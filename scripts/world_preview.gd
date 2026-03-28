@@ -10,12 +10,16 @@ var _world_manager: Node2D = null
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
-		_find_world_manager()
+		call_deferred("_find_world_manager")
 
 
 func _find_world_manager() -> void:
 	var parent = get_parent()
-	if parent and parent.has_method("generate_chunks_at"):
+	if not parent:
+		return
+	if not parent.get_script():
+		return
+	if parent.has_method("generate_chunks_at"):
 		_world_manager = parent
 
 
@@ -43,4 +47,4 @@ func clear_preview() -> void:
 func _is_ready() -> bool:
 	if _world_manager == null:
 		_find_world_manager()
-	return _world_manager != null
+	return _world_manager != null and is_instance_valid(_world_manager)
