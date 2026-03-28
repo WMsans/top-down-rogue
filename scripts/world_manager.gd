@@ -137,6 +137,15 @@ func _update_chunks() -> void:
 			var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
 			_gen_uniform_sets_to_free.append(uniform_set)
 			rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+
+			var push_data := PackedByteArray()
+			push_data.resize(16)
+			push_data.encode_s32(0, coord.x)
+			push_data.encode_s32(4, coord.y)
+			push_data.encode_u32(8, 0)
+			push_data.encode_u32(12, 0)
+			rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
+
 			rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 		rd.compute_list_end()
 
