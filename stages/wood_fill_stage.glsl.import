@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://dtrka7nbh1jd4"
+path="res://.godot/imported/wood_fill_stage.glsl-0ab7e5209ada5981facc3cc67cf6ea6d.res"
+
+[deps]
+
+source_file="res://stages/wood_fill_stage.glsl"
+dest_files=["res://.godot/imported/wood_fill_stage.glsl-0ab7e5209ada5981facc3cc67cf6ea6d.res"]
+
+[params]
+

@@ -1,3 +1,4 @@
+@tool
 extends Node2D
 
 const CHUNK_SIZE := 256
@@ -70,6 +71,8 @@ func _init_dummy_texture() -> void:
 
 
 func _process(_delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	_update_chunks()
 	_run_simulation()
 
@@ -137,6 +140,15 @@ func _update_chunks() -> void:
 			var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
 			_gen_uniform_sets_to_free.append(uniform_set)
 			rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+
+			var push_data := PackedByteArray()
+			push_data.resize(16)
+			push_data.encode_s32(0, coord.x)
+			push_data.encode_s32(4, coord.y)
+			push_data.encode_u32(8, 0)
+			push_data.encode_u32(12, 0)
+			rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
+
 			rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 		rd.compute_list_end()
 
@@ -336,3 +348,57 @@ func get_active_chunk_coords() -> Array[Vector2i]:
 	for coord in chunks:
 		result.append(coord)
 	return result
+
+
+func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> void:
+	for us in _gen_uniform_sets_to_free:
+		rd.free_rid(us)
+	_gen_uniform_sets_to_free.clear()
+
+	var new_chunks: Array[Vector2i] = []
+	for coord in coords:
+		if not chunks.has(coord):
+			_create_chunk(coord)
+			new_chunks.append(coord)
+
+	if new_chunks.is_empty():
+		return
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, gen_pipeline)
+	for coord in new_chunks:
+		var chunk: Chunk = chunks[coord]
+		var gen_uniform := RDUniform.new()
+		gen_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		gen_uniform.binding = 0
+		gen_uniform.add_id(chunk.rd_texture)
+		var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
+		_gen_uniform_sets_to_free.append(uniform_set)
+		rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+
+		var push_data := PackedByteArray()
+		push_data.resize(16)
+		push_data.encode_s32(0, coord.x)
+		push_data.encode_s32(4, coord.y)
+		push_data.encode_u32(8, seed_val)
+		push_data.encode_u32(12, 0)
+		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
+
+		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+	rd.compute_list_end()
+
+	_rebuild_sim_uniform_sets(new_chunks, [])
+
+
+func clear_all_chunks() -> void:
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		_free_chunk_resources(chunk)
+	chunks.clear()
+	for us in _gen_uniform_sets_to_free:
+		rd.free_rid(us)
+	_gen_uniform_sets_to_free.clear()
+
+
+func get_chunk_container() -> Node2D:
+	return chunk_container
