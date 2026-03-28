@@ -4,22 +4,20 @@ extends Node2D
 
 @export var preview_size: int = 3
 @export var world_seed: int = 0
+@export_tool_button("Generate Preview") var generate_preview_button = generate_preview
+@export_tool_button("Clear Preview") var clear_preview_button = clear_preview
 
 var _world_manager: Node2D = null
 
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
-		call_deferred("_find_world_manager")
+		_find_world_manager()
 
 
 func _find_world_manager() -> void:
 	var parent = get_parent()
-	if not parent:
-		return
-	if not parent.get_script():
-		return
-	if parent.has_method("generate_chunks_at"):
+	if parent and parent.has_method("generate_chunks_at"):
 		_world_manager = parent
 
 
@@ -47,4 +45,4 @@ func clear_preview() -> void:
 func _is_ready() -> bool:
 	if _world_manager == null:
 		_find_world_manager()
-	return _world_manager != null and is_instance_valid(_world_manager)
+	return _world_manager != null

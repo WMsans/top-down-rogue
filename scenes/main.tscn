@@ -14,8 +14,9 @@ script = ExtResource("1")
 
 [node name="ChunkContainer" type="Node2D" parent="WorldManager" unique_id=241049915]
 
-[node name="WorldPreview" type="Node2D" parent="WorldManager"]
+[node name="WorldPreview" type="Node2D" parent="WorldManager" unique_id=613443267]
 script = ExtResource("6")
+preview_size = 1
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1982148970]
 zoom = Vector2(8, 8)
