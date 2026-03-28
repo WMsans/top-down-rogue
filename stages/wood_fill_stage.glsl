@@ -3,7 +3,7 @@ struct Context {
     uint world_seed;
 };
 
-void stage_wood_fill(Context ctx, layout(rgba8, set = 0, binding = 0) image2D chunk_tex) {
+void stage_wood_fill(Context ctx, image2D chunk_tex) {
     ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
     if (pos.x >= 256 || pos.y >= 256) return;
 
