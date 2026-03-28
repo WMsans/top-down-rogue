@@ -71,6 +71,7 @@ func _init_dummy_texture() -> void:
 
 func _process(_delta: float) -> void:
 	_update_chunks()
+	_run_simulation()
 
 
 # --- Chunk lifecycle ---
@@ -250,6 +251,47 @@ func _build_sim_uniform_set(chunk: Chunk) -> void:
 		uniforms.append(u)
 
 	chunk.sim_uniform_set = rd.uniform_set_create(uniforms, sim_shader, 0)
+
+
+# --- Simulation dispatch ---
+
+func _run_simulation() -> void:
+	if chunks.is_empty():
+		return
+
+	var push_even := PackedByteArray()
+	push_even.resize(16)
+	push_even.encode_s32(0, 0)
+
+	var push_odd := PackedByteArray()
+	push_odd.resize(16)
+	push_odd.encode_s32(0, 1)
+
+	var compute_list := rd.compute_list_begin()
+
+	# Even pass
+	rd.compute_list_bind_compute_pipeline(compute_list, sim_pipeline)
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		if not chunk.sim_uniform_set.is_valid():
+			continue
+		rd.compute_list_bind_uniform_set(compute_list, chunk.sim_uniform_set, 0)
+		rd.compute_list_set_push_constant(compute_list, push_even, push_even.size())
+		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+
+	rd.compute_list_add_barrier(compute_list)
+
+	# Odd pass
+	rd.compute_list_bind_compute_pipeline(compute_list, sim_pipeline)
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		if not chunk.sim_uniform_set.is_valid():
+			continue
+		rd.compute_list_bind_uniform_set(compute_list, chunk.sim_uniform_set, 0)
+		rd.compute_list_set_push_constant(compute_list, push_odd, push_odd.size())
+		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+
+	rd.compute_list_end()
 
 
 # --- Fire placement (called by InputHandler) ---
