@@ -1,5 +1,3 @@
-#version 450
-
 struct Context {
     ivec2 chunk_coord;
     uint world_seed;
