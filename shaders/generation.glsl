@@ -13,11 +13,6 @@ layout(rgba8, set = 0, binding = 0) uniform image2D chunk_tex;
 
 #include "res://stages/wood_fill_stage.glsl"
 
-struct Context {
-    ivec2 chunk_coord;
-    uint world_seed;
-};
-
 void main() {
     Context ctx;
     ctx.chunk_coord = push_ctx.chunk_coord;
