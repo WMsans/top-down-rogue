@@ -3,7 +3,7 @@ shader_type canvas_item;
 uniform sampler2D chunk_data : filter_nearest;
 
 void fragment() {
-	vec4 data = texture(chunk_data, UV);
+	vec4 data = texture(chunk_data, vec2(UV.x, 1.0 - UV.y));
 	int material = int(round(data.r * 255.0));
 	float health = data.g;
 	float temperature = data.b;
