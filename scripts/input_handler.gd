@@ -1,1 +1,11 @@
 extends Node
+
+const FIRE_RADIUS := 5.0
+
+@onready var world_manager: Node2D = get_parent().get_node("WorldManager")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			var world_pos := get_viewport().get_canvas_transform().affine_inverse() * Vector2(event.position)
+			world_manager.place_fire(world_pos, FIRE_RADIUS)
