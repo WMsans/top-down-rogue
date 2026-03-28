@@ -11,7 +11,7 @@ func _process(_delta: float) -> void:
 		queue_redraw()
 
 func _draw() -> void:
-	var coords := world_manager.get_active_chunk_coords()
+	var coords: Array[Vector2i] = world_manager.get_active_chunk_coords()
 	for coord in coords:
 		var rect := Rect2(
 			Vector2(coord) * CHUNK_SIZE,

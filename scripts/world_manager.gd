@@ -212,12 +212,12 @@ func _rebuild_sim_uniform_sets(loaded: Array[Vector2i], unloaded: Array[Vector2i
 	for coord in loaded:
 		to_rebuild[coord] = true
 		for offset in NEIGHBOR_OFFSETS:
-			var n := coord + offset
+			var n: Vector2i = coord + offset
 			if chunks.has(n):
 				to_rebuild[n] = true
 	for coord in unloaded:
 		for offset in NEIGHBOR_OFFSETS:
-			var n := coord + offset
+			var n: Vector2i = coord + offset
 			if chunks.has(n):
 				to_rebuild[n] = true
 	for coord in to_rebuild:
@@ -240,7 +240,7 @@ func _build_sim_uniform_set(chunk: Chunk) -> void:
 
 	# Bindings 1-4: neighbor textures (top, bottom, left, right)
 	for i in range(4):
-		var n_coord := chunk.coord + NEIGHBOR_OFFSETS[i]
+		var n_coord: Vector2i = chunk.coord + NEIGHBOR_OFFSETS[i]
 		var tex := dummy_texture
 		if chunks.has(n_coord):
 			tex = chunks[n_coord].rd_texture
