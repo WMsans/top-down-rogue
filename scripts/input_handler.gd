@@ -7,5 +7,5 @@ const FIRE_RADIUS := 5.0
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			var world_pos := get_viewport().get_canvas_transform().affine_inverse() * Vector2(event.position)
+			var world_pos := world_manager.get_global_mouse_position()
 			world_manager.place_fire(world_pos, FIRE_RADIUS)
