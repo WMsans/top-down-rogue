@@ -200,3 +200,102 @@ ivec2 get_primary_coord(ivec2 coord, uint seed) {
 int get_shared_edge_dir(ivec2 primary_coord, uint seed) {
     return get_pair_direction(primary_coord, seed);
 }
+
+// ----- Connector System -----
+
+const int CORNER_DEADZONE = 32;
+const int CONNECTOR_MIN_WIDTH = 8;
+const int CONNECTOR_MAX_WIDTH = 23;
+const int CONNECTOR_RANGE = CHUNK_SIZE - 2 * CORNER_DEADZONE;  // 192
+const int MAX_CONNECTORS_PER_EDGE = 2;
+
+struct Connector {
+    int pos;    // pixel offset along the edge [32, 223]
+    int width;  // opening width [8, 23]
+};
+
+// Canonical edge key: always order by lower coord first
+uint edge_key(ivec2 coordA, ivec2 coordB, uint seed) {
+    ivec2 lo, hi;
+    if (coord_less_than(coordA, coordB)) {
+        lo = coordA;
+        hi = coordB;
+    } else {
+        lo = coordB;
+        hi = coordA;
+    }
+    return hash_edge(lo.x, lo.y, hi.x, hi.y, seed);
+}
+
+// Get connectors for a shared edge between two chunks.
+// Returns count (0-2), fills connectors array.
+int get_edge_connectors(ivec2 coordA, ivec2 coordB, uint seed, out Connector connectors[2]) {
+    uint key = edge_key(coordA, coordB, seed);
+    int count = int(hash_combine(key, 0u) % 3u);  // 0, 1, or 2
+
+    for (int i = 0; i < count; i++) {
+        int pos = int(hash_combine(key, uint(i + 1)) % uint(CONNECTOR_RANGE)) + CORNER_DEADZONE;
+        int w = int(hash_combine(key, uint(i + 100)) % uint(CONNECTOR_MAX_WIDTH - CONNECTOR_MIN_WIDTH + 1)) + CONNECTOR_MIN_WIDTH;
+        connectors[i] = Connector(pos, w);
+    }
+
+    // If 2 connectors overlap, discard the second
+    if (count == 2) {
+        int half_a = connectors[0].width / 2;
+        int half_b = connectors[1].width / 2;
+        if (abs(connectors[0].pos - connectors[1].pos) < half_a + half_b) {
+            count = 1;
+        }
+    }
+
+    return count;
+}
+
+// Collect all connectors for a chunk across all 4 edges.
+// edge_pos stores connectors as 2D positions within the chunk.
+// Returns total count. Max 8 connectors (2 per edge).
+struct ConnectorPoint {
+    vec2 pos;  // 2D position within the chunk
+};
+
+int collect_all_connectors(ivec2 coord, uint seed, int chunk_type, out ConnectorPoint points[8]) {
+    int total = 0;
+
+    // For multi-caves, skip the shared edge
+    int shared_dir = -1;
+    if (chunk_type == TYPE_MULTI_PRIMARY) {
+        shared_dir = get_shared_edge_dir(coord, seed);
+    } else if (chunk_type == TYPE_MULTI_SECONDARY) {
+        ivec2 primary = get_primary_coord(coord, seed);
+        // Shared edge dir from my perspective is opposite of primary's pair dir
+        int primary_dir = get_shared_edge_dir(primary, seed);
+        shared_dir = DIR_OPPOSITE[primary_dir];
+    }
+
+    for (int d = 0; d < 4; d++) {
+        if (d == shared_dir) continue;  // Skip shared edge for multi-caves
+
+        ivec2 neighbor = coord + DIR_OFFSETS[d];
+        Connector conns[2];
+        int count = get_edge_connectors(coord, neighbor, seed, conns);
+
+        for (int i = 0; i < count; i++) {
+            vec2 p;
+            if (d == DIR_LEFT) {
+                p = vec2(0.0, float(conns[i].pos));
+            } else if (d == DIR_RIGHT) {
+                p = vec2(float(CHUNK_SIZE - 1), float(conns[i].pos));
+            } else if (d == DIR_UP) {
+                p = vec2(float(conns[i].pos), 0.0);
+            } else {  // DIR_DOWN
+                p = vec2(float(conns[i].pos), float(CHUNK_SIZE - 1));
+            }
+            if (total < 8) {
+                points[total] = ConnectorPoint(p);
+                total++;
+            }
+        }
+    }
+
+    return total;
+}
