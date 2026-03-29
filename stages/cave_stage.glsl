@@ -1,5 +1,3 @@
-#include "res://stages/cave_utils.glsl"
-
 // ----- Tunable Constants -----
 
 const float CAVE_NOISE_SCALE = 0.03;

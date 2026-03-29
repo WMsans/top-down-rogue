@@ -12,6 +12,7 @@ layout(push_constant) uniform PushConstants {
 layout(rgba8, set = 0, binding = 0) uniform image2D chunk_tex;
 
 #include "res://stages/wood_fill_stage.glsl"
+#include "res://stages/cave_utils.glsl"
 #include "res://stages/cave_stage.glsl"
 
 void main() {
