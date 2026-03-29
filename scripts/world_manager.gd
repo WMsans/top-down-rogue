@@ -17,6 +17,7 @@ var dummy_texture: RID  # 256x256 air texture for missing neighbors
 
 var render_shader: Shader
 var _gen_uniform_sets_to_free: Array[RID] = []
+var wall_texture: Texture2D = preload("res://textures/wall.png")
 
 @onready var chunk_container: Node2D = $ChunkContainer
 @onready var camera: Camera2D = get_parent().get_node("Camera2D")
@@ -188,6 +189,8 @@ func _create_chunk(coord: Vector2i) -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = render_shader
 	mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
+	mat.set_shader_parameter("wall_texture", wall_texture)
+	mat.set_shader_parameter("wall_height", 16)
 	chunk.mesh_instance.material = mat
 
 	chunk_container.add_child(chunk.mesh_instance)
