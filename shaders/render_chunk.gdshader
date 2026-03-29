@@ -6,6 +6,8 @@ uniform int wall_height = 16;
 
 const int CHUNK_SIZE = 256;
 const int AIR = 0;
+const int WOOD = 1;
+const int FIRE = 2;
 
 // Read material data at a pixel position in the chunk texture.
 // Returns vec4(material, health, temperature, reserved) in 0-255 range conceptually,
@@ -25,7 +27,8 @@ bool is_solid(ivec2 pos) {
 	if (pos.x < 0 || pos.x >= CHUNK_SIZE || pos.y < 0 || pos.y >= CHUNK_SIZE) {
 		return true;
 	}
-	return get_material(read_pixel(pos)) != AIR;
+	int m = get_material(read_pixel(pos));
+	return m != AIR && m != FIRE;
 }
 
 // Compute material color from pixel data (same logic as original shader).
@@ -74,21 +77,21 @@ void fragment() {
 	vec4 data = read_pixel(px);
 	int mat = get_material(data);
 
-	if (mat == AIR) {
+	if (mat == FIRE) {
+		// Fire renders with its original color, not as a wall
+		COLOR = vec4(material_color(data), 1.0);
+	} else if (mat == AIR) {
 		// --- Wall face check ---
-		// Scan upward on screen (decreasing screen y = decreasing px.y, but due to Y-flip
-		// in read_pixel, "above on screen" is px.y + d in our coordinate space).
+		// Scan upward on screen: due to Y-flip in read_pixel, "above on screen" is px.y + d.
 		ivec2 tex_size = textureSize(wall_texture, 0);
 		bool found_wall = false;
 		for (int d = 1; d <= wall_height; d++) {
 			if (found_wall) break;
 			ivec2 check_pos = ivec2(px.x, px.y + d);
-			if (check_pos.y >= CHUNK_SIZE) break; // past top of chunk
+			if (check_pos.y >= CHUNK_SIZE) break;
 			vec4 src_data = read_pixel(check_pos);
-			int src_mat = get_material(src_data);
-			if (src_mat != AIR) {
+			if (is_solid(check_pos)) {
 				// Found the solid pixel casting a wall face here.
-				// Sample wall texture: column from pixel x, row from distance.
 				// V stretches the texture to fill wall_height, not tex_size.y.
 				float u = (float(px.x % tex_size.x) + 0.5) / float(tex_size.x);
 				float v = (float(d - 1) + 0.5) / float(wall_height);
@@ -99,16 +102,13 @@ void fragment() {
 			}
 		}
 		if (!found_wall) {
-			// No solid above within wall_height — transparent air
 			COLOR = vec4(0.0);
 		}
 	} else {
-		// --- Solid pixel: wall top or black ---
+		// --- Solid pixel (wood etc.): wall top or black ---
 		if (near_air(px)) {
-			// Close to air: render visible wall top with material color
 			COLOR = vec4(material_color(data), 1.0);
 		} else {
-			// Deep interior: black
 			COLOR = vec4(0.0, 0.0, 0.0, 1.0);
 		}
 	}
