@@ -78,6 +78,7 @@ void fragment() {
 		// --- Wall face check ---
 		// Scan "upward on screen" = decreasing py in texture space (since screen y=0 is top).
 		// A solid pixel at py - d has its wall face extruding downward into this air pixel.
+		ivec2 tex_size = textureSize(wall_texture, 0);
 		for (int d = 1; d <= wall_height; d++) {
 			ivec2 check_pos = ivec2(px.x, px.y - d);
 			if (check_pos.y < 0) break; // past top of chunk
@@ -86,7 +87,7 @@ void fragment() {
 			if (src_mat != AIR) {
 				// Found the solid pixel casting a wall face here.
 				// Sample wall texture: column from pixel x, row from distance.
-				ivec2 tex_size = textureSize(wall_texture, 0);
+				// V stretches the texture to fill wall_height, not tex_size.y.
 				float u = (float(px.x % tex_size.x) + 0.5) / float(tex_size.x);
 				float v = (float(d - 1) + 0.5) / float(wall_height);
 				vec3 tex_color = texture(wall_texture, vec2(u, v)).rgb;
