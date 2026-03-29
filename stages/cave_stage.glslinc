@@ -1,11 +1,11 @@
-// ----- Tunable Constants -----
+// Tunable Constants
 
 const float CAVE_NOISE_SCALE = 0.03;
 const float CAVE_THRESHOLD = 0.45;
 const float EDGE_FADE_DIST = 48.0;
 const float CONNECTOR_BOOST_RADIUS = 24.0;
 
-// ----- Cave Carving (Single-Chunk) -----
+// Cave Carving (Single-Chunk)
 
 void carve_cave(ivec2 pos, ivec2 coord, uint seed) {
     // Base cave shape from FBM noise
@@ -32,7 +32,7 @@ void carve_cave(ivec2 pos, ivec2 coord, uint seed) {
     }
 }
 
-// ----- Multi-Cave Carving -----
+// Multi-Cave Carving
 
 void carve_multi_cave(ivec2 pos, ivec2 coord, uint seed) {
     // Find the primary coord
@@ -99,7 +99,7 @@ void carve_multi_cave(ivec2 pos, ivec2 coord, uint seed) {
     }
 }
 
-// ----- Tunnel Carving -----
+// Tunnel Carving
 
 const float TUNNEL_RADIUS = 10.0;
 const float TUNNEL_NOISE_FREQ = 3.0;
@@ -202,7 +202,7 @@ void carve_tunnel(ivec2 pos, ivec2 coord, uint seed) {
     }
 }
 
-// ----- Stage Entry Point -----
+// Stage Entry Point
 
 void stage_cave(Context ctx) {
     ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
@@ -214,7 +214,6 @@ void stage_cave(Context ctx) {
         carve_cave(pos, ctx.chunk_coord, ctx.world_seed);
     } else if (chunk_type == TYPE_MULTI_PRIMARY || chunk_type == TYPE_MULTI_SECONDARY) {
         carve_multi_cave(pos, ctx.chunk_coord, ctx.world_seed);
-    } else if (chunk_type == TYPE_TUNNEL) {
-        carve_tunnel(pos, ctx.chunk_coord, ctx.world_seed);
-    }
+    } 
+    carve_tunnel(pos, ctx.chunk_coord, ctx.world_seed);
 }

@@ -1,4 +1,4 @@
-// ----- Hash utilities -----
+// Hash utilities
 
 const int CHUNK_SIZE = 256;
 
@@ -56,7 +56,7 @@ float hash_to_float(uint h) {
     return float(h & 0xFFFFu) / 65535.0;
 }
 
-// ----- 2D Value Noise -----
+// 2D Value Noise
 
 // Lattice-based value noise: hash at integer corners, bilinear interpolate
 float value_noise_2d(vec2 p, uint seed) {
@@ -87,7 +87,7 @@ float fbm_2d(vec2 p, uint seed) {
     return value;
 }
 
-// ----- Chunk Type Detection -----
+// Chunk Type Detection
 
 const uint TYPE_MULTI_THRESHOLD = 15u;
 const uint TYPE_CAVE_THRESHOLD = 55u;
@@ -209,7 +209,7 @@ int get_shared_edge_dir(ivec2 primary_coord, uint seed) {
     return get_pair_direction(primary_coord, seed);
 }
 
-// ----- Connector System -----
+// Connector System
 
 const int CORNER_DEADZONE = 32;
 const int CONNECTOR_MIN_WIDTH = 8;
