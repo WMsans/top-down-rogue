@@ -86,3 +86,117 @@ float fbm_2d(vec2 p, uint seed) {
     }
     return value;
 }
+
+// ----- Chunk Type Detection -----
+
+const uint TYPE_MULTI_THRESHOLD = 15u;
+const uint TYPE_CAVE_THRESHOLD = 55u;
+
+// Returns the raw type roll for a coordinate (before secondary override)
+int _raw_chunk_type(ivec2 coord, uint seed) {
+    uint h = hash_ivec2(coord, seed);
+    uint type_roll = h % 100u;
+    if (type_roll < TYPE_MULTI_THRESHOLD) {
+        return TYPE_MULTI_PRIMARY;
+    } else if (type_roll < TYPE_CAVE_THRESHOLD) {
+        return TYPE_CAVE;
+    } else {
+        return TYPE_TUNNEL;
+    }
+}
+
+// Returns which direction a multi-primary pairs toward (0-3)
+int get_pair_direction(ivec2 coord, uint seed) {
+    return int(hash_ivec2(coord, seed + 1u) % 4u);
+}
+
+// Returns the paired neighbor coord for a multi-primary
+ivec2 get_pair_neighbor(ivec2 primary_coord, uint seed) {
+    int dir = get_pair_direction(primary_coord, seed);
+    return primary_coord + DIR_OFFSETS[dir];
+}
+
+// Check if coord_a < coord_b lexicographically (x first, then y)
+bool coord_less_than(ivec2 a, ivec2 b) {
+    return (a.x < b.x) || (a.x == b.x && a.y < b.y);
+}
+
+// Full chunk type determination including secondary override and conflict resolution
+int determine_chunk_type(ivec2 coord, uint seed) {
+    // Step 1: Check if any neighbor claims me as its secondary
+    for (int d = 0; d < 4; d++) {
+        ivec2 neighbor = coord + DIR_OFFSETS[d];
+        int neighbor_raw = _raw_chunk_type(neighbor, seed);
+        if (neighbor_raw == TYPE_MULTI_PRIMARY) {
+            int neighbor_pair_dir = get_pair_direction(neighbor, seed);
+            ivec2 neighbor_target = neighbor + DIR_OFFSETS[neighbor_pair_dir];
+            if (neighbor_target == coord) {
+                // Neighbor wants to claim me. But check conflict:
+                // If I'm also a primary trying to claim them, lower coord wins primary.
+                int my_raw = _raw_chunk_type(coord, seed);
+                if (my_raw == TYPE_MULTI_PRIMARY) {
+                    ivec2 my_target = get_pair_neighbor(coord, seed);
+                    if (my_target == neighbor) {
+                        // Mutual claim — lower coord wins primary
+                        if (coord_less_than(coord, neighbor)) {
+                            return TYPE_MULTI_PRIMARY;  // I win primary
+                        } else {
+                            return TYPE_MULTI_SECONDARY;  // They win, I'm secondary
+                        }
+                    }
+                }
+                // Non-mutual: neighbor claims me, I become secondary
+                return TYPE_MULTI_SECONDARY;
+            }
+        }
+    }
+
+    // Step 2: My own roll
+    int my_raw = _raw_chunk_type(coord, seed);
+
+    // If I'm a primary, check if my target is also a primary with a conflict
+    if (my_raw == TYPE_MULTI_PRIMARY) {
+        ivec2 my_target = get_pair_neighbor(coord, seed);
+        int target_raw = _raw_chunk_type(my_target, seed);
+        if (target_raw == TYPE_MULTI_PRIMARY) {
+            // My target is also a primary — do they point at me?
+            ivec2 target_target = get_pair_neighbor(my_target, seed);
+            if (target_target == coord) {
+                // Mutual — lower coord keeps primary (handled above for secondary)
+                if (coord_less_than(coord, my_target)) {
+                    return TYPE_MULTI_PRIMARY;
+                } else {
+                    return TYPE_MULTI_SECONDARY;
+                }
+            }
+            // Non-mutual: both are primaries pointing elsewhere. I stay primary,
+            // but my target won't become my secondary (they're their own primary).
+            // Fall back to CAVE since pairing fails.
+            return TYPE_CAVE;
+        }
+    }
+
+    return my_raw;
+}
+
+// For a secondary chunk, find which neighbor is its primary
+ivec2 get_primary_coord(ivec2 coord, uint seed) {
+    for (int d = 0; d < 4; d++) {
+        ivec2 neighbor = coord + DIR_OFFSETS[d];
+        int neighbor_raw = _raw_chunk_type(neighbor, seed);
+        if (neighbor_raw == TYPE_MULTI_PRIMARY) {
+            int neighbor_pair_dir = get_pair_direction(neighbor, seed);
+            ivec2 neighbor_target = neighbor + DIR_OFFSETS[neighbor_pair_dir];
+            if (neighbor_target == coord) {
+                return neighbor;
+            }
+        }
+    }
+    // Shouldn't reach here for a valid secondary
+    return coord;
+}
+
+// Returns the direction from primary to secondary
+int get_shared_edge_dir(ivec2 primary_coord, uint seed) {
+    return get_pair_direction(primary_coord, seed);
+}
