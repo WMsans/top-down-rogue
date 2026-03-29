@@ -55,3 +55,34 @@ uint hash_edge(int a, int b, int c, int d, uint seed) {
 float hash_to_float(uint h) {
     return float(h & 0xFFFFu) / 65535.0;
 }
+
+// ----- 2D Value Noise -----
+
+// Lattice-based value noise: hash at integer corners, bilinear interpolate
+float value_noise_2d(vec2 p, uint seed) {
+    ivec2 i = ivec2(floor(p));
+    vec2 f = fract(p);
+
+    // Smoothstep interpolation (Hermite)
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    float c00 = hash_to_float(hash_combine(hash_ivec2(i, seed), 0u));
+    float c10 = hash_to_float(hash_combine(hash_ivec2(i + ivec2(1, 0), seed), 0u));
+    float c01 = hash_to_float(hash_combine(hash_ivec2(i + ivec2(0, 1), seed), 0u));
+    float c11 = hash_to_float(hash_combine(hash_ivec2(i + ivec2(1, 1), seed), 0u));
+
+    return mix(mix(c00, c10, u.x), mix(c01, c11, u.x), u.y);
+}
+
+// Fractal Brownian Motion — 3 octaves for organic shapes
+float fbm_2d(vec2 p, uint seed) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+    for (int i = 0; i < 3; i++) {
+        value += amplitude * value_noise_2d(p * frequency, hash_combine(seed, uint(i)));
+        amplitude *= 0.5;
+        frequency *= 2.0;
+    }
+    return value;
+}
