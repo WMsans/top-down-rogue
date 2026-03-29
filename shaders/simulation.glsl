@@ -19,7 +19,6 @@ layout(push_constant, std430) uniform PushConstants {
 const int CHUNK_SIZE = 256;
 const int MAT_AIR = 0;
 const int MAT_WOOD = 1;
-const int MAT_FIRE = 2;
 const int IGNITION_TEMP = 180;
 const int FIRE_TEMP = 255;
 const int HEAT_DISSIPATION = 2;
@@ -52,6 +51,10 @@ vec4 read_neighbor(ivec2 pos) {
 	return vec4(0.0);
 }
 
+bool is_burning(vec4 p) {
+	return get_material(p) == MAT_WOOD && get_temperature(p) > IGNITION_TEMP;
+}
+
 void main() {
 	ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
 	if (pos.x >= CHUNK_SIZE || pos.y >= CHUNK_SIZE) return;
@@ -70,29 +73,26 @@ void main() {
 	vec4 n_left = read_neighbor(pos + ivec2(-1, 0));
 	vec4 n_right = read_neighbor(pos + ivec2(1, 0));
 
-	int fire_neighbors = 0;
-	if (get_material(n_up) == MAT_FIRE) fire_neighbors++;
-	if (get_material(n_down) == MAT_FIRE) fire_neighbors++;
-	if (get_material(n_left) == MAT_FIRE) fire_neighbors++;
-	if (get_material(n_right) == MAT_FIRE) fire_neighbors++;
+	// Count burning neighbors (wood with high temperature)
+	int burning_neighbors = 0;
+	if (is_burning(n_up)) burning_neighbors++;
+	if (is_burning(n_down)) burning_neighbors++;
+	if (is_burning(n_left)) burning_neighbors++;
+	if (is_burning(n_right)) burning_neighbors++;
 
 	if (material == MAT_AIR) {
 		temperature = max(0, temperature - HEAT_DISSIPATION);
 	} else if (material == MAT_WOOD) {
-		temperature = min(255, temperature + fire_neighbors * HEAT_SPREAD);
+		temperature = min(255, temperature + burning_neighbors * HEAT_SPREAD);
 		temperature = max(0, temperature - HEAT_DISSIPATION);
 		if (temperature > IGNITION_TEMP) {
-			material = MAT_FIRE;
-			health = 255;
+			health = health - 1;
 			temperature = FIRE_TEMP;
-		}
-	} else if (material == MAT_FIRE) {
-		temperature = FIRE_TEMP;
-		health = health - 1;
-		if (health <= 0) {
-			material = MAT_AIR;
-			health = 0;
-			temperature = FIRE_TEMP;
+			if (health <= 0) {
+				material = MAT_AIR;
+				health = 0;
+				temperature = 0;
+			}
 		}
 	}
 
