@@ -5,6 +5,10 @@ const CHUNK_SIZE := 256
 const WORKGROUP_SIZE := 8
 const NUM_WORKGROUPS := CHUNK_SIZE / WORKGROUP_SIZE  # 32
 
+const MAT_AIR := 0
+const MAT_WOOD := 1
+const MAX_TEMPERATURE := 255
+
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
 
@@ -338,9 +342,9 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
 			var material := data[idx]
-			if material != 1:  # Only heat wood (material=1)
+			if material != MAT_WOOD:
 				continue
-			data[idx + 2] = 255  # temperature = 255 (max heat)
+			data[idx + 2] = MAX_TEMPERATURE
 		rd.texture_update(chunk.rd_texture, 0, data)
 
 
