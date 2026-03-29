@@ -17,7 +17,7 @@ var dummy_texture: RID  # 256x256 air texture for missing neighbors
 
 var render_shader: Shader
 var _gen_uniform_sets_to_free: Array[RID] = []
-var wall_texture: Texture2D = preload("res://textures/wall.png")
+var wall_texture: Texture2D = preload("res://textures/PixelTextures/plank.png")
 
 @onready var chunk_container: Node2D = $ChunkContainer
 @onready var camera: Camera2D = get_parent().get_node("Camera2D")
@@ -337,10 +337,10 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		var data := rd.texture_get_data(chunk.rd_texture, 0)
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
-			data[idx] = 2      # material = fire
-			data[idx + 1] = 255  # health = 255
-			data[idx + 2] = 255  # temperature = 255
-			data[idx + 3] = 0    # reserved
+			var material := data[idx]
+			if material != 1:  # Only heat wood (material=1)
+				continue
+			data[idx + 2] = 255  # temperature = 255 (max heat)
 		rd.texture_update(chunk.rd_texture, 0, data)
 
 
