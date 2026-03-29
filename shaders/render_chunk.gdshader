@@ -79,7 +79,9 @@ void fragment() {
 		// Scan "upward on screen" = decreasing py in texture space (since screen y=0 is top).
 		// A solid pixel at py - d has its wall face extruding downward into this air pixel.
 		ivec2 tex_size = textureSize(wall_texture, 0);
+		bool found_wall = false;
 		for (int d = 1; d <= wall_height; d++) {
+			if (found_wall) break;
 			ivec2 check_pos = ivec2(px.x, px.y - d);
 			if (check_pos.y < 0) break; // past top of chunk
 			vec4 src_data = read_pixel(check_pos);
@@ -93,11 +95,13 @@ void fragment() {
 				vec3 tex_color = texture(wall_texture, vec2(u, v)).rgb;
 				vec3 tint = material_color(src_data);
 				COLOR = vec4(tex_color * tint, 1.0);
-				return;
+				found_wall = true;
 			}
 		}
-		// No solid above within wall_height — transparent air
-		COLOR = vec4(0.0);
+		if (!found_wall) {
+			// No solid above within wall_height — transparent air
+			COLOR = vec4(0.0);
+		}
 	} else {
 		// --- Solid pixel: wall top or black ---
 		if (near_air(px)) {
