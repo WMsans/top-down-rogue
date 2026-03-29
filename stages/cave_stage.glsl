@@ -25,7 +25,7 @@ void carve_cave(ivec2 pos, ivec2 coord, uint seed) {
     int conn_count = collect_all_connectors(coord, seed, TYPE_CAVE, points);
     for (int i = 0; i < conn_count; i++) {
         float d = distance(vec2(pos), points[i].pos);
-        fade = max(fade, smoothstep(CONNECTOR_BOOST_RADIUS, 0.0, d));
+        fade = max(fade, 1.0 - smoothstep(0.0, CONNECTOR_BOOST_RADIUS, d));
     }
 
     if (n * fade > CAVE_THRESHOLD) {
@@ -93,7 +93,7 @@ void carve_multi_cave(ivec2 pos, ivec2 coord, uint seed) {
     int conn_count = collect_all_connectors(coord, seed, chunk_type, points);
     for (int i = 0; i < conn_count; i++) {
         float d = distance(vec2(pos), points[i].pos);
-        fade = max(fade, smoothstep(CONNECTOR_BOOST_RADIUS, 0.0, d));
+        fade = max(fade, 1.0 - smoothstep(0.0, CONNECTOR_BOOST_RADIUS, d));
     }
 
     if (n * fade > CAVE_THRESHOLD) {

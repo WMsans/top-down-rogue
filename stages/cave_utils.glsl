@@ -145,7 +145,15 @@ int determine_chunk_type(ivec2 coord, uint seed) {
                         }
                     }
                 }
-                // Non-mutual: neighbor claims me, I become secondary
+                // Non-mutual: neighbor claims me. But verify the neighbor
+                // won't be demoted to CAVE (happens when its target — me — is
+                // also a raw primary pointing elsewhere).
+                int my_raw2 = _raw_chunk_type(coord, seed);
+                if (my_raw2 == TYPE_MULTI_PRIMARY) {
+                    // I'm a raw primary not pointing at neighbor — neighbor
+                    // will be demoted to CAVE in its own Step 2, so skip.
+                    continue;
+                }
                 return TYPE_MULTI_SECONDARY;
             }
         }
