@@ -7,7 +7,6 @@ uniform int wall_height = 16;
 const int CHUNK_SIZE = 256;
 const int AIR = 0;
 const int WOOD = 1;
-const int FIRE = 2;
 
 // Read material data at a pixel position in the chunk texture.
 // Returns vec4(material, health, temperature, reserved) in 0-255 range conceptually,
@@ -28,7 +27,7 @@ bool is_solid(ivec2 pos) {
 		return true;
 	}
 	int m = get_material(read_pixel(pos));
-	return m != AIR && m != FIRE;
+	return m != AIR;
 }
 
 // Compute material color from pixel data (same logic as original shader).
@@ -37,16 +36,11 @@ vec3 material_color(vec4 data) {
 	float health = data.g;
 	float temperature = data.b;
 
-	if (mat == 1) {
+	if (mat == WOOD) {
 		// Wood — tint toward red with temperature
 		vec3 wood_color = vec3(0.55, 0.35, 0.17);
 		vec3 hot_color = vec3(0.8, 0.2, 0.1);
 		return mix(wood_color, hot_color, temperature);
-	} else if (mat == 2) {
-		// Fire — orange to red based on health
-		vec3 fire_bright = vec3(1.0, 0.6, 0.1);
-		vec3 fire_dim = vec3(0.8, 0.1, 0.0);
-		return mix(fire_dim, fire_bright, health);
 	}
 	// Fallback (unknown solid material)
 	return vec3(1.0, 0.0, 1.0);
@@ -77,10 +71,7 @@ void fragment() {
 	vec4 data = read_pixel(px);
 	int mat = get_material(data);
 
-	if (mat == FIRE) {
-		// Fire renders with its original color, not as a wall
-		COLOR = vec4(material_color(data), 1.0);
-	} else if (mat == AIR) {
+	if (mat == AIR) {
 		// --- Wall face check ---
 		// Scan upward on screen: due to Y-flip in read_pixel, "above on screen" is px.y + d.
 		ivec2 tex_size = textureSize(wall_texture, 0);
