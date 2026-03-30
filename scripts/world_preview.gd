@@ -45,4 +45,9 @@ func clear_preview() -> void:
 func _is_ready() -> bool:
 	if _world_manager == null:
 		_find_world_manager()
-	return _world_manager != null
+	if _world_manager == null:
+		return false
+	if _world_manager.get_script() == null:
+		_world_manager = null
+		return false
+	return true
