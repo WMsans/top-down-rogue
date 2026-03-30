@@ -125,7 +125,7 @@ func force_sync(center: Vector2i) -> void:
 	if world_manager == null:
 		return
 	set_center(center)
-	var data := world_manager.read_region(get_world_rect())
+	var data: PackedByteArray = world_manager.read_region(get_world_rect())
 	apply_data(data)
 	_frames_since_last_sync = 0
 	_dirty = false
