@@ -25,7 +25,8 @@ var _gen_uniform_sets_to_free: Array[RID] = []
 var material_textures: Texture2DArray
 
 @onready var chunk_container: Node2D = $ChunkContainer
-@onready var camera: Camera2D = get_parent().get_node("Camera2D")
+var camera: Camera2D
+var player: CharacterBody2D
 
 
 func _ready() -> void:
@@ -34,6 +35,8 @@ func _ready() -> void:
 	_init_dummy_texture()
 	render_shader = preload("res://shaders/render_chunk.gdshader")
 	_init_material_textures()
+	if not Engine.is_editor_hint():
+		spawn_player.call_deferred()
 
 
 func _init_material_textures() -> void:
@@ -43,6 +46,22 @@ func _init_material_textures() -> void:
 
 	var images: Array[Image] = [placeholder, plank_img, stone_img]
 	material_textures = TextureArrayBuilder.build_from_images(images)
+
+
+func spawn_player() -> void:
+	var player_scene := preload("res://scenes/player.tscn")
+	player = player_scene.instantiate()
+	get_parent().add_child(player)
+
+	# Wait one frame for chunks to be generated, then find spawn position
+	# (chunks are generated in _process, so we need at least one frame)
+	await get_tree().process_frame
+	await get_tree().process_frame  # second frame ensures GPU generation is dispatched
+
+	var spawn_pos := find_spawn_position()
+	player.global_position = spawn_pos
+
+	camera = player.get_node("Camera2D")
 
 
 func _exit_tree() -> void:
@@ -96,6 +115,13 @@ func _process(_delta: float) -> void:
 # --- Chunk lifecycle ---
 
 func _get_desired_chunks() -> Array[Vector2i]:
+	if camera == null:
+		# Before player spawns, load chunks around origin
+		var result: Array[Vector2i] = []
+		for x in range(-2, 3):
+			for y in range(-2, 3):
+				result.append(Vector2i(x, y))
+		return result
 	var vp_size := get_viewport().get_visible_rect().size
 	var cam_pos := camera.global_position
 	var cam_zoom := camera.zoom

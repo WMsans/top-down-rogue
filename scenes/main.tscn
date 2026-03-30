@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dsytrqtiu7drc"]
 
 [ext_resource type="Script" uid="uid://dbbimgkhcuwvu" path="res://scripts/world_manager.gd" id="1"]
-[ext_resource type="Script" uid="uid://cvgqpuso1m1hn" path="res://scripts/camera_controller.gd" id="2"]
 [ext_resource type="Script" uid="uid://bn2f13as3veks" path="res://scripts/input_handler.gd" id="3"]
 [ext_resource type="Script" uid="uid://fawu47fhsxos" path="res://scripts/debug_manager.gd" id="4"]
 [ext_resource type="Script" uid="uid://dpx6ctk67xl0e" path="res://scripts/chunk_grid_overlay.gd" id="5"]
@@ -18,10 +17,6 @@ script = ExtResource("1")
 script = ExtResource("6")
 preview_size = 1
 world_seed = 56
-
-[node name="Camera2D" type="Camera2D" parent="." unique_id=1982148970]
-zoom = Vector2(8, 8)
-script = ExtResource("2")
 
 [node name="InputHandler" type="Node" parent="." unique_id=924507179]
 script = ExtResource("3")
