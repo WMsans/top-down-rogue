@@ -24,6 +24,15 @@ const int FIRE_TEMP = 255;
 const int HEAT_DISSIPATION = 2;
 const int HEAT_SPREAD = 10;
 
+uint hash(uint n) {
+	n = (n >> 16) ^ n;
+	n *= 0xed5ad0bb;
+	n = (n >> 16) ^ n;
+	n *= 0xac4c1b51;
+	n = (n >> 16) ^ n;
+	return n;
+}
+
 int get_material(vec4 p) { return int(round(p.r * 255.0)); }
 int get_health(vec4 p) { return int(round(p.g * 255.0)); }
 int get_temperature(vec4 p) { return int(round(p.b * 255.0)); }
@@ -73,17 +82,30 @@ void main() {
 	vec4 n_left = read_neighbor(pos + ivec2(-1, 0));
 	vec4 n_right = read_neighbor(pos + ivec2(1, 0));
 
-	// Count burning neighbors (wood with high temperature)
-	int burning_neighbors = 0;
-	if (is_burning(n_up)) burning_neighbors++;
-	if (is_burning(n_down)) burning_neighbors++;
-	if (is_burning(n_left)) burning_neighbors++;
-	if (is_burning(n_right)) burning_neighbors++;
+	// Accumulate random heat from each burning neighbor
+	int heat_gain = 0;
+	uint base_rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed)));
+	if (is_burning(n_up)) {
+		uint rng = hash(base_rng ^ 1u);
+		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+	}
+	if (is_burning(n_down)) {
+		uint rng = hash(base_rng ^ 2u);
+		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+	}
+	if (is_burning(n_left)) {
+		uint rng = hash(base_rng ^ 3u);
+		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+	}
+	if (is_burning(n_right)) {
+		uint rng = hash(base_rng ^ 4u);
+		heat_gain += HEAT_SPREAD / 4 + int(rng % uint(HEAT_SPREAD));
+	}
 
 	if (material == MAT_AIR) {
 		temperature = max(0, temperature - HEAT_DISSIPATION);
 	} else if (material == MAT_WOOD) {
-		temperature = min(255, temperature + burning_neighbors * HEAT_SPREAD);
+		temperature = min(255, temperature + heat_gain);
 		temperature = max(0, temperature - HEAT_DISSIPATION);
 		if (temperature > IGNITION_TEMP) {
 			health = health - 1;
