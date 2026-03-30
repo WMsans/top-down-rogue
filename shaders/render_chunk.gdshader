@@ -31,6 +31,31 @@ bool is_solid(ivec2 pos) {
 	return m != AIR;
 }
 
+vec3 ember_color(float temp_norm, float flicker_amt) {
+	vec3 dark_red = vec3(0.3, 0.0, 0.0);
+	vec3 orange = vec3(0.9, 0.4, 0.0);
+	vec3 yellow_white = vec3(1.0, 0.9, 0.5);
+	
+	float adjusted = clamp(temp_norm + flicker_amt * 0.15, 0.0, 1.0);
+	if (adjusted < 0.85) {
+		float t = (adjusted - 0.7) / 0.15;
+		return mix(dark_red, orange, t);
+	} else {
+		float t = (adjusted - 0.85) / 0.15;
+		return mix(orange, yellow_white, t);
+	}
+}
+
+float flicker_amount(ivec2 pixel_pos, float time, float temp_norm) {
+	float px = float(pixel_pos.x);
+	float py = float(pixel_pos.y);
+	float a = sin(time * 8.0 + px * 0.05) * 0.5;
+	float b = sin(time * 12.0 + py * 0.03) * 0.3;
+	float c = sin(time * 15.0 + (px + py) * 0.04) * 0.2;
+	float flicker = a + b + c;
+	return flicker * (1.0 - temp_norm * 0.3);
+}
+
 // Compute material color from pixel data (same logic as original shader).
 vec3 material_color(vec4 data) {
 	int mat = get_material(data);
