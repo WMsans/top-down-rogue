@@ -472,3 +472,57 @@ func read_region(region: Rect2i) -> PackedByteArray:
 					result[result_y * width + result_x] = material
 
 	return result
+
+
+## Find a spawn position by spiraling outward from search_origin.
+## Looks for a contiguous air pocket that fits body_size.
+## Returns the top-left corner of the pocket in world coordinates.
+## Falls back to search_origin if no pocket found within max_radius.
+func find_spawn_position(search_origin: Vector2i, body_size: Vector2i) -> Vector2i:
+	var max_radius := CHUNK_SIZE * 4  # Search up to 4 chunks away
+	var search_rect := Rect2i(
+		search_origin - Vector2i(max_radius, max_radius),
+		Vector2i(max_radius * 2, max_radius * 2)
+	)
+	var region_data := read_region(search_rect)
+	var region_w: int = search_rect.size.x
+	var region_h: int = search_rect.size.y
+
+	# Spiral outward from center of the search region
+	var center := Vector2i(max_radius, max_radius)
+	var dir := Vector2i(1, 0)
+	var pos := center
+	var steps_in_leg := 1
+	var steps_taken := 0
+	var legs_completed := 0
+
+	for _i in range(region_w * region_h):
+		# Check if body_size fits at this position (all air)
+		if _pocket_fits(region_data, region_w, region_h, pos, body_size):
+			return search_rect.position + pos
+
+		# Spiral step
+		pos += dir
+		steps_taken += 1
+		if steps_taken >= steps_in_leg:
+			steps_taken = 0
+			legs_completed += 1
+			# Rotate direction: right -> down -> left -> up
+			dir = Vector2i(-dir.y, dir.x)
+			if legs_completed % 2 == 0:
+				steps_in_leg += 1
+
+	push_warning("ShadowGrid: No valid spawn pocket found, falling back to search_origin")
+	return search_origin
+
+
+func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left: Vector2i, size: Vector2i) -> bool:
+	if top_left.x < 0 or top_left.y < 0:
+		return false
+	if top_left.x + size.x > region_w or top_left.y + size.y > region_h:
+		return false
+	for y in range(top_left.y, top_left.y + size.y):
+		for x in range(top_left.x, top_left.x + size.x):
+			if data[y * region_w + x] != MAT_AIR:
+				return false
+	return true
