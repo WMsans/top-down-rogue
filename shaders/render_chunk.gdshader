@@ -56,19 +56,19 @@ float flicker_amount(ivec2 pixel_pos, float time, float temp_norm) {
 	return flicker * (1.0 - temp_norm * 0.3);
 }
 
-// Compute material color from pixel data (same logic as original shader).
-vec3 material_color(vec4 data) {
+vec3 material_color(vec4 data, ivec2 pixel_pos) {
 	int mat = get_material(data);
-	float health = data.g;
 	float temperature = data.b;
-
+	
 	if (mat == WOOD) {
-		// Wood — tint toward red with temperature
 		vec3 wood_color = vec3(0.55, 0.35, 0.17);
-		vec3 hot_color = vec3(0.8, 0.2, 0.1);
-		return mix(wood_color, hot_color, temperature);
+		float temp_norm = temperature;
+		if (temperature > 180.0 / 255.0) {
+			float flicker = flicker_amount(pixel_pos, TIME, temp_norm);
+			return ember_color(temp_norm, flicker);
+		}
+		return wood_color;
 	}
-	// Fallback (unknown solid material)
 	return vec3(1.0, 0.0, 1.0);
 }
 
@@ -113,7 +113,7 @@ void fragment() {
 				float u = (float(px.x % tex_size.x) + 0.5) / float(tex_size.x);
 				float v = (float(d - 1) + 0.5) / float(wall_height);
 				vec3 tex_color = texture(wall_texture, vec2(u, v)).rgb;
-				vec3 tint = material_color(src_data);
+				vec3 tint = material_color(src_data, px);
 				COLOR = vec4(tex_color * tint, 1.0);
 				found_wall = true;
 			}
@@ -124,7 +124,7 @@ void fragment() {
 	} else {
 		// --- Solid pixel (wood etc.): wall top or black ---
 		if (near_air(px)) {
-			COLOR = vec4(material_color(data), 1.0);
+			COLOR = vec4(material_color(data, px), 1.0);
 		} else {
 			COLOR = vec4(0.0, 0.0, 0.0, 1.0);
 		}
