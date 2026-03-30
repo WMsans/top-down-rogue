@@ -1,13 +1,13 @@
 shader_type canvas_item;
 
 uniform sampler2D chunk_data : filter_nearest;
-uniform sampler2D wall_texture : filter_nearest;
 uniform int wall_height = 16;
+uniform sampler2DArray material_textures : filter_nearest;
 
 const int CHUNK_SIZE = 256;
 const int AIR = 0;
 const int WOOD = 1;
-const int FIRE = 2;
+const int STONE = 2;
 
 // Read material data at a pixel position in the chunk texture.
 // Returns vec4(material, health, temperature, reserved) in 0-255 range conceptually,
@@ -28,28 +28,59 @@ bool is_solid(ivec2 pos) {
 		return true;
 	}
 	int m = get_material(read_pixel(pos));
-	return m != AIR && m != FIRE;
+	return m != AIR;
 }
 
-// Compute material color from pixel data (same logic as original shader).
-vec3 material_color(vec4 data) {
+vec3 ember_color(float temp_norm, float flicker_amt) {
+	vec3 dark_red = vec3(0.3, 0.0, 0.0);
+	vec3 orange = vec3(0.9, 0.4, 0.0);
+	vec3 yellow_white = vec3(1.0, 0.9, 0.5);
+	
+	float adjusted = clamp(temp_norm + flicker_amt * 0.15, 0.0, 1.0);
+	if (adjusted < 0.85) {
+		float t = (adjusted - 0.7) / 0.15;
+		return mix(dark_red, orange, t);
+	} else {
+		float t = (adjusted - 0.85) / 0.15;
+		return mix(orange, yellow_white, t);
+	}
+}
+
+float flicker_amount(ivec2 pixel_pos, float time, float temp_norm) {
+	float px = float(pixel_pos.x);
+	float py = float(pixel_pos.y);
+	float a = sin(time * 8.0 + px * 0.05) * 0.5;
+	float b = sin(time * 12.0 + py * 0.03) * 0.3;
+	float c = sin(time * 15.0 + (px + py) * 0.04) * 0.2;
+	float flicker = a + b + c;
+	return flicker * (1.0 - temp_norm * 0.3);
+}
+
+vec3 material_color(vec4 data, ivec2 pixel_pos) {
 	int mat = get_material(data);
-	float health = data.g;
 	float temperature = data.b;
 
-	if (mat == 1) {
-		// Wood — tint toward red with temperature
+	if (mat == WOOD) {
 		vec3 wood_color = vec3(0.55, 0.35, 0.17);
-		vec3 hot_color = vec3(0.8, 0.2, 0.1);
-		return mix(wood_color, hot_color, temperature);
-	} else if (mat == 2) {
-		// Fire — orange to red based on health
-		vec3 fire_bright = vec3(1.0, 0.6, 0.1);
-		vec3 fire_dim = vec3(0.8, 0.1, 0.0);
-		return mix(fire_dim, fire_bright, health);
+		float temp_norm = temperature;
+		if (temperature > 180.0 / 255.0) {
+			float flicker = flicker_amount(pixel_pos, TIME, temp_norm);
+			return ember_color(temp_norm, flicker);
+		}
+		return wood_color;
 	}
-	// Fallback (unknown solid material)
+	if (mat == STONE) {
+		return vec3(0.5, 0.5, 0.5);
+	}
 	return vec3(1.0, 0.0, 1.0);
+}
+
+vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, ivec2 pixel_pos) {
+	vec2 tex_size = vec2(textureSize(material_textures, 0).xy);
+	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
+	float v = (float(depth - 1) + 0.5) / float(wall_height);
+	vec3 tex_color = texture(material_textures, vec3(u, v, float(material))).rgb;
+	return tex_color * material_color(src_data, pixel_pos);
 }
 
 // Check if any air pixel exists within euclidean distance 3 of pos.
@@ -77,13 +108,9 @@ void fragment() {
 	vec4 data = read_pixel(px);
 	int mat = get_material(data);
 
-	if (mat == FIRE) {
-		// Fire renders with its original color, not as a wall
-		COLOR = vec4(material_color(data), 1.0);
-	} else if (mat == AIR) {
+	if (mat == AIR) {
 		// --- Wall face check ---
 		// Scan upward on screen: due to Y-flip in read_pixel, "above on screen" is px.y + d.
-		ivec2 tex_size = textureSize(wall_texture, 0);
 		bool found_wall = false;
 		for (int d = 1; d <= wall_height; d++) {
 			if (found_wall) break;
@@ -91,13 +118,7 @@ void fragment() {
 			if (check_pos.y >= CHUNK_SIZE) break;
 			vec4 src_data = read_pixel(check_pos);
 			if (is_solid(check_pos)) {
-				// Found the solid pixel casting a wall face here.
-				// V stretches the texture to fill wall_height, not tex_size.y.
-				float u = (float(px.x % tex_size.x) + 0.5) / float(tex_size.x);
-				float v = (float(d - 1) + 0.5) / float(wall_height);
-				vec3 tex_color = texture(wall_texture, vec2(u, v)).rgb;
-				vec3 tint = material_color(src_data);
-				COLOR = vec4(tex_color * tint, 1.0);
+				COLOR = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
 				found_wall = true;
 			}
 		}
@@ -107,7 +128,7 @@ void fragment() {
 	} else {
 		// --- Solid pixel (wood etc.): wall top or black ---
 		if (near_air(px)) {
-			COLOR = vec4(material_color(data), 1.0);
+			COLOR = vec4(material_color(data, px), 1.0);
 		} else {
 			COLOR = vec4(0.0, 0.0, 0.0, 1.0);
 		}

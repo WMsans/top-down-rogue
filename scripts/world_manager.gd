@@ -5,6 +5,11 @@ const CHUNK_SIZE := 256
 const WORKGROUP_SIZE := 8
 const NUM_WORKGROUPS := CHUNK_SIZE / WORKGROUP_SIZE  # 32
 
+const MAT_AIR := 0
+const MAT_WOOD := 1
+const MAT_STONE := 2
+const MAX_TEMPERATURE := 255
+
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
 
@@ -17,7 +22,7 @@ var dummy_texture: RID  # 256x256 air texture for missing neighbors
 
 var render_shader: Shader
 var _gen_uniform_sets_to_free: Array[RID] = []
-var wall_texture: Texture2D = preload("res://textures/wall.png")
+var material_textures: Texture2DArray
 
 @onready var chunk_container: Node2D = $ChunkContainer
 @onready var camera: Camera2D = get_parent().get_node("Camera2D")
@@ -28,6 +33,16 @@ func _ready() -> void:
 	_init_shaders()
 	_init_dummy_texture()
 	render_shader = preload("res://shaders/render_chunk.gdshader")
+	_init_material_textures()
+
+
+func _init_material_textures() -> void:
+	var plank_img := Image.load_from_file("res://textures/PixelTextures/plank.png")
+	var stone_img := Image.load_from_file("res://textures/PixelTextures/stone.png")
+	var placeholder := TextureArrayBuilder.create_placeholder_image(plank_img.get_size(), Color.TRANSPARENT)
+
+	var images: Array[Image] = [placeholder, plank_img, stone_img]
+	material_textures = TextureArrayBuilder.build_from_images(images)
 
 
 func _exit_tree() -> void:
@@ -189,7 +204,7 @@ func _create_chunk(coord: Vector2i) -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = render_shader
 	mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
-	mat.set_shader_parameter("wall_texture", wall_texture)
+	mat.set_shader_parameter("material_textures", material_textures)
 	mat.set_shader_parameter("wall_height", 16)
 	chunk.mesh_instance.material = mat
 
@@ -277,10 +292,12 @@ func _run_simulation() -> void:
 	var push_even := PackedByteArray()
 	push_even.resize(16)
 	push_even.encode_s32(0, 0)
+	push_even.encode_s32(4, randi())
 
 	var push_odd := PackedByteArray()
 	push_odd.resize(16)
 	push_odd.encode_s32(0, 1)
+	push_odd.encode_s32(4, randi())
 
 	var compute_list := rd.compute_list_begin()
 
@@ -337,10 +354,10 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		var data := rd.texture_get_data(chunk.rd_texture, 0)
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
-			data[idx] = 2      # material = fire
-			data[idx + 1] = 255  # health = 255
-			data[idx + 2] = 255  # temperature = 255
-			data[idx + 3] = 0    # reserved
+			var material := data[idx]
+			if material != MAT_WOOD:
+				continue
+			data[idx + 2] = MAX_TEMPERATURE
 		rd.texture_update(chunk.rd_texture, 0, data)
 
 
