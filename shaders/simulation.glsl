@@ -23,6 +23,7 @@ const int IGNITION_TEMP = 180;
 const int FIRE_TEMP = 255;
 const int HEAT_DISSIPATION = 2;
 const int HEAT_SPREAD = 10;
+const float SPREAD_PROB_MAX = 0.7;
 
 uint hash(uint n) {
 	n = (n >> 16) ^ n;
@@ -82,24 +83,40 @@ void main() {
 	vec4 n_left = read_neighbor(pos + ivec2(-1, 0));
 	vec4 n_right = read_neighbor(pos + ivec2(1, 0));
 
-	// Accumulate random heat from each burning neighbor
+	// Accumulate random heat from each burning neighbor (with probability)
 	int heat_gain = 0;
 	uint base_rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed)));
 	if (is_burning(n_up)) {
+		int n_temp = get_temperature(n_up);
+		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 1u);
-		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		if (rng % 100 < uint(prob * 100.0)) {
+			heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		}
 	}
 	if (is_burning(n_down)) {
+		int n_temp = get_temperature(n_down);
+		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 2u);
-		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		if (rng % 100 < uint(prob * 100.0)) {
+			heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		}
 	}
 	if (is_burning(n_left)) {
+		int n_temp = get_temperature(n_left);
+		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 3u);
-		heat_gain += HEAT_SPREAD / 4 + int(rng % uint(HEAT_SPREAD));
+		if (rng % 100 < uint(prob * 100.0)) {
+			heat_gain += HEAT_SPREAD / 4 + int(rng % uint(HEAT_SPREAD));
+		}
 	}
 	if (is_burning(n_right)) {
+		int n_temp = get_temperature(n_right);
+		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 4u);
-		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		if (rng % 100 < uint(prob * 100.0)) {
+			heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		}
 	}
 
 	if (material == MAT_AIR) {
