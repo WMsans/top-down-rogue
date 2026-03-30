@@ -25,7 +25,11 @@ var _gen_uniform_sets_to_free: Array[RID] = []
 var material_textures: Texture2DArray
 
 @onready var chunk_container: Node2D = $ChunkContainer
-@onready var camera: Camera2D = get_parent().get_node("Camera2D")
+
+## The position used for chunk loading/unloading. Set by the player controller.
+var tracking_position: Vector2 = Vector2.ZERO
+## Reference to the shadow grid for dirty notifications. Set by the player controller.
+var shadow_grid: Node = null
 
 
 func _ready() -> void:
@@ -97,17 +101,18 @@ func _process(_delta: float) -> void:
 
 func _get_desired_chunks() -> Array[Vector2i]:
 	var vp_size := get_viewport().get_visible_rect().size
-	var cam_pos := camera.global_position
-	var cam_zoom := camera.zoom
+	# Use zoom from any Camera2D in the tree, default to 8x
+	var cam := get_viewport().get_camera_2d()
+	var cam_zoom := cam.zoom if cam else Vector2(8, 8)
 	var half_view := vp_size / (2.0 * cam_zoom)
 
 	var min_chunk := Vector2i(
-		floori((cam_pos.x - half_view.x) / CHUNK_SIZE) - 1,
-		floori((cam_pos.y - half_view.y) / CHUNK_SIZE) - 1
+		floori((tracking_position.x - half_view.x) / CHUNK_SIZE) - 1,
+		floori((tracking_position.y - half_view.y) / CHUNK_SIZE) - 1
 	)
 	var max_chunk := Vector2i(
-		floori((cam_pos.x + half_view.x) / CHUNK_SIZE) + 1,
-		floori((cam_pos.y + half_view.y) / CHUNK_SIZE) + 1
+		floori((tracking_position.x + half_view.x) / CHUNK_SIZE) + 1,
+		floori((tracking_position.y + half_view.y) / CHUNK_SIZE) + 1
 	)
 
 	var result: Array[Vector2i] = []
@@ -324,6 +329,15 @@ func _run_simulation() -> void:
 		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 
 	rd.compute_list_end()
+
+	# Notify shadow grid if any simulated chunk overlaps its bounds
+	if shadow_grid:
+		var grid_rect: Rect2i = shadow_grid.get_world_rect()
+		for coord in chunks:
+			var chunk_rect := Rect2i(coord * CHUNK_SIZE, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
+			if grid_rect.intersects(chunk_rect):
+				shadow_grid.mark_dirty()
+				break
 
 
 # --- Fire placement (called by InputHandler) ---
