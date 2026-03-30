@@ -422,3 +422,49 @@ func clear_all_chunks() -> void:
 
 func get_chunk_container() -> Node2D:
 	return chunk_container
+
+
+## Reads a square region of terrain pixel data centered on `center`.
+## Returns a PackedByteArray of size*size*4 bytes (RGBA per pixel).
+## Handles cross-chunk reads by sampling from adjacent chunks.
+func read_terrain_region(center: Vector2, size: int) -> PackedByteArray:
+	var result := PackedByteArray()
+	result.resize(size * size * 4)
+	result.fill(0)
+
+	var half := size / 2
+	var start_x := int(floor(center.x)) - half
+	var start_y := int(floor(center.y)) - half
+
+	# Cache chunk data reads to avoid reading the same chunk multiple times
+	var chunk_data_cache: Dictionary = {}  # Vector2i -> PackedByteArray
+
+	for py in range(size):
+		for px in range(size):
+			var wx := start_x + px
+			var wy := start_y + py
+
+			var chunk_coord := Vector2i(
+				floori(float(wx) / CHUNK_SIZE),
+				floori(float(wy) / CHUNK_SIZE)
+			)
+
+			if not chunks.has(chunk_coord):
+				continue  # result already filled with 0 (air)
+
+			if not chunk_data_cache.has(chunk_coord):
+				var chunk: Chunk = chunks[chunk_coord]
+				chunk_data_cache[chunk_coord] = rd.texture_get_data(chunk.rd_texture, 0)
+
+			var data: PackedByteArray = chunk_data_cache[chunk_coord]
+			var local_x := posmod(wx, CHUNK_SIZE)
+			var local_y := posmod(wy, CHUNK_SIZE)
+			var src_idx := (local_y * CHUNK_SIZE + local_x) * 4
+			var dst_idx := (py * size + px) * 4
+
+			result[dst_idx] = data[src_idx]        # R (material)
+			result[dst_idx + 1] = data[src_idx + 1] # G (health)
+			result[dst_idx + 2] = data[src_idx + 2] # B (temperature)
+			result[dst_idx + 3] = data[src_idx + 3] # A (reserved)
+
+	return result
