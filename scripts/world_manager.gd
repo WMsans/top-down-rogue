@@ -281,10 +281,12 @@ func _run_simulation() -> void:
 	var push_even := PackedByteArray()
 	push_even.resize(16)
 	push_even.encode_s32(0, 0)
+	push_even.encode_s32(4, randi())
 
 	var push_odd := PackedByteArray()
 	push_odd.resize(16)
 	push_odd.encode_s32(0, 1)
+	push_odd.encode_s32(4, randi())
 
 	var compute_list := rd.compute_list_begin()
 
