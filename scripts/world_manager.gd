@@ -422,3 +422,53 @@ func clear_all_chunks() -> void:
 
 func get_chunk_container() -> Node2D:
 	return chunk_container
+
+
+## Read material bytes for a rectangular world region from GPU chunk textures.
+## Returns a PackedByteArray of width*height bytes (one byte per pixel, material type).
+## Pixels in unloaded chunks are returned as 255 (solid).
+func read_region(region: Rect2i) -> PackedByteArray:
+	var width: int = region.size.x
+	var height: int = region.size.y
+	var result := PackedByteArray()
+	result.resize(width * height)
+	result.fill(255)  # Default: solid for unloaded areas
+
+	# Determine which chunks overlap this region
+	var min_chunk := Vector2i(
+		floori(float(region.position.x) / CHUNK_SIZE),
+		floori(float(region.position.y) / CHUNK_SIZE)
+	)
+	var max_chunk := Vector2i(
+		floori(float(region.end.x - 1) / CHUNK_SIZE),
+		floori(float(region.end.y - 1) / CHUNK_SIZE)
+	)
+
+	for cx in range(min_chunk.x, max_chunk.x + 1):
+		for cy in range(min_chunk.y, max_chunk.y + 1):
+			var chunk_coord := Vector2i(cx, cy)
+			if not chunks.has(chunk_coord):
+				continue
+
+			var chunk: Chunk = chunks[chunk_coord]
+			var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
+
+			# World-space origin of this chunk
+			var chunk_origin := chunk_coord * CHUNK_SIZE
+
+			# Overlap between the requested region and this chunk
+			var chunk_rect := Rect2i(chunk_origin, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
+			var overlap := region.intersection(chunk_rect)
+
+			for y in range(overlap.position.y, overlap.end.y):
+				for x in range(overlap.position.x, overlap.end.x):
+					var local_x: int = x - chunk_origin.x
+					var local_y: int = y - chunk_origin.y
+					var chunk_idx: int = (local_y * CHUNK_SIZE + local_x) * 4  # RGBA8
+					var material: int = chunk_data[chunk_idx]  # R channel = material type
+
+					var result_x: int = x - region.position.x
+					var result_y: int = y - region.position.y
+					result[result_y * width + result_x] = material
+
+	return result
