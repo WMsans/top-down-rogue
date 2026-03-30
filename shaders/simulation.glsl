@@ -11,7 +11,7 @@ layout(rgba8, set = 0, binding = 4) readonly uniform image2D neighbor_right;
 
 layout(push_constant, std430) uniform PushConstants {
 	int phase;
-	int _pad1;
+	int frame_seed;
 	int _pad2;
 	int _pad3;
 } pc;
