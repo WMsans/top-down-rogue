@@ -1,25 +1,20 @@
 class_name PlayerController
-extends Node2D
+extends CharacterBody2D
 
 const BODY_WIDTH := 8
 const BODY_HEIGHT := 12
 
 const ShadowGridScript := preload("res://scripts/shadow_grid.gd")
+const TerrainColliderScript := preload("res://scripts/terrain_collider.gd")
 
 @export var acceleration: float = 800.0
 @export var friction: float = 600.0
 @export var max_speed: float = 120.0
 
-var velocity: Vector2 = Vector2.ZERO
 var shadow_grid: Node
+var _terrain_collider: StaticBody2D
 
 @onready var _world_manager: Node2D = get_parent().get_node("WorldManager")
-
-## Collision state — available for gameplay mechanics.
-var is_on_floor: bool = false
-var is_on_wall_left: bool = false
-var is_on_wall_right: bool = false
-var is_on_ceiling: bool = false
 
 
 func _ready() -> void:
@@ -27,10 +22,33 @@ func _ready() -> void:
 	shadow_grid = ShadowGridScript.new()
 	shadow_grid.world_manager = _world_manager
 	add_child(shadow_grid)
+	shadow_grid.data_updated.connect(_on_terrain_data_updated)
+	print("PlayerController: Connected to shadow_grid.data_updated signal")
+
+	# Create terrain collider as sibling (child of Main)
+	_terrain_collider = TerrainColliderScript.new()
+	get_parent().call_deferred("add_child", _terrain_collider)
+	print("PlayerController: Created TerrainCollider")
+	print("  Player position: %s" % position)
+	print("  Player collision_layer: %d" % collision_layer)
+	print("  Player collision_mask: %d" % collision_mask)
+	print("  TerrainCollider parent: %s" % _terrain_collider.get_parent())
+	print("  TerrainCollider collision_layer: %d" % _terrain_collider.collision_layer)
+	print("  TerrainCollider collision_mask: %d" % _terrain_collider.collision_mask)
+	
+	# Get collision shapes
+	var player_shape = get_node("CollisionShape2D")
+	if player_shape:
+		print("  Player CollisionShape2D found, shape: %s" % player_shape.shape)
+		if player_shape.shape:
+			print("    Player shape size: %s" % player_shape.shape.size if player_shape.shape is RectangleShape2D else "N/A")
 
 	# Wire world manager to track this player
 	_world_manager.tracking_position = global_position
 	_world_manager.shadow_grid = shadow_grid
+
+	# Top-down movement: no floor/ceiling distinction
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 
 	# Wait one frame for chunks to generate, then find spawn and sync
 	await get_tree().process_frame
@@ -43,10 +61,32 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if shadow_grid == null:
 		return
+	
+	print("=== Player._physics_process ===")
+	print("  Player position: %s, global_position: %s" % [position, global_position])
+	print("  Player velocity before input: %s" % velocity)
+	
 	var input_dir := _get_input_direction()
+	print("  Input direction: %s" % input_dir)
+	
 	_apply_movement(input_dir, delta)
-	_move_and_collide(delta)
-	_update_contact_state()
+	print("  Velocity after movement: %s" % velocity)
+	
+	var velocity_before := velocity
+	move_and_slide()
+	var velocity_after := velocity
+	
+	print("  Velocity after move_and_slide: %s" % velocity_after)
+	print("  Is on floor: %s, wall: %s" % [is_on_floor(), is_on_wall()])
+	
+	# Debug: Check if collision is happening
+	if velocity_before.length_squared() > 0.001 and velocity_after.length_squared() < 0.001:
+		print("  COLLISION DETECTED! Velocity cleared")
+	elif velocity_before != velocity_after:
+		print("  COLLISION DETECTED! Velocity changed from %s to %s" % [velocity_before, velocity_after])
+	
+	_world_manager.tracking_position = global_position
+	shadow_grid.update_sync(Vector2i(int(floor(position.x)), int(floor(position.y))))
 
 
 func _get_input_direction() -> Vector2:
@@ -75,86 +115,21 @@ func _apply_movement(input_dir: Vector2, delta: float) -> void:
 		velocity = velocity.normalized() * max_speed
 
 
-func _move_and_collide(delta: float) -> void:
-	var half_w: float = float(BODY_WIDTH) / 2.0
-	var half_h: float = float(BODY_HEIGHT) / 2.0
-	var body_top: int = int(floor(position.y - half_h + 0.0001))
-
-	var new_x: float = position.x + velocity.x * delta
-	if velocity.x > 0:
-		var start_edge: float = position.x + half_w
-		var end_edge: float = new_x + half_w
-		var start_pixel: int = int(ceil(start_edge - 0.0001))
-		var end_pixel: int = int(ceil(end_edge - 0.0001))
-		for px in range(start_pixel, end_pixel + 1):
-			if _column_has_solid(px, body_top, BODY_HEIGHT):
-				new_x = float(px) - half_w - 0.0001
-				velocity.x = 0
-				break
-	elif velocity.x < 0:
-		var start_edge: float = position.x - half_w
-		var end_edge: float = new_x - half_w
-		var start_pixel: int = int(start_edge - 0.0001)
-		var end_pixel: int = int(end_edge - 0.0001)
-		for px in range(start_pixel, end_pixel - 1, -1):
-			if _column_has_solid(px, body_top, BODY_HEIGHT):
-				new_x = float(px) + 1.0 + half_w
-				velocity.x = 0
-				break
-
-	var body_left: int = int(floor(new_x - half_w + 0.0001))
-	var new_y: float = position.y + velocity.y * delta
-	if velocity.y > 0:
-		var start_edge: float = position.y + half_h
-		var end_edge: float = new_y + half_h
-		var start_pixel: int = int(ceil(start_edge - 0.0001))
-		var end_pixel: int = int(ceil(end_edge - 0.0001))
-		for py in range(start_pixel, end_pixel + 1):
-			if _row_has_solid(body_left, py, BODY_WIDTH):
-				new_y = float(py) - half_h - 0.0001
-				velocity.y = 0
-				break
-	elif velocity.y < 0:
-		var start_edge: float = position.y - half_h
-		var end_edge: float = new_y - half_h
-		var start_pixel: int = int(start_edge - 0.0001)
-		var end_pixel: int = int(end_edge - 0.0001)
-		for py in range(start_pixel, end_pixel - 1, -1):
-			if _row_has_solid(body_left, py, BODY_WIDTH):
-				new_y = float(py) + 1.0 + half_h
-				velocity.y = 0
-				break
-
-	position = Vector2(new_x, new_y)
-
-
-## Check if any pixel in a vertical column is solid.
-func _column_has_solid(world_x: int, world_y_start: int, height: int) -> bool:
-	for y in range(world_y_start, world_y_start + height):
-		if shadow_grid.is_solid(world_x, y):
-			return true
-	return false
-
-
-## Check if any pixel in a horizontal row is solid.
-func _row_has_solid(world_x_start: int, world_y: int, width: int) -> bool:
-	for x in range(world_x_start, world_x_start + width):
-		if shadow_grid.is_solid(x, world_y):
-			return true
-	return false
-
-
-## Sample adjacent pixels for contact state (available for future gameplay).
-func _update_contact_state() -> void:
-	var half_w: float = float(BODY_WIDTH) / 2.0
-	var half_h: float = float(BODY_HEIGHT) / 2.0
-	var body_left: int = int(floor(position.x - half_w + 0.0001))
-	var body_top: int = int(floor(position.y - half_h + 0.0001))
-
-	is_on_floor = _row_has_solid(body_left, body_top + BODY_HEIGHT, BODY_WIDTH)
-	is_on_ceiling = _row_has_solid(body_left, body_top - 1, BODY_WIDTH)
-	is_on_wall_left = _column_has_solid(body_left - 1, body_top, BODY_HEIGHT)
-	is_on_wall_right = _column_has_solid(body_left + BODY_WIDTH, body_top, BODY_HEIGHT)
-
-	_world_manager.tracking_position = global_position
-	shadow_grid.update_sync(Vector2i(int(floor(position.x)), int(floor(position.y))))
+func _on_terrain_data_updated() -> void:
+	print("=== PlayerController._on_terrain_data_updated ===")
+	if _terrain_collider == null:
+		print("  ERROR: _terrain_collider is null!")
+		return
+	if shadow_grid == null:
+		print("  ERROR: shadow_grid is null!")
+		return
+	
+	print("  shadow_grid._anchor: %s" % shadow_grid._anchor)
+	print("  shadow_grid.grid_size: %d" % shadow_grid.grid_size)
+	print("  shadow_grid._data size: %d" % shadow_grid._data.size())
+	
+	_terrain_collider.rebuild(
+		shadow_grid._data,
+		shadow_grid._anchor,
+		shadow_grid.grid_size
+	)

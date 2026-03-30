@@ -7,6 +7,9 @@ extends Node
 ## Distance from grid center before re-centering triggers a sync.
 const RECENTER_THRESHOLD := 32
 
+## Emitted when grid data is updated (after readback apply or force sync).
+signal data_updated
+
 ## Material constants (must match world_manager.gd / shaders)
 const MAT_AIR := 0
 
@@ -77,7 +80,11 @@ func set_center(center: Vector2i) -> void:
 
 ## Replace the grid data with new readback data. Called after GPU readback completes.
 func apply_data(data: PackedByteArray) -> void:
+	print("=== ShadowGrid.apply_data ===")
+	print("  data size: %d" % data.size())
 	_data = data
+	data_updated.emit()
+	print("  Emitted data_updated signal")
 
 
 ## Returns the world-space Rect2i that this grid currently covers.
@@ -122,10 +129,16 @@ func mark_dirty() -> void:
 
 ## Force an immediate sync (used for initial spawn).
 func force_sync(center: Vector2i) -> void:
+	print("=== ShadowGrid.force_sync ===")
+	print("  center: %s" % center)
 	if world_manager == null:
+		print("  ERROR: world_manager is null!")
 		return
 	set_center(center)
 	var data: PackedByteArray = world_manager.read_region(get_world_rect())
-	apply_data(data)
+	print("  Read region data size: %d" % data.size())
+	_data = data
 	_frames_since_last_sync = 0
 	_dirty = false
+	data_updated.emit()
+	print("  Emitted data_updated signal")
