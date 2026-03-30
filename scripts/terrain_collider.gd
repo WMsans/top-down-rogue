@@ -31,6 +31,10 @@ func rebuild(data: PackedByteArray, anchor: Vector2i, grid_size: int) -> void:
 
 	for sy in samples_h:
 		for sx in samples_w:
+			# Force boundary ring to air so all marching-squares contours close
+			if sx == 0 or sx == samples_w - 1 or sy == 0 or sy == samples_h - 1:
+				samples[sy * samples_w + sx] = 0
+				continue
 			var gx: int = mini(sx * CELL_SIZE, grid_size - 1)
 			var gy: int = mini(sy * CELL_SIZE, grid_size - 1)
 			samples[sy * samples_w + sx] = 1 if data[gy * grid_size + gx] != 0 else 0
@@ -73,10 +77,10 @@ func rebuild(data: PackedByteArray, anchor: Vector2i, grid_size: int) -> void:
 		var poly_points := PackedVector2Array()
 		var current: Vector2i = start_point
 		var prev: Vector2i = Vector2i(-999999, -999999)
+		var closed := false
 
 		while true:
 			visited[current] = true
-# Use local coordinates relative to TerrainCollider's position (anchor)
 			poly_points.append(Vector2(current.x, current.y))
 
 			var cur_neighbors: Array = adj[current]
@@ -91,13 +95,18 @@ func rebuild(data: PackedByteArray, anchor: Vector2i, grid_size: int) -> void:
 					next = n
 					break
 
-			if next == Vector2i(-999999, -999999) or next == start_point:
+			if next == start_point:
+				closed = true
+				break
+			if next == Vector2i(-999999, -999999):
 				break
 
 			prev = current
 			current = next
 
-		if poly_points.size() >= 3:
+		# Only emit segments for closed loops — open chains would create
+		# long connecting lines from the last point back to the first.
+		if poly_points.size() >= 3 and closed:
 			poly_points = _simplify_closed_polygon(poly_points, DP_EPSILON)
 			# Convert closed polyline to segment pairs for ConcavePolygonShape2D
 			for i in poly_points.size():
