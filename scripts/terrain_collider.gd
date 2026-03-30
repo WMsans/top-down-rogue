@@ -17,7 +17,7 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	var player_pos := get_parent().global_position  # Player's position
+	var player_pos: Vector2 = (get_parent() as Node2D).global_position
 
 	if player_pos.distance_to(_last_rebuild_center) < REBUILD_THRESHOLD:
 		return
@@ -32,7 +32,7 @@ func _rebuild_collision(center: Vector2) -> void:
 		child.queue_free()
 
 	# Read terrain region from WorldManager
-	var region_data := _world_manager.read_terrain_region(center, READBACK_SIZE)
+	var region_data: PackedByteArray = _world_manager.read_terrain_region(center, READBACK_SIZE)
 	if region_data.is_empty():
 		return
 
