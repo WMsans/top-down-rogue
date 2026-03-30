@@ -76,41 +76,54 @@ func _apply_movement(input_dir: Vector2, delta: float) -> void:
 
 
 func _move_and_collide(delta: float) -> void:
-	# Player origin is center of the body. Compute top-left from position.
-	var half_w: int = BODY_WIDTH / 2   # 4
-	var half_h: int = BODY_HEIGHT / 2  # 6
+	var half_w: float = float(BODY_WIDTH) / 2.0
+	var half_h: float = float(BODY_HEIGHT) / 2.0
+	var body_top: int = int(floor(position.y - half_h + 0.0001))
 
-	# --- Resolve X axis ---
 	var new_x: float = position.x + velocity.x * delta
-	var test_left: int = int(floor(new_x)) - half_w
-	var test_top: int = int(floor(position.y)) - half_h
 	if velocity.x > 0:
-		# Check right edge
-		var edge_x: int = test_left + BODY_WIDTH  # one pixel past right side
-		if _column_has_solid(edge_x, test_top, BODY_HEIGHT):
-			new_x = float(edge_x - BODY_WIDTH + half_w) - 0.001
-			velocity.x = 0
+		var start_edge: float = position.x + half_w
+		var end_edge: float = new_x + half_w
+		var start_pixel: int = int(ceil(start_edge - 0.0001))
+		var end_pixel: int = int(ceil(end_edge - 0.0001))
+		for px in range(start_pixel, end_pixel + 1):
+			if _column_has_solid(px, body_top, BODY_HEIGHT):
+				new_x = float(px) - half_w - 0.0001
+				velocity.x = 0
+				break
 	elif velocity.x < 0:
-		# Check left edge
-		if _column_has_solid(test_left, test_top, BODY_HEIGHT):
-			new_x = float(test_left + 1 + half_w)
-			velocity.x = 0
+		var start_edge: float = position.x - half_w
+		var end_edge: float = new_x - half_w
+		var start_pixel: int = int(start_edge - 0.0001)
+		var end_pixel: int = int(end_edge - 0.0001)
+		for px in range(start_pixel, end_pixel - 1, -1):
+			if _column_has_solid(px, body_top, BODY_HEIGHT):
+				new_x = float(px) + 1.0 + half_w
+				velocity.x = 0
+				break
 
-	# --- Resolve Y axis ---
+	var body_left: int = int(floor(new_x - half_w + 0.0001))
 	var new_y: float = position.y + velocity.y * delta
-	test_left = int(floor(new_x)) - half_w
-	var test_top_y: int = int(floor(new_y)) - half_h
 	if velocity.y > 0:
-		# Check bottom edge
-		var edge_y: int = test_top_y + BODY_HEIGHT
-		if _row_has_solid(test_left, edge_y, BODY_WIDTH):
-			new_y = float(edge_y - BODY_HEIGHT + half_h) - 0.001
-			velocity.y = 0
+		var start_edge: float = position.y + half_h
+		var end_edge: float = new_y + half_h
+		var start_pixel: int = int(ceil(start_edge - 0.0001))
+		var end_pixel: int = int(ceil(end_edge - 0.0001))
+		for py in range(start_pixel, end_pixel + 1):
+			if _row_has_solid(body_left, py, BODY_WIDTH):
+				new_y = float(py) - half_h - 0.0001
+				velocity.y = 0
+				break
 	elif velocity.y < 0:
-		# Check top edge
-		if _row_has_solid(test_left, test_top_y, BODY_WIDTH):
-			new_y = float(test_top_y + 1 + half_h)
-			velocity.y = 0
+		var start_edge: float = position.y - half_h
+		var end_edge: float = new_y - half_h
+		var start_pixel: int = int(start_edge - 0.0001)
+		var end_pixel: int = int(end_edge - 0.0001)
+		for py in range(start_pixel, end_pixel - 1, -1):
+			if _row_has_solid(body_left, py, BODY_WIDTH):
+				new_y = float(py) + 1.0 + half_h
+				velocity.y = 0
+				break
 
 	position = Vector2(new_x, new_y)
 
@@ -133,17 +146,15 @@ func _row_has_solid(world_x_start: int, world_y: int, width: int) -> bool:
 
 ## Sample adjacent pixels for contact state (available for future gameplay).
 func _update_contact_state() -> void:
-	var half_w: int = BODY_WIDTH / 2
-	var half_h: int = BODY_HEIGHT / 2
-	var left: int = int(floor(position.x)) - half_w
-	var top: int = int(floor(position.y)) - half_h
+	var half_w: float = float(BODY_WIDTH) / 2.0
+	var half_h: float = float(BODY_HEIGHT) / 2.0
+	var body_left: int = int(floor(position.x - half_w + 0.0001))
+	var body_top: int = int(floor(position.y - half_h + 0.0001))
 
-	is_on_floor = _row_has_solid(left, top + BODY_HEIGHT, BODY_WIDTH)
-	is_on_ceiling = _row_has_solid(left, top - 1, BODY_WIDTH)
-	is_on_wall_left = _column_has_solid(left - 1, top, BODY_HEIGHT)
-	is_on_wall_right = _column_has_solid(left + BODY_WIDTH, top, BODY_HEIGHT)
+	is_on_floor = _row_has_solid(body_left, body_top + BODY_HEIGHT, BODY_WIDTH)
+	is_on_ceiling = _row_has_solid(body_left, body_top - 1, BODY_WIDTH)
+	is_on_wall_left = _column_has_solid(body_left - 1, body_top, BODY_HEIGHT)
+	is_on_wall_right = _column_has_solid(body_left + BODY_WIDTH, body_top, BODY_HEIGHT)
 
-	# Update world manager tracking position for chunk loading
 	_world_manager.tracking_position = global_position
-	# Update shadow grid sync
 	shadow_grid.update_sync(Vector2i(int(floor(position.x)), int(floor(position.y))))
