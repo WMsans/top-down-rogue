@@ -4,12 +4,14 @@ extends Node2D
 const BODY_WIDTH := 8
 const BODY_HEIGHT := 12
 
+const ShadowGridScript := preload("res://scripts/shadow_grid.gd")
+
 @export var acceleration: float = 800.0
 @export var friction: float = 600.0
 @export var max_speed: float = 120.0
 
 var velocity: Vector2 = Vector2.ZERO
-var shadow_grid: ShadowGrid
+var shadow_grid: Node
 
 @onready var _world_manager: Node2D = get_parent().get_node("WorldManager")
 
@@ -22,7 +24,7 @@ var is_on_ceiling: bool = false
 
 func _ready() -> void:
 	# Create and configure the shadow grid
-	shadow_grid = ShadowGrid.new()
+	shadow_grid = ShadowGridScript.new()
 	shadow_grid.world_manager = _world_manager
 	add_child(shadow_grid)
 
@@ -33,7 +35,7 @@ func _ready() -> void:
 	# Wait one frame for chunks to generate, then find spawn and sync
 	await get_tree().process_frame
 	await get_tree().process_frame
-	var spawn_pos := _world_manager.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
+	var spawn_pos: Vector2i = _world_manager.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	shadow_grid.force_sync(Vector2i(position))
 
