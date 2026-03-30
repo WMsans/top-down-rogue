@@ -468,3 +468,48 @@ func read_terrain_region(center: Vector2, size: int) -> PackedByteArray:
 			result[dst_idx + 3] = data[src_idx + 3] # A (reserved)
 
 	return result
+
+
+## Finds a valid spawn position in the center chunk (0,0).
+## Searches outward from the chunk center for a 12x12 air pocket (fits 10x10 player with margin).
+func find_spawn_position() -> Vector2:
+	var chunk_coord := Vector2i(0, 0)
+	if not chunks.has(chunk_coord):
+		push_warning("Center chunk not loaded, spawning at origin")
+		return Vector2.ZERO
+
+	var chunk: Chunk = chunks[chunk_coord]
+	var data := rd.texture_get_data(chunk.rd_texture, 0)
+	var pocket_size := 12  # pixels — must be fully air
+
+	# Spiral search outward from chunk center
+	var cx := CHUNK_SIZE / 2
+	var cy := CHUNK_SIZE / 2
+
+	for radius in range(0, CHUNK_SIZE / 2):
+		for dy in range(-radius, radius + 1):
+			for dx in range(-radius, radius + 1):
+				if abs(dx) != radius and abs(dy) != radius:
+					continue  # only check perimeter of this radius ring
+				var sx := cx + dx
+				var sy := cy + dy
+				if sx < 0 or sy < 0 or sx + pocket_size >= CHUNK_SIZE or sy + pocket_size >= CHUNK_SIZE:
+					continue
+				if _is_air_pocket(data, sx, sy, pocket_size):
+					# Return world position at center of pocket
+					return Vector2(
+						chunk_coord.x * CHUNK_SIZE + sx + pocket_size / 2.0,
+						chunk_coord.y * CHUNK_SIZE + sy + pocket_size / 2.0
+					)
+
+	push_warning("No valid spawn found, spawning at chunk center")
+	return Vector2(cx, cy)
+
+
+func _is_air_pocket(data: PackedByteArray, sx: int, sy: int, pocket_size: int) -> bool:
+	for py in range(pocket_size):
+		for px in range(pocket_size):
+			var idx := ((sy + py) * CHUNK_SIZE + (sx + px)) * 4
+			if data[idx] != MAT_AIR:
+				return false
+	return true
