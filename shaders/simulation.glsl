@@ -95,11 +95,11 @@ void main() {
 	}
 	if (is_burning(n_left)) {
 		uint rng = hash(base_rng ^ 3u);
-		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		heat_gain += HEAT_SPREAD / 4 + int(rng % uint(HEAT_SPREAD));
 	}
 	if (is_burning(n_right)) {
 		uint rng = hash(base_rng ^ 4u);
-		heat_gain += HEAT_SPREAD / 4 + int(rng % uint(HEAT_SPREAD));
+		heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
 	}
 
 	if (material == MAT_AIR) {
