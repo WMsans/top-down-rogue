@@ -11,11 +11,31 @@ const BODY_HEIGHT := 12
 var velocity: Vector2 = Vector2.ZERO
 var shadow_grid: ShadowGrid
 
+@onready var _world_manager: Node2D = get_parent().get_node("WorldManager")
+
 ## Collision state — available for gameplay mechanics.
 var is_on_floor: bool = false
 var is_on_wall_left: bool = false
 var is_on_wall_right: bool = false
 var is_on_ceiling: bool = false
+
+
+func _ready() -> void:
+	# Create and configure the shadow grid
+	shadow_grid = ShadowGrid.new()
+	shadow_grid.world_manager = _world_manager
+	add_child(shadow_grid)
+
+	# Wire world manager to track this player
+	_world_manager.tracking_position = global_position
+	_world_manager.shadow_grid = shadow_grid
+
+	# Wait one frame for chunks to generate, then find spawn and sync
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var spawn_pos := _world_manager.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
+	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
+	shadow_grid.force_sync(Vector2i(position))
 
 
 func _physics_process(delta: float) -> void:
@@ -120,3 +140,8 @@ func _update_contact_state() -> void:
 	is_on_ceiling = _row_has_solid(left, top - 1, BODY_WIDTH)
 	is_on_wall_left = _column_has_solid(left - 1, top, BODY_HEIGHT)
 	is_on_wall_right = _column_has_solid(left + BODY_WIDTH, top, BODY_HEIGHT)
+
+	# Update world manager tracking position for chunk loading
+	_world_manager.tracking_position = global_position
+	# Update shadow grid sync
+	shadow_grid.update_sync(Vector2i(int(floor(position.x)), int(floor(position.y))))
