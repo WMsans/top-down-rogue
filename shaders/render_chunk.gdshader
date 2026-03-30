@@ -3,7 +3,6 @@ shader_type canvas_item;
 uniform sampler2D chunk_data : filter_nearest;
 uniform sampler2D wall_texture : filter_nearest;
 uniform int wall_height = 16;
-uniform float TIME;
 
 const int CHUNK_SIZE = 256;
 const int AIR = 0;
