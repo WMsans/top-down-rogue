@@ -197,11 +197,16 @@ static func _point_to_segment_distance(point: Vector2, seg_start: Vector2, seg_e
 	return point.distance_to(projection)
 
 
+## Build collision shape from pre-computed segment vertices.
+## Segments must contain an even number of vertices (pairs of endpoints).
+## Returns the created CollisionShape2D, or null if insufficient segments.
 static func build_from_segments(
 	segments: PackedVector2Array,
 	static_body: StaticBody2D,
 	world_offset: Vector2i
 ) -> CollisionShape2D:
+	if segments.size() % 2 != 0:
+		return null
 	if segments.size() < 4:
 		return null
 
