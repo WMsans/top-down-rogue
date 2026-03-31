@@ -1,5 +1,4 @@
 class_name TerrainCollider
-extends StaticBody2D
 
 ## Cell size for marching squares (in pixels). Larger = fewer polygons but less detail.
 const CELL_SIZE := 2
@@ -7,43 +6,27 @@ const CELL_SIZE := 2
 ## Douglas-Peucker simplification tolerance (in pixels).
 const DP_EPSILON := 0.8
 
-var _collision_shape: CollisionShape2D
 
-
-## Rebuild collision segments from raw shadow grid data.
-## Uses ConcavePolygonShape2D (line segments) to form wall boundaries.
-func rebuild(data: PackedByteArray, anchor: Vector2i, grid_size: int) -> void:
-	# Position this StaticBody2D at the anchor point so collision shapes
-	# can be in local coordinates (relative to this node's position)
-	position = Vector2(anchor.x, anchor.y)
-	
-	print("=== TerrainCollider.rebuild ===")
-	print("  anchor: %s" % anchor)
-	print("  grid_size: %d" % grid_size)
-	print("  data size: %d" % data.size())
-	print("  data sample (first 10 bytes): %s" % [data.slice(0, 10)])
-	
-	# Build sample grid at CELL_SIZE intervals
-	var samples_w: int = grid_size / CELL_SIZE + 1
-	var samples_h: int = grid_size / CELL_SIZE + 1
+## Build collision shape from material data and attach to a StaticBody2D.
+## Returns the created CollisionShape2D, or null if no segments generated.
+static func build_collision(data: PackedByteArray, size: int, static_body: StaticBody2D, world_offset: Vector2i) -> CollisionShape2D:
+	var samples_w: int = size / CELL_SIZE + 1
+	var samples_h: int = size / CELL_SIZE + 1
 	var samples := PackedByteArray()
 	samples.resize(samples_w * samples_h)
 
 	for sy in samples_h:
 		for sx in samples_w:
-			# Force boundary ring to air so all marching-squares contours close
 			if sx == 0 or sx == samples_w - 1 or sy == 0 or sy == samples_h - 1:
 				samples[sy * samples_w + sx] = 0
 				continue
-			var gx: int = mini(sx * CELL_SIZE, grid_size - 1)
-			var gy: int = mini(sy * CELL_SIZE, grid_size - 1)
-			samples[sy * samples_w + sx] = 1 if data[gy * grid_size + gx] != 0 else 0
+			var gx: int = mini(sx * CELL_SIZE, size - 1)
+			var gy: int = mini(sy * CELL_SIZE, size - 1)
+			samples[sy * samples_w + sx] = 1 if data[gy * size + gx] != 0 else 0
 
-	# Marching squares: generate edge segments and build adjacency graph.
-	# Each node has degree exactly 2, forming disjoint closed loops.
 	var cells_w: int = samples_w - 1
 	var cells_h: int = samples_h - 1
-	var adj: Dictionary = {}  # Vector2i → Array[Vector2i]
+	var adj: Dictionary = {}
 
 	for cy in cells_h:
 		for cx in cells_w:
@@ -63,7 +46,6 @@ func rebuild(data: PackedByteArray, anchor: Vector2i, grid_size: int) -> void:
 				adj[p1].append(p2)
 				adj[p2].append(p1)
 
-	# Trace closed polylines from adjacency graph, simplify, then convert to segments
 	var visited: Dictionary = {}
 	var all_segments := PackedVector2Array()
 
@@ -104,44 +86,23 @@ func rebuild(data: PackedByteArray, anchor: Vector2i, grid_size: int) -> void:
 			prev = current
 			current = next
 
-		# Only emit segments for closed loops — open chains would create
-		# long connecting lines from the last point back to the first.
 		if poly_points.size() >= 3 and closed:
 			poly_points = _simplify_closed_polygon(poly_points, DP_EPSILON)
-			# Convert closed polyline to segment pairs for ConcavePolygonShape2D
 			for i in poly_points.size():
 				all_segments.append(poly_points[i])
 				all_segments.append(poly_points[(i + 1) % poly_points.size()])
 
-	# Create or update the single ConcavePolygonShape2D
-	print("  Total segments generated: %d (total points: %d)" % [all_segments.size() / 2, all_segments.size()])
-	
 	if all_segments.size() >= 4:
 		var shape := ConcavePolygonShape2D.new()
 		shape.segments = all_segments
-		if _collision_shape == null:
-			_collision_shape = CollisionShape2D.new()
-			add_child(_collision_shape)
-			print("  Created new CollisionShape2D node")
-		_collision_shape.shape = shape
-		print("  Collision shape created: %d segments" % (all_segments.size() / 2))
-		print("  Shape segments count: %d" % (shape.segments.size() / 2))
-		print("  TerrainCollider position: %s" % position)
-		print("  TerrainCollider global_position: %s" % global_position)
-		print("  TerrainCollider collision_layer: %d" % collision_layer)
-		print("  TerrainCollider collision_mask: %d" % collision_mask)
-		print("  First few segment points: %s" % [all_segments.slice(0, 6)])
-		print("  First 2 segments world coords: (%s, %s), (%s, %s)" % [all_segments[0] + position, all_segments[1] + position, all_segments[2] + position, all_segments[3] + position])
-	elif _collision_shape != null:
-		_collision_shape.shape = null
-		print("  No segments, cleared collision shape")
-	else:
-		print("  WARNING: No segments generated at all!")
+		var collision_shape := CollisionShape2D.new()
+		collision_shape.shape = shape
+		static_body.position = Vector2(world_offset.x, world_offset.y)
+		return collision_shape
+	return null
 
 
-## Marching squares segment lookup.
-## Returns array of [edge_a, edge_b] pairs. Edges: 0=top, 1=right, 2=bottom, 3=left.
-func _get_segments(case_idx: int) -> Array:
+static func _get_segments(case_idx: int) -> Array:
 	match case_idx:
 		1: return [[3, 2]]
 		2: return [[2, 1]]
@@ -160,8 +121,7 @@ func _get_segments(case_idx: int) -> Array:
 		_: return []
 
 
-## Edge midpoint position in local grid coordinates.
-func _edge_point(cx: int, cy: int, edge: int) -> Vector2i:
+static func _edge_point(cx: int, cy: int, edge: int) -> Vector2i:
 	var half: int = CELL_SIZE / 2
 	match edge:
 		0: return Vector2i(cx * CELL_SIZE + half, cy * CELL_SIZE)
@@ -171,9 +131,7 @@ func _edge_point(cx: int, cy: int, edge: int) -> Vector2i:
 	return Vector2i.ZERO
 
 
-## Simplify a closed polygon using Douglas-Peucker.
-## Splits at two opposing vertices, simplifies each half, recombines.
-func _simplify_closed_polygon(points: PackedVector2Array, epsilon: float) -> PackedVector2Array:
+static func _simplify_closed_polygon(points: PackedVector2Array, epsilon: float) -> PackedVector2Array:
 	var n: int = points.size()
 	if n <= 4:
 		return points
@@ -198,8 +156,7 @@ func _simplify_closed_polygon(points: PackedVector2Array, epsilon: float) -> Pac
 	return result
 
 
-## Standard Douglas-Peucker simplification for an open polyline.
-func _douglas_peucker(points: PackedVector2Array, epsilon: float) -> PackedVector2Array:
+static func _douglas_peucker(points: PackedVector2Array, epsilon: float) -> PackedVector2Array:
 	if points.size() <= 2:
 		return points
 
@@ -230,8 +187,7 @@ func _douglas_peucker(points: PackedVector2Array, epsilon: float) -> PackedVecto
 		return result
 
 
-## Distance from a point to a line segment.
-func _point_to_segment_distance(point: Vector2, seg_start: Vector2, seg_end: Vector2) -> float:
+static func _point_to_segment_distance(point: Vector2, seg_start: Vector2, seg_end: Vector2) -> float:
 	var line: Vector2 = seg_end - seg_start
 	var len_sq: float = line.length_squared()
 	if len_sq < 0.0001:

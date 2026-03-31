@@ -13,18 +13,18 @@ const MAX_TEMPERATURE := 255
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
 
-# Shader resources
 var gen_shader: RID
 var gen_pipeline: RID
 var sim_shader: RID
 var sim_pipeline: RID
-var dummy_texture: RID  # 256x256 air texture for missing neighbors
+var dummy_texture: RID
 
 var render_shader: Shader
 var _gen_uniform_sets_to_free: Array[RID] = []
 var material_textures: Texture2DArray
 
 @onready var chunk_container: Node2D = $ChunkContainer
+var collision_container: Node2D
 
 ## The position used for chunk loading/unloading. Set by the player controller.
 var tracking_position: Vector2 = Vector2.ZERO
@@ -38,6 +38,10 @@ func _ready() -> void:
 	_init_dummy_texture()
 	render_shader = preload("res://shaders/render_chunk.gdshader")
 	_init_material_textures()
+	
+	collision_container = Node2D.new()
+	collision_container.name = "CollisionContainer"
+	add_child(collision_container)
 
 
 func _init_material_textures() -> void:
@@ -95,6 +99,7 @@ func _process(_delta: float) -> void:
 		return
 	_update_chunks()
 	_run_simulation()
+	_rebuild_dirty_collisions()
 
 
 # --- Chunk lifecycle ---
@@ -182,7 +187,6 @@ func _create_chunk(coord: Vector2i) -> void:
 	var chunk := Chunk.new()
 	chunk.coord = coord
 
-	# Create RD texture
 	var tf := RDTextureFormat.new()
 	tf.width = CHUNK_SIZE
 	tf.height = CHUNK_SIZE
@@ -195,11 +199,9 @@ func _create_chunk(coord: Vector2i) -> void:
 	)
 	chunk.rd_texture = rd.texture_create(tf, RDTextureView.new())
 
-	# Create Texture2DRD for rendering
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
 
-	# Create MeshInstance2D with QuadMesh
 	chunk.mesh_instance = MeshInstance2D.new()
 	var quad := QuadMesh.new()
 	quad.size = Vector2(CHUNK_SIZE, CHUNK_SIZE)
@@ -214,6 +216,13 @@ func _create_chunk(coord: Vector2i) -> void:
 	chunk.mesh_instance.material = mat
 
 	chunk_container.add_child(chunk.mesh_instance)
+
+	chunk.static_body = StaticBody2D.new()
+	chunk.static_body.collision_layer = 1
+	chunk.static_body.collision_mask = 0
+	collision_container.add_child(chunk.static_body)
+	chunk.collision_dirty = true
+
 	chunks[coord] = chunk
 
 
@@ -226,6 +235,8 @@ func _unload_chunk(coord: Vector2i) -> void:
 func _free_chunk_resources(chunk: Chunk) -> void:
 	if chunk.mesh_instance and is_instance_valid(chunk.mesh_instance):
 		chunk.mesh_instance.queue_free()
+	if chunk.static_body and is_instance_valid(chunk.static_body):
+		chunk.static_body.queue_free()
 	if chunk.sim_uniform_set.is_valid():
 		rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
@@ -340,6 +351,34 @@ func _run_simulation() -> void:
 				break
 
 
+func _rebuild_dirty_collisions() -> void:
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		if not chunk.collision_dirty:
+			continue
+		_rebuild_chunk_collision(chunk)
+
+
+func _rebuild_chunk_collision(chunk: Chunk) -> void:
+	chunk.collision_dirty = false
+	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
+	var material_data := PackedByteArray()
+	material_data.resize(CHUNK_SIZE * CHUNK_SIZE)
+	for y in CHUNK_SIZE:
+		for x in CHUNK_SIZE:
+			var src_idx := (y * CHUNK_SIZE + x) * 4
+			material_data[y * CHUNK_SIZE + x] = chunk_data[src_idx]
+
+	var world_offset := chunk.coord * CHUNK_SIZE
+	if chunk.static_body.get_child_count() > 0:
+		for child in chunk.static_body.get_children():
+			child.queue_free()
+
+	var collision_shape := TerrainCollider.build_collision(material_data, CHUNK_SIZE, chunk.static_body, world_offset)
+	if collision_shape != null:
+		chunk.static_body.add_child(collision_shape)
+
+
 # --- Fire placement (called by InputHandler) ---
 
 func place_fire(world_pos: Vector2, radius: float) -> void:
@@ -366,13 +405,17 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 	for chunk_coord in affected:
 		var chunk: Chunk = chunks[chunk_coord]
 		var data := rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
 			var material := data[idx]
 			if material != MAT_WOOD:
 				continue
 			data[idx + 2] = MAX_TEMPERATURE
-		rd.texture_update(chunk.rd_texture, 0, data)
+			modified = true
+		if modified:
+			rd.texture_update(chunk.rd_texture, 0, data)
+			chunk.collision_dirty = true
 
 
 # --- Public API for debug overlay ---
