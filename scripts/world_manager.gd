@@ -18,6 +18,9 @@ var gen_shader: RID
 var gen_pipeline: RID
 var sim_shader: RID
 var sim_pipeline: RID
+var collider_shader: RID
+var collider_pipeline: RID
+var collider_storage_buffer: RID
 var dummy_texture: RID
 
 var render_shader: Shader
@@ -37,6 +40,7 @@ func _ready() -> void:
 	rd = RenderingServer.get_rendering_device()
 	_init_shaders()
 	_init_dummy_texture()
+	_init_collider_storage_buffer()
 	render_shader = preload("res://shaders/render_chunk.gdshader")
 	_init_material_textures()
 	
@@ -61,6 +65,8 @@ func _exit_tree() -> void:
 	chunks.clear()
 	if dummy_texture.is_valid():
 		rd.free_rid(dummy_texture)
+	if collider_storage_buffer.is_valid():
+		rd.free_rid(collider_storage_buffer)
 	if gen_pipeline.is_valid():
 		rd.free_rid(gen_pipeline)
 	if gen_shader.is_valid():
@@ -69,6 +75,10 @@ func _exit_tree() -> void:
 		rd.free_rid(sim_pipeline)
 	if sim_shader.is_valid():
 		rd.free_rid(sim_shader)
+	if collider_pipeline.is_valid():
+		rd.free_rid(collider_pipeline)
+	if collider_shader.is_valid():
+		rd.free_rid(collider_shader)
 
 
 func _init_shaders() -> void:
@@ -82,6 +92,11 @@ func _init_shaders() -> void:
 	sim_shader = rd.shader_create_from_spirv(sim_spirv)
 	sim_pipeline = rd.compute_pipeline_create(sim_shader)
 
+	var collider_file: RDShaderFile = load("res://shaders/collider.glsl")
+	var collider_spirv := collider_file.get_spirv()
+	collider_shader = rd.shader_create_from_spirv(collider_spirv)
+	collider_pipeline = rd.compute_pipeline_create(collider_shader)
+
 
 func _init_dummy_texture() -> void:
 	var tf := RDTextureFormat.new()
@@ -93,6 +108,15 @@ func _init_dummy_texture() -> void:
 	data.resize(CHUNK_SIZE * CHUNK_SIZE * 4)
 	data.fill(0)
 	dummy_texture = rd.texture_create(tf, RDTextureView.new(), [data])
+
+
+func _init_collider_storage_buffer() -> void:
+	var max_segments := 4096
+	var buffer_size := (1 + max_segments * 4) * 4
+	var bf := RDBufferFormat.new()
+	bf.usage_bits = RenderingDevice.STORAGE_BUFFER_USAGE_READ_WRITE
+	bf.buffer_size = buffer_size
+	collider_storage_buffer = rd.storage_buffer_create(bf)
 
 
 func _process(_delta: float) -> void:
