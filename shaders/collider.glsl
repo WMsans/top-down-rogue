@@ -4,7 +4,10 @@
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(set = 0, binding = 0, rgba8ui) uniform readonly uimage2D terrain_texture;
-layout(set = 0, binding = 1, r32ui) uniform uimage2D segment_buffer;
+layout(std430, binding = 1) buffer SegmentBuffer {
+	uint count;
+	uint data[];
+} segment_buffer;
 
 const uint CELL_SIZE = 2u;
 const uint CHUNK_SIZE = 256u;
@@ -141,13 +144,13 @@ void main() {
 
 	// Atomically reserve space in the buffer and write segments
 	for (uint s = 0u; s < num_segments; s++) {
-		uint idx = imageAtomicAdd(segment_buffer, ivec2(0, 0), 4u);
+		uint idx = atomicAdd(segment_buffer.count, 4u);
 		if (idx + 4u > MAX_BUFFER_SIZE) {
 			return;
 		}
-		imageStore(segment_buffer, ivec2(idx + 0, 0), uvec4(segments[s * 4 + 0], 0u, 0u, 0u));
-		imageStore(segment_buffer, ivec2(idx + 1, 0), uvec4(segments[s * 4 + 1], 0u, 0u, 0u));
-		imageStore(segment_buffer, ivec2(idx + 2, 0), uvec4(segments[s * 4 + 2], 0u, 0u, 0u));
-		imageStore(segment_buffer, ivec2(idx + 3, 0), uvec4(segments[s * 4 + 3], 0u, 0u, 0u));
+		segment_buffer.data[idx + 0] = segments[s * 4 + 0];
+		segment_buffer.data[idx + 1] = segments[s * 4 + 1];
+		segment_buffer.data[idx + 2] = segments[s * 4 + 2];
+		segment_buffer.data[idx + 3] = segments[s * 4 + 3];
 	}
 }
