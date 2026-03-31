@@ -381,14 +381,22 @@ func _run_simulation() -> void:
 
 
 func _rebuild_dirty_collisions() -> void:
+	var now := Time.get_ticks_msec() / 1000.0
 	for coord in chunks:
 		var chunk: Chunk = chunks[coord]
 		if not chunk.collision_dirty:
 			continue
-		_rebuild_chunk_collision(chunk)
+		if now - chunk.last_collision_time < COLLISION_UPDATE_INTERVAL:
+			continue
+		
+		var success := _rebuild_chunk_collision_gpu(chunk)
+		if not success:
+			_rebuild_chunk_collision_cpu(chunk)
+		
+		chunk.last_collision_time = now
 
 
-func _rebuild_chunk_collision(chunk: Chunk) -> void:
+func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
 	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
 	var material_data := PackedByteArray()
 	material_data.resize(CHUNK_SIZE * CHUNK_SIZE)
