@@ -427,10 +427,10 @@ func _parse_segment_buffer(data: PackedByteArray, max_offset: int) -> PackedVect
 	var segments := PackedVector2Array()
 	var offset := 0
 	while offset + 16 <= data.size() and offset < max_offset:
-		var x1 := data.decode_float(offset)
-		var y1 := data.decode_float(offset + 4)
-		var x2 := data.decode_float(offset + 8)
-		var y2 := data.decode_float(offset + 12)
+		var x1 := float(data.decode_u32(offset))
+		var y1 := float(data.decode_u32(offset + 4))
+		var x2 := float(data.decode_u32(offset + 8))
+		var y2 := float(data.decode_u32(offset + 12))
 		if x1 == 0.0 and y1 == 0.0 and x2 == 0.0 and y2 == 0.0:
 			break
 		segments.append(Vector2(x1, y1))
