@@ -8,3 +8,4 @@ var mesh_instance: MeshInstance2D
 var sim_uniform_set: RID
 var static_body: StaticBody2D
 var collision_dirty: bool = true
+var last_collision_time: float = 0.0
