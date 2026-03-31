@@ -467,7 +467,7 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 	if segment_count == 0:
 		return true
 
-	var segments := _parse_segment_buffer(result_data.slice(4), segment_count * 4)
+	var segments := _parse_segment_buffer(result_data.slice(4), segment_count * 16)
 
 	var world_offset := chunk.coord * CHUNK_SIZE
 	if chunk.static_body.get_child_count() > 0:
