@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://c17r3i2gmax44"
+path="res://.godot/imported/collider.glsl-571487ad65844e7b8fa6f3448292d153.res"
+
+[deps]
+
+source_file="res://shaders/collider.glsl"
+dest_files=["res://.godot/imported/collider.glsl-571487ad65844e7b8fa6f3448292d153.res"]
+
+[params]
+
