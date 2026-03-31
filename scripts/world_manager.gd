@@ -117,10 +117,10 @@ func _init_collider_storage_buffer() -> void:
 	var max_segments := 4096
 	var max_vertices := max_segments * 4
 	var buffer_size := 4 + max_vertices * 4
-	var bf := RDBufferFormat.new()
-	bf.usage_bits = RenderingDevice.STORAGE_BUFFER_USAGE_READ_WRITE
-	bf.buffer_size = buffer_size
-	collider_storage_buffer = rd.storage_buffer_create(bf)
+	var data := PackedByteArray()
+	data.resize(buffer_size)
+	data.fill(0)
+	collider_storage_buffer = rd.storage_buffer_create(data)
 
 
 func _process(_delta: float) -> void:
@@ -455,7 +455,7 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 	var buffer_data := PackedByteArray()
 	buffer_data.resize(4)
 	buffer_data.encode_u32(0, 0)
-	rd.buffer_update(collider_storage_buffer, 0, buffer_data)
+	rd.buffer_update(collider_storage_buffer, 0, buffer_data.size(), buffer_data)
 
 	var uniforms: Array[RDUniform] = []
 
