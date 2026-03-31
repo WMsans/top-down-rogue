@@ -12,7 +12,7 @@ layout(std430, binding = 1) buffer SegmentBuffer {
 const uint CELL_SIZE = 2u;
 const uint CHUNK_SIZE = 256u;
 const uint CELLS_PER_SIDE = CHUNK_SIZE / CELL_SIZE;
-const uint MAX_BUFFER_SIZE = 65536u;
+const uint MAX_SEGMENTS = 4096u;
 
 void main() {
 	uint cell_x = gl_GlobalInvocationID.x;
@@ -145,7 +145,7 @@ void main() {
 	// Atomically reserve space in the buffer and write segments
 	for (uint s = 0u; s < num_segments; s++) {
 		uint idx = atomicAdd(segment_buffer.count, 4u);
-		if (idx + 4u > MAX_BUFFER_SIZE) {
+		if (idx + 4u > MAX_SEGMENTS * 4u) {
 			return;
 		}
 		segment_buffer.data[idx + 0] = segments[s * 4 + 0];

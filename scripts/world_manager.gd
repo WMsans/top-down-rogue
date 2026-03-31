@@ -110,7 +110,8 @@ func _init_dummy_texture() -> void:
 	dummy_texture = rd.texture_create(tf, RDTextureView.new(), [data])
 
 
-func _init_collider_storage_buffer() -> void:var max_segments := 4096
+func _init_collider_storage_buffer() -> void:
+	var max_segments := 4096
 	var max_vertices := max_segments * 4
 	var buffer_size := 4 + max_vertices * 4
 	var bf := RDBufferFormat.new()
