@@ -117,10 +117,7 @@ func _init_collider_storage_buffer() -> void:
 	var max_segments := 4096
 	var max_vertices := max_segments * 4
 	var buffer_size := 4 + max_vertices * 4
-	var data := PackedByteArray()
-	data.resize(buffer_size)
-	data.fill(0)
-	collider_storage_buffer = rd.storage_buffer_create(data)
+	collider_storage_buffer = rd.storage_buffer_create(buffer_size)
 
 
 func _process(_delta: float) -> void:
