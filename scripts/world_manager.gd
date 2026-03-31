@@ -9,31 +9,47 @@ const MAT_AIR := 0
 const MAT_WOOD := 1
 const MAT_STONE := 2
 const MAX_TEMPERATURE := 255
+const IGNITION_TEMP := 180
+
+const COLLISION_UPDATE_INTERVAL := 0.3
+const MAX_COLLISION_SEGMENTS := 4096
 
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
 
-# Shader resources
 var gen_shader: RID
 var gen_pipeline: RID
 var sim_shader: RID
 var sim_pipeline: RID
-var dummy_texture: RID  # 256x256 air texture for missing neighbors
+var collider_shader: RID
+var collider_pipeline: RID
+var collider_storage_buffer: RID
+var dummy_texture: RID
 
 var render_shader: Shader
 var _gen_uniform_sets_to_free: Array[RID] = []
 var material_textures: Texture2DArray
 
 @onready var chunk_container: Node2D = $ChunkContainer
-@onready var camera: Camera2D = get_parent().get_node("Camera2D")
+var collision_container: Node2D
+
+## The position used for chunk loading/unloading. Set by the player controller.
+var tracking_position: Vector2 = Vector2.ZERO
+## Reference to the shadow grid for dirty notifications. Set by the player controller.
+var shadow_grid: Node = null
 
 
 func _ready() -> void:
 	rd = RenderingServer.get_rendering_device()
 	_init_shaders()
 	_init_dummy_texture()
+	_init_collider_storage_buffer()
 	render_shader = preload("res://shaders/render_chunk.gdshader")
 	_init_material_textures()
+	
+	collision_container = Node2D.new()
+	collision_container.name = "CollisionContainer"
+	add_child(collision_container)
 
 
 func _init_material_textures() -> void:
@@ -52,6 +68,8 @@ func _exit_tree() -> void:
 	chunks.clear()
 	if dummy_texture.is_valid():
 		rd.free_rid(dummy_texture)
+	if collider_storage_buffer.is_valid():
+		rd.free_rid(collider_storage_buffer)
 	if gen_pipeline.is_valid():
 		rd.free_rid(gen_pipeline)
 	if gen_shader.is_valid():
@@ -60,6 +78,10 @@ func _exit_tree() -> void:
 		rd.free_rid(sim_pipeline)
 	if sim_shader.is_valid():
 		rd.free_rid(sim_shader)
+	if collider_pipeline.is_valid():
+		rd.free_rid(collider_pipeline)
+	if collider_shader.is_valid():
+		rd.free_rid(collider_shader)
 
 
 func _init_shaders() -> void:
@@ -72,6 +94,11 @@ func _init_shaders() -> void:
 	var sim_spirv := sim_file.get_spirv()
 	sim_shader = rd.shader_create_from_spirv(sim_spirv)
 	sim_pipeline = rd.compute_pipeline_create(sim_shader)
+
+	var collider_file: RDShaderFile = load("res://shaders/collider.glsl")
+	var collider_spirv := collider_file.get_spirv()
+	collider_shader = rd.shader_create_from_spirv(collider_spirv)
+	collider_pipeline = rd.compute_pipeline_create(collider_shader)
 
 
 func _init_dummy_texture() -> void:
@@ -86,28 +113,37 @@ func _init_dummy_texture() -> void:
 	dummy_texture = rd.texture_create(tf, RDTextureView.new(), [data])
 
 
+func _init_collider_storage_buffer() -> void:
+	var max_segments := 4096
+	var max_vertices := max_segments * 4
+	var buffer_size := 4 + max_vertices * 4
+	collider_storage_buffer = rd.storage_buffer_create(buffer_size)
+
+
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	_update_chunks()
 	_run_simulation()
+	_rebuild_dirty_collisions()
 
 
 # --- Chunk lifecycle ---
 
 func _get_desired_chunks() -> Array[Vector2i]:
 	var vp_size := get_viewport().get_visible_rect().size
-	var cam_pos := camera.global_position
-	var cam_zoom := camera.zoom
+	# Use zoom from any Camera2D in the tree, default to 8x
+	var cam := get_viewport().get_camera_2d()
+	var cam_zoom := cam.zoom if cam else Vector2(8, 8)
 	var half_view := vp_size / (2.0 * cam_zoom)
 
 	var min_chunk := Vector2i(
-		floori((cam_pos.x - half_view.x) / CHUNK_SIZE) - 1,
-		floori((cam_pos.y - half_view.y) / CHUNK_SIZE) - 1
+		floori((tracking_position.x - half_view.x) / CHUNK_SIZE) - 1,
+		floori((tracking_position.y - half_view.y) / CHUNK_SIZE) - 1
 	)
 	var max_chunk := Vector2i(
-		floori((cam_pos.x + half_view.x) / CHUNK_SIZE) + 1,
-		floori((cam_pos.y + half_view.y) / CHUNK_SIZE) + 1
+		floori((tracking_position.x + half_view.x) / CHUNK_SIZE) + 1,
+		floori((tracking_position.y + half_view.y) / CHUNK_SIZE) + 1
 	)
 
 	var result: Array[Vector2i] = []
@@ -177,7 +213,6 @@ func _create_chunk(coord: Vector2i) -> void:
 	var chunk := Chunk.new()
 	chunk.coord = coord
 
-	# Create RD texture
 	var tf := RDTextureFormat.new()
 	tf.width = CHUNK_SIZE
 	tf.height = CHUNK_SIZE
@@ -190,11 +225,9 @@ func _create_chunk(coord: Vector2i) -> void:
 	)
 	chunk.rd_texture = rd.texture_create(tf, RDTextureView.new())
 
-	# Create Texture2DRD for rendering
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
 
-	# Create MeshInstance2D with QuadMesh
 	chunk.mesh_instance = MeshInstance2D.new()
 	var quad := QuadMesh.new()
 	quad.size = Vector2(CHUNK_SIZE, CHUNK_SIZE)
@@ -209,6 +242,13 @@ func _create_chunk(coord: Vector2i) -> void:
 	chunk.mesh_instance.material = mat
 
 	chunk_container.add_child(chunk.mesh_instance)
+
+	chunk.static_body = StaticBody2D.new()
+	chunk.static_body.collision_layer = 1
+	chunk.static_body.collision_mask = 0
+	collision_container.add_child(chunk.static_body)
+	chunk.collision_dirty = true
+
 	chunks[coord] = chunk
 
 
@@ -221,6 +261,8 @@ func _unload_chunk(coord: Vector2i) -> void:
 func _free_chunk_resources(chunk: Chunk) -> void:
 	if chunk.mesh_instance and is_instance_valid(chunk.mesh_instance):
 		chunk.mesh_instance.queue_free()
+	if chunk.static_body and is_instance_valid(chunk.static_body):
+		chunk.static_body.queue_free()
 	if chunk.sim_uniform_set.is_valid():
 		rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
@@ -325,6 +367,141 @@ func _run_simulation() -> void:
 
 	rd.compute_list_end()
 
+	# Notify shadow grid if any simulated chunk overlaps its bounds
+	if shadow_grid:
+		var grid_rect: Rect2i = shadow_grid.get_world_rect()
+		for coord in chunks:
+			var chunk_rect := Rect2i(coord * CHUNK_SIZE, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
+			if grid_rect.intersects(chunk_rect):
+				shadow_grid.mark_dirty()
+				break
+
+
+func _rebuild_dirty_collisions() -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		if not chunk.collision_dirty:
+			continue
+		if now - chunk.last_collision_time < COLLISION_UPDATE_INTERVAL:
+			continue
+		
+		var success := _rebuild_chunk_collision_gpu(chunk)
+		if not success:
+			_rebuild_chunk_collision_cpu(chunk)
+		else:
+			chunk.collision_dirty = _check_chunk_burning(chunk)
+		
+		chunk.last_collision_time = now
+
+
+func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
+	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
+	var material_data := PackedByteArray()
+	material_data.resize(CHUNK_SIZE * CHUNK_SIZE)
+	var has_burning := false
+	for y in CHUNK_SIZE:
+		for x in CHUNK_SIZE:
+			var src_idx := (y * CHUNK_SIZE + x) * 4
+			var mat := chunk_data[src_idx]
+			var temp := chunk_data[src_idx + 2]
+			material_data[y * CHUNK_SIZE + x] = mat
+			if mat == MAT_WOOD and temp > IGNITION_TEMP:
+				has_burning = true
+	chunk.collision_dirty = has_burning
+
+	var world_offset := chunk.coord * CHUNK_SIZE
+	if chunk.static_body.get_child_count() > 0:
+		for child in chunk.static_body.get_children():
+			child.queue_free()
+
+	var collision_shape := TerrainCollider.build_collision(material_data, CHUNK_SIZE, chunk.static_body, world_offset)
+	if collision_shape != null:
+		chunk.static_body.add_child(collision_shape)
+
+
+func _parse_segment_buffer(data: PackedByteArray, max_offset: int) -> PackedVector2Array:
+	var segments := PackedVector2Array()
+	var offset := 0
+	while offset + 16 <= data.size() and offset < max_offset:
+		var x1 := float(data.decode_u32(offset))
+		var y1 := float(data.decode_u32(offset + 4))
+		var x2 := float(data.decode_u32(offset + 8))
+		var y2 := float(data.decode_u32(offset + 12))
+		if x1 == 0.0 and y1 == 0.0 and x2 == 0.0 and y2 == 0.0:
+			break
+		segments.append(Vector2(x1, y1))
+		segments.append(Vector2(x2, y2))
+		offset += 16
+	return segments
+
+
+func _check_chunk_burning(chunk: Chunk) -> bool:
+	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
+	for y in CHUNK_SIZE:
+		for x in CHUNK_SIZE:
+			var src_idx := (y * CHUNK_SIZE + x) * 4
+			var mat := chunk_data[src_idx]
+			var temp := chunk_data[src_idx + 2]
+			if mat == MAT_WOOD and temp > IGNITION_TEMP:
+				return true
+	return false
+
+
+func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
+	var buffer_data := PackedByteArray()
+	buffer_data.resize(4)
+	buffer_data.encode_u32(0, 0)
+	rd.buffer_update(collider_storage_buffer, 0, buffer_data.size(), buffer_data)
+
+	var uniforms: Array[RDUniform] = []
+
+	var u0 := RDUniform.new()
+	u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u0.binding = 0
+	u0.add_id(chunk.rd_texture)
+	uniforms.append(u0)
+
+	var u1 := RDUniform.new()
+	u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u1.binding = 1
+	u1.add_id(collider_storage_buffer)
+	uniforms.append(u1)
+
+	var uniform_set := rd.uniform_set_create(uniforms, collider_shader, 0)
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, collider_pipeline)
+	rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+	rd.compute_list_dispatch(compute_list, 16, 16, 1)
+	rd.compute_list_end()
+
+	rd.free_rid(uniform_set)
+
+	var result_data := rd.buffer_get_data(collider_storage_buffer)
+	if result_data.size() < 4:
+		return false
+
+	var segment_count := result_data.decode_u32(0)
+	if segment_count == 0:
+		return true
+
+	var segments := _parse_segment_buffer(result_data.slice(4), segment_count * 16)
+
+	var world_offset := chunk.coord * CHUNK_SIZE
+	if chunk.static_body.get_child_count() > 0:
+		for child in chunk.static_body.get_children():
+			child.queue_free()
+
+	if segments.size() >= 4:
+		var collision_shape := TerrainCollider.build_from_segments(
+			segments, chunk.static_body, world_offset
+		)
+		if collision_shape != null:
+			chunk.static_body.add_child(collision_shape)
+
+	return true
+
 
 # --- Fire placement (called by InputHandler) ---
 
@@ -352,13 +529,17 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 	for chunk_coord in affected:
 		var chunk: Chunk = chunks[chunk_coord]
 		var data := rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
 			var material := data[idx]
 			if material != MAT_WOOD:
 				continue
 			data[idx + 2] = MAX_TEMPERATURE
-		rd.texture_update(chunk.rd_texture, 0, data)
+			modified = true
+		if modified:
+			rd.texture_update(chunk.rd_texture, 0, data)
+			chunk.collision_dirty = true
 
 
 # --- Public API for debug overlay ---
@@ -422,3 +603,107 @@ func clear_all_chunks() -> void:
 
 func get_chunk_container() -> Node2D:
 	return chunk_container
+
+
+## Read material bytes for a rectangular world region from GPU chunk textures.
+## Returns a PackedByteArray of width*height bytes (one byte per pixel, material type).
+## Pixels in unloaded chunks are returned as 255 (solid).
+func read_region(region: Rect2i) -> PackedByteArray:
+	var width: int = region.size.x
+	var height: int = region.size.y
+	var result := PackedByteArray()
+	result.resize(width * height)
+	result.fill(255)  # Default: solid for unloaded areas
+
+	# Determine which chunks overlap this region
+	var min_chunk := Vector2i(
+		floori(float(region.position.x) / CHUNK_SIZE),
+		floori(float(region.position.y) / CHUNK_SIZE)
+	)
+	var max_chunk := Vector2i(
+		floori(float(region.end.x - 1) / CHUNK_SIZE),
+		floori(float(region.end.y - 1) / CHUNK_SIZE)
+	)
+
+	for cx in range(min_chunk.x, max_chunk.x + 1):
+		for cy in range(min_chunk.y, max_chunk.y + 1):
+			var chunk_coord := Vector2i(cx, cy)
+			if not chunks.has(chunk_coord):
+				continue
+
+			var chunk: Chunk = chunks[chunk_coord]
+			var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
+
+			# World-space origin of this chunk
+			var chunk_origin := chunk_coord * CHUNK_SIZE
+
+			# Overlap between the requested region and this chunk
+			var chunk_rect := Rect2i(chunk_origin, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
+			var overlap := region.intersection(chunk_rect)
+
+			for y in range(overlap.position.y, overlap.end.y):
+				for x in range(overlap.position.x, overlap.end.x):
+					var local_x: int = x - chunk_origin.x
+					var local_y: int = y - chunk_origin.y
+					var chunk_idx: int = (local_y * CHUNK_SIZE + local_x) * 4  # RGBA8
+					var material: int = chunk_data[chunk_idx]  # R channel = material type
+
+					var result_x: int = x - region.position.x
+					var result_y: int = y - region.position.y
+					result[result_y * width + result_x] = material
+
+	return result
+
+
+## Find a spawn position by spiraling outward from search_origin.
+## Looks for a contiguous air pocket that fits body_size.
+## Returns the top-left corner of the pocket in world coordinates.
+## Falls back to search_origin if no pocket found within max_radius.
+func find_spawn_position(search_origin: Vector2i, body_size: Vector2i) -> Vector2i:
+	var max_radius := CHUNK_SIZE * 4  # Search up to 4 chunks away
+	var search_rect := Rect2i(
+		search_origin - Vector2i(max_radius, max_radius),
+		Vector2i(max_radius * 2, max_radius * 2)
+	)
+	var region_data := read_region(search_rect)
+	var region_w: int = search_rect.size.x
+	var region_h: int = search_rect.size.y
+
+	# Spiral outward from center of the search region
+	var center := Vector2i(max_radius, max_radius)
+	var dir := Vector2i(1, 0)
+	var pos := center
+	var steps_in_leg := 1
+	var steps_taken := 0
+	var legs_completed := 0
+
+	for _i in range(region_w * region_h):
+		# Check if body_size fits at this position (all air)
+		if _pocket_fits(region_data, region_w, region_h, pos, body_size):
+			return search_rect.position + pos
+
+		# Spiral step
+		pos += dir
+		steps_taken += 1
+		if steps_taken >= steps_in_leg:
+			steps_taken = 0
+			legs_completed += 1
+			# Rotate direction: right -> down -> left -> up
+			dir = Vector2i(-dir.y, dir.x)
+			if legs_completed % 2 == 0:
+				steps_in_leg += 1
+
+	push_warning("ShadowGrid: No valid spawn pocket found, falling back to search_origin")
+	return search_origin
+
+
+func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left: Vector2i, size: Vector2i) -> bool:
+	if top_left.x < 0 or top_left.y < 0:
+		return false
+	if top_left.x + size.x > region_w or top_left.y + size.y > region_h:
+		return false
+	for y in range(top_left.y, top_left.y + size.y):
+		for x in range(top_left.x, top_left.x + size.x):
+			if data[y * region_w + x] != MAT_AIR:
+				return false
+	return true
