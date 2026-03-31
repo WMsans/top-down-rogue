@@ -9,6 +9,7 @@ const MAT_AIR := 0
 const MAT_WOOD := 1
 const MAT_STONE := 2
 const MAX_TEMPERATURE := 255
+const IGNITION_TEMP := 180
 
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
@@ -360,14 +361,19 @@ func _rebuild_dirty_collisions() -> void:
 
 
 func _rebuild_chunk_collision(chunk: Chunk) -> void:
-	chunk.collision_dirty = false
 	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
 	var material_data := PackedByteArray()
 	material_data.resize(CHUNK_SIZE * CHUNK_SIZE)
+	var has_burning := false
 	for y in CHUNK_SIZE:
 		for x in CHUNK_SIZE:
 			var src_idx := (y * CHUNK_SIZE + x) * 4
-			material_data[y * CHUNK_SIZE + x] = chunk_data[src_idx]
+			var mat := chunk_data[src_idx]
+			var temp := chunk_data[src_idx + 2]
+			material_data[y * CHUNK_SIZE + x] = mat
+			if mat == MAT_WOOD and temp > IGNITION_TEMP:
+				has_burning = true
+	chunk.collision_dirty = has_burning
 
 	var world_offset := chunk.coord * CHUNK_SIZE
 	if chunk.static_body.get_child_count() > 0:
