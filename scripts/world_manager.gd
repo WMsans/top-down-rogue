@@ -392,6 +392,8 @@ func _rebuild_dirty_collisions() -> void:
 		var success := _rebuild_chunk_collision_gpu(chunk)
 		if not success:
 			_rebuild_chunk_collision_cpu(chunk)
+		else:
+			chunk.collision_dirty = _check_chunk_burning(chunk)
 		
 		chunk.last_collision_time = now
 
@@ -435,6 +437,18 @@ func _parse_segment_buffer(data: PackedByteArray, max_offset: int) -> PackedVect
 		segments.append(Vector2(x2, y2))
 		offset += 16
 	return segments
+
+
+func _check_chunk_burning(chunk: Chunk) -> bool:
+	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
+	for y in CHUNK_SIZE:
+		for x in CHUNK_SIZE:
+			var src_idx := (y * CHUNK_SIZE + x) * 4
+			var mat := chunk_data[src_idx]
+			var temp := chunk_data[src_idx + 2]
+			if mat == MAT_WOOD and temp > IGNITION_TEMP:
+				return true
+	return false
 
 
 func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
