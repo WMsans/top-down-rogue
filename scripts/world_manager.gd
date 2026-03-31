@@ -11,6 +11,9 @@ const MAT_STONE := 2
 const MAX_TEMPERATURE := 255
 const IGNITION_TEMP := 180
 
+const COLLISION_UPDATE_INTERVAL := 0.3
+const MAX_COLLISION_SEGMENTS := 4096
+
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
 
@@ -408,6 +411,77 @@ func _rebuild_chunk_collision(chunk: Chunk) -> void:
 	var collision_shape := TerrainCollider.build_collision(material_data, CHUNK_SIZE, chunk.static_body, world_offset)
 	if collision_shape != null:
 		chunk.static_body.add_child(collision_shape)
+
+
+func _parse_segment_buffer(data: PackedByteArray, max_offset: int) -> PackedVector2Array:
+	var segments := PackedVector2Array()
+	var offset := 0
+	while offset + 16 <= data.size() and offset < max_offset:
+		var x1 := data.decode_float(offset)
+		var y1 := data.decode_float(offset + 4)
+		var x2 := data.decode_float(offset + 8)
+		var y2 := data.decode_float(offset + 12)
+		if x1 == 0.0 and y1 == 0.0 and x2 == 0.0 and y2 == 0.0:
+			break
+		segments.append(Vector2(x1, y1))
+		segments.append(Vector2(x2, y2))
+		offset += 16
+	return segments
+
+
+func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
+	var buffer_data := PackedByteArray()
+	buffer_data.resize(4)
+	buffer_data.encode_u32(0, 0)
+	rd.buffer_update(collider_storage_buffer, 0, buffer_data)
+
+	var uniforms: Array[RDUniform] = []
+
+	var u0 := RDUniform.new()
+	u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u0.binding = 0
+	u0.add_id(chunk.rd_texture)
+	uniforms.append(u0)
+
+	var u1 := RDUniform.new()
+	u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u1.binding = 1
+	u1.add_id(collider_storage_buffer)
+	uniforms.append(u1)
+
+	var uniform_set := rd.uniform_set_create(uniforms, collider_shader, 0)
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, collider_pipeline)
+	rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+	rd.compute_list_dispatch(compute_list, 16, 16, 1)
+	rd.compute_list_end()
+
+	rd.free_rid(uniform_set)
+
+	var result_data := rd.buffer_get_data(collider_storage_buffer)
+	if result_data.size() < 4:
+		return false
+
+	var segment_count := result_data.decode_u32(0)
+	if segment_count == 0:
+		return true
+
+	var segments := _parse_segment_buffer(result_data.slice(4), segment_count * 4)
+
+	var world_offset := chunk.coord * CHUNK_SIZE
+	if chunk.static_body.get_child_count() > 0:
+		for child in chunk.static_body.get_children():
+			child.queue_free()
+
+	if segments.size() >= 4:
+		var collision_shape := TerrainCollider.build_from_segments(
+			segments, chunk.static_body, world_offset
+		)
+		if collision_shape != null:
+			chunk.static_body.add_child(collision_shape)
+
+	return true
 
 
 # --- Fire placement (called by InputHandler) ---
