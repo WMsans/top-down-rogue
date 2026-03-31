@@ -195,3 +195,19 @@ static func _point_to_segment_distance(point: Vector2, seg_start: Vector2, seg_e
 	var t: float = clampf((point - seg_start).dot(line) / len_sq, 0.0, 1.0)
 	var projection: Vector2 = seg_start + line * t
 	return point.distance_to(projection)
+
+
+static func build_from_segments(
+	segments: PackedVector2Array,
+	static_body: StaticBody2D,
+	world_offset: Vector2i
+) -> CollisionShape2D:
+	if segments.size() < 4:
+		return null
+
+	var shape := ConcavePolygonShape2D.new()
+	shape.segments = segments
+	var collision_shape := CollisionShape2D.new()
+	collision_shape.shape = shape
+	static_body.position = Vector2(world_offset.x, world_offset.y)
+	return collision_shape
