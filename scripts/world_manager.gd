@@ -239,9 +239,28 @@ func _create_chunk(coord: Vector2i) -> void:
 	mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
 	mat.set_shader_parameter("material_textures", material_textures)
 	mat.set_shader_parameter("wall_height", 16)
+	mat.set_shader_parameter("layer_mode", 1)
 	chunk.mesh_instance.material = mat
 
 	chunk_container.add_child(chunk.mesh_instance)
+
+	# Wall top mesh (renders in front of player)
+	chunk.wall_mesh_instance = MeshInstance2D.new()
+	var wall_quad := QuadMesh.new()
+	wall_quad.size = Vector2(CHUNK_SIZE, CHUNK_SIZE)
+	chunk.wall_mesh_instance.mesh = wall_quad
+	chunk.wall_mesh_instance.position = chunk.mesh_instance.position
+	chunk.wall_mesh_instance.z_index = 1
+
+	var wall_mat := ShaderMaterial.new()
+	wall_mat.shader = render_shader
+	wall_mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
+	wall_mat.set_shader_parameter("material_textures", material_textures)
+	wall_mat.set_shader_parameter("wall_height", 16)
+	wall_mat.set_shader_parameter("layer_mode", 0)
+	chunk.wall_mesh_instance.material = wall_mat
+
+	chunk_container.add_child(chunk.wall_mesh_instance)
 
 	chunk.static_body = StaticBody2D.new()
 	chunk.static_body.collision_layer = 1
@@ -261,6 +280,8 @@ func _unload_chunk(coord: Vector2i) -> void:
 func _free_chunk_resources(chunk: Chunk) -> void:
 	if chunk.mesh_instance and is_instance_valid(chunk.mesh_instance):
 		chunk.mesh_instance.queue_free()
+	if chunk.wall_mesh_instance and is_instance_valid(chunk.wall_mesh_instance):
+		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
 	if chunk.sim_uniform_set.is_valid():
