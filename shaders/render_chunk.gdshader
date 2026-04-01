@@ -110,62 +110,27 @@ void fragment() {
 
 	if (mat == AIR) {
 		// --- Wall face check ---
-		// Scan downward on screen to find solid below. Wall extends upward from solid.
+		// Scan upward on screen: due to Y-flip in read_pixel, "above on screen" is px.y + d.
 		bool found_wall = false;
 		for (int d = 1; d <= wall_height; d++) {
 			if (found_wall) break;
-			ivec2 check_pos = ivec2(px.x, px.y - d);
-			if (check_pos.y < 0) break;
+			ivec2 check_pos = ivec2(px.x, px.y + d);
+			if (check_pos.y >= CHUNK_SIZE) break;
 			vec4 src_data = read_pixel(check_pos);
 			if (is_solid(check_pos)) {
+				COLOR = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
 				found_wall = true;
-
-				// Count consecutive solid pixels below the source
-				int solid_count = 1;
-				for (int s = 1; s < wall_height; s++) {
-					ivec2 below = ivec2(check_pos.x, check_pos.y - s);
-					if (below.y < 0 || !is_solid(below)) break;
-					solid_count++;
-				}
-				solid_count = min(solid_count, wall_height);
-
-				int tex_zone_size = wall_height - solid_count;
-
-				if (d > tex_zone_size) {
-					// Dark/edge zone (top of wall): project into solid region
-					ivec2 virtual_pos = ivec2(check_pos.x, check_pos.y - (wall_height - d));
-					if (virtual_pos.y >= 0 && is_solid(virtual_pos) && near_air(virtual_pos)) {
-						vec4 vdata = read_pixel(virtual_pos);
-						COLOR = vec4(material_color(vdata, px), 1.0);
-					} else {
-						COLOR = vec4(0.0, 0.0, 0.0, 1.0);
-					}
-				} else {
-					// Texture zone (bottom of wall face)
-					int depth = tex_zone_size - d + 1;
-					COLOR = vec4(sample_material_texture(get_material(src_data), px.x, depth, src_data, px), 1.0);
-				}
 			}
 		}
 		if (!found_wall) {
 			COLOR = vec4(0.0);
 		}
 	} else {
-		// --- Solid pixel: bottom of wall, render as texture ---
-		int above_count = 0;
-		for (int s = 1; s <= wall_height; s++) {
-			ivec2 above_pos = ivec2(px.x, px.y + s);
-			if (above_pos.y >= CHUNK_SIZE || !is_solid(above_pos)) break;
-			above_count++;
+		// --- Solid pixel (wood etc.): wall top or black ---
+		if (near_air(px)) {
+			COLOR = vec4(material_color(data, px), 1.0);
+		} else {
+			COLOR = vec4(0.0, 0.0, 0.0, 1.0);
 		}
-		int below_count = 0;
-		for (int s = 1; s <= wall_height; s++) {
-			ivec2 below_pos = ivec2(px.x, px.y - s);
-			if (below_pos.y < 0 || !is_solid(below_pos)) break;
-			below_count++;
-		}
-		int total_solid = min(above_count + below_count + 1, wall_height);
-		int depth = clamp(wall_height - total_solid + 1 + above_count, 1, wall_height);
-		COLOR = vec4(sample_material_texture(mat, px.x, depth, data, px), 1.0);
 	}
 }
