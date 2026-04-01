@@ -3,6 +3,7 @@ shader_type canvas_item;
 uniform sampler2D chunk_data : filter_nearest;
 uniform int wall_height = 16;
 uniform sampler2DArray material_textures : filter_nearest;
+uniform int layer_mode = 0;
 
 const int CHUNK_SIZE = 256;
 const int AIR = 0;
@@ -109,28 +110,37 @@ void fragment() {
 	int mat = get_material(data);
 
 	if (mat == AIR) {
-		// --- Wall face check ---
-		// Scan upward on screen: due to Y-flip in read_pixel, "above on screen" is px.y + d.
-		bool found_wall = false;
-		for (int d = 1; d <= wall_height; d++) {
-			if (found_wall) break;
-			ivec2 check_pos = ivec2(px.x, px.y + d);
-			if (check_pos.y >= CHUNK_SIZE) break;
-			vec4 src_data = read_pixel(check_pos);
-			if (is_solid(check_pos)) {
-				COLOR = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
-				found_wall = true;
+		if (layer_mode == 0) {
+			// Ground layer: air pixels are transparent
+			COLOR = vec4(0.0);
+		} else {
+			// Wall face layer: scan upward for wall source
+			bool found_wall = false;
+			for (int d = 1; d <= wall_height; d++) {
+				if (found_wall) break;
+				ivec2 check_pos = ivec2(px.x, px.y + d);
+				if (check_pos.y >= CHUNK_SIZE) break;
+				vec4 src_data = read_pixel(check_pos);
+				if (is_solid(check_pos)) {
+					COLOR = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
+					found_wall = true;
+				}
+			}
+			if (!found_wall) {
+				COLOR = vec4(0.0);
 			}
 		}
-		if (!found_wall) {
-			COLOR = vec4(0.0);
-		}
 	} else {
-		// --- Solid pixel (wood etc.): wall top or black ---
-		if (near_air(px)) {
-			COLOR = vec4(material_color(data, px), 1.0);
+		if (layer_mode == 1) {
+			// Wall face layer: solid pixels are transparent
+			COLOR = vec4(0.0);
 		} else {
-			COLOR = vec4(0.0, 0.0, 0.0, 1.0);
+			// Ground layer: wall top or black
+			if (near_air(px)) {
+				COLOR = vec4(material_color(data, px), 1.0);
+			} else {
+				COLOR = vec4(0.0, 0.0, 0.0, 1.0);
+			}
 		}
 	}
 }
