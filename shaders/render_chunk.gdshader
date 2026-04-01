@@ -57,23 +57,39 @@ float flicker_amount(ivec2 pixel_pos, float time, float temp_norm) {
 	return flicker * (1.0 - temp_norm * 0.3);
 }
 
+vec3 get_material_top_color(int material) {
+	float v = 0.5 / float(wall_height);
+	return texture(material_textures, vec3(0.5, v, float(material))).rgb;
+}
+
+vec3 get_temperature_tint(float temperature, ivec2 pixel_pos) {
+	if (temperature > 180.0 / 255.0) {
+		float temp_norm = temperature;
+		float flicker = flicker_amount(pixel_pos, TIME, temp_norm);
+		return ember_color(temp_norm, flicker);
+	}
+	return vec3(1.0);
+}
+
+vec3 apply_temperature_tint(vec3 base_color, float temperature, ivec2 pixel_pos) {
+	if (temperature > 180.0 / 255.0) {
+		float temp_norm = temperature;
+		float flicker = flicker_amount(pixel_pos, TIME, temp_norm);
+		return ember_color(temp_norm, flicker);
+	}
+	float temp_norm = temperature;
+	float temp_affected = temp_norm * 0.7;
+	vec3 hot_tint = vec3(1.0, 0.3, 0.1);
+	return mix(base_color, base_color * hot_tint + vec3(0.2, 0.0, 0.0), temp_affected);
+}
+
 vec3 material_color(vec4 data, ivec2 pixel_pos) {
 	int mat = get_material(data);
-	float temperature = data.b;
-
-	if (mat == WOOD) {
-		vec3 wood_color = vec3(0.55, 0.35, 0.17);
-		float temp_norm = temperature;
-		if (temperature > 180.0 / 255.0) {
-			float flicker = flicker_amount(pixel_pos, TIME, temp_norm);
-			return ember_color(temp_norm, flicker);
-		}
-		return wood_color;
+	if (mat == AIR) {
+		return vec3(1.0, 0.0, 1.0);
 	}
-	if (mat == STONE) {
-		return vec3(0.5, 0.5, 0.5);
-	}
-	return vec3(1.0, 0.0, 1.0);
+	vec3 base_color = get_material_top_color(mat);
+	return apply_temperature_tint(base_color, data.b, pixel_pos);
 }
 
 vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, ivec2 pixel_pos) {
@@ -81,7 +97,8 @@ vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, 
 	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
 	float v = (float(depth - 1) + 0.5) / float(wall_height);
 	vec3 tex_color = texture(material_textures, vec3(u, v, float(material))).rgb;
-	return tex_color * material_color(src_data, pixel_pos);
+	vec3 tint = get_temperature_tint(src_data.b, pixel_pos);
+	return tex_color * tint;
 }
 
 // Check if any air pixel exists within euclidean distance 3 of pos.
