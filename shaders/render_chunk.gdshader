@@ -57,9 +57,11 @@ float flicker_amount(ivec2 pixel_pos, float time, float temp_norm) {
 	return flicker * (1.0 - temp_norm * 0.3);
 }
 
-vec3 get_material_top_color(int material) {
+vec3 get_material_top_color(int material, int src_x) {
+	vec2 tex_size = vec2(textureSize(material_textures, 0).xy);
+	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
 	float v = 0.5 / float(wall_height);
-	return texture(material_textures, vec3(0.5, v, float(material))).rgb;
+	return texture(material_textures, vec3(u, v, float(material))).rgb;
 }
 
 vec3 get_temperature_tint(float temperature, ivec2 pixel_pos) {
