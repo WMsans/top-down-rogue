@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://fawu47fhsxos" path="res://scripts/debug_manager.gd" id="4"]
 [ext_resource type="Script" uid="uid://dpx6ctk67xl0e" path="res://scripts/chunk_grid_overlay.gd" id="5"]
 [ext_resource type="Script" uid="uid://cwpvprev001" path="res://scripts/world_preview.gd" id="6"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="7"]
+[ext_resource type="PackedScene" uid="uid://dyro2k6hacg2y" path="res://scenes/player.tscn" id="7"]
 [ext_resource type="Script" uid="uid://d3mmf5m6ttifw" path="res://scripts/collision_overlay.gd" id="8"]
 
 [node name="Main" type="Node2D" unique_id=194821170]

@@ -1,6 +1,8 @@
 shader_type canvas_item;
 
 uniform sampler2D chunk_data : filter_nearest;
+uniform sampler2D neighbor_data : filter_nearest;
+uniform bool has_neighbor = false;
 uniform int wall_height = 16;
 uniform sampler2DArray material_textures : filter_nearest;
 uniform int layer_mode = 0;
@@ -29,6 +31,43 @@ bool is_solid(ivec2 pos) {
 		return true;
 	}
 	int m = get_material(read_pixel(pos));
+	return m != AIR;
+}
+
+// Read from neighboring chunk texture (for wall face scan overflow).
+// neighbor_pos is in the neighbor's local px coordinate space.
+vec4 read_neighbor(ivec2 neighbor_pos) {
+	vec2 uv = (vec2(neighbor_pos) + 0.5) / float(CHUNK_SIZE);
+	uv.y = 1.0 - uv.y;
+	return texture(neighbor_data, uv);
+}
+
+// Read pixel data, crossing into neighbor chunk when pos.y >= CHUNK_SIZE.
+vec4 read_pixel_extended(ivec2 pos) {
+	if (pos.y < CHUNK_SIZE) {
+		return read_pixel(pos);
+	}
+	if (!has_neighbor) {
+		return vec4(0.0); // air fallback
+	}
+	return read_neighbor(ivec2(pos.x, pos.y - CHUNK_SIZE));
+}
+
+bool is_solid_extended(ivec2 pos) {
+	if (pos.x < 0 || pos.x >= CHUNK_SIZE) {
+		return true;
+	}
+	if (pos.y < 0) {
+		return true;
+	}
+	if (pos.y < CHUNK_SIZE) {
+		int m = get_material(read_pixel(pos));
+		return m != AIR;
+	}
+	if (!has_neighbor) {
+		return false; // no neighbor = treat as air (no fake wall faces)
+	}
+	int m = get_material(read_neighbor(ivec2(pos.x, pos.y - CHUNK_SIZE)));
 	return m != AIR;
 }
 
@@ -138,9 +177,8 @@ void fragment() {
 			for (int d = 1; d <= wall_height; d++) {
 				if (found_wall) break;
 				ivec2 check_pos = ivec2(px.x, px.y + d);
-				if (check_pos.y >= CHUNK_SIZE) break;
-				vec4 src_data = read_pixel(check_pos);
-				if (is_solid(check_pos)) {
+				vec4 src_data = read_pixel_extended(check_pos);
+				if (is_solid_extended(check_pos)) {
 					COLOR = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
 					found_wall = true;
 				}

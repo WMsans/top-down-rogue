@@ -207,6 +207,7 @@ func _update_chunks() -> void:
 	# Rebuild simulation uniform sets for affected chunks
 	if not new_chunks.is_empty() or not to_remove.is_empty():
 		_rebuild_sim_uniform_sets(new_chunks, to_remove)
+		_update_render_neighbors(new_chunks, to_remove)
 
 
 func _create_chunk(coord: Vector2i) -> void:
@@ -344,6 +345,36 @@ func _build_sim_uniform_set(chunk: Chunk) -> void:
 		uniforms.append(u)
 
 	chunk.sim_uniform_set = rd.uniform_set_create(uniforms, sim_shader, 0)
+
+
+## Update render shader neighbor textures for wall face continuity across chunks.
+## The wall face scan goes +px.y (north in world), so each chunk needs its
+## northern neighbor's texture: chunk_coord + (0, -1).
+func _update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
+	# Chunks that need their neighbor updated: newly loaded chunks and
+	# chunks directly south of loaded/unloaded chunks (they gain/lose a neighbor).
+	var to_update: Dictionary = {}
+	for coord in loaded:
+		to_update[coord] = true
+		var south: Vector2i = coord + Vector2i(0, 1)
+		if chunks.has(south):
+			to_update[south] = true
+	for coord in unloaded:
+		var south: Vector2i = coord + Vector2i(0, 1)
+		if chunks.has(south):
+			to_update[south] = true
+
+	for coord in to_update:
+		if not chunks.has(coord):
+			continue
+		var chunk: Chunk = chunks[coord]
+		var north_coord: Vector2i = coord + Vector2i(0, -1)
+		var mat: ShaderMaterial = chunk.mesh_instance.material as ShaderMaterial
+		if chunks.has(north_coord):
+			mat.set_shader_parameter("neighbor_data", chunks[north_coord].texture_2d_rd)
+			mat.set_shader_parameter("has_neighbor", true)
+		else:
+			mat.set_shader_parameter("has_neighbor", false)
 
 
 # --- Simulation dispatch ---
@@ -610,6 +641,7 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> void:
 	rd.compute_list_end()
 
 	_rebuild_sim_uniform_sets(new_chunks, [])
+	_update_render_neighbors(new_chunks, [])
 
 
 func clear_all_chunks() -> void:
