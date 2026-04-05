@@ -90,7 +90,7 @@ vec3 material_color(vec4 data, ivec2 pixel_pos) {
 	if (mat == AIR) {
 		return vec3(1.0, 0.0, 1.0);
 	}
-	vec3 base_color = get_material_top_color(mat);
+	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
 	return apply_temperature_tint(base_color, data.b, pixel_pos);
 }
 
