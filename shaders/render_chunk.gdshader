@@ -1,4 +1,5 @@
 shader_type canvas_item;
+#include "res://shaders/generated/materials.gdshaderinc"
 
 uniform sampler2D chunk_data : filter_nearest;
 uniform sampler2D neighbor_data : filter_nearest;
@@ -8,9 +9,6 @@ uniform sampler2DArray material_textures : filter_nearest;
 uniform int layer_mode = 0;
 
 const int CHUNK_SIZE = 256;
-const int AIR = 0;
-const int WOOD = 1;
-const int STONE = 2;
 
 // Read material data at a pixel position in the chunk texture.
 // Returns vec4(material, health, temperature, reserved) in 0-255 range conceptually,
@@ -31,7 +29,7 @@ bool is_solid(ivec2 pos) {
 		return true;
 	}
 	int m = get_material(read_pixel(pos));
-	return m != AIR;
+	return HAS_COLLIDER[m];
 }
 
 // Read from neighboring chunk texture (for wall face scan overflow).
@@ -62,13 +60,13 @@ bool is_solid_extended(ivec2 pos) {
 	}
 	if (pos.y < CHUNK_SIZE) {
 		int m = get_material(read_pixel(pos));
-		return m != AIR;
+		return HAS_COLLIDER[m];
 	}
 	if (!has_neighbor) {
 		return false; // no neighbor = treat as air (no fake wall faces)
 	}
 	int m = get_material(read_neighbor(ivec2(pos.x, pos.y - CHUNK_SIZE)));
-	return m != AIR;
+	return HAS_COLLIDER[m];
 }
 
 vec3 ember_color(float temp_norm, float flicker_amt) {
@@ -126,7 +124,7 @@ vec3 apply_temperature_tint(vec3 base_color, float temperature, ivec2 pixel_pos)
 
 vec3 material_color(vec4 data, ivec2 pixel_pos) {
 	int mat = get_material(data);
-	if (mat == AIR) {
+	if (mat == MAT_AIR) {
 		return vec3(1.0, 0.0, 1.0);
 	}
 	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
@@ -167,7 +165,7 @@ void fragment() {
 	vec4 data = read_pixel(px);
 	int mat = get_material(data);
 
-	if (mat == AIR) {
+	if (mat == MAT_AIR) {
 		if (layer_mode == 0) {
 			// Ground layer: air pixels are transparent
 			COLOR = vec4(0.0);
