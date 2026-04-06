@@ -1,0 +1,32 @@
+// Simplex Cave Stage
+// Uses simplex noise for smooth, organic cave shapes with seamless chunk transitions.
+
+// Tunable Constants
+const float SIMPLEX_CAVE_SCALE = 0.008;
+const float SIMPLEX_CAVE_THRESHOLD = 0.42;
+const float SIMPLEX_RIDGE_SCALE = 0.012;
+const float SIMPLEX_RIDGE_WEIGHT = 0.3;
+const int SIMPLEX_OCTAVES = 5;
+
+void stage_simplex_cave(Context ctx) {
+    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+    if (pos.x >= 256 || pos.y >= 256) return;
+    
+    // Convert local pixel position to world space for seamless transitions
+    // World position = chunk origin in world space + local offset
+    vec2 world_pos = vec2(ctx.chunk_coord * 256) + vec2(pos);
+    
+    // Primary cave shape using FBM simplex noise
+    float cave_noise = simplex_fbm(world_pos * SIMPLEX_CAVE_SCALE, ctx.world_seed, SIMPLEX_OCTAVES);
+    
+    // Add ridge noise for sharper features
+    float ridge_noise = simplex_ridge(world_pos * SIMPLEX_RIDGE_SCALE, hash_combine(ctx.world_seed, 1000u), 4);
+    
+    // Blend the two noise types
+    float combined = cave_noise * (1.0 - SIMPLEX_RIDGE_WEIGHT) + ridge_noise * SIMPLEX_RIDGE_WEIGHT;
+    
+    // Threshold-based carving: airwhere noise exceeds threshold
+    if (combined > SIMPLEX_CAVE_THRESHOLD) {
+        imageStore(chunk_tex, pos, vec4(0.0));
+    }
+}

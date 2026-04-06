@@ -207,6 +207,7 @@ func _update_chunks() -> void:
 	# Rebuild simulation uniform sets for affected chunks
 	if not new_chunks.is_empty() or not to_remove.is_empty():
 		_rebuild_sim_uniform_sets(new_chunks, to_remove)
+		_update_render_neighbors(new_chunks, to_remove)
 
 
 func _create_chunk(coord: Vector2i) -> void:
@@ -239,9 +240,28 @@ func _create_chunk(coord: Vector2i) -> void:
 	mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
 	mat.set_shader_parameter("material_textures", material_textures)
 	mat.set_shader_parameter("wall_height", 16)
+	mat.set_shader_parameter("layer_mode", 1)
 	chunk.mesh_instance.material = mat
 
 	chunk_container.add_child(chunk.mesh_instance)
+
+	# Wall top mesh (renders in front of player)
+	chunk.wall_mesh_instance = MeshInstance2D.new()
+	var wall_quad := QuadMesh.new()
+	wall_quad.size = Vector2(CHUNK_SIZE, CHUNK_SIZE)
+	chunk.wall_mesh_instance.mesh = wall_quad
+	chunk.wall_mesh_instance.position = chunk.mesh_instance.position
+	chunk.wall_mesh_instance.z_index = 1
+
+	var wall_mat := ShaderMaterial.new()
+	wall_mat.shader = render_shader
+	wall_mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
+	wall_mat.set_shader_parameter("material_textures", material_textures)
+	wall_mat.set_shader_parameter("wall_height", 16)
+	wall_mat.set_shader_parameter("layer_mode", 0)
+	chunk.wall_mesh_instance.material = wall_mat
+
+	chunk_container.add_child(chunk.wall_mesh_instance)
 
 	chunk.static_body = StaticBody2D.new()
 	chunk.static_body.collision_layer = 1
@@ -261,6 +281,8 @@ func _unload_chunk(coord: Vector2i) -> void:
 func _free_chunk_resources(chunk: Chunk) -> void:
 	if chunk.mesh_instance and is_instance_valid(chunk.mesh_instance):
 		chunk.mesh_instance.queue_free()
+	if chunk.wall_mesh_instance and is_instance_valid(chunk.wall_mesh_instance):
+		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
 	if chunk.sim_uniform_set.is_valid():
@@ -323,6 +345,36 @@ func _build_sim_uniform_set(chunk: Chunk) -> void:
 		uniforms.append(u)
 
 	chunk.sim_uniform_set = rd.uniform_set_create(uniforms, sim_shader, 0)
+
+
+## Update render shader neighbor textures for wall face continuity across chunks.
+## The wall face scan goes +px.y (north in world), so each chunk needs its
+## northern neighbor's texture: chunk_coord + (0, -1).
+func _update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
+	# Chunks that need their neighbor updated: newly loaded chunks and
+	# chunks directly south of loaded/unloaded chunks (they gain/lose a neighbor).
+	var to_update: Dictionary = {}
+	for coord in loaded:
+		to_update[coord] = true
+		var south: Vector2i = coord + Vector2i(0, 1)
+		if chunks.has(south):
+			to_update[south] = true
+	for coord in unloaded:
+		var south: Vector2i = coord + Vector2i(0, 1)
+		if chunks.has(south):
+			to_update[south] = true
+
+	for coord in to_update:
+		if not chunks.has(coord):
+			continue
+		var chunk: Chunk = chunks[coord]
+		var north_coord: Vector2i = coord + Vector2i(0, -1)
+		var mat: ShaderMaterial = chunk.mesh_instance.material as ShaderMaterial
+		if chunks.has(north_coord):
+			mat.set_shader_parameter("neighbor_data", chunks[north_coord].texture_2d_rd)
+			mat.set_shader_parameter("has_neighbor", true)
+		else:
+			mat.set_shader_parameter("has_neighbor", false)
 
 
 # --- Simulation dispatch ---
@@ -486,7 +538,7 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 	if segment_count == 0:
 		return true
 
-	var segments := _parse_segment_buffer(result_data.slice(4), segment_count * 16)
+	var segments := _parse_segment_buffer(result_data.slice(4), segment_count * 4)
 
 	var world_offset := chunk.coord * CHUNK_SIZE
 	if chunk.static_body.get_child_count() > 0:
@@ -589,6 +641,7 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> void:
 	rd.compute_list_end()
 
 	_rebuild_sim_uniform_sets(new_chunks, [])
+	_update_render_neighbors(new_chunks, [])
 
 
 func clear_all_chunks() -> void:

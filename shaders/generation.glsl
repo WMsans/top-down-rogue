@@ -11,16 +11,17 @@ layout(push_constant) uniform PushConstants {
 
 layout(rgba8, set = 0, binding = 0) uniform image2D chunk_tex;
 
-// #include "res://stages/stone_fill_stage.glslinc"
-#include "res://stages/wood_fill_stage.glslinc"
-#include "res://stages/cave_utils.glslinc"
-#include "res://stages/cave_stage.glslinc" 
+#include "res://shaders/noise/simplex_2d.glslinc"
+#include "res://stages/stone_fill_stage.glslinc"
+// #include "res://stages/wood_fill_stage.glslinc"
+#include "res://stages/simplex_cave_utils.glslinc"
+#include "res://stages/simplex_cave_stage.glslinc" 
 
 void main() {
 	Context ctx;
 	ctx.chunk_coord = push_ctx.chunk_coord;
 	ctx.world_seed = push_ctx.world_seed;
 
-	stage_wood_fill(ctx);
-	stage_cave(ctx);
+	stage_stone_fill(ctx);
+	stage_simplex_cave(ctx);
 }
