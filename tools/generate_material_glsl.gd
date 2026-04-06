@@ -68,5 +68,10 @@ func _init():
     file.store_string(output)
     file.close()
     
+    var file2 := FileAccess.open("res://shaders/generated/materials.gdshaderinc", FileAccess.WRITE)
+    file2.store_string(output)
+    file2.close()
+    
     print("Generated shaders/generated/materials.glslinc")
+    print("Generated shaders/generated/materials.gdshaderinc")
     quit()
