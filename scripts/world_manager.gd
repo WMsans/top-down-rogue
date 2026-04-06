@@ -10,6 +10,7 @@ const MAX_COLLISION_SEGMENTS := 4096
 
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
+var occupancy_manager: OccupancyManager
 
 var gen_shader: RID
 var gen_pipeline: RID
@@ -40,6 +41,10 @@ func _ready() -> void:
 	_init_collider_storage_buffer()
 	render_shader = preload("res://shaders/render_chunk.gdshader")
 	_init_material_textures()
+	
+	occupancy_manager = OccupancyManager.new()
+	occupancy_manager.rd = rd
+	add_child(occupancy_manager)
 	
 	collision_container = Node2D.new()
 	collision_container.name = "CollisionContainer"
@@ -124,6 +129,7 @@ func _init_collider_storage_buffer() -> void:
 func _process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	occupancy_manager.update_occupancy(chunks, CHUNK_SIZE)
 	_update_chunks()
 	_run_simulation()
 	_rebuild_dirty_collisions()
