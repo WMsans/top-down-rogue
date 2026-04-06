@@ -5,12 +5,6 @@ const CHUNK_SIZE := 256
 const WORKGROUP_SIZE := 8
 const NUM_WORKGROUPS := CHUNK_SIZE / WORKGROUP_SIZE  # 32
 
-const MAT_AIR := 0
-const MAT_WOOD := 1
-const MAT_STONE := 2
-const MAX_TEMPERATURE := 255
-const IGNITION_TEMP := 180
-
 const COLLISION_UPDATE_INTERVAL := 0.3
 const MAX_COLLISION_SEGMENTS := 4096
 
@@ -53,11 +47,18 @@ func _ready() -> void:
 
 
 func _init_material_textures() -> void:
-	var plank_img := Image.load_from_file("res://textures/PixelTextures/plank.png")
-	var stone_img := Image.load_from_file("res://textures/PixelTextures/stone.png")
-	var placeholder := TextureArrayBuilder.create_placeholder_image(plank_img.get_size(), Color.TRANSPARENT)
-
-	var images: Array[Image] = [placeholder, plank_img, stone_img]
+	var images: Array[Image] = []
+	for m in MaterialRegistry.materials:
+		if m.texture_path.is_empty():
+			var ref_img: Image
+			if images.size() > 0:
+				ref_img = images[0]
+			else:
+				ref_img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
+				ref_img.fill(Color.TRANSPARENT)
+			images.append(TextureArrayBuilder.create_placeholder_image(ref_img.get_size(), Color.TRANSPARENT))
+		else:
+			images.append(Image.load_from_file(m.texture_path))
 	material_textures = TextureArrayBuilder.build_from_images(images)
 
 
@@ -458,7 +459,7 @@ func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
 			var mat := chunk_data[src_idx]
 			var temp := chunk_data[src_idx + 2]
 			material_data[y * CHUNK_SIZE + x] = mat
-			if mat == MAT_WOOD and temp > IGNITION_TEMP:
+			if MaterialRegistry.is_flammable(mat) and temp > MaterialRegistry.get_ignition_temp(mat):
 				has_burning = true
 	chunk.collision_dirty = has_burning
 
@@ -495,7 +496,7 @@ func _check_chunk_burning(chunk: Chunk) -> bool:
 			var src_idx := (y * CHUNK_SIZE + x) * 4
 			var mat := chunk_data[src_idx]
 			var temp := chunk_data[src_idx + 2]
-			if mat == MAT_WOOD and temp > IGNITION_TEMP:
+			if MaterialRegistry.is_flammable(mat) and temp > MaterialRegistry.get_ignition_temp(mat):
 				return true
 	return false
 
@@ -585,9 +586,9 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
 			var material := data[idx]
-			if material != MAT_WOOD:
+			if not MaterialRegistry.is_flammable(material):
 				continue
-			data[idx + 2] = MAX_TEMPERATURE
+			data[idx + 2] = 255
 			modified = true
 		if modified:
 			rd.texture_update(chunk.rd_texture, 0, data)
@@ -757,6 +758,6 @@ func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left:
 		return false
 	for y in range(top_left.y, top_left.y + size.y):
 		for x in range(top_left.x, top_left.x + size.x):
-			if data[y * region_w + x] != MAT_AIR:
+			if data[y * region_w + x] != MaterialRegistry.MAT_AIR:
 				return false
 	return true
