@@ -10,6 +10,7 @@ layout(rgba8, set = 0, binding = 1) readonly uniform image2D neighbor_top;
 layout(rgba8, set = 0, binding = 2) readonly uniform image2D neighbor_bottom;
 layout(rgba8, set = 0, binding = 3) readonly uniform image2D neighbor_left;
 layout(rgba8, set = 0, binding = 4) readonly uniform image2D neighbor_right;
+layout(r8, set = 0, binding = 5) readonly uniform image2D occupancy_tex;
 
 layout(push_constant, std430) uniform PushConstants {
 	int phase;
@@ -36,9 +37,33 @@ uint hash(uint n) {
 int get_material(vec4 p) { return int(round(p.r * 255.0)); }
 int get_health(vec4 p) { return int(round(p.g * 255.0)); }
 int get_temperature(vec4 p) { return int(round(p.b * 255.0)); }
+int get_density(vec4 p) { return int(round(p.g * 255.0)); }
 
 vec4 make_pixel(int mat, int hp, int temp) {
-	return vec4(float(mat) / 255.0, float(hp) / 255.0, float(temp) / 255.0, 0.0);
+    return vec4(float(mat) / 255.0, float(hp) / 255.0, float(temp) / 255.0, 0.0);
+}
+
+vec2 unpack_velocity(int packed) {
+    int encoded_vx = (packed >> 4) & 0x0F;
+    int encoded_vy = packed & 0x0F;
+    float vx = float(encoded_vx - 8);
+    float vy = float(encoded_vy - 8);
+    return vec2(vx, vy);
+}
+
+int pack_velocity(vec2 vel) {
+    int encoded_vx = int(clamp(vel.x + 8.0, 0.0, 15.0));
+    int encoded_vy = int(clamp(vel.y + 8.0, 0.0, 15.0));
+    return (encoded_vx << 4) | encoded_vy;
+}
+
+vec4 make_gas_pixel(int mat, int density, int temp, int packed_vel) {
+    return vec4(
+        float(mat) / 255.0,
+        float(density) / 255.0,
+        float(temp) / 255.0,
+        float(packed_vel) / 255.0
+    );
 }
 
 vec4 read_neighbor(ivec2 pos) {
@@ -60,9 +85,123 @@ vec4 read_neighbor(ivec2 pos) {
 	return vec4(0.0);
 }
 
+int read_occupancy(ivec2 pos) {
+    if (pos.x < 0 || pos.x >= CHUNK_SIZE || pos.y < 0 || pos.y >= CHUNK_SIZE) {
+        return 0;
+    }
+    vec4 occ = imageLoad(occupancy_tex, pos);
+    return int(round(occ.r * 255.0));
+}
+
 bool is_burning(vec4 p) {
-	int mat = get_material(p);
-	return IS_FLAMMABLE[mat] && get_temperature(p) > IGNITION_TEMP[mat];
+    int mat = get_material(p);
+    return IS_FLAMMABLE[mat] && get_temperature(p) > IGNITION_TEMP[mat];
+}
+
+bool is_blocked(ivec2 pos) {
+    vec4 neighbor_data = read_neighbor(pos);
+    int neighbor_mat = get_material(neighbor_data);
+    if (HAS_COLLIDER[neighbor_mat]) {
+        return true;
+    }
+    if (read_occupancy(pos) > 0) {
+        return true;
+    }
+    return false;
+}
+
+vec4 simulate_gas(ivec2 pos, vec4 pixel, uint rng) {
+    int mat = get_material(pixel);
+    int density = get_density(pixel);
+    int temp = get_temperature(pixel);
+    int packed_vel = int(round(pixel.a * 255.0));
+    vec2 vel = unpack_velocity(packed_vel);
+    
+    float new_density = float(density);
+    vec2 new_vel = vel;
+    int new_temp = temp;
+    
+    float dt = 1.0;
+    float diffusion_rate = 0.1;
+    
+    vec2 prev_pos = vec2(pos) - new_vel * dt;
+    ivec2 prev_pos_ivec = ivec2(int(round(prev_pos.x)), int(round(prev_pos.y)));
+    vec4 prev_pixel = read_neighbor(prev_pos_ivec);
+    int prev_mat = get_material(prev_pixel);
+    if (prev_mat == mat || prev_mat == MAT_AIR) {
+        int prev_density = get_density(prev_pixel);
+        int prev_vel = int(round(prev_pixel.a * 255.0));
+        float advection_weight = length(new_vel) / 8.0;
+        new_density = mix(float(density), float(prev_density), advection_weight * 0.5);
+    }
+    
+    int transfer_out = 0;
+    ivec2 neighbors[4] = ivec2[4](
+        pos + ivec2(0, -1),
+        pos + ivec2(0, 1),
+        pos + ivec2(-1, 0),
+        pos + ivec2(1, 0)
+    );
+    
+    int free_neighbors = 0;
+    for (int i = 0; i < 4; i++) {
+        if (!is_blocked(neighbors[i])) {
+            vec4 n_data = read_neighbor(neighbors[i]);
+            int n_mat = get_material(n_data);
+            if (n_mat == MAT_AIR || n_mat == mat) {
+                free_neighbors++;
+            }
+        }
+    }
+    
+    if (free_neighbors > 0 && new_density > 10.0) {
+        float per_neighbor = diffusion_rate * new_density / float(free_neighbors);
+        for (int i = 0; i < 4; i++) {
+            if (!is_blocked(neighbors[i])) {
+                vec4 n_data = read_neighbor(neighbors[i]);
+                int n_mat = get_material(n_data);
+                int n_density = get_density(n_data);
+                if (n_mat == MAT_AIR || n_mat == mat) {
+                    uint neighbor_rng = hash(rng ^ uint(i + 1));
+                    if (neighbor_rng % 100 < 50) {
+                        transfer_out += int(per_neighbor);
+                    }
+                }
+            }
+        }
+    }
+    
+    new_density -= float(transfer_out);
+    new_vel *= 0.98;
+    
+    if (read_occupancy(pos) > 0) {
+        int push_count = 0;
+        vec2 push_dir = vec2(0.0);
+        for (int i = 0; i < 4; i++) {
+            if (!is_blocked(neighbors[i])) {
+                push_dir += normalize(vec2(neighbors[i] - pos));
+                push_count++;
+            }
+        }
+        if (push_count > 0) {
+            push_dir /= float(push_count);
+            new_vel += push_dir * 2.0;
+            new_density = max(0.0, new_density - 20.0);
+        }
+    }
+    
+    new_vel = clamp(new_vel, vec2(-8.0), vec2(8.0));
+    new_density = max(0.0, min(255.0, new_density));
+    new_temp = max(0, min(255, new_temp));
+    
+    int new_packed_vel = pack_velocity(new_vel);
+    int new_density_int = int(round(new_density));
+    
+    if (new_density_int <= 0) {
+        return make_pixel(MAT_AIR, 0, 0);
+    }
+    
+    return make_gas_pixel(mat, new_density_int, new_temp, new_packed_vel);
 }
 
 void main() {
@@ -83,7 +222,14 @@ void main() {
 	vec4 n_left = read_neighbor(pos + ivec2(-1, 0));
 	vec4 n_right = read_neighbor(pos + ivec2(1, 0));
 
-	// Accumulate random heat from each burning neighbor (with probability)
+    if (IS_GAS[material]) {
+        uint base_rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed)));
+        vec4 result = simulate_gas(pos, pixel, base_rng);
+        imageStore(chunk_tex, pos, result);
+        return;
+    }
+
+    // Accumulate random heat from each burning neighbor (with probability)
 	int heat_gain = 0;
 	uint base_rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed)));
 	if (is_burning(n_up)) {
