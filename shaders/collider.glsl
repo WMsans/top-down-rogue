@@ -1,6 +1,8 @@
 #[compute]
 #version 450
 
+#include "res://shaders/generated/materials.glslinc"
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(set = 0, binding = 0, rgba8ui) uniform readonly uimage2D terrain_texture;
@@ -37,10 +39,10 @@ void main() {
 	uvec4 bl_sample = imageLoad(terrain_texture, ivec2(gx, gy + CELL_SIZE));
 
 	// Material is in R channel, check if solid (non-zero)
-	uint tl = (tl_sample.r != 0u) ? 1u : 0u;
-	uint tr = (tr_sample.r != 0u) ? 1u : 0u;
-	uint br = (br_sample.r != 0u) ? 1u : 0u;
-	uint bl = (bl_sample.r != 0u) ? 1u : 0u;
+	uint tl = (tl_sample.r != 0u && HAS_COLLIDER[tl_sample.r]) ? 1u : 0u;
+	uint tr = (tr_sample.r != 0u && HAS_COLLIDER[tr_sample.r]) ? 1u : 0u;
+	uint br = (br_sample.r != 0u && HAS_COLLIDER[br_sample.r]) ? 1u : 0u;
+	uint bl = (bl_sample.r != 0u && HAS_COLLIDER[bl_sample.r]) ? 1u : 0u;
 
 	// All air or all solid => no segment
 	if (tl + tr + br + bl == 0u || tl + tr + br + bl == 4u) {
