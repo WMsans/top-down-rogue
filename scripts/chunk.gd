@@ -3,6 +3,7 @@ extends RefCounted
 
 var coord: Vector2i
 var rd_texture: RID
+var occupancy_texture: RID
 var texture_2d_rd: Texture2DRD
 var mesh_instance: MeshInstance2D
 var wall_mesh_instance: MeshInstance2D

@@ -227,6 +227,19 @@ func _create_chunk(coord: Vector2i) -> void:
 	)
 	chunk.rd_texture = rd.texture_create(tf, RDTextureView.new())
 
+	var occ_tf := RDTextureFormat.new()
+	occ_tf.width = CHUNK_SIZE
+	occ_tf.height = CHUNK_SIZE
+	occ_tf.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	occ_tf.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
+	)
+	var occ_data := PackedByteArray()
+	occ_data.resize(CHUNK_SIZE * CHUNK_SIZE)
+	occ_data.fill(0)
+	chunk.occupancy_texture = rd.texture_create(occ_tf, RDTextureView.new(), [occ_data])
+
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
 
@@ -290,6 +303,8 @@ func _free_chunk_resources(chunk: Chunk) -> void:
 		rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
 		rd.free_rid(chunk.rd_texture)
+	if chunk.occupancy_texture.is_valid():
+		rd.free_rid(chunk.occupancy_texture)
 
 
 # --- Simulation uniform sets ---
