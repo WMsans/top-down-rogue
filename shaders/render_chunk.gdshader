@@ -1,5 +1,5 @@
 shader_type canvas_item;
-#include "res://shaders/generated/materials.glslinc"
+#include "res://shaders/generated/materials.gdshaderinc"
 
 uniform sampler2D chunk_data : filter_nearest;
 uniform sampler2D neighbor_data : filter_nearest;
