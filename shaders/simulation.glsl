@@ -154,6 +154,8 @@ vec4 simulate_gas(ivec2 pos, vec4 pixel, uint rng) {
         }
     }
     
+    float transfer_in = 0.0;
+    
     if (free_neighbors > 0 && new_density > 10.0) {
         float per_neighbor = diffusion_rate * new_density / float(free_neighbors);
         for (int i = 0; i < 4; i++) {
@@ -161,17 +163,31 @@ vec4 simulate_gas(ivec2 pos, vec4 pixel, uint rng) {
                 vec4 n_data = read_neighbor(neighbors[i]);
                 int n_mat = get_material(n_data);
                 int n_density = get_density(n_data);
-                if (n_mat == MAT_AIR || n_mat == mat) {
+                if (n_mat == MAT_AIR) {
                     uint neighbor_rng = hash(rng ^ uint(i + 1));
                     if (neighbor_rng % 100 < 50) {
                         transfer_out += int(per_neighbor);
+                    }
+                } else if (n_mat == mat) {
+                    float density_diff = float(n_density) - float(density);
+                    if (density_diff > 0.0) {
+                        float incoming = diffusion_rate * density_diff * 0.5;
+                        uint in_rng = hash(rng ^ uint(i + 100));
+                        if (in_rng % 100 < 50) {
+                            transfer_in += incoming;
+                        }
+                    } else {
+                        uint neighbor_rng = hash(rng ^ uint(i + 1));
+                        if (neighbor_rng % 100 < 50) {
+                            transfer_out += int(per_neighbor);
+                        }
                     }
                 }
             }
         }
     }
     
-    new_density -= float(transfer_out);
+    new_density = new_density - float(transfer_out) + transfer_in;
     new_vel *= 0.98;
     
     if (read_occupancy(pos) > 0) {
