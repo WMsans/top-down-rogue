@@ -42,6 +42,15 @@ func _init():
         output += "\n"
     output += ");\n\n"
     
+    output += "const bool IS_GAS[%d] = bool[%d](\n" % [mat_count, mat_count]
+    for i in registry.materials.size():
+        var m = registry.materials[i]
+        output += "    %s" % ("true" if m.is_gas else "false")
+        if i < registry.materials.size() - 1:
+            output += ","
+        output += "\n"
+    output += ");\n\n"
+    
     output += "const int IGNITION_TEMP[%d] = int[%d](\n" % [mat_count, mat_count]
     for i in registry.materials.size():
         var m = registry.materials[i]

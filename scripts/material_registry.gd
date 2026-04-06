@@ -10,6 +10,7 @@ class MaterialDef:
     var burn_health: int
     var has_collider: bool
     var has_wall_extension: bool
+    var is_gas: bool
 
     func _init(
         p_name: String,
@@ -18,7 +19,8 @@ class MaterialDef:
         p_ignition_temp: int,
         p_burn_health: int,
         p_has_collider: bool,
-        p_has_wall_extension: bool
+        p_has_wall_extension: bool,
+        p_is_gas: bool = false
     ):
         name = p_name
         texture_path = p_texture_path
@@ -27,12 +29,14 @@ class MaterialDef:
         burn_health = p_burn_health
         has_collider = p_has_collider
         has_wall_extension = p_has_wall_extension
+        is_gas = p_is_gas
 
 var materials: Array[MaterialDef] = []
 
 var MAT_AIR: int
 var MAT_WOOD: int
 var MAT_STONE: int
+var MAT_STEAM_GAS: int
 
 func _ready():
     _init_materials()
@@ -60,6 +64,14 @@ func _init_materials():
     mat_stone.id = materials.size()
     materials.append(mat_stone)
     MAT_STONE = mat_stone.id
+    
+    var mat_steam_gas := MaterialDef.new(
+        "STEAM_GAS", "",
+        false, 0, 0, false, false, true
+    )
+    mat_steam_gas.id = materials.size()
+    materials.append(mat_steam_gas)
+    MAT_STEAM_GAS = mat_steam_gas.id
 
 func is_flammable(material_id: int) -> bool:
     if material_id < 0 or material_id >= materials.size():
@@ -80,3 +92,8 @@ func has_wall_extension(material_id: int) -> bool:
     if material_id < 0 or material_id >= materials.size():
         return false
     return materials[material_id].has_wall_extension
+
+func is_gas(material_id: int) -> bool:
+    if material_id < 0 or material_id >= materials.size():
+        return false
+    return materials[material_id].is_gas
