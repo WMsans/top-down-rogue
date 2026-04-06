@@ -1,6 +1,8 @@
 #[compute]
 #version 450
 
+#include "res://shaders/generated/materials.glslinc"
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(rgba8, set = 0, binding = 0) uniform image2D chunk_tex;
@@ -17,9 +19,6 @@ layout(push_constant, std430) uniform PushConstants {
 } pc;
 
 const int CHUNK_SIZE = 256;
-const int MAT_AIR = 0;
-const int MAT_WOOD = 1;
-const int IGNITION_TEMP = 180;
 const int FIRE_TEMP = 255;
 const int HEAT_DISSIPATION = 2;
 const int HEAT_SPREAD = 10;
@@ -62,7 +61,8 @@ vec4 read_neighbor(ivec2 pos) {
 }
 
 bool is_burning(vec4 p) {
-	return get_material(p) == MAT_WOOD && get_temperature(p) > IGNITION_TEMP;
+	int mat = get_material(p);
+	return IS_FLAMMABLE[mat] && get_temperature(p) > IGNITION_TEMP[mat];
 }
 
 void main() {
@@ -87,32 +87,36 @@ void main() {
 	int heat_gain = 0;
 	uint base_rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed)));
 	if (is_burning(n_up)) {
+		int n_mat = get_material(n_up);
 		int n_temp = get_temperature(n_up);
-		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
+		float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 1u);
 		if (rng % 100 < uint(prob * 100.0)) {
 			heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
 		}
 	}
 	if (is_burning(n_down)) {
+		int n_mat = get_material(n_down);
 		int n_temp = get_temperature(n_down);
-		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
+		float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 2u);
 		if (rng % 100 < uint(prob * 100.0)) {
 			heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
 		}
 	}
 	if (is_burning(n_left)) {
+		int n_mat = get_material(n_left);
 		int n_temp = get_temperature(n_left);
-		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
+		float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 3u);
 		if (rng % 100 < uint(prob * 100.0)) {
 			heat_gain += HEAT_SPREAD / 4 + int(rng % uint(HEAT_SPREAD));
 		}
 	}
 	if (is_burning(n_right)) {
+		int n_mat = get_material(n_right);
 		int n_temp = get_temperature(n_right);
-		float prob = float(n_temp - IGNITION_TEMP) / float(FIRE_TEMP - IGNITION_TEMP) * SPREAD_PROB_MAX;
+		float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
 		uint rng = hash(base_rng ^ 4u);
 		if (rng % 100 < uint(prob * 100.0)) {
 			heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
@@ -121,10 +125,10 @@ void main() {
 
 	if (material == MAT_AIR) {
 		temperature = max(0, temperature - HEAT_DISSIPATION);
-	} else if (material == MAT_WOOD) {
+	} else if (IS_FLAMMABLE[material]) {
 		temperature = min(255, temperature + heat_gain);
 		temperature = max(0, temperature - HEAT_DISSIPATION);
-		if (temperature > IGNITION_TEMP) {
+		if (temperature > IGNITION_TEMP[material]) {
 			health = health - 1;
 			temperature = FIRE_TEMP;
 			if (health <= 0) {

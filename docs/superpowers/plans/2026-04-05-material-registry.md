@@ -1,0 +1,680 @@
+# Material Registry Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Create a centralized material registry that makes adding new materials easy, with auto-generated shader constants.
+
+**Architecture:** GDScript autoload singleton holds material definitions in an array. A code generator produces GLSL include file with constants and property arrays. Shaders include this generated file.
+
+**Tech Stack:** GDScript, GLSL compute shaders, Godot 4 RenderingDevice API
+
+---
+
+## File Structure
+
+**Created:**
+- `scripts/material_registry.gd` — Autoload singleton with material definitions
+- `tools/generate_material_glsl.gd` — Code generator script
+- `generate_materials.sh` — Build script to run generator
+- `shaders/generated/materials.glslinc` — Generated shader constants
+
+**Modified:**
+- `project.godot` — Register autoload
+- `scripts/world_manager.gd` — Use registry instead of hardcoded constants
+- `shaders/simulation.glsl` — Use generated constants
+- `shaders/collider.glsl` — Use HAS_COLLIDER[]
+- `shaders/render_chunk.gdshader` — Use HAS_WALL_EXTENSION[]
+- `stages/stone_fill_stage.glslinc` — Use MAT_STONE constant
+- `stages/wood_fill_stage.glslinc` — Use MAT_WOOD constant (if exists)
+
+---
+
+### Task 1: Create MaterialRegistry Autoload
+
+**Files:**
+- Create: `scripts/material_registry.gd`
+- Modify: `project.godot` (add autoload entry)
+
+- [ ] **Step 1: Create MaterialRegistry class with MaterialDef inner class**
+
+Create `scripts/material_registry.gd`:
+
+```gdscript
+class_name MaterialRegistry
+extends Node
+
+class MaterialDef:
+    var id: int
+    var name: String
+    var texture_path: String
+    var flammable: bool
+    var ignition_temp: int
+    var burn_health: int
+    var has_collider: bool
+    var has_wall_extension: bool
+
+    func _init(
+        p_name: String,
+        p_texture_path: String,
+        p_flammable: bool,
+        p_ignition_temp: int,
+        p_burn_health: int,
+        p_has_collider: bool,
+        p_has_wall_extension: bool
+    ):
+        name = p_name
+        texture_path = p_texture_path
+        flammable = p_flammable
+        ignition_temp = p_ignition_temp
+        burn_health = p_burn_health
+        has_collider = p_has_collider
+        has_wall_extension = p_has_wall_extension
+
+var materials: Array[MaterialDef] = []
+
+var MAT_AIR: int
+var MAT_WOOD: int
+var MAT_STONE: int
+
+func _ready():
+    _init_materials()
+
+func _init_materials():
+    var mat_air := MaterialDef.new(
+        "AIR", "", false, 0, 0, false, false
+    )
+    mat_air.id = materials.size()
+    materials.append(mat_air)
+    MAT_AIR = mat_air.id
+    
+    var mat_wood := MaterialDef.new(
+        "WOOD", "res://textures/PixelTextures/plank.png",
+        true, 180, 255, true, true
+    )
+    mat_wood.id = materials.size()
+    materials.append(mat_wood)
+    MAT_WOOD = mat_wood.id
+    
+    var mat_stone := MaterialDef.new(
+        "STONE", "res://textures/PixelTextures/stone.png",
+        false, 0, 0, true, true
+    )
+    mat_stone.id = materials.size()
+    materials.append(mat_stone)
+    MAT_STONE = mat_stone.id
+
+func is_flammable(material_id: int) -> bool:
+    if material_id < 0 or material_id >= materials.size():
+        return false
+    return materials[material_id].flammable
+
+func get_ignition_temp(material_id: int) -> int:
+    if material_id < 0 or material_id >= materials.size():
+        return 0
+    return materials[material_id].ignition_temp
+
+func has_collider(material_id: int) -> bool:
+    if material_id < 0 or material_id >= materials.size():
+        return false
+    return materials[material_id].has_collider
+
+func has_wall_extension(material_id: int) -> bool:
+    if material_id < 0 or material_id >= materials.size():
+        return false
+    return materials[material_id].has_wall_extension
+```
+
+- [ ] **Step 2: Register MaterialRegistry as autoload in project.godot**
+
+Open `project.godot` and find the `[autoload]` section. Add:
+
+```ini
+MaterialRegistry="*res://scripts/material_registry.gd"
+```
+
+- [ ] **Step 3: Verify MaterialRegistry loads correctly**
+
+Run Godot and verify no errors. The autoload should be accessible globally.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add scripts/material_registry.gd project.godot
+git commit -m "feat: add MaterialRegistry autoload with material definitions"
+```
+
+---
+
+### Task 2: Create GLSL Code Generator
+
+**Files:**
+- Create: `tools/generate_material_glsl.gd`
+- Create: `shaders/generated/` directory
+
+- [ ] **Step 1: Create the generator script**
+
+Create `tools/generate_material_glsl.gd`:
+
+```gdscript
+extends SceneTree
+
+func _init():
+    var registry_script = load("res://scripts/material_registry.gd")
+    var registry = registry_script.new()
+    registry._ready()
+    
+    var output := "// Auto-generated by generate_material_glsl.gd\n"
+    output += "// DO NOT EDIT - regenerate by running: godot --headless --script res://tools/generate_material_glsl.gd\n\n"
+    output += "#pragma once\n\n"
+    
+    output += "const int MAT_COUNT = %d;\n\n" % registry.materials.size()
+    
+    for m in registry.materials:
+        output += "const int MAT_%s = %d;\n" % [m.name, m.id]
+    output += "\n"
+    
+    output += "const bool IS_FLAMMABLE[MAT_COUNT] = bool[MAT_COUNT](\n"
+    for i in registry.materials.size():
+        var m = registry.materials[i]
+        output += "    %s" % ("true" if m.flammable else "false")
+        if i < registry.materials.size() - 1:
+            output += ","
+        output += "\n"
+    output += ");\n\n"
+    
+    output += "const bool HAS_COLLIDER[MAT_COUNT] = bool[MAT_COUNT](\n"
+    for i in registry.materials.size():
+        var m = registry.materials[i]
+        output += "    %s" % ("true" if m.has_collider else "false")
+        if i < registry.materials.size() - 1:
+            output += ","
+        output += "\n"
+    output += ");\n\n"
+    
+    output += "const bool HAS_WALL_EXTENSION[MAT_COUNT] = bool[MAT_COUNT](\n"
+    for i in registry.materials.size():
+        var m = registry.materials[i]
+        output += "    %s" % ("true" if m.has_wall_extension else "false")
+        if i < registry.materials.size() - 1:
+            output += ","
+        output += "\n"
+    output += ");\n\n"
+    
+    output += "const int IGNITION_TEMP[MAT_COUNT] = int[MAT_COUNT](\n"
+    for i in registry.materials.size():
+        var m = registry.materials[i]
+        output += "    %d" % m.ignition_temp
+        if i < registry.materials.size() - 1:
+            output += ","
+        output += "\n"
+    output += ");\n\n"
+    
+    output += "const int BURN_HEALTH[MAT_COUNT] = int[MAT_COUNT](\n"
+    for i in registry.materials.size():
+        var m = registry.materials[i]
+        output += "    %d" % m.burn_health
+        if i < registry.materials.size() - 1:
+            output += ","
+        output += "\n"
+    output += ");\n"
+    
+    var dir := DirAccess.open("res://shaders")
+    if not dir.dir_exists("generated"):
+        dir.make_dir("generated")
+    
+    var file := FileAccess.open("res://shaders/generated/materials.glslinc", FileAccess.WRITE)
+    file.store_string(output)
+    file.close()
+    
+    print("Generated shaders/generated/materials.glslinc")
+    quit()
+```
+
+- [ ] **Step 2: Create generated directory placeholder**
+
+Create `shaders/generated/.gdignore` (empty file) to prevent Godot from importing the directory:
+
+```bash
+touch shaders/generated/.gdignore
+```
+
+- [ ] **Step 3: Run the generator to create initial materials.glslinc**
+
+```bash
+cd /home/jeremy/Development/Godot/top-down-rogue
+godot --headless --script res://tools/generate_material_glsl.gd
+```
+
+- [ ] **Step 4: Verify generated file contents**
+
+Check that `shaders/generated/materials.glslinc` contains the expected constants for AIR, WOOD, STONE.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add tools/generate_material_glsl.gd shaders/generated/
+git commit -m "feat: add GLSL generator script for material constants"
+```
+
+---
+
+### Task 3: Create Build Script
+
+**Files:**
+- Create: `generate_materials.sh`
+
+- [ ] **Step 1: Create the build script**
+
+Create `generate_materials.sh`:
+
+```bash
+#!/bin/bash
+cd "$(dirname "$0")"
+godot --headless --script res://tools/generate_material_glsl.gd
+```
+
+- [ ] **Step 2: Make it executable**
+
+```bash
+chmod +x generate_materials.sh
+```
+
+- [ ] **Step 3: Test the script**
+
+```bash
+./generate_materials.sh
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add generate_materials.sh
+git commit -m "feat: add build script for material GLSL generation"
+```
+
+---
+
+### Task 4: Update Simulation Shader
+
+**Files:**
+- Modify: `shaders/simulation.glsl`
+
+- [ ] **Step 1: Add include for generated materials**
+
+At the top of `shaders/simulation.glsl`, after the `#version 450` line and before the `layout` declarations, add:
+
+```glsl
+#include "res://shaders/generated/materials.glslinc"
+```
+
+- [ ] **Step 2: Remove hardcoded material constants**
+
+Delete these lines from `shaders/simulation.glsl`:
+
+```glsl
+const int MAT_AIR = 0;
+const int MAT_WOOD = 1;
+```
+
+- [ ] **Step 3: Update is_burning function to use IS_FLAMMABLE**
+
+Replace the `is_burning` function:
+
+```glsl
+bool is_burning(vec4 p) {
+    int mat = get_material(p);
+    return IS_FLAMMABLE[mat] && get_temperature(p) > IGNITION_TEMP[mat];
+}
+```
+
+- [ ] **Step 4: Update burning logic in main to use MAT_AIR**
+
+In the `main()` function, find the block starting with `if (material == MAT_AIR)` and replace:
+
+```glsl
+if (material == MAT_AIR) {
+    temperature = max(0, temperature - HEAT_DISSIPATION);
+} else if (IS_FLAMMABLE[material]) {
+    temperature = min(255, temperature + heat_gain);
+    temperature = max(0, temperature - HEAT_DISSIPATION);
+    if (temperature > IGNITION_TEMP[material]) {
+        health = health - 1;
+        temperature = FIRE_TEMP;
+        if (health <= 0) {
+            material = MAT_AIR;
+            health = 0;
+            temperature = 0;
+        }
+    }
+}
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add shaders/simulation.glsl
+git commit -m "refactor: use generated material constants in simulation shader"
+```
+
+---
+
+### Task 5: Update Collider Shader
+
+**Files:**
+- Modify: `shaders/collider.glsl`
+
+- [ ] **Step 1: Add include for generated materials**
+
+At the top of `shaders/collider.glsl`, after the `#version 450` line, add:
+
+```glsl
+#include "res://shaders/generated/materials.glslinc"
+```
+
+- [ ] **Step 2: Update solid check to use HAS_COLLIDER**
+
+Find the section where materials are checked (around lines 39-43). Replace:
+
+```glsl
+// Material is in R channel, check if solid (non-zero)
+uint tl = (tl_sample.r != 0u && HAS_COLLIDER[tl_sample.r]) ? 1u : 0u;
+uint tr = (tr_sample.r != 0u && HAS_COLLIDER[tr_sample.r]) ? 1u : 0u;
+uint br = (br_sample.r != 0u && HAS_COLLIDER[br_sample.r]) ? 1u : 0u;
+uint bl = (bl_sample.r != 0u && HAS_COLLIDER[bl_sample.r]) ? 1u : 0u;
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add shaders/collider.glsl
+git commit -m "refactor: use HAS_COLLIDER in collider shader"
+```
+
+---
+
+### Task 6: Update Render Shader
+
+**Files:**
+- Modify: `shaders/render_chunk.gdshader`
+
+- [ ] **Step 1: Add include for generated materials**
+
+At the top of `shaders/render_chunk.gdshader`, after `shader_type canvas_item;`, add:
+
+```glsl
+#include "res://shaders/generated/materials.glslinc"
+```
+
+- [ ] **Step 2: Remove hardcoded material constants**
+
+Delete these lines from `shaders/render_chunk.gdshader`:
+
+```glsl
+const int AIR = 0;
+const int WOOD = 1;
+const int STONE = 2;
+```
+
+- [ ] **Step 3: Update is_solid functions to use HAS_COLLIDER**
+
+In the `is_solid` function, change:
+
+```glsl
+bool is_solid(ivec2 pos) {
+    if (pos.x < 0 || pos.x >= CHUNK_SIZE || pos.y < 0 || pos.y >= CHUNK_SIZE) {
+        return true;
+    }
+    int m = get_material(read_pixel(pos));
+    return HAS_COLLIDER[m];
+}
+```
+
+- [ ] **Step 4: Update is_solid_extended function**
+
+In the `is_solid_extended` function, update to use HAS_COLLIDER:
+
+```glsl
+bool is_solid_extended(ivec2 pos) {
+    if (pos.x < 0 || pos.x >= CHUNK_SIZE) {
+        return true;
+    }
+    if (pos.y < 0) {
+        return true;
+    }
+    if (pos.y < CHUNK_SIZE) {
+        int m = get_material(read_pixel(pos));
+        return HAS_COLLIDER[m];
+    }
+    if (!has_neighbor) {
+        return false;
+    }
+    int m = get_material(read_neighbor(ivec2(pos.x, pos.y - CHUNK_SIZE)));
+    return HAS_COLLIDER[m];
+}
+```
+
+- [ ] **Step 5: Update AIR constant reference**
+
+In the `fragment()` function, find `if (mat == AIR)` and change to:
+
+```glsl
+if (mat == MAT_AIR) {
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add shaders/render_chunk.gdshader
+git commit -m "refactor: use generated material constants in render shader"
+```
+
+---
+
+### Task 7: Update Generation Stages
+
+**Files:**
+- Modify: `stages/stone_fill_stage.glslinc`
+
+- [ ] **Step 1: Add include to stone_fill_stage.glslinc**
+
+At the beginning of `stages/stone_fill_stage.glslinc`, add:
+
+```glsl
+#include "res://shaders/generated/materials.glslinc"
+```
+
+- [ ] **Step 2: Use MAT_STONE constant**
+
+Change the pixel assignment from:
+
+```glsl
+vec4 pixel = vec4(2.0 / 255.0, 1.0, 0.0, 0.0);
+```
+
+to:
+
+```glsl
+vec4 pixel = vec4(float(MAT_STONE) / 255.0, 1.0, 0.0, 0.0);
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add stages/stone_fill_stage.glslinc
+git commit -m "refactor: use MAT_STONE constant in stone fill stage"
+```
+
+---
+
+### Task 8: Update world_manager.gd
+
+**Files:**
+- Modify: `scripts/world_manager.gd`
+
+- [ ] **Step 1: Remove material constants**
+
+Delete these lines from `scripts/world_manager.gd`:
+
+```gdscript
+const MAT_AIR := 0
+const MAT_WOOD := 1
+const MAT_STONE := 2
+```
+
+- [ ] **Step 2: Update MAX_TEMPERATURE and IGNITION_TEMP references**
+
+Remove:
+
+```gdscript
+const MAX_TEMPERATURE := 255
+const IGNITION_TEMP := 180
+```
+
+The simulation shader uses IGNITION_TEMP from the generated constants. For `MAX_TEMPERATURE`, define locally where needed:
+
+In `place_fire`, find the line `data[idx + 2] = MAX_TEMPERATURE` and replace with `data[idx + 2] = 255`.
+
+- [ ] **Step 3: Update _init_material_textures**
+
+Replace the entire `_init_material_textures` function with:
+
+```gdscript
+func _init_material_textures() -> void:
+    var images: Array[Image] = []
+    for m in MaterialRegistry.materials:
+        if m.texture_path.is_empty():
+            var ref_img: Image
+            if images.size() > 0:
+                ref_img = images[0]
+            else:
+                ref_img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
+                ref_img.fill(Color.TRANSPARENT)
+            images.append(TextureArrayBuilder.create_placeholder_image(ref_img.get_size(), Color.TRANSPARENT))
+        else:
+            images.append(Image.load_from_file(m.texture_path))
+    material_textures = TextureArrayBuilder.build_from_images(images)
+```
+
+- [ ] **Step 4: Update _check_chunk_burning**
+
+Replace `_check_chunk_burning` to use registry:
+
+```gdscript
+func _check_chunk_burning(chunk: Chunk) -> bool:
+    var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
+    for y in CHUNK_SIZE:
+        for x in CHUNK_SIZE:
+            var src_idx := (y * CHUNK_SIZE + x) * 4
+            var mat := chunk_data[src_idx]
+            var temp := chunk_data[src_idx + 2]
+            if MaterialRegistry.is_flammable(mat) and temp > MaterialRegistry.get_ignition_temp(mat):
+                return true
+    return false
+```
+
+- [ ] **Step 5: Update _rebuild_chunk_collision_cpu**
+
+Replace the burning check in `_rebuild_chunk_collision_cpu`:
+
+```gdscript
+var has_burning := false
+for y in CHUNK_SIZE:
+    for x in CHUNK_SIZE:
+        var src_idx := (y * CHUNK_SIZE + x) * 4
+        var mat := chunk_data[src_idx]
+        var temp := chunk_data[src_idx + 2]
+        material_data[y * CHUNK_SIZE + x] = mat
+        if MaterialRegistry.is_flammable(mat) and temp > MaterialRegistry.get_ignition_temp(mat):
+            has_burning = true
+chunk.collision_dirty = has_burning
+```
+
+- [ ] **Step 6: Update place_fire**
+
+Replace the `place_fire` function's material check:
+
+```gdscript
+for pixel_pos: Vector2i in affected[chunk_coord]:
+    var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
+    var material := data[idx]
+    if not MaterialRegistry.is_flammable(material):
+        continue
+    data[idx + 2] = 255
+    modified = true
+```
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add scripts/world_manager.gd
+git commit -m "refactor: use MaterialRegistry instead of hardcoded material constants"
+```
+
+---
+
+### Task 9: Run Generator and Verify
+
+**Files:**
+- Regenerate: `shaders/generated/materials.glslinc`
+
+- [ ] **Step 1: Run the generator again to ensure consistency**
+
+```bash
+./generate_materials.sh
+```
+
+- [ ] **Step 2: Verify the game runs without errors**
+
+Run Godot and check for any shader compilation errors or runtime errors.
+
+- [ ] **Step 3: Verify materials display correctly**
+
+In-game, verify that:
+- Stone and wood textures render correctly
+- Fire spreads on wood but not stone
+- Colliders work for both materials
+
+- [ ] **Step 4: Commit any regenerated files**
+
+```bash
+git add shaders/generated/materials.glslinc
+git commit -m "chore: regenerate materials.glslinc"
+```
+
+---
+
+### Task 10: Add .gitignore for Generated Files (Optional)
+
+**Files:**
+- Modify: `.gitignore`
+
+- [ ] **Step 1: Decide whether to track generated file**
+
+Option A (track it): Keep `shaders/generated/materials.glslinc` in git so builds are reproducible without running generator.
+
+Option B (ignore it): Add to `.gitignore`:
+```
+shaders/generated/materials.glslinc
+```
+
+The spec indicates tracking it, so no `.gitignore` change needed.
+
+- [ ] **Step 2: Commit if adding to .gitignore**
+
+Skip this step since we're tracking the generated file.
+
+---
+
+## Summary
+
+This plan creates:
+1. MaterialRegistry autoload with material definitions
+2. GLSL code generator for shader constants
+3. Build script for regeneration
+4. Updated shaders using generated constants
+5. Updated world_manager.gd using registry
+
+After implementation, adding a new material requires:
+1. Add entry in `MaterialRegistry._init_materials()`
+2. Add texture to `textures/PixelTextures/`
+3. Run `./generate_materials.sh`

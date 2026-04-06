@@ -8,6 +8,6 @@ void stage_wood_fill(Context ctx) {
     if (pos.x >= 256 || pos.y >= 256) return;
 
     // Wood: material=1, health=255, temperature=0, reserved=0
-    vec4 pixel = vec4(1.0 / 255.0, 1.0, 0.0, 0.0);
+    vec4 pixel = vec4(float(MAT_WOOD) / 255.0, 1.0, 0.0, 0.0);
     imageStore(chunk_tex, pos, pixel);
 }

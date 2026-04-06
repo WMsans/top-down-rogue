@@ -8,6 +8,6 @@ void stage_stone_fill(Context ctx) {
     if (pos.x >= 256 || pos.y >= 256) return;
 
     // Stone: material=2, health=255, temperature=0, reserved=0
-    vec4 pixel = vec4(2.0 / 255.0, 1.0, 0.0, 0.0);
+    vec4 pixel = vec4(float(MAT_STONE) / 255.0, 1.0, 0.0, 0.0);
     imageStore(chunk_tex, pos, pixel);
 }
