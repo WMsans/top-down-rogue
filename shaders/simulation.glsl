@@ -121,21 +121,9 @@ vec4 simulate_gas(ivec2 pos, vec4 pixel, uint rng) {
     vec2 new_vel = vel;
     int new_temp = temp;
     
-    float dt = 1.0;
-    float diffusion_rate = 0.1;
+    new_vel *= 0.98;
     
-    vec2 prev_pos = vec2(pos) - new_vel * dt;
-    ivec2 prev_pos_ivec = ivec2(int(round(prev_pos.x)), int(round(prev_pos.y)));
-    vec4 prev_pixel = read_neighbor(prev_pos_ivec);
-    int prev_mat = get_material(prev_pixel);
-    if (prev_mat == mat || prev_mat == MAT_AIR) {
-        int prev_density = get_density(prev_pixel);
-        int prev_vel = int(round(prev_pixel.a * 255.0));
-        float advection_weight = length(new_vel) / 8.0;
-        new_density = mix(float(density), float(prev_density), advection_weight * 0.5);
-    }
-    
-    int transfer_out = 0;
+    int free_neighbors = 0;
     ivec2 neighbors[4] = ivec2[4](
         pos + ivec2(0, -1),
         pos + ivec2(0, 1),
@@ -143,7 +131,6 @@ vec4 simulate_gas(ivec2 pos, vec4 pixel, uint rng) {
         pos + ivec2(1, 0)
     );
     
-    int free_neighbors = 0;
     for (int i = 0; i < 4; i++) {
         if (!is_blocked(neighbors[i])) {
             vec4 n_data = read_neighbor(neighbors[i]);
@@ -154,41 +141,10 @@ vec4 simulate_gas(ivec2 pos, vec4 pixel, uint rng) {
         }
     }
     
-    float transfer_in = 0.0;
-    
-    if (free_neighbors > 0 && new_density > 10.0) {
-        float per_neighbor = diffusion_rate * new_density / float(free_neighbors);
-        for (int i = 0; i < 4; i++) {
-            if (!is_blocked(neighbors[i])) {
-                vec4 n_data = read_neighbor(neighbors[i]);
-                int n_mat = get_material(n_data);
-                int n_density = get_density(n_data);
-                if (n_mat == MAT_AIR) {
-                    uint neighbor_rng = hash(rng ^ uint(i + 1));
-                    if (neighbor_rng % 100 < 50) {
-                        transfer_out += int(per_neighbor);
-                    }
-                } else if (n_mat == mat) {
-                    float density_diff = float(n_density) - float(density);
-                    if (density_diff > 0.0) {
-                        float incoming = diffusion_rate * density_diff * 0.5;
-                        uint in_rng = hash(rng ^ uint(i + 100));
-                        if (in_rng % 100 < 50) {
-                            transfer_in += incoming;
-                        }
-                    } else {
-                        uint neighbor_rng = hash(rng ^ uint(i + 1));
-                        if (neighbor_rng % 100 < 50) {
-                            transfer_out += int(per_neighbor);
-                        }
-                    }
-                }
-            }
-        }
+    if (free_neighbors > 0 && new_density > 5.0) {
+        float diffusion_amount = new_density * 0.1 / float(free_neighbors + 1);
+        new_density -= diffusion_amount * float(free_neighbors);
     }
-    
-    new_density = new_density - float(transfer_out) + transfer_in;
-    new_vel *= 0.98;
     
     if (read_occupancy(pos) > 0) {
         int push_count = 0;
