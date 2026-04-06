@@ -10,9 +10,6 @@ const RECENTER_THRESHOLD := 32
 ## Emitted when grid data is updated (after readback apply or force sync).
 signal data_updated
 
-## Material constants (must match world_manager.gd / shaders)
-const MAT_AIR := 0
-
 var _data: PackedByteArray
 ## World position of the grid's top-left corner.
 var _anchor: Vector2i = Vector2i.ZERO
@@ -53,7 +50,7 @@ func is_solid(world_x: int, world_y: int) -> bool:
 	var idx := _world_to_index(world_x, world_y)
 	if idx == -1:
 		return true
-	return _data[idx] != MAT_AIR
+	return _data[idx] != MaterialRegistry.MAT_AIR
 
 
 ## Returns the material type byte at (world_x, world_y).
