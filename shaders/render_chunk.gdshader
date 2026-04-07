@@ -189,7 +189,19 @@ void fragment() {
 
     if (IS_GAS[mat]) {
         if (layer_mode == 1) {
-            COLOR = vec4(0.0);
+            bool found_wall = false;
+            for (int d = 1; d <= wall_height; d++) {
+                if (found_wall) break;
+                ivec2 check_pos = ivec2(px.x, px.y + d);
+                vec4 src_data = read_pixel_extended(check_pos);
+                if (is_solid_extended(check_pos)) {
+                    COLOR = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
+                    found_wall = true;
+                }
+            }
+            if (!found_wall) {
+                COLOR = vec4(0.0);
+            }
         } else {
             COLOR = render_gas(data, px);
         }
