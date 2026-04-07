@@ -193,10 +193,7 @@ void fragment() {
         } else {
             COLOR = render_gas(data, px);
         }
-        return;
-    }
-
-    if (mat == MAT_AIR) {
+    } else if (mat == MAT_AIR) {
         if (layer_mode == 0) {
             COLOR = vec4(0.0);
         } else {
