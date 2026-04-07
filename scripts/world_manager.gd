@@ -623,6 +623,44 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 			chunk.collision_dirty = true
 
 
+func place_gas(world_pos: Vector2, radius: float, density: int = 200) -> void:
+	var center_x := int(floor(world_pos.x))
+	var center_y := int(floor(world_pos.y))
+	var r := int(ceil(radius))
+
+	var affected: Dictionary = {}
+	for dx in range(-r, r + 1):
+		for dy in range(-r, r + 1):
+			if dx * dx + dy * dy > r * r:
+				continue
+			var wx := center_x + dx
+			var wy := center_y + dy
+			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
+			if not chunks.has(chunk_coord):
+				continue
+			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
+			if not affected.has(chunk_coord):
+				affected[chunk_coord] = []
+			affected[chunk_coord].append(local)
+
+	for chunk_coord in affected:
+		var chunk: Chunk = chunks[chunk_coord]
+		var data := rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
+		for pixel_pos: Vector2i in affected[chunk_coord]:
+			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
+			var material := data[idx]
+			if material != MaterialRegistry.MAT_AIR:
+				continue
+			data[idx] = MaterialRegistry.MAT_STEAM_GAS
+			data[idx + 1] = density
+			data[idx + 2] = 0
+			data[idx + 3] = 136
+			modified = true
+		if modified:
+			rd.texture_update(chunk.rd_texture, 0, data)
+
+
 # --- Public API for debug overlay ---
 
 func get_active_chunk_coords() -> Array[Vector2i]:
