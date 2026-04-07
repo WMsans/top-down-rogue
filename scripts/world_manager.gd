@@ -366,6 +366,13 @@ func _build_sim_uniform_set(chunk: Chunk) -> void:
 		u.add_id(tex)
 		uniforms.append(u)
 
+	# Binding 5: occupancy texture
+	var u5 := RDUniform.new()
+	u5.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u5.binding = 5
+	u5.add_id(chunk.occupancy_texture)
+	uniforms.append(u5)
+
 	chunk.sim_uniform_set = rd.uniform_set_create(uniforms, sim_shader, 0)
 
 
