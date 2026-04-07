@@ -141,11 +141,6 @@ vec4 simulate_gas(ivec2 pos, vec4 pixel, uint rng) {
         }
     }
     
-    if (free_neighbors > 0 && new_density > 5.0) {
-        float diffusion_amount = new_density * 0.1 / float(free_neighbors + 1);
-        new_density -= diffusion_amount * float(free_neighbors);
-    }
-    
     if (read_occupancy(pos) > 0) {
         int push_count = 0;
         vec2 push_dir = vec2(0.0);
