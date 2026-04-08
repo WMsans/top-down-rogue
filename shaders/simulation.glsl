@@ -79,24 +79,175 @@ vec4 pack_gas(int density, ivec2 vel) {
 	);
 }
 
+bool is_solid_for_gas(int mat) {
+    // Gas flows only between AIR and GAS. Anything else is a wall.
+    return mat != MAT_AIR && mat != MAT_GAS;
+}
+
+// Integer divide with hash-based stochastic rounding for the remainder.
+// `salt` differentiates independent random streams (e.g., 1..4 for four directions).
+int stochastic_div(int numerator, int denom, ivec2 pos, uint salt) {
+    if (denom <= 0) return 0;
+    int base = numerator / denom;
+    int rem = numerator - base * denom;
+    if (rem <= 0) return base;
+    uint rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed) ^ salt));
+    return base + (int(rng % uint(denom)) < rem ? 1 : 0);
+}
+
 // Returns true if this cell was overwritten by an injection and main() should return.
 bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
 	return false;  // stub — Task 5
 }
 
-// Gas advection for gas AND air cells. Writes pixel via imageStore and returns.
 void gas_advect_pull(
-	ivec2 pos, vec4 pixel,
-	vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right
+    ivec2 pos, vec4 pixel,
+    vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right
 ) {
-	// Stub — Task 4 replaces this body. For now, preserve existing behavior:
-	int material = get_material(pixel);
-	int health = get_health(pixel);
-	int temperature = get_temperature(pixel);
-	if (material == MAT_AIR) {
-		temperature = max(0, temperature - HEAT_DISSIPATION);
-	}
-	imageStore(chunk_tex, pos, make_pixel(material, health, temperature));
+    int material = get_material(pixel);
+
+    // --- Fast path: AIR cell with no neighboring gas. Preserve heat decay. ---
+    int n_mat_up    = get_material(n_up);
+    int n_mat_down  = get_material(n_down);
+    int n_mat_left  = get_material(n_left);
+    int n_mat_right = get_material(n_right);
+
+    bool any_gas_neighbor =
+        n_mat_up == MAT_GAS || n_mat_down == MAT_GAS ||
+        n_mat_left == MAT_GAS || n_mat_right == MAT_GAS;
+
+    if (material == MAT_AIR && !any_gas_neighbor) {
+        int health = get_health(pixel);
+        int temperature = max(0, get_temperature(pixel) - HEAT_DISSIPATION);
+        imageStore(chunk_tex, pos, make_pixel(MAT_AIR, health, temperature));
+        return;
+    }
+
+    // --- Own state ---
+    int density = (material == MAT_GAS) ? get_density(pixel) : 0;
+    ivec2 vel = (material == MAT_GAS) ? unpack_velocity(pixel) : ivec2(0);
+
+    // --- Compute outflow components (only meaningful if density > 0) ---
+    // Directions: up = (0,-1), down = (0,1), left = (-1,0), right = (1,0)
+    // Outward component toward neighbor N is max(0, v · unit_dir_to_N).
+    int comp_up    = max(0, -vel.y);
+    int comp_down  = max(0,  vel.y);
+    int comp_left  = max(0, -vel.x);
+    int comp_right = max(0,  vel.x);
+
+    // Cancel components that point into a solid (no flow into walls).
+    if (is_solid_for_gas(n_mat_up))    comp_up    = 0;
+    if (is_solid_for_gas(n_mat_down))  comp_down  = 0;
+    if (is_solid_for_gas(n_mat_left))  comp_left  = 0;
+    if (is_solid_for_gas(n_mat_right)) comp_right = 0;
+
+    int out_up    = stochastic_div(density * comp_up,    V_MAX_OUTFLOW, pos, 1u);
+    int out_down  = stochastic_div(density * comp_down,  V_MAX_OUTFLOW, pos, 2u);
+    int out_left  = stochastic_div(density * comp_left,  V_MAX_OUTFLOW, pos, 3u);
+    int out_right = stochastic_div(density * comp_right, V_MAX_OUTFLOW, pos, 4u);
+
+    int total_out = out_up + out_down + out_left + out_right;
+    if (total_out > density) {
+        // Rare due to component clamping; cap to prevent negative density.
+        total_out = density;
+    }
+
+    // --- Compute inflow from each neighbor toward this cell ---
+    // For neighbor N at direction d from this cell, inflow = density_N * comp(v_N, -d)
+    int in_up    = 0;
+    int in_down  = 0;
+    int in_left  = 0;
+    int in_right = 0;
+    ivec2 vin_up    = ivec2(0);
+    ivec2 vin_down  = ivec2(0);
+    ivec2 vin_left  = ivec2(0);
+    ivec2 vin_right = ivec2(0);
+
+    if (n_mat_up == MAT_GAS) {
+        int dN = get_density(n_up);
+        ivec2 vN = unpack_velocity(n_up);
+        // Up-neighbor is above us; it flows toward us along +y (i.e., vy > 0).
+        int c = max(0, vN.y);
+        in_up = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 5u);
+        vin_up = vN;
+    }
+    if (n_mat_down == MAT_GAS) {
+        int dN = get_density(n_down);
+        ivec2 vN = unpack_velocity(n_down);
+        int c = max(0, -vN.y);
+        in_down = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 6u);
+        vin_down = vN;
+    }
+    if (n_mat_left == MAT_GAS) {
+        int dN = get_density(n_left);
+        ivec2 vN = unpack_velocity(n_left);
+        int c = max(0, vN.x);
+        in_left = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 7u);
+        vin_left = vN;
+    }
+    if (n_mat_right == MAT_GAS) {
+        int dN = get_density(n_right);
+        ivec2 vN = unpack_velocity(n_right);
+        int c = max(0, -vN.x);
+        in_right = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 8u);
+        vin_right = vN;
+    }
+
+    int total_in = in_up + in_down + in_left + in_right;
+
+    // --- Wall reflection: any velocity component pointing into a solid flips sign ---
+    if (is_solid_for_gas(n_mat_up)    && vel.y < 0) vel.y = -vel.y;
+    if (is_solid_for_gas(n_mat_down)  && vel.y > 0) vel.y = -vel.y;
+    if (is_solid_for_gas(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
+    if (is_solid_for_gas(n_mat_right) && vel.x > 0) vel.x = -vel.x;
+
+    // --- New density ---
+    int new_density = density - total_out + total_in;
+    new_density = clamp(new_density, 0, 255);
+
+    // --- New velocity: density-weighted average, then 1/16 damping ---
+    int stayed = max(0, density - total_out);
+    int weight = max(1, stayed + total_in);
+
+    ivec2 vsum = vel * stayed
+               + vin_up    * in_up
+               + vin_down  * in_down
+               + vin_left  * in_left
+               + vin_right * in_right;
+
+    ivec2 new_vel = vsum / weight;
+    new_vel = (new_vel * 15) / 16;
+    new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
+
+    // --- Material transitions ---
+    if (material == MAT_AIR) {
+        // AIR -> GAS only if enough flow arrived.
+        if (total_in >= THRESHOLD_BECOME_GAS) {
+            // Use purely-inflow-weighted velocity (there's no pre-existing velocity for air).
+            int w = max(1, total_in);
+            ivec2 inflow_vel = (
+                vin_up * in_up + vin_down * in_down +
+                vin_left * in_left + vin_right * in_right
+            ) / w;
+            inflow_vel = (inflow_vel * 15) / 16;
+            inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
+            imageStore(chunk_tex, pos, pack_gas(total_in, inflow_vel));
+            return;
+        }
+        // Not enough flow — stay air, but keep heat dissipation.
+        int health = get_health(pixel);
+        int temperature = max(0, get_temperature(pixel) - HEAT_DISSIPATION);
+        imageStore(chunk_tex, pos, make_pixel(MAT_AIR, health, temperature));
+        return;
+    }
+
+    // material == MAT_GAS from here on.
+    if (new_density < THRESHOLD_DISSIPATE) {
+        // Dissipate — revert to air with cleared alpha/velocity.
+        imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
+        return;
+    }
+    imageStore(chunk_tex, pos, pack_gas(new_density, new_vel));
 }
 
 vec4 read_neighbor(ivec2 pos) {
