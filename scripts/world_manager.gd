@@ -7,6 +7,10 @@ const NUM_WORKGROUPS := CHUNK_SIZE / WORKGROUP_SIZE  # 32
 
 const COLLISION_UPDATE_INTERVAL := 0.3
 const MAX_COLLISION_SEGMENTS := 4096
+const MAX_INJECTIONS_PER_CHUNK := 32
+# Header: int count + 12 bytes padding (std430 16-byte alignment).
+# Each InjectionAABB is 32 bytes (ivec2 min + ivec2 max + ivec2 vel + 2x i32 pad).
+const INJECTION_BUFFER_SIZE := 16 + 32 * MAX_INJECTIONS_PER_CHUNK
 
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
@@ -227,6 +231,13 @@ func _create_chunk(coord: Vector2i) -> void:
 	)
 	chunk.rd_texture = rd.texture_create(tf, RDTextureView.new())
 
+	chunk.injection_buffer = rd.storage_buffer_create(INJECTION_BUFFER_SIZE)
+	# Zero-initialize (count = 0, no bodies) so the first dispatch is a no-op loop.
+	var zero_data := PackedByteArray()
+	zero_data.resize(INJECTION_BUFFER_SIZE)
+	zero_data.fill(0)
+	rd.buffer_update(chunk.injection_buffer, 0, zero_data.size(), zero_data)
+
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
 
@@ -286,6 +297,8 @@ func _free_chunk_resources(chunk: Chunk) -> void:
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
+	if chunk.injection_buffer.is_valid():
+		rd.free_rid(chunk.injection_buffer)
 	if chunk.sim_uniform_set.is_valid():
 		rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
@@ -345,6 +358,13 @@ func _build_sim_uniform_set(chunk: Chunk) -> void:
 		u.add_id(tex)
 		uniforms.append(u)
 
+	# Binding 5: rigidbody injection SSBO (per chunk)
+	var u5 := RDUniform.new()
+	u5.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u5.binding = 5
+	u5.add_id(chunk.injection_buffer)
+	uniforms.append(u5)
+
 	chunk.sim_uniform_set = rd.uniform_set_create(uniforms, sim_shader, 0)
 
 
@@ -393,6 +413,15 @@ func _run_simulation() -> void:
 	push_odd.resize(16)
 	push_odd.encode_s32(0, 1)
 	push_odd.encode_s32(4, randi())
+
+	# Upload per-chunk injection payloads before dispatch.
+	var tree := get_tree()
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		if not chunk.injection_buffer.is_valid():
+			continue
+		var payload := GasInjector.build_payload(tree, coord)
+		rd.buffer_update(chunk.injection_buffer, 0, payload.size(), payload)
 
 	var compute_list := rd.compute_list_begin()
 
@@ -554,6 +583,46 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 			chunk.static_body.add_child(collision_shape)
 
 	return true
+
+
+## Debug: spawn a circular blob of gas at world_pos with given density and velocity.
+func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector2i = Vector2i.ZERO) -> void:
+	var center_x := int(floor(world_pos.x))
+	var center_y := int(floor(world_pos.y))
+	var r := int(ceil(radius))
+	var affected: Dictionary = {}  # Vector2i -> Array[Vector2i]
+	for dx in range(-r, r + 1):
+		for dy in range(-r, r + 1):
+			if dx * dx + dy * dy > r * r:
+				continue
+			var wx := center_x + dx
+			var wy := center_y + dy
+			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
+			if not chunks.has(chunk_coord):
+				continue
+			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
+			if not affected.has(chunk_coord):
+				affected[chunk_coord] = []
+			affected[chunk_coord].append(local)
+	var clamped_density: int = clampi(density, 0, 255)
+	var vx := clampi(velocity.x + 8, 0, 15)
+	var vy := clampi(velocity.y + 8, 0, 15)
+	var packed_velocity: int = (vx << 4) | vy
+	for chunk_coord in affected:
+		var chunk: Chunk = chunks[chunk_coord]
+		var data := rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
+		for pixel_pos: Vector2i in affected[chunk_coord]:
+			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
+			if data[idx] != MaterialRegistry.MAT_AIR:
+				continue
+			data[idx] = MaterialRegistry.MAT_GAS
+			data[idx + 1] = clamped_density
+			data[idx + 2] = 0
+			data[idx + 3] = packed_velocity
+			modified = true
+		if modified:
+			rd.texture_update(chunk.rd_texture, 0, data)
 
 
 # --- Fire placement (called by InputHandler) ---

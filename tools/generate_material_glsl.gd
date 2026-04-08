@@ -60,6 +60,16 @@ func _init():
         output += "\n"
     output += ");\n"
     
+    output += "const vec4 MATERIAL_TINT[%d] = vec4[%d](\n" % [mat_count, mat_count]
+    for i in registry.materials.size():
+        var m = registry.materials[i]
+        var c: Color = m.tint_color
+        output += "    vec4(%f, %f, %f, %f)" % [c.r, c.g, c.b, c.a]
+        if i < registry.materials.size() - 1:
+            output += ","
+        output += "\n"
+    output += ");\n"
+    
     var dir := DirAccess.open("res://shaders")
     if not dir.dir_exists("generated"):
         dir.make_dir("generated")

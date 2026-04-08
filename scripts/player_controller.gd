@@ -24,6 +24,7 @@ func _ready() -> void:
 	_world_manager.shadow_grid = shadow_grid
 
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	add_to_group("gas_interactors")
 
 	await get_tree().process_frame
 	await get_tree().process_frame
