@@ -21,5 +21,4 @@ position_smoothing_enabled = true
 position_smoothing_speed = 12.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2000232908]
-position = Vector2(0, -6)
 shape = SubResource("1")
