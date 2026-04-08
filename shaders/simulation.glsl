@@ -39,10 +39,12 @@ const int HEAT_SPREAD = 10;
 const float SPREAD_PROB_MAX = 0.7;
 // --- Gas simulation constants ---
 const int V_MAX_OUTFLOW = 8;
-const int THRESHOLD_BECOME_GAS = 4;
-const int THRESHOLD_DISSIPATE = 4;
+// Any inflow turns AIR into GAS; gas reverts to AIR only when truly empty.
+// This keeps the simulation mass-conserving: every unit of density that
+// leaves a gas cell is captured by its neighbor, never silently destroyed.
+const int THRESHOLD_BECOME_GAS = 1;
+const int THRESHOLD_DISSIPATE = 1;
 const int MAX_INJECTIONS_PER_CHUNK = 32;
-const int DIFFUSION_AMOUNT = 2;
 
 uint hash(uint n) {
 	n = (n >> 16) ^ n;
@@ -217,37 +219,8 @@ void gas_advect_pull(
     if (is_solid_for_gas(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
     if (is_solid_for_gas(n_mat_right) && vel.x > 0) vel.x = -vel.x;
 
-    // --- Diffusion: spread density based on density gradient (independent of velocity) ---
-    int diff_in = 0;
-    int diff_out = 0;
-
-    if (density > 0) {
-        int dens_up    = (n_mat_up == MAT_GAS)    ? get_density(n_up)    : 0;
-        int dens_down  = (n_mat_down == MAT_GAS)  ? get_density(n_down)  : 0;
-        int dens_left  = (n_mat_left == MAT_GAS)   ? get_density(n_left)  : 0;
-        int dens_right = (n_mat_right == MAT_GAS)  ? get_density(n_right) : 0;
-
-        if (!is_solid_for_gas(n_mat_up) && dens_up < density)
-            diff_out += min(DIFFUSION_AMOUNT, density - dens_up);
-        if (!is_solid_for_gas(n_mat_down) && dens_down < density)
-            diff_out += min(DIFFUSION_AMOUNT, density - dens_down);
-        if (!is_solid_for_gas(n_mat_left) && dens_left < density)
-            diff_out += min(DIFFUSION_AMOUNT, density - dens_left);
-        if (!is_solid_for_gas(n_mat_right) && dens_right < density)
-            diff_out += min(DIFFUSION_AMOUNT, density - dens_right);
-    }
-
-    if (n_mat_up == MAT_GAS && get_density(n_up) > density && !is_solid_for_gas(material))
-        diff_in += min(DIFFUSION_AMOUNT, get_density(n_up) - density);
-    if (n_mat_down == MAT_GAS && get_density(n_down) > density && !is_solid_for_gas(material))
-        diff_in += min(DIFFUSION_AMOUNT, get_density(n_down) - density);
-    if (n_mat_left == MAT_GAS && get_density(n_left) > density && !is_solid_for_gas(material))
-        diff_in += min(DIFFUSION_AMOUNT, get_density(n_left) - density);
-    if (n_mat_right == MAT_GAS && get_density(n_right) > density && !is_solid_for_gas(material))
-        diff_in += min(DIFFUSION_AMOUNT, get_density(n_right) - density);
-
-    // --- New density ---
-    int new_density = density - total_out + total_in - diff_out + diff_in;
+    // --- New density (advection only - diffusion removed due to mass conservation issues) ---
+    int new_density = density - total_out + total_in;
     new_density = clamp(new_density, 0, 255);
 
     // --- New velocity: density-weighted average, then 1/16 damping ---
@@ -269,7 +242,7 @@ ivec2 new_vel = vsum / weight;
 
     // --- Material transitions ---
     if (material == MAT_AIR) {
-        int air_total_in = total_in + diff_in;
+        int air_total_in = total_in;
         // AIR -> GAS only if enough flow arrived.
         if (air_total_in >= THRESHOLD_BECOME_GAS) {
             // Use purely-inflow-weighted velocity (there's no pre-existing velocity for air).
