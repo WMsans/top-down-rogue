@@ -472,7 +472,14 @@ func _rebuild_dirty_collisions() -> void:
 		if not success:
 			_rebuild_chunk_collision_cpu(chunk)
 		else:
-			chunk.collision_dirty = _check_chunk_burning(chunk)
+			# Refresh has_burning every 10th rebuild (~3s) so fires that
+			# burn out eventually stop triggering rebuilds, without paying
+			# a texture readback on every rebuild.
+			chunk.burning_recheck_counter += 1
+			if chunk.burning_recheck_counter >= 10:
+				chunk.burning_recheck_counter = 0
+				chunk.has_burning = _check_chunk_burning(chunk)
+			chunk.collision_dirty = chunk.has_burning
 		
 		chunk.last_collision_time = now
 
