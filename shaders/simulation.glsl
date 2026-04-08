@@ -45,6 +45,7 @@ const int V_MAX_OUTFLOW = 8;
 const int THRESHOLD_BECOME_GAS = 1;
 const int THRESHOLD_DISSIPATE = 1;
 const int MAX_INJECTIONS_PER_CHUNK = 32;
+const int DIFFUSION_RATE = 4; // Fraction of density gradient to transfer per frame (1/4 = 25%)
 
 uint hash(uint n) {
 	n = (n >> 16) ^ n;
@@ -165,9 +166,16 @@ void gas_advect_pull(
     int out_right = stochastic_div(density * comp_right, V_MAX_OUTFLOW, pos, 4u);
 
     int total_out = out_up + out_down + out_left + out_right;
-    if (total_out > density) {
-        // Rare due to component clamping; cap to prevent negative density.
-        total_out = density;
+    // Proportionally scale outflows if they exceed density, and cap to 50% per frame
+    // to ensure gas flows gradually rather than evacuating instantly.
+    int max_outflow = min(density, max(1, density / 2));
+    if (total_out > max_outflow) {
+        // Scale each directional outflow proportionally
+        out_up    = out_up    * max_outflow / max(1, total_out);
+        out_down  = out_down  * max_outflow / max(1, total_out);
+        out_left  = out_left  * max_outflow / max(1, total_out);
+        out_right = out_right * max_outflow / max(1, total_out);
+        total_out = out_up + out_down + out_left + out_right;
     }
 
     // --- Compute inflow from each neighbor toward this cell ---
@@ -219,8 +227,28 @@ void gas_advect_pull(
     if (is_solid_for_gas(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
     if (is_solid_for_gas(n_mat_right) && vel.x > 0) vel.x = -vel.x;
 
-    // --- New density (advection only - diffusion removed due to mass conservation issues) ---
-    int new_density = density - total_out + total_in;
+    // --- Diffusion: spread density toward lower-density neighbors (independent of velocity) ---
+    int diff_out = 0;
+    if (density > 0) {
+        int dens_up    = (n_mat_up == MAT_GAS)    ? get_density(n_up)    : 0;
+        int dens_down  = (n_mat_down == MAT_GAS)  ? get_density(n_down)  : 0;
+        int dens_left  = (n_mat_left == MAT_GAS)  ? get_density(n_left)  : 0;
+        int dens_right = (n_mat_right == MAT_GAS) ? get_density(n_right) : 0;
+
+        if (!is_solid_for_gas(n_mat_up)    && dens_up < density)    diff_out += (density - dens_up) / DIFFUSION_RATE;
+        if (!is_solid_for_gas(n_mat_down)  && dens_down < density)  diff_out += (density - dens_down) / DIFFUSION_RATE;
+        if (!is_solid_for_gas(n_mat_left)  && dens_left < density)  diff_out += (density - dens_left) / DIFFUSION_RATE;
+        if (!is_solid_for_gas(n_mat_right) && dens_right < density) diff_out += (density - dens_right) / DIFFUSION_RATE;
+    }
+
+    int diff_in = 0;
+    if (n_mat_up == MAT_GAS    && get_density(n_up) > density    && !is_solid_for_gas(material))    diff_in += (get_density(n_up) - density) / DIFFUSION_RATE;
+    if (n_mat_down == MAT_GAS  && get_density(n_down) > density  && !is_solid_for_gas(material))  diff_in += (get_density(n_down) - density) / DIFFUSION_RATE;
+    if (n_mat_left == MAT_GAS  && get_density(n_left) > density  && !is_solid_for_gas(material))  diff_in += (get_density(n_left) - density) / DIFFUSION_RATE;
+    if (n_mat_right == MAT_GAS && get_density(n_right) > density && !is_solid_for_gas(material)) diff_in += (get_density(n_right) - density) / DIFFUSION_RATE;
+
+    // --- New density ---
+    int new_density = density - total_out + total_in - diff_out + diff_in;
     new_density = clamp(new_density, 0, 255);
 
     // --- New velocity: density-weighted average, then 1/16 damping ---
@@ -242,15 +270,16 @@ ivec2 new_vel = vsum / weight;
 
     // --- Material transitions ---
     if (material == MAT_AIR) {
-        int air_total_in = total_in;
+        int air_total_in = total_in + diff_in;
         // AIR -> GAS only if enough flow arrived.
         if (air_total_in >= THRESHOLD_BECOME_GAS) {
             // Use purely-inflow-weighted velocity (there's no pre-existing velocity for air).
-            int w = max(1, total_in);
+            int w = max(1, total_in + diff_in);
             ivec2 inflow_vel = (
                 vin_up * in_up + vin_down * in_down +
                 vin_left * in_left + vin_right * in_right
-            ) / w;
+            );
+            if (w > 0) inflow_vel /= w;
             inflow_vel = (inflow_vel * 15) / 16;
             inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
             imageStore(chunk_tex, pos, pack_gas(air_total_in, inflow_vel));
