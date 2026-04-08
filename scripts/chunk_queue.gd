@@ -2,40 +2,35 @@ class_name ChunkQueue
 extends RefCounted
 
 var pending_generation: Array = []  # Array[Dictionary] with {coord, priority}
+var pending_generation_keys: Dictionary = {}  # O(1) lookup for deduplication
 var pending_texture_reset: Array = []  # Array[Dictionary] with {coord, chunk}
+var pending_texture_reset_keys: Dictionary = {}  # O(1) lookup for deduplication
 var max_generation_per_frame: int = 2
 var max_texture_updates_per_frame: int = 4
 
 func add_generation(coord: Vector2i, priority: float) -> void:
-	for item in pending_generation:
-		if item.coord == coord:
-			item.priority = min(item.priority, priority)
-			return
+	if pending_generation_keys.has(coord):
+		for item in pending_generation:
+			if item.coord == coord:
+				item.priority = min(item.priority, priority)
+				return
 	pending_generation.append({"coord": coord, "priority": priority})
+	pending_generation_keys[coord] = true
 
 func add_texture_reset(coord: Vector2i, chunk: Chunk) -> void:
-	for item in pending_texture_reset:
-		if item.coord == coord:
-			return
+	if pending_texture_reset_keys.has(coord):
+		return
 	pending_texture_reset.append({"coord": coord, "chunk": chunk})
+	pending_texture_reset_keys[coord] = true
 
 func has_pending(coord: Vector2i) -> bool:
-	for item in pending_generation:
-		if item.coord == coord:
-			return true
-	for item in pending_texture_reset:
-		if item.coord == coord:
-			return true
-	return false
+	return pending_generation_keys.has(coord) or pending_texture_reset_keys.has(coord)
 
 func process_next_frame(
 	rd: RenderingDevice,
 	gen_pipeline: RID,
 	gen_shader: RID,
 	chunks: Dictionary,
-	dummy_texture: RID,
-	sim_shader: RID,
-	collider_storage_buffer: RID,
 	on_chunk_ready: Callable
 ) -> Dictionary:
 	var processed := {"generated": [], "reset": []}
@@ -47,6 +42,7 @@ func process_next_frame(
 		var item: Dictionary = pending_texture_reset.pop_front()
 		var coord: Vector2i = item.coord
 		var chunk: Chunk = item.chunk
+		pending_texture_reset_keys.erase(coord)
 		if not chunks.has(coord) or chunks[coord] != chunk:
 			continue
 		var zero_data := PackedByteArray()
@@ -60,6 +56,7 @@ func process_next_frame(
 	while gen_count < max_generation_per_frame and not pending_generation.is_empty():
 		var item: Dictionary = pending_generation.pop_front()
 		var coord: Vector2i = item.coord
+		pending_generation_keys.erase(coord)
 		if not chunks.has(coord):
 			continue
 		_dispatch_generation(rd, gen_pipeline, gen_shader, chunks[coord])
@@ -73,7 +70,7 @@ func process_next_frame(
 func _dispatch_generation(rd: RenderingDevice, gen_pipeline: RID, gen_shader: RID, chunk: Chunk) -> void:
 	var gen_uniform := RDUniform.new()
 	gen_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-	gen_uniform.binding = 0
+	gen_uniform.uniform_binding = 0
 	gen_uniform.add_id(chunk.rd_texture)
 	var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
 	
