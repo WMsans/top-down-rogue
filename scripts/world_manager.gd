@@ -414,6 +414,15 @@ func _run_simulation() -> void:
 	push_odd.encode_s32(0, 1)
 	push_odd.encode_s32(4, randi())
 
+	# Upload per-chunk injection payloads before dispatch.
+	var tree := get_tree()
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		if not chunk.injection_buffer.is_valid():
+			continue
+		var payload := GasInjector.build_payload(tree, coord)
+		rd.buffer_update(chunk.injection_buffer, 0, payload.size(), payload)
+
 	var compute_list := rd.compute_list_begin()
 
 	# Even pass
