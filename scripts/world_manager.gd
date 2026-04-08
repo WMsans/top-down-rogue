@@ -576,6 +576,43 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 	return true
 
 
+## Debug: spawn a circular blob of gas at world_pos with given density.
+func place_gas(world_pos: Vector2, radius: float, density: int) -> void:
+	var center_x := int(floor(world_pos.x))
+	var center_y := int(floor(world_pos.y))
+	var r := int(ceil(radius))
+	var affected: Dictionary = {}  # Vector2i -> Array[Vector2i]
+	for dx in range(-r, r + 1):
+		for dy in range(-r, r + 1):
+			if dx * dx + dy * dy > r * r:
+				continue
+			var wx := center_x + dx
+			var wy := center_y + dy
+			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
+			if not chunks.has(chunk_coord):
+				continue
+			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
+			if not affected.has(chunk_coord):
+				affected[chunk_coord] = []
+			affected[chunk_coord].append(local)
+	var clamped_density: int = clampi(density, 0, 255)
+	for chunk_coord in affected:
+		var chunk: Chunk = chunks[chunk_coord]
+		var data := rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
+		for pixel_pos: Vector2i in affected[chunk_coord]:
+			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
+			if data[idx] != MaterialRegistry.MAT_AIR:
+				continue
+			data[idx] = MaterialRegistry.MAT_GAS
+			data[idx + 1] = clamped_density
+			data[idx + 2] = 0
+			data[idx + 3] = (8 << 4) | 8  # packed velocity (0, 0)
+			modified = true
+		if modified:
+			rd.texture_update(chunk.rd_texture, 0, data)
+
+
 # --- Fire placement (called by InputHandler) ---
 
 func place_fire(world_pos: Vector2, radius: float) -> void:
