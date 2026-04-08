@@ -156,46 +156,64 @@ bool near_air(ivec2 pos) {
 }
 
 void fragment() {
-	// Convert UV to pixel coordinates in texture space.
-	// UV (0,0) is top-left on screen. Texture pixel (0,0) is also top-left.
-	// The Y-flip is handled inside read_pixel().
 	ivec2 px = ivec2(UV * float(CHUNK_SIZE));
 	px = clamp(px, ivec2(0), ivec2(CHUNK_SIZE - 1));
 
 	vec4 data = read_pixel(px);
 	int mat = get_material(data);
 
+	// --- Gas overlay: remember the tint and fall through as if this cell were air. ---
+	vec4 gas_tint = vec4(0.0);
+	float gas_alpha = 0.0;
+	if (mat == MAT_GAS) {
+		vec4 tint = MATERIAL_TINT[MAT_GAS];
+		gas_tint = vec4(tint.rgb, 1.0);
+		// Ensure visibility even at low density: minimum 25% alpha, scales to tint.a at max
+		gas_alpha = mix(0.25, tint.a, data.g);
+		mat = MAT_AIR;
+	}
+
+	vec4 base_color = vec4(0.0);
+
 	if (mat == MAT_AIR) {
 		if (layer_mode == 0) {
-			// Ground layer: air pixels are transparent
-			COLOR = vec4(0.0);
+			base_color = vec4(0.0);
 		} else {
-			// Wall face layer: scan upward for wall source
 			bool found_wall = false;
 			for (int d = 1; d <= wall_height; d++) {
 				if (found_wall) break;
 				ivec2 check_pos = ivec2(px.x, px.y + d);
 				vec4 src_data = read_pixel_extended(check_pos);
 				if (is_solid_extended(check_pos)) {
-					COLOR = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
+					base_color = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
 					found_wall = true;
 				}
 			}
 			if (!found_wall) {
-				COLOR = vec4(0.0);
+				base_color = vec4(0.0);
 			}
 		}
 	} else {
 		if (layer_mode == 1) {
-			// Wall face layer: solid pixels are transparent
-			COLOR = vec4(0.0);
+			base_color = vec4(0.0);
 		} else {
-			// Ground layer: wall top or black
 			if (near_air(px)) {
-				COLOR = vec4(material_color(data, px), 1.0);
+				base_color = vec4(material_color(data, px), 1.0);
 			} else {
-				COLOR = vec4(0.0, 0.0, 0.0, 1.0);
+				base_color = vec4(0.0, 0.0, 0.0, 1.0);
 			}
 		}
+	}
+
+	// --- Composite gas tint over base color. Preserves wall faces behind gas. ---
+	if (gas_alpha > 0.0) {
+		// Straight-alpha over: out.rgb = mix(base.rgb, tint.rgb, gas_alpha);
+		//                     out.a   = base.a + (1 - base.a) * gas_alpha
+		//                             = max(base.a, gas_alpha) for our base.a ∈ {0,1}
+		vec3 rgb = mix(base_color.rgb, gas_tint.rgb, gas_alpha);
+		float a = max(base_color.a, gas_alpha);
+		COLOR = vec4(rgb, a);
+	} else {
+		COLOR = base_color;
 	}
 }

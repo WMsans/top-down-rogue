@@ -10,6 +10,7 @@ class MaterialDef:
     var burn_health: int
     var has_collider: bool
     var has_wall_extension: bool
+    var tint_color: Color
 
     func _init(
         p_name: String,
@@ -18,7 +19,8 @@ class MaterialDef:
         p_ignition_temp: int,
         p_burn_health: int,
         p_has_collider: bool,
-        p_has_wall_extension: bool
+        p_has_wall_extension: bool,
+        p_tint_color: Color = Color(0, 0, 0, 0)
     ):
         name = p_name
         texture_path = p_texture_path
@@ -27,12 +29,14 @@ class MaterialDef:
         burn_health = p_burn_health
         has_collider = p_has_collider
         has_wall_extension = p_has_wall_extension
+        tint_color = p_tint_color
 
 var materials: Array[MaterialDef] = []
 
 var MAT_AIR: int
 var MAT_WOOD: int
 var MAT_STONE: int
+var MAT_GAS: int
 
 func _ready():
     _init_materials()
@@ -61,6 +65,16 @@ func _init_materials():
     materials.append(mat_stone)
     MAT_STONE = mat_stone.id
 
+    var mat_gas := MaterialDef.new(
+        "GAS", "",
+        false, 0, 0,
+        false, false,
+        Color(0.4, 0.9, 0.3, 1.0)
+    )
+    mat_gas.id = materials.size()
+    materials.append(mat_gas)
+    MAT_GAS = mat_gas.id
+
 func is_flammable(material_id: int) -> bool:
     if material_id < 0 or material_id >= materials.size():
         return false
@@ -80,3 +94,8 @@ func has_wall_extension(material_id: int) -> bool:
     if material_id < 0 or material_id >= materials.size():
         return false
     return materials[material_id].has_wall_extension
+
+func get_tint_color(material_id: int) -> Color:
+    if material_id < 0 or material_id >= materials.size():
+        return Color(0, 0, 0, 0)
+    return materials[material_id].tint_color
