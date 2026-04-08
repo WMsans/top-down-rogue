@@ -662,6 +662,7 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		if modified:
 			rd.texture_update(chunk.rd_texture, 0, data)
 			chunk.collision_dirty = true
+			chunk.has_burning = true
 
 
 # --- Public API for debug overlay ---
