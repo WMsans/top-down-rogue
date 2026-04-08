@@ -700,6 +700,7 @@ func clear_all_chunks() -> void:
 		var chunk: Chunk = chunks[coord]
 		_free_chunk_resources(chunk)
 	chunks.clear()
+	chunk_pool.clear()
 	for us in _gen_uniform_sets_to_free:
 		rd.free_rid(us)
 	_gen_uniform_sets_to_free.clear()
