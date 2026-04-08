@@ -461,27 +461,47 @@ func _run_simulation() -> void:
 
 func _rebuild_dirty_collisions() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
+	var tracking_chunk := Vector2(
+		tracking_position.x / CHUNK_SIZE,
+		tracking_position.y / CHUNK_SIZE
+	)
+
+	# Find the single highest-priority dirty chunk this frame.
+	# Initial builds (last_collision_time == 0.0) bypass the interval gate;
+	# re-rebuilds of already-built chunks still wait COLLISION_UPDATE_INTERVAL.
+	var best: Chunk = null
+	var best_dist_sq := INF
 	for coord in chunks:
 		var chunk: Chunk = chunks[coord]
 		if not chunk.collision_dirty:
 			continue
-		if now - chunk.last_collision_time < COLLISION_UPDATE_INTERVAL:
+		var is_initial: bool = chunk.last_collision_time == 0.0
+		if not is_initial and now - chunk.last_collision_time < COLLISION_UPDATE_INTERVAL:
 			continue
-		
-		var success := _rebuild_chunk_collision_gpu(chunk)
-		if not success:
-			_rebuild_chunk_collision_cpu(chunk)
-		else:
-			# Refresh has_burning every 10th rebuild (~3s) so fires that
-			# burn out eventually stop triggering rebuilds, without paying
-			# a texture readback on every rebuild.
-			chunk.burning_recheck_counter += 1
-			if chunk.burning_recheck_counter >= 10:
-				chunk.burning_recheck_counter = 0
-				chunk.has_burning = _check_chunk_burning(chunk)
-			chunk.collision_dirty = chunk.has_burning
-		
-		chunk.last_collision_time = now
+		var d := Vector2(coord) - tracking_chunk
+		var dist_sq := d.x * d.x + d.y * d.y
+		# Prioritize initial builds over re-rebuilds at equal distance by
+		# subtracting a constant; this keeps newly-loaded chunks ahead.
+		if is_initial:
+			dist_sq -= 10000.0
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best = chunk
+
+	if best == null:
+		return
+
+	var success := _rebuild_chunk_collision_gpu(best)
+	if not success:
+		_rebuild_chunk_collision_cpu(best)
+	else:
+		best.burning_recheck_counter += 1
+		if best.burning_recheck_counter >= 10:
+			best.burning_recheck_counter = 0
+			best.has_burning = _check_chunk_burning(best)
+		best.collision_dirty = best.has_burning
+
+	best.last_collision_time = now
 
 
 func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
