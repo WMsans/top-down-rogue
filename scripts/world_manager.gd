@@ -28,6 +28,10 @@ var render_shader: Shader
 var _gen_uniform_sets_to_free: Array[RID] = []
 var material_textures: Texture2DArray
 
+var chunk_pool: ChunkPool
+var chunk_queue: ChunkQueue
+var predictive_loader: PredictiveLoader
+
 @onready var chunk_container: Node2D = $ChunkContainer
 var collision_container: Node2D
 
@@ -45,9 +49,23 @@ func _ready() -> void:
 	render_shader = preload("res://shaders/render_chunk.gdshader")
 	_init_material_textures()
 	
+	# Create collision container before pool initialization
 	collision_container = Node2D.new()
 	collision_container.name = "CollisionContainer"
 	add_child(collision_container)
+	
+	# Initialize pool and queue
+	chunk_pool = ChunkPool.new(
+		rd,
+		gen_shader,
+		gen_pipeline,
+		render_shader,
+		material_textures,
+		collision_container,
+		64
+	)
+	chunk_queue = ChunkQueue.new()
+	predictive_loader = PredictiveLoader.new()
 
 
 func _init_material_textures() -> void:
@@ -70,6 +88,8 @@ func _exit_tree() -> void:
 	for coord in chunks:
 		var chunk: Chunk = chunks[coord]
 		_free_chunk_resources(chunk)
+	if chunk_pool:
+		chunk_pool.clear()
 	chunks.clear()
 	if dummy_texture.is_valid():
 		rd.free_rid(dummy_texture)
@@ -155,20 +175,39 @@ func _get_desired_chunks() -> Array[Vector2i]:
 	for x in range(min_chunk.x, max_chunk.x + 1):
 		for y in range(min_chunk.y, max_chunk.y + 1):
 			result.append(Vector2i(x, y))
+	
+	# Add predictive chunks
+	var predicted := predictive_loader.get_predicted_chunks(result, tracking_position)
+	for coord in predicted:
+		if not result.has(coord):
+			result.append(coord)
+	
 	return result
 
 
 func _update_chunks() -> void:
-	# Free previous frame's generation uniform sets (GPU is done with them)
+	# Free previous frame's generation uniform sets
 	for us in _gen_uniform_sets_to_free:
 		rd.free_rid(us)
 	_gen_uniform_sets_to_free.clear()
-
+	
+	# Process queue first (async processing)
+	var processed := chunk_queue.process_next_frame(
+		rd,
+		gen_pipeline,
+		gen_shader,
+		chunks,
+		_rebuild_after_generation
+	)
+	
+	# Update predictive loader position
+	predictive_loader.update(tracking_position)
+	
 	var desired := _get_desired_chunks()
 	var desired_set: Dictionary = {}
 	for coord in desired:
 		desired_set[coord] = true
-
+	
 	# Unload stale chunks
 	var to_remove: Array[Vector2i] = []
 	for coord in chunks:
@@ -176,118 +215,66 @@ func _update_chunks() -> void:
 			to_remove.append(coord)
 	for coord in to_remove:
 		_unload_chunk(coord)
-
-	# Load new chunks
+	
+	# Queue new chunks
 	var new_chunks: Array[Vector2i] = []
 	for coord in desired:
 		if not chunks.has(coord):
-			_create_chunk(coord)
+			_load_chunk(coord)
 			new_chunks.append(coord)
-
-	# Batch-generate all new chunks
-	if not new_chunks.is_empty():
-		var compute_list := rd.compute_list_begin()
-		rd.compute_list_bind_compute_pipeline(compute_list, gen_pipeline)
-		for coord in new_chunks:
+		elif not chunk_queue.has_pending(coord):
+			# Chunk exists and not pending, check if needs rebuild
 			var chunk: Chunk = chunks[coord]
-			var gen_uniform := RDUniform.new()
-			gen_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-			gen_uniform.binding = 0
-			gen_uniform.add_id(chunk.rd_texture)
-			var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
-			_gen_uniform_sets_to_free.append(uniform_set)
-			rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
-
-			var push_data := PackedByteArray()
-			push_data.resize(16)
-			push_data.encode_s32(0, coord.x)
-			push_data.encode_s32(4, coord.y)
-			push_data.encode_u32(8, 0)
-			push_data.encode_u32(12, 0)
-			rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
-
-			rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
-		rd.compute_list_end()
-
-	# Rebuild simulation uniform sets for affected chunks
+			if chunk.is_recycled:
+				chunk_queue.add_texture_reset(coord, chunk)
+	
+	# Rebuild simulation uniform sets for newly loaded chunks
 	if not new_chunks.is_empty() or not to_remove.is_empty():
 		_rebuild_sim_uniform_sets(new_chunks, to_remove)
 		_update_render_neighbors(new_chunks, to_remove)
 
 
-func _create_chunk(coord: Vector2i) -> void:
-	var chunk := Chunk.new()
-	chunk.coord = coord
-
-	var tf := RDTextureFormat.new()
-	tf.width = CHUNK_SIZE
-	tf.height = CHUNK_SIZE
-	tf.format = RenderingDevice.DATA_FORMAT_R8G8B8A8_UNORM
-	tf.usage_bits = (
-		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
-		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
-		| RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT
-		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
-	)
-	chunk.rd_texture = rd.texture_create(tf, RDTextureView.new())
-
-	chunk.injection_buffer = rd.storage_buffer_create(INJECTION_BUFFER_SIZE)
-	# Zero-initialize (count = 0, no bodies) so the first dispatch is a no-op loop.
-	var zero_data := PackedByteArray()
-	zero_data.resize(INJECTION_BUFFER_SIZE)
-	zero_data.fill(0)
-	rd.buffer_update(chunk.injection_buffer, 0, zero_data.size(), zero_data)
-
-	chunk.texture_2d_rd = Texture2DRD.new()
-	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
-
-	chunk.mesh_instance = MeshInstance2D.new()
-	var quad := QuadMesh.new()
-	quad.size = Vector2(CHUNK_SIZE, CHUNK_SIZE)
-	chunk.mesh_instance.mesh = quad
-	chunk.mesh_instance.position = Vector2(coord) * CHUNK_SIZE + Vector2(CHUNK_SIZE / 2.0, CHUNK_SIZE / 2.0)
-
-	var mat := ShaderMaterial.new()
-	mat.shader = render_shader
-	mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
-	mat.set_shader_parameter("material_textures", material_textures)
-	mat.set_shader_parameter("wall_height", 16)
-	mat.set_shader_parameter("layer_mode", 1)
-	chunk.mesh_instance.material = mat
-
-	chunk_container.add_child(chunk.mesh_instance)
-
-	# Wall top mesh (renders in front of player)
-	chunk.wall_mesh_instance = MeshInstance2D.new()
-	var wall_quad := QuadMesh.new()
-	wall_quad.size = Vector2(CHUNK_SIZE, CHUNK_SIZE)
-	chunk.wall_mesh_instance.mesh = wall_quad
-	chunk.wall_mesh_instance.position = chunk.mesh_instance.position
-	chunk.wall_mesh_instance.z_index = 1
-
-	var wall_mat := ShaderMaterial.new()
-	wall_mat.shader = render_shader
-	wall_mat.set_shader_parameter("chunk_data", chunk.texture_2d_rd)
-	wall_mat.set_shader_parameter("material_textures", material_textures)
-	wall_mat.set_shader_parameter("wall_height", 16)
-	wall_mat.set_shader_parameter("layer_mode", 0)
-	chunk.wall_mesh_instance.material = wall_mat
-
-	chunk_container.add_child(chunk.wall_mesh_instance)
-
-	chunk.static_body = StaticBody2D.new()
-	chunk.static_body.collision_layer = 1
-	chunk.static_body.collision_mask = 0
-	collision_container.add_child(chunk.static_body)
-	chunk.collision_dirty = true
-
+func _load_chunk(coord: Vector2i) -> void:
+	var chunk := chunk_pool.get_chunk(coord)
+	chunk.is_recycled = chunk_pool.inactive_chunks.has(coord)
 	chunks[coord] = chunk
+	
+	chunk_container.add_child(chunk.mesh_instance)
+	chunk_container.add_child(chunk.wall_mesh_instance)
+	collision_container.add_child(chunk.static_body)
+	
+	# Queue for generation or texture reset
+	var player_chunk := Vector2i(
+		floori(tracking_position.x / float(CHUNK_SIZE)),
+		floori(tracking_position.y / float(CHUNK_SIZE))
+	)
+	var distance := (Vector2(coord) - Vector2(player_chunk)).length()
+	
+	if chunk.is_recycled:
+		chunk_queue.add_texture_reset(coord, chunk)
+	else:
+		chunk_queue.add_generation(coord, distance)
 
 
 func _unload_chunk(coord: Vector2i) -> void:
 	var chunk: Chunk = chunks[coord]
-	_free_chunk_resources(chunk)
+	chunk_container.remove_child(chunk.mesh_instance)
+	chunk_container.remove_child(chunk.wall_mesh_instance)
+	collision_container.remove_child(chunk.static_body)
 	chunks.erase(coord)
+	
+	# Remove from scene tree but keep in pool
+	chunk.is_recycled = true
+	chunk_pool.return_chunk(coord, chunk)
+
+
+func _rebuild_after_generation(coord: Vector2i) -> void:
+	if not chunks.has(coord):
+		return
+	var chunk: Chunk = chunks[coord]
+	var loaded: Array[Vector2i] = [coord]
+	_rebuild_sim_uniform_sets(loaded, [])
+	_update_render_neighbors(loaded, [])
 
 
 func _free_chunk_resources(chunk: Chunk) -> void:
