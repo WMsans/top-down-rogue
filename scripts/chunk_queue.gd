@@ -70,7 +70,7 @@ func process_next_frame(
 func _dispatch_generation(rd: RenderingDevice, gen_pipeline: RID, gen_shader: RID, chunk: Chunk) -> void:
 	var gen_uniform := RDUniform.new()
 	gen_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-	gen_uniform.uniform_binding = 0
+	gen_uniform.binding = 0
 	gen_uniform.add_id(chunk.rd_texture)
 	var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
 	
