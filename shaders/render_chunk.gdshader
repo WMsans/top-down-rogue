@@ -168,7 +168,8 @@ void fragment() {
 	if (mat == MAT_GAS) {
 		vec4 tint = MATERIAL_TINT[MAT_GAS];
 		gas_tint = vec4(tint.rgb, 1.0);
-		gas_alpha = tint.a * data.g;  // density in G, 0..1
+		// Ensure visibility even at low density: minimum 25% alpha, scales to tint.a at max
+		gas_alpha = mix(0.25, tint.a, data.g);
 		mat = MAT_AIR;
 	}
 
