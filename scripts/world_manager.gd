@@ -668,7 +668,7 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> void:
 	var new_chunks: Array[Vector2i] = []
 	for coord in coords:
 		if not chunks.has(coord):
-			_create_chunk(coord)
+			_load_chunk(coord)
 			new_chunks.append(coord)
 
 	if new_chunks.is_empty():
