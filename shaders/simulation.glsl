@@ -18,11 +18,30 @@ layout(push_constant, std430) uniform PushConstants {
 	int _pad3;
 } pc;
 
+struct InjectionAABB {
+	ivec2 aabb_min;
+	ivec2 aabb_max;
+	ivec2 velocity;
+	int _pad0;
+	int _pad1;
+};
+
+layout(set = 0, binding = 5, std430) readonly buffer InjectionBuffer {
+	int count;
+	int _pad[3];
+	InjectionAABB bodies[];
+} injections;
+
 const int CHUNK_SIZE = 256;
 const int FIRE_TEMP = 255;
 const int HEAT_DISSIPATION = 2;
 const int HEAT_SPREAD = 10;
 const float SPREAD_PROB_MAX = 0.7;
+// --- Gas simulation constants ---
+const int V_MAX_OUTFLOW = 8;
+const int THRESHOLD_BECOME_GAS = 4;
+const int THRESHOLD_DISSIPATE = 4;
+const int MAX_INJECTIONS_PER_CHUNK = 32;
 
 uint hash(uint n) {
 	n = (n >> 16) ^ n;
@@ -39,6 +58,45 @@ int get_temperature(vec4 p) { return int(round(p.b * 255.0)); }
 
 vec4 make_pixel(int mat, int hp, int temp) {
 	return vec4(float(mat) / 255.0, float(hp) / 255.0, float(temp) / 255.0, 0.0);
+}
+
+int get_density(vec4 p) { return int(round(p.g * 255.0)); }
+
+ivec2 unpack_velocity(vec4 p) {
+	uint a = uint(round(p.a * 255.0));
+	return ivec2(int(a >> 4) - 8, int(a & 15u) - 8);
+}
+
+vec4 pack_gas(int density, ivec2 vel) {
+	int vx = clamp(vel.x + 8, 0, 15);
+	int vy = clamp(vel.y + 8, 0, 15);
+	uint a = (uint(vx) << 4) | uint(vy);
+	return vec4(
+		float(MAT_GAS) / 255.0,
+		float(clamp(density, 0, 255)) / 255.0,
+		0.0,
+		float(a) / 255.0
+	);
+}
+
+// Returns true if this cell was overwritten by an injection and main() should return.
+bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
+	return false;  // stub — Task 5
+}
+
+// Gas advection for gas AND air cells. Writes pixel via imageStore and returns.
+void gas_advect_pull(
+	ivec2 pos, vec4 pixel,
+	vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right
+) {
+	// Stub — Task 4 replaces this body. For now, preserve existing behavior:
+	int material = get_material(pixel);
+	int health = get_health(pixel);
+	int temperature = get_temperature(pixel);
+	if (material == MAT_AIR) {
+		temperature = max(0, temperature - HEAT_DISSIPATION);
+	}
+	imageStore(chunk_tex, pos, make_pixel(material, health, temperature));
 }
 
 vec4 read_neighbor(ivec2 pos) {
@@ -69,21 +127,31 @@ void main() {
 	ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
 	if (pos.x >= CHUNK_SIZE || pos.y >= CHUNK_SIZE) return;
 
-	// Checkerboard: skip if not this phase
-	if ((pos.x + pos.y) % 2 != pc.phase) return;
-
 	vec4 pixel = imageLoad(chunk_tex, pos);
 	int material = get_material(pixel);
+
+	// 1. Rigidbody AABB injection — returns if the cell was written.
+	if (try_inject_rigidbody_velocity(pos, material, pixel)) return;
+
+	// 2. Neighbor reads used by both gas and burning.
+	vec4 n_up    = read_neighbor(pos + ivec2(0, -1));
+	vec4 n_down  = read_neighbor(pos + ivec2(0,  1));
+	vec4 n_left  = read_neighbor(pos + ivec2(-1, 0));
+	vec4 n_right = read_neighbor(pos + ivec2( 1, 0));
+
+	// 3. Gas + air path — runs every frame, pull-based, no phase guard.
+	if (material == MAT_GAS || material == MAT_AIR) {
+		gas_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
+		return;
+	}
+
+	// 4. Checkerboard burning logic for solids.
+	if ((pos.x + pos.y) % 2 != pc.phase) return;
+
 	int health = get_health(pixel);
 	int temperature = get_temperature(pixel);
 
-	// Read cardinal neighbors
-	vec4 n_up = read_neighbor(pos + ivec2(0, -1));
-	vec4 n_down = read_neighbor(pos + ivec2(0, 1));
-	vec4 n_left = read_neighbor(pos + ivec2(-1, 0));
-	vec4 n_right = read_neighbor(pos + ivec2(1, 0));
-
-	// Accumulate random heat from each burning neighbor (with probability)
+	// Accumulate random heat from each burning neighbor (with probability).
 	int heat_gain = 0;
 	uint base_rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed)));
 	if (is_burning(n_up)) {
@@ -123,9 +191,7 @@ void main() {
 		}
 	}
 
-	if (material == MAT_AIR) {
-		temperature = max(0, temperature - HEAT_DISSIPATION);
-	} else if (IS_FLAMMABLE[material]) {
+	if (IS_FLAMMABLE[material]) {
 		temperature = min(255, temperature + heat_gain);
 		temperature = max(0, temperature - HEAT_DISSIPATION);
 		if (temperature > IGNITION_TEMP[material]) {
