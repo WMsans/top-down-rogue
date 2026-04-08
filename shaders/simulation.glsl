@@ -230,9 +230,12 @@ void gas_advect_pull(
                + vin_left  * in_left
                + vin_right * in_right;
 
-    ivec2 new_vel = vsum / weight;
-    new_vel = (new_vel * 15) / 16;
-    new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
+ivec2 new_vel = vsum / weight;
+	int new_vel_mag = max(abs(new_vel.x), abs(new_vel.y));
+	if (new_vel_mag > 1) {
+		new_vel = (new_vel * 15) / 16;
+	}
+	new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
 
     // --- Material transitions ---
     if (material == MAT_AIR) {
