@@ -222,11 +222,6 @@ func _update_chunks() -> void:
 		if not chunks.has(coord):
 			_load_chunk(coord)
 			new_chunks.append(coord)
-		elif not chunk_queue.has_pending(coord):
-			# Chunk exists and not pending, check if needs rebuild
-			var chunk: Chunk = chunks[coord]
-			if chunk.is_recycled:
-				chunk_queue.add_texture_reset(coord, chunk)
 	
 	# Rebuild simulation uniform sets for newly loaded chunks
 	if not new_chunks.is_empty() or not to_remove.is_empty():
@@ -235,8 +230,9 @@ func _update_chunks() -> void:
 
 
 func _load_chunk(coord: Vector2i) -> void:
+	var was_recycled := chunk_pool.inactive_chunks.has(coord)
 	var chunk := chunk_pool.get_chunk(coord)
-	chunk.is_recycled = chunk_pool.inactive_chunks.has(coord)
+	chunk.is_recycled = was_recycled
 	chunks[coord] = chunk
 	
 	chunk_container.add_child(chunk.mesh_instance)
@@ -250,9 +246,7 @@ func _load_chunk(coord: Vector2i) -> void:
 	)
 	var distance := (Vector2(coord) - Vector2(player_chunk)).length()
 	
-	if chunk.is_recycled:
-		chunk_queue.add_texture_reset(coord, chunk)
-	else:
+	if not chunk.is_recycled:
 		chunk_queue.add_generation(coord, distance)
 
 
