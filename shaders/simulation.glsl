@@ -97,7 +97,22 @@ int stochastic_div(int numerator, int denom, ivec2 pos, uint salt) {
 
 // Returns true if this cell was overwritten by an injection and main() should return.
 bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
-	return false;  // stub — Task 5
+    if (material != MAT_GAS) return false;
+    bool wrote = false;
+    int n = min(injections.count, MAX_INJECTIONS_PER_CHUNK);
+    for (int i = 0; i < n; i++) {
+        InjectionAABB b = injections.bodies[i];
+        if (pos.x < b.aabb_min.x || pos.x >= b.aabb_max.x) continue;
+        if (pos.y < b.aabb_min.y || pos.y >= b.aabb_max.y) continue;
+
+        ivec2 cur_vel = unpack_velocity(pixel);
+        ivec2 new_vel = clamp(cur_vel + b.velocity, ivec2(-8), ivec2(7));
+        int dens = get_density(pixel);
+        pixel = pack_gas(dens, new_vel);
+        wrote = true;
+    }
+    if (wrote) imageStore(chunk_tex, pos, pixel);
+    return wrote;
 }
 
 void gas_advect_pull(
