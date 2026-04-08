@@ -7,6 +7,10 @@ const NUM_WORKGROUPS := CHUNK_SIZE / WORKGROUP_SIZE  # 32
 
 const COLLISION_UPDATE_INTERVAL := 0.3
 const MAX_COLLISION_SEGMENTS := 4096
+const MAX_INJECTIONS_PER_CHUNK := 32
+# Header: int count + 12 bytes padding (std430 16-byte alignment).
+# Each InjectionAABB is 32 bytes (ivec2 min + ivec2 max + ivec2 vel + 2x i32 pad).
+const INJECTION_BUFFER_SIZE := 16 + 32 * MAX_INJECTIONS_PER_CHUNK
 
 var rd: RenderingDevice
 var chunks: Dictionary = {}  # Vector2i -> Chunk
@@ -227,6 +231,13 @@ func _create_chunk(coord: Vector2i) -> void:
 	)
 	chunk.rd_texture = rd.texture_create(tf, RDTextureView.new())
 
+	chunk.injection_buffer = rd.storage_buffer_create(INJECTION_BUFFER_SIZE)
+	# Zero-initialize (count = 0, no bodies) so the first dispatch is a no-op loop.
+	var zero_data := PackedByteArray()
+	zero_data.resize(INJECTION_BUFFER_SIZE)
+	zero_data.fill(0)
+	rd.buffer_update(chunk.injection_buffer, 0, zero_data.size(), zero_data)
+
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
 
@@ -286,6 +297,8 @@ func _free_chunk_resources(chunk: Chunk) -> void:
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
+	if chunk.injection_buffer.is_valid():
+		rd.free_rid(chunk.injection_buffer)
 	if chunk.sim_uniform_set.is_valid():
 		rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
@@ -344,6 +357,13 @@ func _build_sim_uniform_set(chunk: Chunk) -> void:
 		u.binding = i + 1
 		u.add_id(tex)
 		uniforms.append(u)
+
+	# Binding 5: rigidbody injection SSBO (per chunk)
+	var u5 := RDUniform.new()
+	u5.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u5.binding = 5
+	u5.add_id(chunk.injection_buffer)
+	uniforms.append(u5)
 
 	chunk.sim_uniform_set = rd.uniform_set_create(uniforms, sim_shader, 0)
 
