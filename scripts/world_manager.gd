@@ -585,8 +585,8 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 	return true
 
 
-## Debug: spawn a circular blob of gas at world_pos with given density.
-func place_gas(world_pos: Vector2, radius: float, density: int) -> void:
+## Debug: spawn a circular blob of gas at world_pos with given density and velocity.
+func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector2i = Vector2i.ZERO) -> void:
 	var center_x := int(floor(world_pos.x))
 	var center_y := int(floor(world_pos.y))
 	var r := int(ceil(radius))
@@ -605,6 +605,9 @@ func place_gas(world_pos: Vector2, radius: float, density: int) -> void:
 				affected[chunk_coord] = []
 			affected[chunk_coord].append(local)
 	var clamped_density: int = clampi(density, 0, 255)
+	var vx := clampi(velocity.x + 8, 0, 15)
+	var vy := clampi(velocity.y + 8, 0, 15)
+	var packed_velocity: int = (vx << 4) | vy
 	for chunk_coord in affected:
 		var chunk: Chunk = chunks[chunk_coord]
 		var data := rd.texture_get_data(chunk.rd_texture, 0)
@@ -616,7 +619,7 @@ func place_gas(world_pos: Vector2, radius: float, density: int) -> void:
 			data[idx] = MaterialRegistry.MAT_GAS
 			data[idx + 1] = clamped_density
 			data[idx + 2] = 0
-			data[idx + 3] = (8 << 4) | 8  # packed velocity (0, 0)
+			data[idx + 3] = packed_velocity
 			modified = true
 		if modified:
 			rd.texture_update(chunk.rd_texture, 0, data)

@@ -8,8 +8,14 @@ const GAS_DENSITY := 200
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
-		var world_pos := world_manager.get_global_mouse_position()
+		var viewport := get_viewport()
+		var camera := viewport.get_camera_2d()
+		if camera == null:
+			return
+		var screen_pos := viewport.get_mouse_position()
+		var view_size := viewport.get_visible_rect().size
+		var world_pos := (screen_pos - view_size * 0.5) / camera.zoom + camera.global_position
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			world_manager.place_fire(world_pos, FIRE_RADIUS)
+			world_manager.place_gas(world_pos, GAS_RADIUS, GAS_DENSITY, Vector2i(-4, -4))
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			world_manager.place_gas(world_pos, GAS_RADIUS, GAS_DENSITY)
+			world_manager.place_gas(world_pos, GAS_RADIUS, GAS_DENSITY, Vector2i.ZERO)
