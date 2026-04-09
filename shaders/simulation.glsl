@@ -98,9 +98,10 @@ vec4 pack_lava(int density, int temperature, ivec2 vel) {
 	);
 }
 
-bool is_solid_for_gas(int mat) {
-    // Gas flows only between AIR and GAS. Anything else is a wall.
-    return mat != MAT_AIR && mat != MAT_GAS;
+bool is_solid_for_fluid(int mat) {
+    // Fluids (GAS, LAVA) flow only between AIR and other fluids.
+    // Anything else is a wall.
+    return mat != MAT_AIR && mat != MAT_GAS && mat != MAT_LAVA;
 }
 
 // Integer divide with hash-based stochastic rounding for the remainder.
@@ -170,10 +171,10 @@ void gas_advect_pull(
     int comp_right = max(0,  vel.x);
 
     // Cancel components that point into a solid (no flow into walls).
-    if (is_solid_for_gas(n_mat_up))    comp_up    = 0;
-    if (is_solid_for_gas(n_mat_down))  comp_down  = 0;
-    if (is_solid_for_gas(n_mat_left))  comp_left  = 0;
-    if (is_solid_for_gas(n_mat_right)) comp_right = 0;
+    if (is_solid_for_fluid(n_mat_up))    comp_up    = 0;
+    if (is_solid_for_fluid(n_mat_down))  comp_down  = 0;
+    if (is_solid_for_fluid(n_mat_left))  comp_left  = 0;
+    if (is_solid_for_fluid(n_mat_right)) comp_right = 0;
 
     int out_up    = stochastic_div(density * comp_up,    V_MAX_OUTFLOW, pos, 1u);
     int out_down  = stochastic_div(density * comp_down,  V_MAX_OUTFLOW, pos, 2u);
@@ -237,10 +238,10 @@ void gas_advect_pull(
     int total_in = in_up + in_down + in_left + in_right;
 
     // --- Wall reflection: any velocity component pointing into a solid flips sign ---
-    if (is_solid_for_gas(n_mat_up)    && vel.y < 0) vel.y = -vel.y;
-    if (is_solid_for_gas(n_mat_down)  && vel.y > 0) vel.y = -vel.y;
-    if (is_solid_for_gas(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
-    if (is_solid_for_gas(n_mat_right) && vel.x > 0) vel.x = -vel.x;
+    if (is_solid_for_fluid(n_mat_up)    && vel.y < 0) vel.y = -vel.y;
+    if (is_solid_for_fluid(n_mat_down)  && vel.y > 0) vel.y = -vel.y;
+    if (is_solid_for_fluid(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
+    if (is_solid_for_fluid(n_mat_right) && vel.x > 0) vel.x = -vel.x;
 
     // --- Diffusion: spread density toward lower-density neighbors (independent of velocity) ---
     int diff_out = 0;
@@ -250,17 +251,17 @@ void gas_advect_pull(
         int dens_left  = (n_mat_left == MAT_GAS)  ? get_density(n_left)  : 0;
         int dens_right = (n_mat_right == MAT_GAS) ? get_density(n_right) : 0;
 
-        if (!is_solid_for_gas(n_mat_up)    && dens_up < density)    diff_out += (density - dens_up) / DIFFUSION_RATE;
-        if (!is_solid_for_gas(n_mat_down)  && dens_down < density)  diff_out += (density - dens_down) / DIFFUSION_RATE;
-        if (!is_solid_for_gas(n_mat_left)  && dens_left < density)  diff_out += (density - dens_left) / DIFFUSION_RATE;
-        if (!is_solid_for_gas(n_mat_right) && dens_right < density) diff_out += (density - dens_right) / DIFFUSION_RATE;
+        if (!is_solid_for_fluid(n_mat_up)    && dens_up < density)    diff_out += (density - dens_up) / DIFFUSION_RATE;
+        if (!is_solid_for_fluid(n_mat_down)  && dens_down < density)  diff_out += (density - dens_down) / DIFFUSION_RATE;
+        if (!is_solid_for_fluid(n_mat_left)  && dens_left < density)  diff_out += (density - dens_left) / DIFFUSION_RATE;
+        if (!is_solid_for_fluid(n_mat_right) && dens_right < density) diff_out += (density - dens_right) / DIFFUSION_RATE;
     }
 
     int diff_in = 0;
-    if (n_mat_up == MAT_GAS    && get_density(n_up) > density    && !is_solid_for_gas(material))    diff_in += (get_density(n_up) - density) / DIFFUSION_RATE;
-    if (n_mat_down == MAT_GAS  && get_density(n_down) > density  && !is_solid_for_gas(material))  diff_in += (get_density(n_down) - density) / DIFFUSION_RATE;
-    if (n_mat_left == MAT_GAS  && get_density(n_left) > density  && !is_solid_for_gas(material))  diff_in += (get_density(n_left) - density) / DIFFUSION_RATE;
-    if (n_mat_right == MAT_GAS && get_density(n_right) > density && !is_solid_for_gas(material)) diff_in += (get_density(n_right) - density) / DIFFUSION_RATE;
+    if (n_mat_up == MAT_GAS    && get_density(n_up) > density    && !is_solid_for_fluid(material))    diff_in += (get_density(n_up) - density) / DIFFUSION_RATE;
+    if (n_mat_down == MAT_GAS  && get_density(n_down) > density  && !is_solid_for_fluid(material))  diff_in += (get_density(n_down) - density) / DIFFUSION_RATE;
+    if (n_mat_left == MAT_GAS  && get_density(n_left) > density  && !is_solid_for_fluid(material))  diff_in += (get_density(n_left) - density) / DIFFUSION_RATE;
+    if (n_mat_right == MAT_GAS && get_density(n_right) > density && !is_solid_for_fluid(material)) diff_in += (get_density(n_right) - density) / DIFFUSION_RATE;
 
     // --- New density ---
     int new_density = density - total_out + total_in - diff_out + diff_in;
