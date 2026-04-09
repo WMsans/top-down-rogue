@@ -83,6 +83,21 @@ vec4 pack_gas(int density, ivec2 vel) {
 	);
 }
 
+int get_density_lava(vec4 p) { return int(round(p.g * 255.0)); }
+int get_temperature_lava(vec4 p) { return int(round(p.b * 255.0)); }
+
+vec4 pack_lava(int density, int temperature, ivec2 vel) {
+	int vx = clamp(vel.x + 8, 0, 15);
+	int vy = clamp(vel.y + 8, 0, 15);
+	uint a = (uint(vx) << 4) | uint(vy);
+	return vec4(
+		float(MAT_LAVA) / 255.0,
+		float(clamp(density, 0, 255)) / 255.0,
+		float(clamp(temperature, 0, 255)) / 255.0,
+		float(a) / 255.0
+	);
+}
+
 bool is_solid_for_gas(int mat) {
     // Gas flows only between AIR and GAS. Anything else is a wall.
     return mat != MAT_AIR && mat != MAT_GAS;
