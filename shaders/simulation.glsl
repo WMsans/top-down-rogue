@@ -407,6 +407,12 @@ bool is_burning(vec4 p) {
 	return IS_FLAMMABLE[mat] && get_temperature(p) > IGNITION_TEMP[mat];
 }
 
+bool is_hot_lava(vec4 p, int target_material) {
+	if (get_material(p) != MAT_LAVA) return false;
+	int temp = get_temperature_lava(p);
+	return temp > IGNITION_TEMP[target_material];
+}
+
 void main() {
 	ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
 	if (pos.x >= CHUNK_SIZE || pos.y >= CHUNK_SIZE) return;
@@ -473,6 +479,20 @@ void main() {
 		if (rng % 100 < uint(prob * 100.0)) {
 			heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
 		}
+	}
+
+	// Heat from hot lava neighbors
+	if (is_hot_lava(n_up, material)) {
+		heat_gain += get_temperature_lava(n_up) / 4;
+	}
+	if (is_hot_lava(n_down, material)) {
+		heat_gain += get_temperature_lava(n_down) / 4;
+	}
+	if (is_hot_lava(n_left, material)) {
+		heat_gain += get_temperature_lava(n_left) / 4;
+	}
+	if (is_hot_lava(n_right, material)) {
+		heat_gain += get_temperature_lava(n_right) / 4;
 	}
 
 	if (IS_FLAMMABLE[material]) {
