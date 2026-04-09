@@ -150,7 +150,7 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
     return wrote;
 }
 
-void gas_advect_pull(
+void fluid_advect_pull(
     ivec2 pos, vec4 pixel,
     vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right
 ) {
@@ -373,8 +373,8 @@ void main() {
 	vec4 n_right = read_neighbor(pos + ivec2( 1, 0));
 
 	// 3. Gas + air path — runs every frame, pull-based, no phase guard.
-	if (material == MAT_GAS || material == MAT_AIR) {
-		gas_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
+	if (material == MAT_GAS || material == MAT_LAVA || material == MAT_AIR) {
+		fluid_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
 		return;
 	}
 
