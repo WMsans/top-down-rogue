@@ -680,7 +680,7 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 				continue
 			data[idx] = MaterialRegistry.MAT_LAVA
 			data[idx + 1] = 200
-			data[idx + 2] = 0
+			data[idx + 2] = 255
 			data[idx + 3] = 136
 			modified = true
 		if modified:
