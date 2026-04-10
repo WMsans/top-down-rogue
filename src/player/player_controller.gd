@@ -4,7 +4,7 @@ extends CharacterBody2D
 const BODY_WIDTH := 8
 const BODY_HEIGHT := 12
 
-const ShadowGridScript := preload("res://scripts/shadow_grid.gd")
+const ShadowGridScript := preload("res://src/core/shadow_grid.gd")
 
 @export var acceleration: float = 800.0
 @export var friction: float = 600.0
