@@ -16,6 +16,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		var view_size := viewport.get_visible_rect().size
 		var world_pos := (screen_pos - view_size * 0.5) / camera.zoom + camera.global_position
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			world_manager.place_fire(world_pos, 5.0)
+			world_manager.place_gas(world_pos, GAS_RADIUS, GAS_DENSITY)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			world_manager.place_lava(world_pos, 5.0)
