@@ -44,7 +44,7 @@ func _ready() -> void:
 	_init_shaders()
 	_init_dummy_texture()
 	_init_collider_storage_buffer()
-	render_shader = preload("res://shaders/render_chunk.gdshader")
+	render_shader = preload("res://shaders/visual/render_chunk.gdshader")
 	_init_material_textures()
 	
 	collision_container = Node2D.new()
@@ -92,17 +92,17 @@ func _exit_tree() -> void:
 
 
 func _init_shaders() -> void:
-	var gen_file: RDShaderFile = load("res://shaders/generation.glsl")
+	var gen_file: RDShaderFile = load("res://shaders/compute/generation.glsl")
 	var gen_spirv := gen_file.get_spirv()
 	gen_shader = rd.shader_create_from_spirv(gen_spirv)
 	gen_pipeline = rd.compute_pipeline_create(gen_shader)
 
-	var sim_file: RDShaderFile = load("res://shaders/simulation.glsl")
+	var sim_file: RDShaderFile = load("res://shaders/compute/simulation.glsl")
 	var sim_spirv := sim_file.get_spirv()
 	sim_shader = rd.shader_create_from_spirv(sim_spirv)
 	sim_pipeline = rd.compute_pipeline_create(sim_shader)
 
-	var collider_file: RDShaderFile = load("res://shaders/collider.glsl")
+	var collider_file: RDShaderFile = load("res://shaders/compute/collider.glsl")
 	var collider_spirv := collider_file.get_spirv()
 	collider_shader = rd.shader_create_from_spirv(collider_spirv)
 	collider_pipeline = rd.compute_pipeline_create(collider_shader)

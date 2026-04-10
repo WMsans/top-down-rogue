@@ -1,7 +1,7 @@
 extends SceneTree
 
 func _init():
-    var registry_script = load("res://scripts/material_registry.gd")
+    var registry_script = load("res://src/autoload/material_registry.gd")
     var registry = registry_script.new()
     registry._ready()
     
