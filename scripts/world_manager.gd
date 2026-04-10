@@ -685,6 +685,8 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 			modified = true
 		if modified:
 			rd.texture_update(chunk.rd_texture, 0, data)
+			chunk.collision_dirty = true
+			chunk.has_burning = true
 
 
 # --- Fire placement (called by InputHandler) ---
