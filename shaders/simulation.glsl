@@ -325,10 +325,7 @@ ivec2 new_vel = vsum / weight;
 	}
 	new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
 
-    // --- Temperature decay for lava ---
-    if (is_lava) {
-        temperature = max(0, temperature - HEAT_DISSIPATION);
-    }
+    
 
     // --- Material transitions ---
     if (is_air) {
@@ -350,16 +347,24 @@ ivec2 new_vel = vsum / weight;
         if (gas_in >= THRESHOLD_BECOME_GAS || lava_in >= THRESHOLD_BECOME_LAVA) {
             // Material determined by majority inflow
             ivec2 inflow_vel = ivec2(0);
+            int inflow_temp = 0;
             if (total_in > 0) {
                 inflow_vel = (vin_up * in_up + vin_down * in_down + vin_left * in_left + vin_right * in_right) / total_in;
                 inflow_vel = (inflow_vel * 15) / 16;
                 inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
+                // Weighted average temperature from lava inflows
+                int temp_sum = 0;
+                if (n_mat_up == MAT_LAVA) temp_sum += get_temperature_lava(n_up) * in_up;
+                if (n_mat_down == MAT_LAVA) temp_sum += get_temperature_lava(n_down) * in_down;
+                if (n_mat_left == MAT_LAVA) temp_sum += get_temperature_lava(n_left) * in_left;
+                if (n_mat_right == MAT_LAVA) temp_sum += get_temperature_lava(n_right) * in_right;
+                inflow_temp = temp_sum / max(1, lava_in);
             }
 
             if (gas_in >= lava_in) {
                 imageStore(chunk_tex, pos, pack_gas(total_air_in, inflow_vel));
             } else {
-                imageStore(chunk_tex, pos, pack_lava(total_air_in, 0, inflow_vel));
+                imageStore(chunk_tex, pos, pack_lava(total_air_in, inflow_temp, inflow_vel));
             }
             return;
         }
