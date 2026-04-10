@@ -5,7 +5,7 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-layout(set = 0, binding = 0, rgba8ui) uniform readonly uimage2D terrain_texture;
+layout(rgba8, set = 0, binding = 0) uniform readonly image2D terrain_texture;
 layout(std430, binding = 1) buffer SegmentBuffer {
 	uint count;
 	uint data[];
@@ -33,16 +33,21 @@ void main() {
 		return;
 	}
 
-	uvec4 tl_sample = imageLoad(terrain_texture, ivec2(gx, gy));
-	uvec4 tr_sample = imageLoad(terrain_texture, ivec2(gx + CELL_SIZE, gy));
-	uvec4 br_sample = imageLoad(terrain_texture, ivec2(gx + CELL_SIZE, gy + CELL_SIZE));
-	uvec4 bl_sample = imageLoad(terrain_texture, ivec2(gx, gy + CELL_SIZE));
+	vec4 tl_sample = imageLoad(terrain_texture, ivec2(gx, gy));
+	vec4 tr_sample = imageLoad(terrain_texture, ivec2(gx + CELL_SIZE, gy));
+	vec4 br_sample = imageLoad(terrain_texture, ivec2(gx + CELL_SIZE, gy + CELL_SIZE));
+	vec4 bl_sample = imageLoad(terrain_texture, ivec2(gx, gy + CELL_SIZE));
 
 	// Material is in R channel, check if solid (non-zero)
-	uint tl = (tl_sample.r != 0u && HAS_COLLIDER[tl_sample.r]) ? 1u : 0u;
-	uint tr = (tr_sample.r != 0u && HAS_COLLIDER[tr_sample.r]) ? 1u : 0u;
-	uint br = (br_sample.r != 0u && HAS_COLLIDER[br_sample.r]) ? 1u : 0u;
-	uint bl = (bl_sample.r != 0u && HAS_COLLIDER[bl_sample.r]) ? 1u : 0u;
+	uint tl_mat = uint(round(tl_sample.r * 255.0));
+	uint tr_mat = uint(round(tr_sample.r * 255.0));
+	uint br_mat = uint(round(br_sample.r * 255.0));
+	uint bl_mat = uint(round(bl_sample.r * 255.0));
+	
+	uint tl = (tl_mat != 0u && HAS_COLLIDER[tl_mat]) ? 1u : 0u;
+	uint tr = (tr_mat != 0u && HAS_COLLIDER[tr_mat]) ? 1u : 0u;
+	uint br = (br_mat != 0u && HAS_COLLIDER[br_mat]) ? 1u : 0u;
+	uint bl = (bl_mat != 0u && HAS_COLLIDER[bl_mat]) ? 1u : 0u;
 
 	// All air or all solid => no segment
 	if (tl + tr + br + bl == 0u || tl + tr + br + bl == 4u) {
