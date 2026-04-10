@@ -37,6 +37,7 @@ var MAT_AIR: int
 var MAT_WOOD: int
 var MAT_STONE: int
 var MAT_GAS: int
+var MAT_LAVA: int
 
 func _ready():
     _init_materials()
@@ -74,6 +75,16 @@ func _init_materials():
     mat_gas.id = materials.size()
     materials.append(mat_gas)
     MAT_GAS = mat_gas.id
+
+    var mat_lava := MaterialDef.new(
+        "LAVA", "",
+        false, 0, 0,
+        false, false,
+        Color(0.9, 0.4, 0.1, 1.0)
+    )
+    mat_lava.id = materials.size()
+    materials.append(mat_lava)
+    MAT_LAVA = mat_lava.id
 
 func is_flammable(material_id: int) -> bool:
     if material_id < 0 or material_id >= materials.size():

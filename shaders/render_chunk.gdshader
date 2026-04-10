@@ -162,14 +162,14 @@ void fragment() {
 	vec4 data = read_pixel(px);
 	int mat = get_material(data);
 
-	// --- Gas overlay: remember the tint and fall through as if this cell were air. ---
-	vec4 gas_tint = vec4(0.0);
-	float gas_alpha = 0.0;
-	if (mat == MAT_GAS) {
-		vec4 tint = MATERIAL_TINT[MAT_GAS];
-		gas_tint = vec4(tint.rgb, 1.0);
+	// --- Fluid overlay: remember the tint and fall through as if this cell were air. ---
+	vec4 fluid_tint = vec4(0.0);
+	float fluid_alpha = 0.0;
+	if (mat == MAT_GAS || mat == MAT_LAVA) {
+		vec4 tint = MATERIAL_TINT[mat];
+		fluid_tint = vec4(tint.rgb, 1.0);
 		// Ensure visibility even at low density: minimum 25% alpha, scales to tint.a at max
-		gas_alpha = mix(0.25, tint.a, data.g);
+		fluid_alpha = mix(0.25, tint.a, data.g);
 		mat = MAT_AIR;
 	}
 
@@ -205,13 +205,13 @@ void fragment() {
 		}
 	}
 
-	// --- Composite gas tint over base color. Preserves wall faces behind gas. ---
-	if (gas_alpha > 0.0) {
-		// Straight-alpha over: out.rgb = mix(base.rgb, tint.rgb, gas_alpha);
-		//                     out.a   = base.a + (1 - base.a) * gas_alpha
-		//                             = max(base.a, gas_alpha) for our base.a ∈ {0,1}
-		vec3 rgb = mix(base_color.rgb, gas_tint.rgb, gas_alpha);
-		float a = max(base_color.a, gas_alpha);
+	// --- Composite fluid tint over base color. Preserves wall faces behind fluid. ---
+	if (fluid_alpha > 0.0) {
+		// Straight-alpha over: out.rgb = mix(base.rgb, tint.rgb, fluid_alpha);
+		//                     out.a   = base.a + (1 - base.a) * fluid_alpha
+		//                             = max(base.a, fluid_alpha) for our base.a ∈ {0,1}
+		vec3 rgb = mix(base_color.rgb, fluid_tint.rgb, fluid_alpha);
+		float a = max(base_color.a, fluid_alpha);
 		COLOR = vec4(rgb, a);
 	} else {
 		COLOR = base_color;
