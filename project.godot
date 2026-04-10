@@ -17,7 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-MaterialRegistry="*res://scripts/material_registry.gd"
+MaterialRegistry="*res://src/autoload/material_registry.gd"
 
 [editor_plugins]
 
