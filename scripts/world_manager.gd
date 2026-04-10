@@ -514,7 +514,7 @@ func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
 			var src_idx := (y * CHUNK_SIZE + x) * 4
 			var mat := chunk_data[src_idx]
 			var temp := chunk_data[src_idx + 2]
-			material_data[y * CHUNK_SIZE + x] = mat
+			material_data[y * CHUNK_SIZE + x] = mat if MaterialRegistry.has_collider(mat) else 0
 			if MaterialRegistry.is_flammable(mat) and temp > MaterialRegistry.get_ignition_temp(mat):
 				has_burning = true
 	chunk.collision_dirty = has_burning
@@ -593,6 +593,9 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 
 	var segment_count := result_data.decode_u32(0)
 	if segment_count == 0:
+		if chunk.static_body.get_child_count() > 0:
+			for child in chunk.static_body.get_children():
+				child.queue_free()
 		return true
 
 	var segments := _parse_segment_buffer(result_data.slice(4), segment_count * 4)
