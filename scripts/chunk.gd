@@ -9,7 +9,3 @@ var wall_mesh_instance: MeshInstance2D
 var sim_uniform_set: RID
 var injection_buffer: RID
 var static_body: StaticBody2D
-var collision_dirty: bool = true
-var last_collision_time: float = 0.0
-var has_burning: bool = false
-var burning_recheck_counter: int = 0
