@@ -142,7 +142,17 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
             dens = get_density_lava(pixel);
         }
         
-        ivec2 new_vel = clamp(cur_vel + b.velocity, ivec2(-8), ivec2(7));
+        ivec2 center = (b.aabb_min + b.aabb_max) / 2;
+        ivec2 diff = pos - center;
+        int dist_x = abs(diff.x);
+        int dist_y = abs(diff.y);
+        ivec2 push_dir = ivec2(0);
+        if (dist_x >= dist_y) {
+            push_dir.x = (diff.x >= 0) ? 7 : -7;
+        } else {
+            push_dir.y = (diff.y >= 0) ? 7 : -7;
+        }
+        ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
         
         if (material == MAT_GAS) {
             pixel = pack_gas(dens, new_vel);
