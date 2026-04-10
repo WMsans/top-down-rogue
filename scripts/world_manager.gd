@@ -5,9 +5,10 @@ const CHUNK_SIZE := 256
 const WORKGROUP_SIZE := 8
 const NUM_WORKGROUPS := CHUNK_SIZE / WORKGROUP_SIZE  # 32
 
-const COLLISION_UPDATE_INTERVAL := 0.3
 const MAX_COLLISION_SEGMENTS := 4096
 const MAX_INJECTIONS_PER_CHUNK := 32
+const COLLISION_REBUILD_INTERVAL := 0.2
+const COLLISIONS_PER_FRAME := 4
 # Header: int count + 12 bytes padding (std430 16-byte alignment).
 # Each InjectionAABB is 32 bytes (ivec2 min + ivec2 max + ivec2 vel + 2x i32 pad).
 const INJECTION_BUFFER_SIZE := 16 + 32 * MAX_INJECTIONS_PER_CHUNK
@@ -27,6 +28,7 @@ var dummy_texture: RID
 var render_shader: Shader
 var _gen_uniform_sets_to_free: Array[RID] = []
 var material_textures: Texture2DArray
+var _collision_rebuild_timer: float = 0.0
 
 @onready var chunk_container: Node2D = $ChunkContainer
 var collision_container: Node2D
@@ -125,12 +127,12 @@ func _init_collider_storage_buffer() -> void:
 	collider_storage_buffer = rd.storage_buffer_create(buffer_size)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	_update_chunks()
 	_run_simulation()
-	_rebuild_dirty_collisions()
+	_rebuild_dirty_collisions(delta)
 
 
 # --- Chunk lifecycle ---
@@ -279,7 +281,6 @@ func _create_chunk(coord: Vector2i) -> void:
 	chunk.static_body.collision_layer = 1
 	chunk.static_body.collision_mask = 0
 	collision_container.add_child(chunk.static_body)
-	chunk.collision_dirty = true
 
 	chunks[coord] = chunk
 
@@ -459,65 +460,43 @@ func _run_simulation() -> void:
 				break
 
 
-func _rebuild_dirty_collisions() -> void:
-	var now := Time.get_ticks_msec() / 1000.0
-	var tracking_chunk := Vector2(
-		tracking_position.x / CHUNK_SIZE,
-		tracking_position.y / CHUNK_SIZE
-	)
+var _collision_rebuild_index: int = 0
 
-	# Find the single highest-priority dirty chunk this frame.
-	# Initial builds (last_collision_time == 0.0) bypass the interval gate;
-	# re-rebuilds of already-built chunks still wait COLLISION_UPDATE_INTERVAL.
-	var best: Chunk = null
-	var best_dist_sq := INF
-	for coord in chunks:
-		var chunk: Chunk = chunks[coord]
-		if not chunk.collision_dirty:
-			continue
-		var is_initial: bool = chunk.last_collision_time == 0.0
-		if not is_initial and now - chunk.last_collision_time < COLLISION_UPDATE_INTERVAL:
-			continue
-		var d := Vector2(coord) - tracking_chunk
-		var dist_sq := d.x * d.x + d.y * d.y
-		# Prioritize initial builds over re-rebuilds at equal distance by
-		# subtracting a constant; this keeps newly-loaded chunks ahead.
-		if is_initial:
-			dist_sq -= 10000.0
-		if dist_sq < best_dist_sq:
-			best_dist_sq = dist_sq
-			best = chunk
 
-	if best == null:
+func _rebuild_dirty_collisions(delta: float) -> void:
+	if chunks.is_empty():
 		return
 
-	var success := _rebuild_chunk_collision_gpu(best)
-	if not success:
-		_rebuild_chunk_collision_cpu(best)
-	else:
-		best.burning_recheck_counter += 1
-		if best.burning_recheck_counter >= 10:
-			best.burning_recheck_counter = 0
-			best.has_burning = _check_chunk_burning(best)
-		best.collision_dirty = best.has_burning
+	_collision_rebuild_timer += delta
+	if _collision_rebuild_timer < COLLISION_REBUILD_INTERVAL:
+		return
+	_collision_rebuild_timer = 0.0
 
-	best.last_collision_time = now
+	var chunk_coords: Array[Vector2i] = []
+	for coord in chunks:
+		chunk_coords.append(coord)
+
+	var count := mini(COLLISIONS_PER_FRAME, chunk_coords.size())
+	for i in range(count):
+		var idx := (_collision_rebuild_index + i) % chunk_coords.size()
+		var coord: Vector2i = chunk_coords[idx]
+		var chunk: Chunk = chunks[coord]
+		var success := _rebuild_chunk_collision_gpu(chunk)
+		if not success:
+			_rebuild_chunk_collision_cpu(chunk)
+
+	_collision_rebuild_index = (_collision_rebuild_index + count) % max(1, chunk_coords.size())
 
 
 func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
 	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
 	var material_data := PackedByteArray()
 	material_data.resize(CHUNK_SIZE * CHUNK_SIZE)
-	var has_burning := false
 	for y in CHUNK_SIZE:
 		for x in CHUNK_SIZE:
 			var src_idx := (y * CHUNK_SIZE + x) * 4
 			var mat := chunk_data[src_idx]
-			var temp := chunk_data[src_idx + 2]
 			material_data[y * CHUNK_SIZE + x] = mat if MaterialRegistry.has_collider(mat) else 0
-			if MaterialRegistry.is_flammable(mat) and temp > MaterialRegistry.get_ignition_temp(mat):
-				has_burning = true
-	chunk.collision_dirty = has_burning
 
 	var world_offset := chunk.coord * CHUNK_SIZE
 	if chunk.static_body.get_child_count() > 0:
@@ -543,18 +522,6 @@ func _parse_segment_buffer(data: PackedByteArray, max_offset: int) -> PackedVect
 		segments.append(Vector2(x2, y2))
 		offset += 16
 	return segments
-
-
-func _check_chunk_burning(chunk: Chunk) -> bool:
-	var chunk_data := rd.texture_get_data(chunk.rd_texture, 0)
-	for y in CHUNK_SIZE:
-		for x in CHUNK_SIZE:
-			var src_idx := (y * CHUNK_SIZE + x) * 4
-			var mat := chunk_data[src_idx]
-			var temp := chunk_data[src_idx + 2]
-			if MaterialRegistry.is_flammable(mat) and temp > MaterialRegistry.get_ignition_temp(mat):
-				return true
-	return false
 
 
 func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
@@ -688,8 +655,6 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 			modified = true
 		if modified:
 			rd.texture_update(chunk.rd_texture, 0, data)
-			chunk.collision_dirty = true
-			chunk.has_burning = true
 
 
 # --- Fire placement (called by InputHandler) ---
@@ -728,8 +693,6 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 			modified = true
 		if modified:
 			rd.texture_update(chunk.rd_texture, 0, data)
-			chunk.collision_dirty = true
-			chunk.has_burning = true
 
 
 # --- Public API for debug overlay ---
