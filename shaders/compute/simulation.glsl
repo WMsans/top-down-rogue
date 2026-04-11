@@ -136,9 +136,33 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
         if (pos.y < b.aabb_min.y || pos.y >= b.aabb_max.y) continue;
 
         if (material == MAT_GAS) {
+            // Push gas radially away from body center (not along body velocity).
+            // This prevents gas from being "dragged" with the player.
             ivec2 cur_vel = unpack_velocity(pixel);
-            ivec2 new_vel = clamp(cur_vel + b.velocity, ivec2(-8), ivec2(7));
+            ivec2 center = (b.aabb_min + b.aabb_max) / 2;
+            ivec2 diff = pos - center;
+            // Push at max strength — a solid body forcefully displaces gas.
+            ivec2 push_dir = ivec2(0);
+            if (diff.x == 0 && diff.y == 0) {
+                // Cell is exactly at center — push in body's travel direction
+                push_dir = b.velocity;
+            } else {
+                int dist_x = abs(diff.x);
+                int dist_y = abs(diff.y);
+                if (dist_x >= dist_y) {
+                    push_dir.x = (diff.x >= 0) ? 7 : -7;
+                } else {
+                    push_dir.y = (diff.y >= 0) ? 7 : -7;
+                }
+            }
+            ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
             int dens = get_density(pixel);
+            // Reduce density for cells in front of movement to prevent accumulation
+            bool in_front = (b.velocity.x > 0 && diff.x > 0) || (b.velocity.x < 0 && diff.x < 0) ||
+                            (b.velocity.y > 0 && diff.y > 0) || (b.velocity.y < 0 && diff.y < 0);
+            if (in_front && (b.velocity.x != 0 || b.velocity.y != 0)) {
+                dens = dens * 3 / 4; // Reduce by 25%
+            }
             pixel = pack_gas(dens, new_vel);
         } else {
             ivec2 cur_vel = unpack_velocity_lava(pixel);
