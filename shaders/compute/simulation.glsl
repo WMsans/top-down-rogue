@@ -104,10 +104,14 @@ vec4 pack_lava(int density, int temperature, ivec2 vel) {
 	);
 }
 
-bool is_solid_for_fluid(int mat) {
-    // Fluids (GAS, LAVA) flow only between AIR and other fluids.
-    // Anything else is a wall.
-    return mat != MAT_AIR && mat != MAT_GAS && mat != MAT_LAVA;
+bool is_solid_for_gas(int mat) {
+    // Gas flows only between AIR and GAS. Anything else is a wall.
+    return mat != MAT_AIR && mat != MAT_GAS;
+}
+
+bool is_solid_for_lava(int mat) {
+    // Lava flows only between AIR and LAVA. Anything else is a wall.
+    return mat != MAT_AIR && mat != MAT_LAVA;
 }
 
 // Integer divide with hash-based stochastic rounding for the remainder.
@@ -131,32 +135,25 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
         if (pos.x < b.aabb_min.x || pos.x >= b.aabb_max.x) continue;
         if (pos.y < b.aabb_min.y || pos.y >= b.aabb_max.y) continue;
 
-        ivec2 cur_vel;
-        int dens;
-        
         if (material == MAT_GAS) {
-            cur_vel = unpack_velocity(pixel);
-            dens = get_density(pixel);
-        } else {
-            cur_vel = unpack_velocity(pixel);
-            dens = get_density_lava(pixel);
-        }
-        
-        ivec2 center = (b.aabb_min + b.aabb_max) / 2;
-        ivec2 diff = pos - center;
-        int dist_x = abs(diff.x);
-        int dist_y = abs(diff.y);
-        ivec2 push_dir = ivec2(0);
-        if (dist_x >= dist_y) {
-            push_dir.x = (diff.x >= 0) ? 7 : -7;
-        } else {
-            push_dir.y = (diff.y >= 0) ? 7 : -7;
-        }
-        ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
-        
-        if (material == MAT_GAS) {
+            ivec2 cur_vel = unpack_velocity(pixel);
+            ivec2 new_vel = clamp(cur_vel + b.velocity, ivec2(-8), ivec2(7));
+            int dens = get_density(pixel);
             pixel = pack_gas(dens, new_vel);
         } else {
+            ivec2 cur_vel = unpack_velocity_lava(pixel);
+            ivec2 center = (b.aabb_min + b.aabb_max) / 2;
+            ivec2 diff = pos - center;
+            int dist_x = abs(diff.x);
+            int dist_y = abs(diff.y);
+            ivec2 push_dir = ivec2(0);
+            if (dist_x >= dist_y) {
+                push_dir.x = (diff.x >= 0) ? 7 : -7;
+            } else {
+                push_dir.y = (diff.y >= 0) ? 7 : -7;
+            }
+            ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
+            int dens = get_density_lava(pixel);
             int temp = get_temperature_lava(pixel);
             pixel = pack_lava(dens, temp, new_vel);
         }
@@ -166,7 +163,7 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
     return wrote;
 }
 
-void fluid_advect_pull(
+void gas_advect_pull(
     ivec2 pos, vec4 pixel,
     vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right
 ) {
@@ -178,17 +175,11 @@ void fluid_advect_pull(
     int n_mat_left  = get_material(n_left);
     int n_mat_right = get_material(n_right);
 
-    bool is_gas = (material == MAT_GAS);
-    bool is_lava = (material == MAT_LAVA);
-    bool is_air = (material == MAT_AIR);
+    bool any_gas_neighbor =
+        n_mat_up == MAT_GAS || n_mat_down == MAT_GAS ||
+        n_mat_left == MAT_GAS || n_mat_right == MAT_GAS;
 
-    bool any_fluid_neighbor =
-        n_mat_up == MAT_GAS || n_mat_up == MAT_LAVA ||
-        n_mat_down == MAT_GAS || n_mat_down == MAT_LAVA ||
-        n_mat_left == MAT_GAS || n_mat_left == MAT_LAVA ||
-        n_mat_right == MAT_GAS || n_mat_right == MAT_LAVA;
-
-    if (is_air && !any_fluid_neighbor) {
+    if (material == MAT_AIR && !any_gas_neighbor) {
         int health = get_health(pixel);
         int temperature = max(0, get_temperature(pixel) - HEAT_DISSIPATION);
         imageStore(chunk_tex, pos, make_pixel(MAT_AIR, health, temperature));
@@ -196,32 +187,20 @@ void fluid_advect_pull(
     }
 
     // --- Own state ---
-    int density = 0;
-    int temperature = 0;
-    ivec2 vel = ivec2(0);
-
-    if (is_gas) {
-        density = get_density(pixel);
-        vel = unpack_velocity(pixel);
-    } else if (is_lava) {
-        density = get_density_lava(pixel);
-        temperature = get_temperature_lava(pixel);
-        vel = unpack_velocity_lava(pixel);
-    }
+    int density = (material == MAT_GAS) ? get_density(pixel) : 0;
+    ivec2 vel = (material == MAT_GAS) ? unpack_velocity(pixel) : ivec2(0);
 
     // --- Compute outflow components (only meaningful if density > 0) ---
-    // Directions: up = (0,-1), down = (0,1), left = (-1,0), right = (1,0)
-    // Outward component toward neighbor N is max(0, v · unit_dir_to_N).
     int comp_up    = max(0, -vel.y);
     int comp_down  = max(0,  vel.y);
     int comp_left  = max(0, -vel.x);
     int comp_right = max(0,  vel.x);
 
     // Cancel components that point into a solid (no flow into walls).
-    if (is_solid_for_fluid(n_mat_up))    comp_up    = 0;
-    if (is_solid_for_fluid(n_mat_down))  comp_down  = 0;
-    if (is_solid_for_fluid(n_mat_left))  comp_left  = 0;
-    if (is_solid_for_fluid(n_mat_right)) comp_right = 0;
+    if (is_solid_for_gas(n_mat_up))    comp_up    = 0;
+    if (is_solid_for_gas(n_mat_down))  comp_down  = 0;
+    if (is_solid_for_gas(n_mat_left))  comp_left  = 0;
+    if (is_solid_for_gas(n_mat_right)) comp_right = 0;
 
     int out_up    = stochastic_div(density * comp_up,    V_MAX_OUTFLOW, pos, 1u);
     int out_down  = stochastic_div(density * comp_down,  V_MAX_OUTFLOW, pos, 2u);
@@ -233,7 +212,6 @@ void fluid_advect_pull(
     // to ensure gas flows gradually rather than evacuating instantly.
     int max_outflow = min(density, max(1, density / 2));
     if (total_out > max_outflow) {
-        // Scale each directional outflow proportionally
         out_up    = out_up    * max_outflow / max(1, total_out);
         out_down  = out_down  * max_outflow / max(1, total_out);
         out_left  = out_left  * max_outflow / max(1, total_out);
@@ -242,40 +220,39 @@ void fluid_advect_pull(
     }
 
     // --- Compute inflow from each neighbor toward this cell ---
-    // For neighbor N at direction d from this cell, inflow = density_N * comp(v_N, -d)
-    int in_up = 0;
-    int in_down = 0;
-    int in_left = 0;
+    int in_up    = 0;
+    int in_down  = 0;
+    int in_left  = 0;
     int in_right = 0;
-    ivec2 vin_up = ivec2(0);
-    ivec2 vin_down = ivec2(0);
-    ivec2 vin_left = ivec2(0);
+    ivec2 vin_up    = ivec2(0);
+    ivec2 vin_down  = ivec2(0);
+    ivec2 vin_left  = ivec2(0);
     ivec2 vin_right = ivec2(0);
 
-    if (n_mat_up == MAT_GAS || n_mat_up == MAT_LAVA) {
-        int dN = (n_mat_up == MAT_GAS) ? get_density(n_up) : get_density_lava(n_up);
-        ivec2 vN = (n_mat_up == MAT_GAS) ? unpack_velocity(n_up) : unpack_velocity_lava(n_up);
+    if (n_mat_up == MAT_GAS) {
+        int dN = get_density(n_up);
+        ivec2 vN = unpack_velocity(n_up);
         int c = max(0, vN.y);
         in_up = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 5u);
         vin_up = vN;
     }
-    if (n_mat_down == MAT_GAS || n_mat_down == MAT_LAVA) {
-        int dN = (n_mat_down == MAT_GAS) ? get_density(n_down) : get_density_lava(n_down);
-        ivec2 vN = (n_mat_down == MAT_GAS) ? unpack_velocity(n_down) : unpack_velocity_lava(n_down);
+    if (n_mat_down == MAT_GAS) {
+        int dN = get_density(n_down);
+        ivec2 vN = unpack_velocity(n_down);
         int c = max(0, -vN.y);
         in_down = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 6u);
         vin_down = vN;
     }
-    if (n_mat_left == MAT_GAS || n_mat_left == MAT_LAVA) {
-        int dN = (n_mat_left == MAT_GAS) ? get_density(n_left) : get_density_lava(n_left);
-        ivec2 vN = (n_mat_left == MAT_GAS) ? unpack_velocity(n_left) : unpack_velocity_lava(n_left);
+    if (n_mat_left == MAT_GAS) {
+        int dN = get_density(n_left);
+        ivec2 vN = unpack_velocity(n_left);
         int c = max(0, vN.x);
         in_left = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 7u);
         vin_left = vN;
     }
-    if (n_mat_right == MAT_GAS || n_mat_right == MAT_LAVA) {
-        int dN = (n_mat_right == MAT_GAS) ? get_density(n_right) : get_density_lava(n_right);
-        ivec2 vN = (n_mat_right == MAT_GAS) ? unpack_velocity(n_right) : unpack_velocity_lava(n_right);
+    if (n_mat_right == MAT_GAS) {
+        int dN = get_density(n_right);
+        ivec2 vN = unpack_velocity(n_right);
         int c = max(0, -vN.x);
         in_right = stochastic_div(dN * c, V_MAX_OUTFLOW, pos, 8u);
         vin_right = vN;
@@ -284,35 +261,30 @@ void fluid_advect_pull(
     int total_in = in_up + in_down + in_left + in_right;
 
     // --- Wall reflection: any velocity component pointing into a solid flips sign ---
-    if (is_solid_for_fluid(n_mat_up)    && vel.y < 0) vel.y = -vel.y;
-    if (is_solid_for_fluid(n_mat_down)  && vel.y > 0) vel.y = -vel.y;
-    if (is_solid_for_fluid(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
-    if (is_solid_for_fluid(n_mat_right) && vel.x > 0) vel.x = -vel.x;
+    if (is_solid_for_gas(n_mat_up)    && vel.y < 0) vel.y = -vel.y;
+    if (is_solid_for_gas(n_mat_down)  && vel.y > 0) vel.y = -vel.y;
+    if (is_solid_for_gas(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
+    if (is_solid_for_gas(n_mat_right) && vel.x > 0) vel.x = -vel.x;
 
-// --- Diffusion: spread density toward lower-density neighbors (independent of velocity) ---
+    // --- Diffusion: spread density toward lower-density neighbors (independent of velocity) ---
     int diff_out = 0;
-    int diff_in = 0;
+    if (density > 0) {
+        int dens_up    = (n_mat_up == MAT_GAS)    ? get_density(n_up)    : 0;
+        int dens_down  = (n_mat_down == MAT_GAS)  ? get_density(n_down)  : 0;
+        int dens_left  = (n_mat_left == MAT_GAS)  ? get_density(n_left)  : 0;
+        int dens_right = (n_mat_right == MAT_GAS) ? get_density(n_right) : 0;
 
-    if (is_gas) {
-        if (density > 0) {
-            int dens_up    = (n_mat_up == MAT_GAS)    ? get_density(n_up)    : 0;
-            int dens_down  = (n_mat_down == MAT_GAS)  ? get_density(n_down)  : 0;
-            int dens_left  = (n_mat_left == MAT_GAS)  ? get_density(n_left)  : 0;
-            int dens_right = (n_mat_right == MAT_GAS) ? get_density(n_right) : 0;
-
-            if (!is_solid_for_fluid(n_mat_up)    && dens_up < density)    diff_out += (density - dens_up) / DIFFUSION_RATE;
-            if (!is_solid_for_fluid(n_mat_down)  && dens_down < density)  diff_out += (density - dens_down) / DIFFUSION_RATE;
-            if (!is_solid_for_fluid(n_mat_left)  && dens_left < density)  diff_out += (density - dens_left) / DIFFUSION_RATE;
-            if (!is_solid_for_fluid(n_mat_right) && dens_right < density) diff_out += (density - dens_right) / DIFFUSION_RATE;
-        }
-
-        // Diffusion inflow
-        if (n_mat_up == MAT_GAS    && get_density(n_up) > density    && !is_solid_for_fluid(material))    diff_in += (get_density(n_up) - density) / DIFFUSION_RATE;
-        if (n_mat_down == MAT_GAS  && get_density(n_down) > density  && !is_solid_for_fluid(material))  diff_in += (get_density(n_down) - density) / DIFFUSION_RATE;
-        if (n_mat_left == MAT_GAS  && get_density(n_left) > density  && !is_solid_for_fluid(material))  diff_in += (get_density(n_left) - density) / DIFFUSION_RATE;
-        if (n_mat_right == MAT_GAS && get_density(n_right) > density && !is_solid_for_fluid(material)) diff_in += (get_density(n_right) - density) / DIFFUSION_RATE;
+        if (!is_solid_for_gas(n_mat_up)    && dens_up < density)    diff_out += (density - dens_up) / DIFFUSION_RATE;
+        if (!is_solid_for_gas(n_mat_down)  && dens_down < density)  diff_out += (density - dens_down) / DIFFUSION_RATE;
+        if (!is_solid_for_gas(n_mat_left)  && dens_left < density)  diff_out += (density - dens_left) / DIFFUSION_RATE;
+        if (!is_solid_for_gas(n_mat_right) && dens_right < density) diff_out += (density - dens_right) / DIFFUSION_RATE;
     }
-    // Lava has no diffusion - diff_out and diff_in remain 0
+
+    int diff_in = 0;
+    if (n_mat_up == MAT_GAS    && get_density(n_up) > density    && !is_solid_for_gas(material))    diff_in += (get_density(n_up) - density) / DIFFUSION_RATE;
+    if (n_mat_down == MAT_GAS  && get_density(n_down) > density  && !is_solid_for_gas(material))  diff_in += (get_density(n_down) - density) / DIFFUSION_RATE;
+    if (n_mat_left == MAT_GAS  && get_density(n_left) > density  && !is_solid_for_gas(material))  diff_in += (get_density(n_left) - density) / DIFFUSION_RATE;
+    if (n_mat_right == MAT_GAS && get_density(n_right) > density && !is_solid_for_gas(material)) diff_in += (get_density(n_right) - density) / DIFFUSION_RATE;
 
     // --- New density ---
     int new_density = density - total_out + total_in - diff_out + diff_in;
@@ -328,74 +300,173 @@ void fluid_advect_pull(
                + vin_left  * in_left
                + vin_right * in_right;
 
-ivec2 new_vel = vsum / weight;
-	int new_vel_mag = max(abs(new_vel.x), abs(new_vel.y));
-	if (new_vel_mag > 1) {
-		new_vel = (new_vel * 15) / 16;
-	}
-	new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
-
-    
+    ivec2 new_vel = vsum / weight;
+    int new_vel_mag = max(abs(new_vel.x), abs(new_vel.y));
+    if (new_vel_mag > 1) {
+        new_vel = (new_vel * 15) / 16;
+    }
+    new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
 
     // --- Material transitions ---
-    if (is_air) {
-        // Determine which fluid type wins based on inflow composition
-        int gas_in = 0;
-        int lava_in = 0;
-
-        if (n_mat_up == MAT_GAS) gas_in += in_up;
-        else if (n_mat_up == MAT_LAVA) lava_in += in_up;
-        if (n_mat_down == MAT_GAS) gas_in += in_down;
-        else if (n_mat_down == MAT_LAVA) lava_in += in_down;
-        if (n_mat_left == MAT_GAS) gas_in += in_left;
-        else if (n_mat_left == MAT_LAVA) lava_in += in_left;
-        if (n_mat_right == MAT_GAS) gas_in += in_right;
-        else if (n_mat_right == MAT_LAVA) lava_in += in_right;
-
-        int total_air_in = total_in + diff_in;
-
-        if (gas_in >= THRESHOLD_BECOME_GAS || lava_in >= THRESHOLD_BECOME_LAVA) {
-            // Material determined by majority inflow
-            ivec2 inflow_vel = ivec2(0);
-            int inflow_temp = 0;
-            if (total_in > 0) {
-                inflow_vel = (vin_up * in_up + vin_down * in_down + vin_left * in_left + vin_right * in_right) / total_in;
-                inflow_vel = (inflow_vel * 15) / 16;
-                inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
-                // Weighted average temperature from lava inflows
-                int temp_sum = 0;
-                if (n_mat_up == MAT_LAVA) temp_sum += get_temperature_lava(n_up) * in_up;
-                if (n_mat_down == MAT_LAVA) temp_sum += get_temperature_lava(n_down) * in_down;
-                if (n_mat_left == MAT_LAVA) temp_sum += get_temperature_lava(n_left) * in_left;
-                if (n_mat_right == MAT_LAVA) temp_sum += get_temperature_lava(n_right) * in_right;
-                inflow_temp = temp_sum / max(1, lava_in);
-            }
-
-            if (gas_in >= lava_in) {
-                imageStore(chunk_tex, pos, pack_gas(total_air_in, inflow_vel));
-            } else {
-                imageStore(chunk_tex, pos, pack_lava(total_air_in, inflow_temp, inflow_vel));
-            }
+    if (material == MAT_AIR) {
+        int air_total_in = total_in + diff_in;
+        if (air_total_in >= THRESHOLD_BECOME_GAS) {
+            int w = max(1, total_in + diff_in);
+            ivec2 inflow_vel = (
+                vin_up * in_up + vin_down * in_down +
+                vin_left * in_left + vin_right * in_right
+            );
+            if (w > 0) inflow_vel /= w;
+            inflow_vel = (inflow_vel * 15) / 16;
+            inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
+            imageStore(chunk_tex, pos, pack_gas(air_total_in, inflow_vel));
             return;
         }
-        // Stay air
         int health = get_health(pixel);
-        int temp = max(0, get_temperature(pixel) - HEAT_DISSIPATION);
-        imageStore(chunk_tex, pos, make_pixel(MAT_AIR, health, temp));
+        int temperature = max(0, get_temperature(pixel) - HEAT_DISSIPATION);
+        imageStore(chunk_tex, pos, make_pixel(MAT_AIR, health, temperature));
         return;
     }
 
-    // GAS or LAVA
+    // material == MAT_GAS from here on.
     if (new_density < THRESHOLD_DISSIPATE) {
         imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
         return;
     }
+    imageStore(chunk_tex, pos, pack_gas(new_density, new_vel));
+}
 
-    if (is_gas) {
-        imageStore(chunk_tex, pos, pack_gas(new_density, new_vel));
-    } else {
-        imageStore(chunk_tex, pos, pack_lava(new_density, temperature, new_vel));
+void lava_advect_pull(
+    ivec2 pos, vec4 pixel,
+    vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right
+) {
+    int material = get_material(pixel);
+
+    int n_mat_up    = get_material(n_up);
+    int n_mat_down  = get_material(n_down);
+    int n_mat_left  = get_material(n_left);
+    int n_mat_right = get_material(n_right);
+
+    bool any_lava_neighbor =
+        n_mat_up == MAT_LAVA || n_mat_down == MAT_LAVA ||
+        n_mat_left == MAT_LAVA || n_mat_right == MAT_LAVA;
+
+    if (material == MAT_AIR && !any_lava_neighbor) {
+        // Not relevant for lava - let gas_advect_pull handle pure-air cells
+        return;
     }
+
+    // --- Own state ---
+    int density = (material == MAT_LAVA) ? get_density_lava(pixel) : 0;
+    int temperature = (material == MAT_LAVA) ? get_temperature_lava(pixel) : 0;
+    ivec2 vel = (material == MAT_LAVA) ? unpack_velocity_lava(pixel) : ivec2(0);
+
+    int comp_up    = max(0, -vel.y);
+    int comp_down  = max(0,  vel.y);
+    int comp_left  = max(0, -vel.x);
+    int comp_right = max(0,  vel.x);
+
+    if (is_solid_for_lava(n_mat_up))    comp_up    = 0;
+    if (is_solid_for_lava(n_mat_down))  comp_down  = 0;
+    if (is_solid_for_lava(n_mat_left))  comp_left  = 0;
+    if (is_solid_for_lava(n_mat_right)) comp_right = 0;
+
+    int out_up    = stochastic_div(density * comp_up,    V_MAX_OUTFLOW, pos, 1u);
+    int out_down  = stochastic_div(density * comp_down,  V_MAX_OUTFLOW, pos, 2u);
+    int out_left  = stochastic_div(density * comp_left,  V_MAX_OUTFLOW, pos, 3u);
+    int out_right = stochastic_div(density * comp_right, V_MAX_OUTFLOW, pos, 4u);
+
+    int total_out = out_up + out_down + out_left + out_right;
+    int max_outflow = min(density, max(1, density / 2));
+    if (total_out > max_outflow) {
+        out_up    = out_up    * max_outflow / max(1, total_out);
+        out_down  = out_down  * max_outflow / max(1, total_out);
+        out_left  = out_left  * max_outflow / max(1, total_out);
+        out_right = out_right * max_outflow / max(1, total_out);
+        total_out = out_up + out_down + out_left + out_right;
+    }
+
+    int in_up = 0, in_down = 0, in_left = 0, in_right = 0;
+    ivec2 vin_up = ivec2(0), vin_down = ivec2(0), vin_left = ivec2(0), vin_right = ivec2(0);
+
+    if (n_mat_up == MAT_LAVA) {
+        int dN = get_density_lava(n_up);
+        ivec2 vN = unpack_velocity_lava(n_up);
+        in_up = stochastic_div(dN * max(0, vN.y), V_MAX_OUTFLOW, pos, 5u);
+        vin_up = vN;
+    }
+    if (n_mat_down == MAT_LAVA) {
+        int dN = get_density_lava(n_down);
+        ivec2 vN = unpack_velocity_lava(n_down);
+        in_down = stochastic_div(dN * max(0, -vN.y), V_MAX_OUTFLOW, pos, 6u);
+        vin_down = vN;
+    }
+    if (n_mat_left == MAT_LAVA) {
+        int dN = get_density_lava(n_left);
+        ivec2 vN = unpack_velocity_lava(n_left);
+        in_left = stochastic_div(dN * max(0, vN.x), V_MAX_OUTFLOW, pos, 7u);
+        vin_left = vN;
+    }
+    if (n_mat_right == MAT_LAVA) {
+        int dN = get_density_lava(n_right);
+        ivec2 vN = unpack_velocity_lava(n_right);
+        in_right = stochastic_div(dN * max(0, -vN.x), V_MAX_OUTFLOW, pos, 8u);
+        vin_right = vN;
+    }
+
+    int total_in = in_up + in_down + in_left + in_right;
+
+    // Wall reflection
+    if (is_solid_for_lava(n_mat_up)    && vel.y < 0) vel.y = -vel.y;
+    if (is_solid_for_lava(n_mat_down)  && vel.y > 0) vel.y = -vel.y;
+    if (is_solid_for_lava(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
+    if (is_solid_for_lava(n_mat_right) && vel.x > 0) vel.x = -vel.x;
+
+    // Lava has no diffusion
+
+    int new_density = clamp(density - total_out + total_in, 0, 255);
+
+    int stayed = max(0, density - total_out);
+    int weight = max(1, stayed + total_in);
+    ivec2 vsum = vel * stayed
+               + vin_up * in_up + vin_down * in_down
+               + vin_left * in_left + vin_right * in_right;
+    ivec2 new_vel = vsum / weight;
+    int new_vel_mag = max(abs(new_vel.x), abs(new_vel.y));
+    if (new_vel_mag > 1) {
+        new_vel = (new_vel * 15) / 16;
+    }
+    new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
+
+    // Weighted average temperature from inflows
+    int temp_weight = stayed * temperature;
+    if (n_mat_up == MAT_LAVA) temp_weight += get_temperature_lava(n_up) * in_up;
+    if (n_mat_down == MAT_LAVA) temp_weight += get_temperature_lava(n_down) * in_down;
+    if (n_mat_left == MAT_LAVA) temp_weight += get_temperature_lava(n_left) * in_left;
+    if (n_mat_right == MAT_LAVA) temp_weight += get_temperature_lava(n_right) * in_right;
+    int new_temp = temp_weight / max(1, stayed + total_in);
+
+    if (material == MAT_AIR) {
+        if (total_in >= THRESHOLD_BECOME_LAVA) {
+            ivec2 inflow_vel = ivec2(0);
+            if (total_in > 0) {
+                inflow_vel = (vin_up * in_up + vin_down * in_down + vin_left * in_left + vin_right * in_right) / total_in;
+                inflow_vel = (inflow_vel * 15) / 16;
+                inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
+            }
+            imageStore(chunk_tex, pos, pack_lava(total_in, new_temp, inflow_vel));
+            return;
+        }
+        // Stay air - don't write, let gas_advect_pull handle it
+        return;
+    }
+
+    // material == MAT_LAVA
+    if (new_density < THRESHOLD_DISSIPATE) {
+        imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
+        return;
+    }
+    imageStore(chunk_tex, pos, pack_lava(new_density, new_temp, new_vel));
 }
 
 vec4 read_neighbor(ivec2 pos) {
@@ -444,13 +515,24 @@ void main() {
 	vec4 n_left  = read_neighbor(pos + ivec2(-1, 0));
 	vec4 n_right = read_neighbor(pos + ivec2( 1, 0));
 
-	// 3. Gas + air path — runs every frame, pull-based, no phase guard.
-	if (material == MAT_GAS || material == MAT_LAVA || material == MAT_AIR) {
-		fluid_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
+	// 3. Lava path — runs before gas so air cells get lava first if applicable.
+	if (material == MAT_LAVA || material == MAT_AIR) {
+		lava_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
+		// If this was a lava cell, we're done. If air, gas may still need to run.
+		if (material == MAT_LAVA) return;
+		// Re-read pixel in case lava_advect_pull converted this air cell to lava.
+		pixel = imageLoad(chunk_tex, pos);
+		material = get_material(pixel);
+		if (material == MAT_LAVA) return;
+	}
+
+	// 4. Gas + air path — runs every frame, pull-based, no phase guard.
+	if (material == MAT_GAS || material == MAT_AIR) {
+		gas_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
 		return;
 	}
 
-	// 4. Checkerboard burning logic for solids.
+	// 5. Checkerboard burning logic for solids.
 	if ((pos.x + pos.y) % 2 != pc.phase) return;
 
 	int health = get_health(pixel);
