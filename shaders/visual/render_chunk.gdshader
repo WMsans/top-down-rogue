@@ -10,6 +10,14 @@ uniform int layer_mode = 0;
 
 const int CHUNK_SIZE = 256;
 
+vec3 srgb_to_linear(vec3 srgb) {
+	return mix(
+		srgb / 12.92,
+		pow((srgb + 0.055) / 1.055, vec3(2.4)),
+		greaterThan(srgb, vec3(0.04045))
+	);
+}
+
 // Read material data at a pixel position in the chunk texture.
 // Returns vec4(material, health, temperature, reserved) in 0-255 range conceptually,
 // but as normalized floats from the RGBA8 texture.
@@ -87,7 +95,8 @@ vec3 get_material_top_color(int material, int src_x) {
 	vec2 tex_size = vec2(textureSize(material_textures, 0).xy);
 	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
 	float v = 0.5 / float(wall_height);
-	return texture(material_textures, vec3(u, v, float(material))).rgb;
+	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
+	return srgb_to_linear(srgb);
 }
 
 vec3 get_temperature_tint(float temperature) {
@@ -120,7 +129,8 @@ vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, 
 	vec2 tex_size = vec2(textureSize(material_textures, 0).xy);
 	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
 	float v = (float(depth - 1) + 0.5) / float(wall_height);
-	vec3 tex_color = texture(material_textures, vec3(u, v, float(material))).rgb;
+	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
+	vec3 tex_color = srgb_to_linear(srgb);
 	vec3 tint = get_temperature_tint(src_data.b);
 	return tex_color * tint;
 }
