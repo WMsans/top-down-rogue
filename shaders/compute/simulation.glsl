@@ -179,6 +179,12 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
             ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
             int dens = get_density_lava(pixel);
             int temp = get_temperature_lava(pixel);
+            // Reduce density for cells in front of movement to prevent accumulation
+            bool in_front = (b.velocity.x > 0 && diff.x > 0) || (b.velocity.x < 0 && diff.x < 0) ||
+                            (b.velocity.y > 0 && diff.y > 0) || (b.velocity.y < 0 && diff.y < 0);
+            if (in_front && (b.velocity.x != 0 || b.velocity.y != 0)) {
+                dens = dens * 3 / 4;
+            }
             pixel = pack_lava(dens, temp, new_vel);
         }
         wrote = true;
