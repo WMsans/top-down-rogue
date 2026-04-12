@@ -6,6 +6,7 @@ const BODY_HEIGHT := 12
 
 const ShadowGridScript := preload("res://src/core/shadow_grid.gd")
 const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
+const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
 
 @export var acceleration: float = 800.0
 @export var friction: float = 600.0
@@ -31,6 +32,7 @@ func _ready() -> void:
 
 	weapons.resize(3)
 	weapons[0] = TestWeaponScript.new()
+	weapons[1] = MeleeWeaponScript.new()
 
 	await get_tree().process_frame
 	await get_tree().process_frame
