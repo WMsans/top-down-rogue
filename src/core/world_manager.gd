@@ -284,6 +284,7 @@ func _create_chunk(coord: Vector2i) -> void:
 
 	# LightOccluder2D uses light_mask=1 by default, PointLight2D checks all masks by default
 	chunk.occluder_instance = LightOccluder2D.new()
+	chunk.occluder_instance.position = Vector2(coord.x * CHUNK_SIZE, coord.y * CHUNK_SIZE)
 	chunk.occluder_instance.occluder = OccluderPolygon2D.new()
 	collision_container.add_child(chunk.occluder_instance)
 
@@ -587,13 +588,9 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 		if collision_shape != null:
 			chunk.static_body.add_child(collision_shape)
 
-		var occluder := TerrainCollider.build_occluder(segments, world_offset)
-		if occluder != null:
-			if chunk.occluder_instance.occluder != null:
-				chunk.occluder_instance.occluder.polygon = occluder.occluder.polygon
-			else:
-				chunk.occluder_instance.occluder = occluder.occluder
-			occluder.queue_free()
+		var polygon := TerrainCollider.create_occluder_polygon(segments)
+		if polygon != null:
+			chunk.occluder_instance.occluder = polygon
 		elif chunk.occluder_instance.occluder != null:
 			chunk.occluder_instance.occluder.polygon = PackedVector2Array()
 
