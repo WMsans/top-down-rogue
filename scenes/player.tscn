@@ -1,9 +1,18 @@
 [gd_scene format=3 uid="uid://dyro2k6hacg2y"]
 
-[ext_resource type="Script" uid="uid://qr0pr5uqvbhh" path="res://src/player/player_controller.gd" id="1"]
+[ext_resource type="Script" uid="uid://hixog1elal7b" path="res://src/player/player_controller.gd" id="1"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
+
+[sub_resource type="Gradient" id="Gradient_3vyb7"]
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_g2els"]
+gradient = SubResource("Gradient_3vyb7")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
 
 [node name="Player" type="CharacterBody2D" unique_id=1776190034]
 script = ExtResource("1")
@@ -22,3 +31,11 @@ position_smoothing_speed = 12.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2000232908]
 shape = SubResource("1")
+
+[node name="PointLight2D" type="PointLight2D" parent="." unique_id=693124189]
+energy = 2.0
+texture = SubResource("GradientTexture2D_g2els")
+shadow_enabled = true
+shadow_filter = 3
+shadow_filter_smooth = 2.0
+shadow_color = Color(0, 0, 0, 0.5)

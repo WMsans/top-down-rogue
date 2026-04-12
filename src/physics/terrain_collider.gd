@@ -6,6 +6,9 @@ const CELL_SIZE := 2
 ## Douglas-Peucker simplification tolerance (in pixels).
 const DP_EPSILON := 0.8
 
+## Distance to inset occluder polygons (in pixels). Matches near_air() radius.
+const OCCLUDER_INSET := 3.0
+
 
 ## Build collision shape from material data and attach to a StaticBody2D.
 ## Returns the created CollisionShape2D, or null if no segments generated.
@@ -197,6 +200,47 @@ static func _point_to_segment_distance(point: Vector2, seg_start: Vector2, seg_e
 	return point.distance_to(projection)
 
 
+## Shrink a closed polygon by offsetting vertices inward along their normals.
+## Points must form a closed loop (first and last are implicit neighbors).
+## Returns a new polygon with inset vertices, or empty if degenerate.
+static func shrink_polygon(points: PackedVector2Array, distance: float) -> PackedVector2Array:
+	if points.size() < 3:
+		return PackedVector2Array()
+	
+	# Calculate signed area to determine winding direction
+	# Positive = counter-clockwise, negative = clockwise
+	var signed_area := 0.0
+	for i in points.size():
+		var j := (i + 1) % points.size()
+		signed_area += points[i].x * points[j].y - points[j].x * points[i].y
+	signed_area *= 0.5
+	
+	# Inward direction multiplier: +1 for CCW (positive area), -1 for CW (negative area)
+	var inward_mult := 1.0 if signed_area > 0 else -1.0
+	
+	var result := PackedVector2Array()
+	result.resize(points.size())
+	
+	for i in points.size():
+		var prev_idx := (i - 1 + points.size()) % points.size()
+		var next_idx := (i + 1) % points.size()
+		
+		# Edge from prev to current, and current to next
+		var edge1 := points[i] - points[prev_idx]
+		var edge2 := points[next_idx] - points[i]
+		
+		# Perpendiculars (rotate90counter-clockwise)
+		var perp1 := Vector2(-edge1.y, edge1.x)
+		var perp2 := Vector2(-edge2.y, edge2.x)
+		
+		# Normalize and average for vertex normal
+		var normal := (perp1.normalized() + perp2.normalized()).normalized()
+		# Apply inward offset
+		result[i] = points[i] + normal * distance * inward_mult
+	
+	return result
+
+
 ## Build collision shape from pre-computed segment vertices.
 ## Segments must contain an even number of vertices (pairs of endpoints).
 ## Returns the created CollisionShape2D, or null if insufficient segments.
@@ -216,3 +260,73 @@ static func build_from_segments(
 	collision_shape.shape = shape
 	static_body.position = Vector2(world_offset.x, world_offset.y)
 	return collision_shape
+
+
+## Build ordered polygon chains from segment pairs and return an array of OccluderPolygon2D.
+## Segments is a flat array of endpoint pairs: [A, B, C, D, ...] where (A,B), (C,D) are segments.
+## Returns an empty array if no valid polygons can be reconstructed.
+static func create_occluder_polygons(segments: PackedVector2Array) -> Array[OccluderPolygon2D]:
+	if segments.size() < 4:
+		return []
+
+	# Build adjacency from segment pairs
+	var adj: Dictionary = {}  # Vector2 -> Array[Vector2]
+	for i in range(0, segments.size(), 2):
+		var p1 := segments[i]
+		var p2 := segments[i + 1]
+		if not adj.has(p1):
+			adj[p1] = []
+		if not adj.has(p2):
+			adj[p2] = []
+		adj[p1].append(p2)
+		adj[p2].append(p1)
+
+	# Trace closed loops
+	var visited: Dictionary = {}
+	var result: Array[OccluderPolygon2D] = []
+
+	for start: Vector2 in adj:
+		if visited.has(start):
+			continue
+		var neighbors: Array = adj[start]
+		if neighbors.size() == 0:
+			continue
+
+		var chain := PackedVector2Array()
+		var current: Vector2 = start
+		var prev := Vector2(-1e9, -1e9)
+		var closed := false
+
+		while true:
+			visited[current] = true
+			chain.append(current)
+
+			var cur_neighbors: Array = adj[current]
+			var next := Vector2(-1e9, -1e9)
+			for n: Vector2 in cur_neighbors:
+				if n == prev:
+					continue
+				if n == start and chain.size() >= 3:
+					next = start
+					break
+				if not visited.has(n):
+					next = n
+					break
+
+			if next == start:
+				closed = true
+				break
+			if next == Vector2(-1e9, -1e9):
+				break
+
+			prev = current
+			current = next
+
+		if chain.size() >= 3 and closed:
+			var shrunk := shrink_polygon(chain, OCCLUDER_INSET)
+			if shrunk.size() >= 3:
+				var polygon := OccluderPolygon2D.new()
+				polygon.polygon = shrunk
+				result.append(polygon)
+
+	return result

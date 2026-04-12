@@ -29,4 +29,6 @@ enabled=PackedStringArray("res://addons/level_preview/plugin.cfg")
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
+viewport/hdr_2d=true

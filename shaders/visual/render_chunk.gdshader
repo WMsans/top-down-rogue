@@ -10,6 +10,14 @@ uniform int layer_mode = 0;
 
 const int CHUNK_SIZE = 256;
 
+vec3 srgb_to_linear(vec3 srgb) {
+	return mix(
+		srgb / 12.92,
+		pow((srgb + 0.055) / 1.055, vec3(2.4)),
+		greaterThan(srgb, vec3(0.04045))
+	);
+}
+
 // Read material data at a pixel position in the chunk texture.
 // Returns vec4(material, health, temperature, reserved) in 0-255 range conceptually,
 // but as normalized floats from the RGBA8 texture.
@@ -69,52 +77,38 @@ bool is_solid_extended(ivec2 pos) {
 	return HAS_COLLIDER[m];
 }
 
-vec3 ember_color(float temp_norm, float flicker_amt) {
+vec3 ember_color(float temp_norm) {
 	vec3 dark_red = vec3(0.3, 0.0, 0.0);
 	vec3 orange = vec3(0.9, 0.4, 0.0);
 	vec3 yellow_white = vec3(1.0, 0.9, 0.5);
 	
-	float adjusted = clamp(temp_norm + flicker_amt * 0.15, 0.0, 1.0);
-	if (adjusted < 0.85) {
-		float t = (adjusted - 0.7) / 0.15;
+	if (temp_norm < 0.85) {
+		float t = (temp_norm - 0.7) / 0.15;
 		return mix(dark_red, orange, t);
 	} else {
-		float t = (adjusted - 0.85) / 0.15;
+		float t = (temp_norm - 0.85) / 0.15;
 		return mix(orange, yellow_white, t);
 	}
-}
-
-float flicker_amount(ivec2 pixel_pos, float time, float temp_norm) {
-	float px = float(pixel_pos.x);
-	float py = float(pixel_pos.y);
-	float a = sin(time * 8.0 + px * 0.05) * 0.5;
-	float b = sin(time * 12.0 + py * 0.03) * 0.3;
-	float c = sin(time * 15.0 + (px + py) * 0.04) * 0.2;
-	float flicker = a + b + c;
-	return flicker * (1.0 - temp_norm * 0.3);
 }
 
 vec3 get_material_top_color(int material, int src_x) {
 	vec2 tex_size = vec2(textureSize(material_textures, 0).xy);
 	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
 	float v = 0.5 / float(wall_height);
-	return texture(material_textures, vec3(u, v, float(material))).rgb;
+	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
+	return srgb_to_linear(srgb);
 }
 
-vec3 get_temperature_tint(float temperature, ivec2 pixel_pos) {
+vec3 get_temperature_tint(float temperature) {
 	if (temperature > 180.0 / 255.0) {
-		float temp_norm = temperature;
-		float flicker = flicker_amount(pixel_pos, TIME, temp_norm);
-		return ember_color(temp_norm, flicker);
+		return ember_color(temperature);
 	}
 	return vec3(1.0);
 }
 
-vec3 apply_temperature_tint(vec3 base_color, float temperature, ivec2 pixel_pos) {
+vec3 apply_temperature_tint(vec3 base_color, float temperature) {
 	if (temperature > 180.0 / 255.0) {
-		float temp_norm = temperature;
-		float flicker = flicker_amount(pixel_pos, TIME, temp_norm);
-		return ember_color(temp_norm, flicker);
+		return ember_color(temperature);
 	}
 	float temp_norm = temperature;
 	float temp_affected = temp_norm * 0.7;
@@ -128,15 +122,16 @@ vec3 material_color(vec4 data, ivec2 pixel_pos) {
 		return vec3(1.0, 0.0, 1.0);
 	}
 	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
-	return apply_temperature_tint(base_color, data.b, pixel_pos);
+	return apply_temperature_tint(base_color, data.b);
 }
 
 vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, ivec2 pixel_pos) {
 	vec2 tex_size = vec2(textureSize(material_textures, 0).xy);
 	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
 	float v = (float(depth - 1) + 0.5) / float(wall_height);
-	vec3 tex_color = texture(material_textures, vec3(u, v, float(material))).rgb;
-	vec3 tint = get_temperature_tint(src_data.b, pixel_pos);
+	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
+	vec3 tex_color = srgb_to_linear(srgb);
+	vec3 tint = get_temperature_tint(src_data.b);
 	return tex_color * tint;
 }
 
