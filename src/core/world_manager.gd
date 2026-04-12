@@ -282,6 +282,10 @@ func _create_chunk(coord: Vector2i) -> void:
 	chunk.static_body.collision_mask = 0
 	collision_container.add_child(chunk.static_body)
 
+	chunk.occluder_instance = LightOccluder2D.new()
+	chunk.occluder_instance.occluder = OccluderPolygon2D.new()
+	collision_container.add_child(chunk.occluder_instance)
+
 	chunks[coord] = chunk
 
 
