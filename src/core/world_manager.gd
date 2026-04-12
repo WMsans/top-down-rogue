@@ -512,6 +512,7 @@ func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
 	var collision_shape := TerrainCollider.build_collision(material_data, CHUNK_SIZE, chunk.static_body, world_offset)
 	if collision_shape != null:
 		chunk.static_body.add_child(collision_shape)
+	# Note: Occluder update skipped in CPU fallback path (GPU path is primary)
 
 
 func _parse_segment_buffer(data: PackedByteArray, max_offset: int) -> PackedVector2Array:
