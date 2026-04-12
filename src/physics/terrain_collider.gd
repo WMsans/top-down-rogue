@@ -6,6 +6,9 @@ const CELL_SIZE := 2
 ## Douglas-Peucker simplification tolerance (in pixels).
 const DP_EPSILON := 0.8
 
+## Distance to inset occluder polygons (in pixels). Matches near_air() radius.
+const OCCLUDER_INSET := 3.0
+
 
 ## Build collision shape from material data and attach to a StaticBody2D.
 ## Returns the created CollisionShape2D, or null if no segments generated.
