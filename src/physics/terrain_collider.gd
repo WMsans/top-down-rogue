@@ -216,3 +216,21 @@ static func build_from_segments(
 	collision_shape.shape = shape
 	static_body.position = Vector2(world_offset.x, world_offset.y)
 	return collision_shape
+
+
+## Build a LightOccluder2D from segment endpoints.
+## Segments must contain an even number of vertices (pairs of endpoints).
+## Returns the created LightOccluder2D, or null if insufficient segments.
+static func build_occluder(
+	segments: PackedVector2Array,
+	world_offset: Vector2i
+) -> LightOccluder2D:
+	if segments.size() < 4:
+		return null
+
+	var occluder := LightOccluder2D.new()
+	var polygon := OccluderPolygon2D.new()
+	polygon.polygon = segments
+	occluder.occluder = polygon
+	occluder.position = Vector2(world_offset.x, world_offset.y)
+	return occluder
