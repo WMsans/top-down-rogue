@@ -218,13 +218,69 @@ static func build_from_segments(
 	return collision_shape
 
 
-## Create an OccluderPolygon2D from segment endpoints.
-## Segments must contain an even number of vertices (pairs of endpoints).
-## Returns the created OccluderPolygon2D, or null if insufficient segments.
-static func create_occluder_polygon(segments: PackedVector2Array) -> OccluderPolygon2D:
+## Build ordered polygon chains from segment pairs and return an array of OccluderPolygon2D.
+## Segments is a flat array of endpoint pairs: [A, B, C, D, ...] where (A,B), (C,D) are segments.
+## Returns an empty array if no valid polygons can be reconstructed.
+static func create_occluder_polygons(segments: PackedVector2Array) -> Array[OccluderPolygon2D]:
 	if segments.size() < 4:
-		return null
-	
-	var polygon := OccluderPolygon2D.new()
-	polygon.polygon = segments
-	return polygon
+		return []
+
+	# Build adjacency from segment pairs
+	var adj: Dictionary = {}  # Vector2 -> Array[Vector2]
+	for i in range(0, segments.size(), 2):
+		var p1 := segments[i]
+		var p2 := segments[i + 1]
+		if not adj.has(p1):
+			adj[p1] = []
+		if not adj.has(p2):
+			adj[p2] = []
+		adj[p1].append(p2)
+		adj[p2].append(p1)
+
+	# Trace closed loops
+	var visited: Dictionary = {}
+	var result: Array[OccluderPolygon2D] = []
+
+	for start: Vector2 in adj:
+		if visited.has(start):
+			continue
+		var neighbors: Array = adj[start]
+		if neighbors.size() == 0:
+			continue
+
+		var chain := PackedVector2Array()
+		var current: Vector2 = start
+		var prev := Vector2(-1e9, -1e9)
+		var closed := false
+
+		while true:
+			visited[current] = true
+			chain.append(current)
+
+			var cur_neighbors: Array = adj[current]
+			var next := Vector2(-1e9, -1e9)
+			for n: Vector2 in cur_neighbors:
+				if n == prev:
+					continue
+				if n == start and chain.size() >= 3:
+					next = start
+					break
+				if not visited.has(n):
+					next = n
+					break
+
+			if next == start:
+				closed = true
+				break
+			if next == Vector2(-1e9, -1e9):
+				break
+
+			prev = current
+			current = next
+
+		if chain.size() >= 3 and closed:
+			var polygon := OccluderPolygon2D.new()
+			polygon.polygon = chain
+			result.append(polygon)
+
+	return result
