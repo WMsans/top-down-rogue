@@ -302,6 +302,8 @@ func _free_chunk_resources(chunk: Chunk) -> void:
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
+	if chunk.occluder_instance and is_instance_valid(chunk.occluder_instance):
+		chunk.occluder_instance.queue_free()
 	if chunk.injection_buffer.is_valid():
 		rd.free_rid(chunk.injection_buffer)
 	if chunk.sim_uniform_set.is_valid():
