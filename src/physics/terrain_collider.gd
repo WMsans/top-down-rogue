@@ -200,6 +200,47 @@ static func _point_to_segment_distance(point: Vector2, seg_start: Vector2, seg_e
 	return point.distance_to(projection)
 
 
+## Shrink a closed polygon by offsetting vertices inward along their normals.
+## Points must form a closed loop (first and last are implicit neighbors).
+## Returns a new polygon with inset vertices, or empty if degenerate.
+static func shrink_polygon(points: PackedVector2Array, distance: float) -> PackedVector2Array:
+	if points.size() < 3:
+		return PackedVector2Array()
+	
+	# Calculate signed area to determine winding direction
+	# Positive = counter-clockwise, negative = clockwise
+	var signed_area := 0.0
+	for i in points.size():
+		var j := (i + 1) % points.size()
+		signed_area += points[i].x * points[j].y - points[j].x * points[i].y
+	signed_area *= 0.5
+	
+	# Inward direction multiplier: +1 for CCW (positive area), -1 for CW (negative area)
+	var inward_mult := 1.0 if signed_area > 0 else -1.0
+	
+	var result := PackedVector2Array()
+	result.resize(points.size())
+	
+	for i in points.size():
+		var prev_idx := (i - 1 + points.size()) % points.size()
+		var next_idx := (i + 1) % points.size()
+		
+		# Edgefrom prev to current, and current to next
+		var edge1 := points[i] - points[prev_idx]
+		var edge2 := points[next_idx] - points[i]
+		
+		# Perpendiculars (rotate90counter-clockwise)
+		var perp1 := Vector2(-edge1.y, edge1.x)
+		var perp2 := Vector2(-edge2.y, edge2.x)
+		
+		# Normalize and average for vertex normal
+		var normal := (perp1.normalized() + perp2.normalized()).normalized()
+		# Apply inward offset
+		result[i] = points[i] + normal * distance * inward_mult
+	
+	return result
+
+
 ## Build collision shape from pre-computed segment vertices.
 ## Segments must contain an even number of vertices (pairs of endpoints).
 ## Returns the created CollisionShape2D, or null if insufficient segments.
