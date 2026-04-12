@@ -35,3 +35,7 @@ shape = SubResource("1")
 [node name="PointLight2D" type="PointLight2D" parent="." unique_id=693124189]
 energy = 2.0
 texture = SubResource("GradientTexture2D_g2els")
+shadow_enabled = true
+shadow_filter = 3
+shadow_filter_smooth = 2.0
+shadow_color = Color(0, 0, 0, 0.5)
