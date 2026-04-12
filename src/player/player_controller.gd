@@ -46,6 +46,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var input_dir := _get_input_direction()
+	if input_dir != Vector2.ZERO:
+		_last_facing = input_dir
 	_apply_movement(input_dir, delta)
 	move_and_slide()
 
@@ -102,6 +104,4 @@ func get_world_manager() -> Node:
 
 
 func get_facing_direction() -> Vector2:
-	if velocity.length_squared() > 0.01:
-		_last_facing = velocity.normalized()
 	return _last_facing
