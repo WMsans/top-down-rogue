@@ -585,6 +585,16 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 		if collision_shape != null:
 			chunk.static_body.add_child(collision_shape)
 
+		var occluder := TerrainCollider.build_occluder(segments, world_offset)
+		if occluder != null:
+			if chunk.occluder_instance.occluder != null:
+				chunk.occluder_instance.occluder.polygon = occluder.occluder.polygon
+			else:
+				chunk.occluder_instance.occluder = occluder.occluder
+			occluder.queue_free()
+		elif chunk.occluder_instance.occluder != null:
+			chunk.occluder_instance.occluder.polygon = PackedVector2Array()
+
 	return true
 
 
