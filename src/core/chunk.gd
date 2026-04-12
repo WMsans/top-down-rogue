@@ -9,3 +9,4 @@ var wall_mesh_instance: MeshInstance2D
 var sim_uniform_set: RID
 var injection_buffer: RID
 var static_body: StaticBody2D
+var occluder_instance: LightOccluder2D
