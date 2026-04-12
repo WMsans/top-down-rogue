@@ -13,6 +13,7 @@ const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 
 var weapons: Array[Weapon] = []
 var shadow_grid: Node
+var _last_facing: Vector2 = Vector2.DOWN
 
 @onready var _world_manager: Node2D = get_parent().get_node("WorldManager")
 
@@ -96,3 +97,9 @@ func _tick_weapons(delta: float) -> void:
 
 func get_world_manager() -> Node:
 	return _world_manager
+
+
+func get_facing_direction() -> Vector2:
+	if velocity.length_squared() > 0.01:
+		_last_facing = velocity.normalized()
+	return _last_facing
