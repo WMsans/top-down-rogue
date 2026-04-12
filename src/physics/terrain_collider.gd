@@ -225,7 +225,7 @@ static func shrink_polygon(points: PackedVector2Array, distance: float) -> Packe
 		var prev_idx := (i - 1 + points.size()) % points.size()
 		var next_idx := (i + 1) % points.size()
 		
-		# Edgefrom prev to current, and current to next
+		# Edge from prev to current, and current to next
 		var edge1 := points[i] - points[prev_idx]
 		var edge2 := points[next_idx] - points[i]
 		
@@ -323,8 +323,10 @@ static func create_occluder_polygons(segments: PackedVector2Array) -> Array[Occl
 			current = next
 
 		if chain.size() >= 3 and closed:
-			var polygon := OccluderPolygon2D.new()
-			polygon.polygon = chain
-			result.append(polygon)
+			var shrunk := shrink_polygon(chain, OCCLUDER_INSET)
+			if shrunk.size() >= 3:
+				var polygon := OccluderPolygon2D.new()
+				polygon.polygon = shrunk
+				result.append(polygon)
 
 	return result
