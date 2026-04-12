@@ -8,6 +8,10 @@
 [ext_resource type="PackedScene" uid="uid://dyro2k6hacg2y" path="res://scenes/player.tscn" id="7"]
 [ext_resource type="Script" uid="uid://41pttcuclgqw" path="res://src/debug/collision_overlay.gd" id="8"]
 
+[sub_resource type="Environment" id="Environment_o6xl0"]
+background_mode = 3
+glow_enabled = true
+
 [node name="Main" type="Node2D" unique_id=194821170]
 
 [node name="WorldManager" type="Node2D" parent="." unique_id=1684191940]
@@ -33,3 +37,10 @@ script = ExtResource("5")
 
 [node name="CollisionOverlay" type="Node2D" parent="DebugManager" unique_id=1883432000]
 script = ExtResource("8")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1615427374]
+environment = SubResource("Environment_o6xl0")
+
+[node name="DirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=1871237143]
+color = Color(0.95, 0.95, 0.95, 1)
+blend_mode = 1

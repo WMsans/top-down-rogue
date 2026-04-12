@@ -28,26 +28,28 @@ void main() {
 	uint gx = cell_x * CELL_SIZE;
 	uint gy = cell_y * CELL_SIZE;
 
-	// Border cells are treated as air (outside chunk)
-	if (gx == 0 || gy == 0 || gx >= CHUNK_SIZE - CELL_SIZE || gy >= CHUNK_SIZE - CELL_SIZE) {
-		return;
-	}
-
+	// Sample corners, clamping positions that fall outside the texture
 	vec4 tl_sample = imageLoad(terrain_texture, ivec2(gx, gy));
-	vec4 tr_sample = imageLoad(terrain_texture, ivec2(gx + CELL_SIZE, gy));
-	vec4 br_sample = imageLoad(terrain_texture, ivec2(gx + CELL_SIZE, gy + CELL_SIZE));
-	vec4 bl_sample = imageLoad(terrain_texture, ivec2(gx, gy + CELL_SIZE));
+	vec4 tr_sample = imageLoad(terrain_texture, ivec2(min(gx + CELL_SIZE, CHUNK_SIZE - 1u), gy));
+	vec4 br_sample = imageLoad(terrain_texture, ivec2(min(gx + CELL_SIZE, CHUNK_SIZE - 1u), min(gy + CELL_SIZE, CHUNK_SIZE - 1u)));
+	vec4 bl_sample = imageLoad(terrain_texture, ivec2(gx, min(gy + CELL_SIZE, CHUNK_SIZE - 1u)));
 
 	// Material is in R channel, check if solid (non-zero)
 	uint tl_mat = uint(round(tl_sample.r * 255.0));
 	uint tr_mat = uint(round(tr_sample.r * 255.0));
 	uint br_mat = uint(round(br_sample.r * 255.0));
 	uint bl_mat = uint(round(bl_sample.r * 255.0));
-	
+
 	uint tl = (tl_mat != 0u && HAS_COLLIDER[tl_mat]) ? 1u : 0u;
 	uint tr = (tr_mat != 0u && HAS_COLLIDER[tr_mat]) ? 1u : 0u;
 	uint br = (br_mat != 0u && HAS_COLLIDER[br_mat]) ? 1u : 0u;
 	uint bl = (bl_mat != 0u && HAS_COLLIDER[bl_mat]) ? 1u : 0u;
+
+	// Force border corners to air so contours close at chunk edges (matches CPU behavior)
+	if (gx == 0u || gy == 0u) tl = 0u;
+	if (gx + CELL_SIZE >= CHUNK_SIZE || gy == 0u) tr = 0u;
+	if (gx + CELL_SIZE >= CHUNK_SIZE || gy + CELL_SIZE >= CHUNK_SIZE) br = 0u;
+	if (gx == 0u || gy + CELL_SIZE >= CHUNK_SIZE) bl = 0u;
 
 	// All air or all solid => no segment
 	if (tl + tr + br + bl == 0u || tl + tr + br + bl == 4u) {
@@ -134,13 +136,13 @@ void main() {
 			num_segments = 1u;
 			break;
 		case 13u: // A+B+D
-			segments[0] = bottom_edge.x; segments[1] = bottom_edge.y;
-			segments[2] = left_edge.x; segments[3] = left_edge.y;
+			segments[0] = right_edge.x; segments[1] = right_edge.y;
+			segments[2] = bottom_edge.x; segments[3] = bottom_edge.y;
 			num_segments = 1u;
 			break;
 		case 14u: // A+B+C
-			segments[0] = right_edge.x; segments[1] = right_edge.y;
-			segments[2] = bottom_edge.x; segments[3] = bottom_edge.y;
+			segments[0] = bottom_edge.x; segments[1] = bottom_edge.y;
+			segments[2] = left_edge.x; segments[3] = left_edge.y;
 			num_segments = 1u;
 			break;
 		case 15u: // A+B+C+D

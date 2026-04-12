@@ -282,6 +282,9 @@ func _create_chunk(coord: Vector2i) -> void:
 	chunk.static_body.collision_mask = 0
 	collision_container.add_child(chunk.static_body)
 
+	# LightOccluder2D uses light_mask=1 by default, PointLight2D checks all masks by default
+	chunk.occluder_instances = []
+
 	chunks[coord] = chunk
 
 
@@ -298,6 +301,10 @@ func _free_chunk_resources(chunk: Chunk) -> void:
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
+	for occluder in chunk.occluder_instances:
+		if is_instance_valid(occluder):
+			occluder.queue_free()
+	chunk.occluder_instances.clear()
 	if chunk.injection_buffer.is_valid():
 		rd.free_rid(chunk.injection_buffer)
 	if chunk.sim_uniform_set.is_valid():
@@ -506,6 +513,7 @@ func _rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
 	var collision_shape := TerrainCollider.build_collision(material_data, CHUNK_SIZE, chunk.static_body, world_offset)
 	if collision_shape != null:
 		chunk.static_body.add_child(collision_shape)
+	# Note: Occluder update skipped in CPU fallback path (GPU path is primary)
 
 
 func _parse_segment_buffer(data: PackedByteArray, max_offset: int) -> PackedVector2Array:
@@ -578,6 +586,21 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 		)
 		if collision_shape != null:
 			chunk.static_body.add_child(collision_shape)
+
+		# Clear old occluders and create new ones from polygon chains
+		for occluder in chunk.occluder_instances:
+			if is_instance_valid(occluder):
+				occluder.queue_free()
+		chunk.occluder_instances.clear()
+
+		var occluder_polygons := TerrainCollider.create_occluder_polygons(segments)
+		var chunk_pos := Vector2(chunk.coord.x * CHUNK_SIZE, chunk.coord.y * CHUNK_SIZE)
+		for poly in occluder_polygons:
+			var occ := LightOccluder2D.new()
+			occ.position = chunk_pos
+			occ.occluder = poly
+			collision_container.add_child(occ)
+			chunk.occluder_instances.append(occ)
 
 	return true
 
