@@ -57,7 +57,7 @@ MeleeWeapon (unchanged core logic)
 1. `_ready() -> void`
    - Calculate `_start_angle` from current rotation minus `HALF_ARC`
    - Calculate `_end_angle` from current rotation plus `HALF_ARC`
-   - Set initial blade position
+   - Set initial blade position at `_start_angle`
 
 2. `_process(delta: float) -> void`
    - Increment `_elapsed` by `delta`
@@ -66,6 +66,7 @@ MeleeWeapon (unchanged core logic)
    - Calculate current angle: interpolate from `_start_angle` to `_end_angle`
    - Apply ease-out function for natural deceleration
    - Update blade sprite position: `Vector2(cos(current_angle), sin(current_angle)) * BLADE_DISTANCE`
+   - Update blade sprite rotation to `current_angle + PI/2` (blade points perpendicular to radius, along arc)
    - Fade out alpha as swing completes
 
 **Scene Structure:** `scenes/melee_swing_effect.tscn`
