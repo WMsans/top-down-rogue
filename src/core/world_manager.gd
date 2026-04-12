@@ -283,10 +283,7 @@ func _create_chunk(coord: Vector2i) -> void:
 	collision_container.add_child(chunk.static_body)
 
 	# LightOccluder2D uses light_mask=1 by default, PointLight2D checks all masks by default
-	chunk.occluder_instance = LightOccluder2D.new()
-	chunk.occluder_instance.position = Vector2(coord.x * CHUNK_SIZE, coord.y * CHUNK_SIZE)
-	chunk.occluder_instance.occluder = OccluderPolygon2D.new()
-	collision_container.add_child(chunk.occluder_instance)
+	chunk.occluder_instances = []
 
 	chunks[coord] = chunk
 
@@ -304,8 +301,10 @@ func _free_chunk_resources(chunk: Chunk) -> void:
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
-	if chunk.occluder_instance and is_instance_valid(chunk.occluder_instance):
-		chunk.occluder_instance.queue_free()
+	for occluder in chunk.occluder_instances:
+		if is_instance_valid(occluder):
+			occluder.queue_free()
+	chunk.occluder_instances.clear()
 	if chunk.injection_buffer.is_valid():
 		rd.free_rid(chunk.injection_buffer)
 	if chunk.sim_uniform_set.is_valid():
@@ -588,11 +587,20 @@ func _rebuild_chunk_collision_gpu(chunk: Chunk) -> bool:
 		if collision_shape != null:
 			chunk.static_body.add_child(collision_shape)
 
-		var polygon := TerrainCollider.create_occluder_polygon(segments)
-		if polygon != null:
-			chunk.occluder_instance.occluder = polygon
-		elif chunk.occluder_instance.occluder != null:
-			chunk.occluder_instance.occluder.polygon = PackedVector2Array()
+		# Clear old occluders and create new ones from polygon chains
+		for occluder in chunk.occluder_instances:
+			if is_instance_valid(occluder):
+				occluder.queue_free()
+		chunk.occluder_instances.clear()
+
+		var occluder_polygons := TerrainCollider.create_occluder_polygons(segments)
+		var chunk_pos := Vector2(chunk.coord.x * CHUNK_SIZE, chunk.coord.y * CHUNK_SIZE)
+		for poly in occluder_polygons:
+			var occ := LightOccluder2D.new()
+			occ.position = chunk_pos
+			occ.occluder = poly
+			collision_container.add_child(occ)
+			chunk.occluder_instances.append(occ)
 
 	return true
 
