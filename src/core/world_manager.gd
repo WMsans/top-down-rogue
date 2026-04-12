@@ -282,6 +282,7 @@ func _create_chunk(coord: Vector2i) -> void:
 	chunk.static_body.collision_mask = 0
 	collision_container.add_child(chunk.static_body)
 
+	# LightOccluder2D uses light_mask=1 by default, PointLight2D checks all masks by default
 	chunk.occluder_instance = LightOccluder2D.new()
 	chunk.occluder_instance.occluder = OccluderPolygon2D.new()
 	collision_container.add_child(chunk.occluder_instance)
