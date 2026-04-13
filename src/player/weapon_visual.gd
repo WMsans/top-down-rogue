@@ -121,6 +121,15 @@ func _get_position_at_angle(angle: float, distance: float) -> Vector2:
 	return Vector2(cos(angle), sin(angle)) * distance
 
 
+func _elastic_out(t: float) -> float:
+	if t <= 0.0:
+		return 0.0
+	if t >= 1.0:
+		return 1.0
+	var p := 0.3
+	return pow(2.0, -10.0 * t) * sin((t - p / 4.0) * (2.0 * PI) / p) + 1.0
+
+
 func _get_player() -> Node:
 	var parent := get_parent()
 	if parent == null:
