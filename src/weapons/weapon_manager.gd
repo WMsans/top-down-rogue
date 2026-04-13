@@ -13,6 +13,12 @@ func _ready() -> void:
 	weapons.resize(3)
 	weapons[0] = TestWeaponScript.new()
 	weapons[1] = MeleeWeaponScript.new()
+	
+	for weapon in weapons:
+		if weapon != null and weapon.visual_scene != null:
+			var visual_instance := weapon.visual_scene.instantiate()
+			_player.add_child(visual_instance)
+			weapon.visual = visual_instance
 
 
 func _input(event: InputEvent) -> void:
