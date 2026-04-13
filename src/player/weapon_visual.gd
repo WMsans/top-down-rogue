@@ -4,15 +4,32 @@ extends Node2D
 const WEAPON_TEXTURE := preload("res://textures/weapon.png")
 const PIVOT_DISTANCE: float = 15.0
 
-const SWING_DURATION: float = 0.25
-const HALF_ARC: float = PI / 4.0
+const SWING_DURATION: float = 0.30
+const HALF_ARC: float = PI / 3.5
 
-const OVERSHOOT_ANGLE: float = PI / 6.0
-const SWING_PHASE_RATIO: float = 0.65
+# Phase timing ratios (must sum to ~SWING_PHASE_END)
+const PREP_END: float = 0.12
+const ACTION_END: float = 0.32
+const SETTLE_END: float = 0.60
+const RETURN_START: float = 0.60
 const RETURN_EASE_POWER: float = 2.5
 
-const TRAIL_INTERVAL: float = 0.03
-const TRAIL_LIFETIME: float = 0.18
+# Swing angles
+const ANTICIPATION_PULLBACK: float = PI / 6.0
+const OVERSHOOT_ANGLE: float = PI / 5.0
+const SETTLE_BOUNCE_AMOUNT: float = PI / 14.0
+
+# Squash & stretch
+const PREP_SCALE: Vector2 = Vector2(1.25, 0.75)
+const ACTION_SCALE: Vector2 = Vector2(0.7, 1.35)
+const SETTLE_SCALE: Vector2 = Vector2(1.1, 0.92)
+
+# Distance punch (weapon lunges forward during action)
+const PUNCH_DISTANCE: float = 22.0
+
+# Trail
+const TRAIL_INTERVAL: float = 0.02
+const TRAIL_LIFETIME: float = 0.15
 const TRAIL_COLOR: Color = Color(0.3, 0.9, 1.0, 0.6)
 
 @onready var _sprite: Sprite2D = $Sprite2D
@@ -47,6 +64,7 @@ func _process(delta: float) -> void:
 func _process_idle() -> void:
 	position = Vector2(cos(_facing_angle), sin(_facing_angle)) * PIVOT_DISTANCE
 	rotation = _facing_angle + PI / 2.0
+	_sprite.scale = Vector2.ONE
 
 
 func _process_swing(delta: float) -> void:
@@ -58,6 +76,7 @@ func _process_swing(delta: float) -> void:
 		_is_swinging = false
 		_sprite.position = Vector2.ZERO
 		_sprite.rotation = 0.0
+		_sprite.scale = Vector2.ONE
 		_process_idle()
 		return
 
@@ -65,25 +84,80 @@ func _process_swing(delta: float) -> void:
 	rotation = 0.0
 
 	var current_angle := _get_swing_angle(t)
-	_sprite.position = _get_position_at_angle(current_angle, PIVOT_DISTANCE)
+	var dist := _get_swing_distance(t)
+	_sprite.position = _get_position_at_angle(current_angle, dist)
 	_sprite.rotation = current_angle + PI / 2.0
+	_sprite.scale = _get_swing_scale(t)
 
-	if _trail_timer >= TRAIL_INTERVAL:
-		_trail_timer -= TRAIL_INTERVAL
+	# Spawn trails more aggressively during action phase
+	var interval := TRAIL_INTERVAL * (0.5 if t >= PREP_END and t < ACTION_END else 1.0)
+	if _trail_timer >= interval:
+		_trail_timer -= interval
 		_spawn_trail()
 
 
 func _get_swing_angle(t: float) -> float:
-	if t < SWING_PHASE_RATIO:
-		var swing_t := t / SWING_PHASE_RATIO
-		var eased_t := _elastic_out(swing_t)
-		var overshoot_end: float = _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
-		return lerpf(_start_angle, overshoot_end, eased_t)
+	var swing_dir := signf(_end_angle - _start_angle)
+
+	if t < PREP_END:
+		# Anticipation: pull back behind the start angle
+		var prep_t := t / PREP_END
+		var eased := _ease_out_quad(prep_t)
+		var pullback_target := _start_angle - ANTICIPATION_PULLBACK * swing_dir
+		return lerpf(_start_angle, pullback_target, eased)
+
+	elif t < ACTION_END:
+		# Action: fast swing from pullback through to overshoot
+		var action_t := (t - PREP_END) / (ACTION_END - PREP_END)
+		var eased := _ease_in_out_cubic(action_t)
+		var pullback_angle := _start_angle - ANTICIPATION_PULLBACK * swing_dir
+		var overshoot_target := _end_angle + OVERSHOOT_ANGLE * swing_dir
+		return lerpf(pullback_angle, overshoot_target, eased)
+
+	elif t < SETTLE_END:
+		# Settle: damped bounce around end angle
+		var settle_t := (t - ACTION_END) / (SETTLE_END - ACTION_END)
+		var overshoot_target := _end_angle + OVERSHOOT_ANGLE * swing_dir
+		var base := lerpf(overshoot_target, _end_angle, _ease_out_quad(settle_t))
+		var bounce := sin(settle_t * PI * 3.0) * SETTLE_BOUNCE_AMOUNT * (1.0 - settle_t)
+		return base + bounce * swing_dir
+
 	else:
-		var return_t := (t - SWING_PHASE_RATIO) / (1.0 - SWING_PHASE_RATIO)
+		# Return: ease back to facing (preserved from original)
+		var return_t := (t - RETURN_START) / (1.0 - RETURN_START)
 		var eased_return := ease(return_t, RETURN_EASE_POWER)
-		var overshoot_end: float = _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
-		return lerpf(overshoot_end, _facing_angle, eased_return)
+		return lerpf(_end_angle, _facing_angle, eased_return)
+
+
+func _get_swing_distance(t: float) -> float:
+	if t < PREP_END:
+		# Pull in slightly during anticipation
+		var prep_t := t / PREP_END
+		return lerpf(PIVOT_DISTANCE, PIVOT_DISTANCE * 0.85, _ease_out_quad(prep_t))
+	elif t < ACTION_END:
+		# Punch forward during action
+		var action_t := (t - PREP_END) / (ACTION_END - PREP_END)
+		var punch := sin(action_t * PI) # peaks at midpoint
+		return lerpf(PIVOT_DISTANCE * 0.85, PIVOT_DISTANCE, action_t) + punch * (PUNCH_DISTANCE - PIVOT_DISTANCE)
+	else:
+		return PIVOT_DISTANCE
+
+
+func _get_swing_scale(t: float) -> Vector2:
+	if t < PREP_END:
+		var prep_t := t / PREP_END
+		return Vector2.ONE.lerp(PREP_SCALE, _ease_out_quad(prep_t))
+	elif t < ACTION_END:
+		var action_t := (t - PREP_END) / (ACTION_END - PREP_END)
+		if action_t < 0.5:
+			return PREP_SCALE.lerp(ACTION_SCALE, _ease_in_out_cubic(action_t * 2.0))
+		else:
+			return ACTION_SCALE.lerp(Vector2.ONE, _ease_out_quad((action_t - 0.5) * 2.0))
+	elif t < SETTLE_END:
+		var settle_t := (t - ACTION_END) / (SETTLE_END - ACTION_END)
+		return Vector2.ONE.lerp(SETTLE_SCALE, (1.0 - settle_t) * sin(settle_t * PI))
+	else:
+		return Vector2.ONE
 
 
 func swing(direction: Vector2) -> void:
@@ -113,13 +187,16 @@ func _get_position_at_angle(angle: float, distance: float) -> Vector2:
 	return Vector2(cos(angle), sin(angle)) * distance
 
 
-func _elastic_out(t: float) -> float:
-	if t <= 0.0:
-		return 0.0
-	if t >= 1.0:
-		return 1.0
-	var p := 0.3
-	return pow(2.0, -10.0 * t) * sin((t - p / 4.0) * (2.0 * PI) / p) + 1.0
+func _ease_out_quad(t: float) -> float:
+	return 1.0 - (1.0 - t) * (1.0 - t)
+
+
+func _ease_in_out_cubic(t: float) -> float:
+	if t < 0.5:
+		return 4.0 * t * t * t
+	else:
+		var f := -2.0 * t + 2.0
+		return 1.0 - f * f * f / 2.0
 
 
 func _get_player() -> Node:
