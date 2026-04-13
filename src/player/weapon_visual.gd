@@ -60,14 +60,31 @@ func _process_swing(delta: float) -> void:
 	if t >= 1.0:
 		_is_swinging = false
 		_clear_trails()
+		_sprite.position = Vector2.ZERO
+		_sprite.rotation = 0.0
 		_process_idle()
 		return
 	
-	var eased_t := ease(t, 2.0)
-	var current_angle := lerpf(_start_angle, _end_angle, eased_t)
-	
-	_sprite.position = _get_position_at_angle(current_angle, PIVOT_DISTANCE)
-	_sprite.rotation = current_angle + PI / 2.0
+	if t < SWING_PHASE_RATIO:
+		var swing_t := t / SWING_PHASE_RATIO
+		var eased_t := _elastic_out(swing_t)
+		var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+		var current_angle := lerpf(_start_angle, overshoot_end, eased_t)
+		
+		position = Vector2.ZERO
+		rotation = 0.0
+		_sprite.position = _get_position_at_angle(current_angle, PIVOT_DISTANCE)
+		_sprite.rotation = current_angle + PI / 2.0
+	else:
+		var return_t := (t - SWING_PHASE_RATIO) / (1.0 - SWING_PHASE_RATIO)
+		var eased_return := ease(return_t, RETURN_EASE_POWER)
+		var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+		var current_angle := lerpf(overshoot_end, _facing_angle, eased_return)
+		
+		position = Vector2(cos(_facing_angle), sin(_facing_angle)) * PIVOT_DISTANCE
+		rotation = _facing_angle + PI / 2.0
+		_sprite.position = _get_position_at_angle(current_angle, PIVOT_DISTANCE)
+		_sprite.rotation = current_angle + PI / 2.0
 	
 	_update_trails(t)
 
