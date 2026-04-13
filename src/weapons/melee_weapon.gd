@@ -43,7 +43,10 @@ var _elapsed: float = 0.0
 var _start_angle: float = 0.0
 var _end_angle: float = 0.0
 var _facing_angle: float = 0.0
+var _visual_angle: float = NAN
 var _trail_timer: float = 0.0
+
+const IDLE_ROTATION_SPEED: float = 10.0
 
 
 func _init() -> void:
@@ -98,6 +101,10 @@ func update_visual(delta: float, user: Node) -> void:
 
 	_facing_angle = _get_facing_direction(user).angle()
 
+	if _visual_angle != _visual_angle:
+		_visual_angle = _facing_angle
+	_visual_angle = lerp_angle(_visual_angle, _facing_angle, minf(1.0, IDLE_ROTATION_SPEED * delta))
+
 	if _is_swinging:
 		_process_swing(delta)
 	else:
@@ -114,8 +121,8 @@ func _start_swing(direction: Vector2) -> void:
 
 
 func _process_idle() -> void:
-	visual.position = Vector2(cos(_facing_angle), sin(_facing_angle)) * PIVOT_DISTANCE
-	visual.rotation = _facing_angle + PI / 2.0
+	visual.position = Vector2(cos(_visual_angle), sin(_visual_angle)) * PIVOT_DISTANCE
+	visual.rotation = _visual_angle + PI / 2.0
 	_sprite.position = Vector2.ZERO
 	_sprite.rotation = 0.0
 	_sprite.scale = Vector2.ONE
