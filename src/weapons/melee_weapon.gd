@@ -234,6 +234,8 @@ func _spawn_trail() -> void:
 	var tex_size := WEAPON_TEXTURE.get_size()
 	trail.offset = Vector2(tex_size.x / 2.0, -tex_size.y / 4.0)
 	trail.modulate = TRAIL_COLOR
+	trail.z_index = -1
+	trail.z_as_relative = false
 	visual.get_tree().current_scene.add_child(trail)
 	trail.global_position = _sprite.global_position
 	trail.global_rotation = _sprite.global_rotation
