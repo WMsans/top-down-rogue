@@ -15,6 +15,10 @@ const TRAIL_COLORS: Array[Color] = [
 	Color(1.0, 1.0, 1.0, 0.2)
 ]
 
+const OVERSHOOT_ANGLE: float = PI / 6.0
+const SWING_PHASE_RATIO: float = 0.65
+const RETURN_EASE_POWER: float = 2.5
+
 @onready var _sprite: Sprite2D = $Sprite2D
 
 var _is_swinging: bool = false
