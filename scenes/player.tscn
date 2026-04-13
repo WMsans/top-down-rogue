@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://hixog1elal7b" path="res://src/player/player_controller.gd" id="1"]
 [ext_resource type="Script" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
+[ext_resource type="PackedScene" path="res://scenes/weapon_visual.tscn" id="weapon_visual"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
@@ -43,3 +44,5 @@ shadow_color = Color(0, 0, 0, 0.5)
 
 [node name="WeaponManager" type="Node" parent="."]
 script = ExtResource("weapon_manager")
+
+[node name="WeaponVisual" parent="." instance=ExtResource("weapon_visual")]
