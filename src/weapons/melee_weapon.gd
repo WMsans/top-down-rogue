@@ -9,22 +9,21 @@ const PUSH_SPEED: float = 60.0
 
 # Visual constants
 const PIVOT_DISTANCE: float = 15.0
-const SWING_DURATION: float = 0.30
 const HALF_ARC: float = PI / 3.5
 
-# Phase timing ratios
-const PREP_END: float = 0.12
-const ACTION_END: float = 0.32
-const SETTLE_END: float = 0.60
-const RETURN_START: float = 0.60
-const RETURN_EASE_POWER: float = 2.5
+# Per-phase durations (seconds)
+const PREP_DURATION: float = 0.08
+const ACTION_DURATION: float = 0.12
+const SETTLE_DURATION: float = 0.18
+const RETURN_DURATION: float = 0.22
 
 # Swing angles
 const ANTICIPATION_PULLBACK: float = PI / 6.0
-const OVERSHOOT_ANGLE: float = PI / 5.0
-const SETTLE_BOUNCE_AMOUNT: float = PI / 14.0
+const OVERSHOOT_ANGLE: float = PI / 4.0
+const SETTLE_BOUNCE_AMOUNT: float = PI / 12.0
+const SETTLE_BOUNCE_FREQ: float = 28.0
 
-# Squash & stretch
+# Squash & stretch targets
 const PREP_SCALE: Vector2 = Vector2(1.25, 0.75)
 const ACTION_SCALE: Vector2 = Vector2(0.7, 1.35)
 const SETTLE_SCALE: Vector2 = Vector2(1.1, 0.92)
@@ -32,19 +31,31 @@ const SETTLE_SCALE: Vector2 = Vector2(1.1, 0.92)
 # Distance punch
 const PUNCH_DISTANCE: float = 22.0
 
+# Lerp speeds (exponential decay rate, higher = snappier)
+const LERP_SNAP: float = 16.0
+const LERP_SMOOTH: float = 10.0
+const LERP_EASE: float = 6.0
+
 # Trail
 const TRAIL_INTERVAL: float = 0.02
 const TRAIL_LIFETIME: float = 0.15
 const TRAIL_COLOR: Color = Color(0.3, 0.9, 1.0, 0.6)
 
+enum Phase { NONE, PREP, ACTION, SETTLE, RETURN }
+
 var _cooldown_timer: float = 0.0
 var _is_swinging: bool = false
-var _elapsed: float = 0.0
+var _phase: int = Phase.NONE
+var _phase_time: float = 0.0
 var _start_angle: float = 0.0
 var _end_angle: float = 0.0
+var _swing_dir: float = 1.0
 var _facing_angle: float = 0.0
 var _visual_angle: float = NAN
 var _trail_timer: float = 0.0
+var _swing_angle: float = 0.0
+var _swing_dist: float = PIVOT_DISTANCE
+var _swing_scale: Vector2 = Vector2.ONE
 
 const IDLE_ROTATION_SPEED: float = 10.0
 
@@ -115,7 +126,12 @@ func _start_swing(direction: Vector2) -> void:
 	_facing_angle = direction.angle()
 	_start_angle = _facing_angle - HALF_ARC
 	_end_angle = _facing_angle + HALF_ARC
-	_elapsed = 0.0
+	_swing_dir = signf(_end_angle - _start_angle)
+	_swing_angle = _visual_angle
+	_swing_dist = PIVOT_DISTANCE
+	_swing_scale = Vector2.ONE
+	_phase = Phase.PREP
+	_phase_time = 0.0
 	_trail_timer = TRAIL_INTERVAL
 	_is_swinging = true
 
@@ -129,86 +145,87 @@ func _process_idle() -> void:
 
 
 func _process_swing(delta: float) -> void:
-	_elapsed += delta
+	_phase_time += delta
 	_trail_timer += delta
 
-	var t := _elapsed / SWING_DURATION
-	if t >= 1.0:
-		_is_swinging = false
-		_process_idle()
-		return
+	var target_angle: float = _facing_angle
+	var target_dist: float = PIVOT_DISTANCE
+	var target_scale: Vector2 = Vector2.ONE
+	var angle_speed: float = LERP_SMOOTH
+	var dist_speed: float = LERP_SMOOTH
+	var scale_speed: float = LERP_SMOOTH
+
+	match _phase:
+		Phase.PREP:
+			target_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
+			target_dist = PIVOT_DISTANCE * 0.85
+			target_scale = PREP_SCALE
+			angle_speed = LERP_SMOOTH
+			dist_speed = LERP_SMOOTH
+			scale_speed = LERP_SMOOTH
+			if _phase_time >= PREP_DURATION:
+				_phase = Phase.ACTION
+				_phase_time = 0.0
+
+		Phase.ACTION:
+			target_angle = _end_angle + OVERSHOOT_ANGLE * _swing_dir
+			target_dist = PUNCH_DISTANCE
+			target_scale = ACTION_SCALE
+			angle_speed = LERP_SNAP
+			dist_speed = LERP_SNAP
+			scale_speed = LERP_SNAP
+			if _phase_time >= ACTION_DURATION:
+				_phase = Phase.SETTLE
+				_phase_time = 0.0
+
+		Phase.SETTLE:
+			var decay := maxf(0.0, 1.0 - _phase_time / SETTLE_DURATION)
+			target_angle = _end_angle + sin(_phase_time * SETTLE_BOUNCE_FREQ) * SETTLE_BOUNCE_AMOUNT * decay * _swing_dir
+			target_dist = PIVOT_DISTANCE
+			target_scale = Vector2.ONE + (SETTLE_SCALE - Vector2.ONE) * decay
+			angle_speed = LERP_SMOOTH
+			dist_speed = LERP_SMOOTH
+			scale_speed = LERP_SMOOTH
+			if _phase_time >= SETTLE_DURATION:
+				_phase = Phase.RETURN
+				_phase_time = 0.0
+
+		Phase.RETURN:
+			target_angle = _facing_angle
+			target_dist = PIVOT_DISTANCE
+			target_scale = Vector2.ONE
+			angle_speed = LERP_EASE
+			dist_speed = LERP_EASE
+			scale_speed = LERP_EASE
+			if _phase_time >= RETURN_DURATION:
+				_is_swinging = false
+				_visual_angle = _swing_angle
+				_process_idle()
+				return
+
+		_:
+			_is_swinging = false
+			_process_idle()
+			return
+
+	var angle_factor: float = 1.0 - exp(-angle_speed * delta)
+	var dist_factor: float = 1.0 - exp(-dist_speed * delta)
+	var scale_factor: float = 1.0 - exp(-scale_speed * delta)
+
+	_swing_angle = lerp_angle(_swing_angle, target_angle, angle_factor)
+	_swing_dist = lerpf(_swing_dist, target_dist, dist_factor)
+	_swing_scale = _swing_scale.lerp(target_scale, scale_factor)
 
 	visual.position = Vector2.ZERO
 	visual.rotation = 0.0
+	_sprite.position = Vector2(cos(_swing_angle), sin(_swing_angle)) * _swing_dist
+	_sprite.rotation = _swing_angle + PI / 2.0
+	_sprite.scale = _swing_scale
 
-	var current_angle := _get_swing_angle(t)
-	var dist := _get_swing_distance(t)
-	_sprite.position = Vector2(cos(current_angle), sin(current_angle)) * dist
-	_sprite.rotation = current_angle + PI / 2.0
-	_sprite.scale = _get_swing_scale(t)
-
-	var interval := TRAIL_INTERVAL * (0.5 if t >= PREP_END and t < ACTION_END else 1.0)
+	var interval := TRAIL_INTERVAL * (0.5 if _phase == Phase.ACTION else 1.0)
 	if _trail_timer >= interval:
 		_trail_timer -= interval
 		_spawn_trail()
-
-
-func _get_swing_angle(t: float) -> float:
-	var swing_dir := signf(_end_angle - _start_angle)
-
-	if t < PREP_END:
-		var prep_t := t / PREP_END
-		var eased := _ease_out_quad(prep_t)
-		var pullback_target := _start_angle - ANTICIPATION_PULLBACK * swing_dir
-		return lerpf(_start_angle, pullback_target, eased)
-
-	elif t < ACTION_END:
-		var action_t := (t - PREP_END) / (ACTION_END - PREP_END)
-		var eased := _ease_in_out_cubic(action_t)
-		var pullback_angle := _start_angle - ANTICIPATION_PULLBACK * swing_dir
-		var overshoot_target := _end_angle + OVERSHOOT_ANGLE * swing_dir
-		return lerpf(pullback_angle, overshoot_target, eased)
-
-	elif t < SETTLE_END:
-		var settle_t := (t - ACTION_END) / (SETTLE_END - ACTION_END)
-		var overshoot_target := _end_angle + OVERSHOOT_ANGLE * swing_dir
-		var base := lerpf(overshoot_target, _end_angle, _ease_out_quad(settle_t))
-		var bounce := sin(settle_t * PI * 3.0) * SETTLE_BOUNCE_AMOUNT * (1.0 - settle_t)
-		return base + bounce * swing_dir
-
-	else:
-		var return_t := (t - RETURN_START) / (1.0 - RETURN_START)
-		var eased_return := ease(return_t, RETURN_EASE_POWER)
-		return lerpf(_end_angle, _facing_angle, eased_return)
-
-
-func _get_swing_distance(t: float) -> float:
-	if t < PREP_END:
-		var prep_t := t / PREP_END
-		return lerpf(PIVOT_DISTANCE, PIVOT_DISTANCE * 0.85, _ease_out_quad(prep_t))
-	elif t < ACTION_END:
-		var action_t := (t - PREP_END) / (ACTION_END - PREP_END)
-		var punch := sin(action_t * PI)
-		return lerpf(PIVOT_DISTANCE * 0.85, PIVOT_DISTANCE, action_t) + punch * (PUNCH_DISTANCE - PIVOT_DISTANCE)
-	else:
-		return PIVOT_DISTANCE
-
-
-func _get_swing_scale(t: float) -> Vector2:
-	if t < PREP_END:
-		var prep_t := t / PREP_END
-		return Vector2.ONE.lerp(PREP_SCALE, _ease_out_quad(prep_t))
-	elif t < ACTION_END:
-		var action_t := (t - PREP_END) / (ACTION_END - PREP_END)
-		if action_t < 0.5:
-			return PREP_SCALE.lerp(ACTION_SCALE, _ease_in_out_cubic(action_t * 2.0))
-		else:
-			return ACTION_SCALE.lerp(Vector2.ONE, _ease_out_quad((action_t - 0.5) * 2.0))
-	elif t < SETTLE_END:
-		var settle_t := (t - ACTION_END) / (SETTLE_END - ACTION_END)
-		return Vector2.ONE.lerp(SETTLE_SCALE, (1.0 - settle_t) * sin(settle_t * PI))
-	else:
-		return Vector2.ONE
 
 
 func _spawn_trail() -> void:
@@ -223,18 +240,6 @@ func _spawn_trail() -> void:
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, TRAIL_LIFETIME)
 	tween.tween_callback(trail.queue_free)
-
-
-func _ease_out_quad(t: float) -> float:
-	return 1.0 - (1.0 - t) * (1.0 - t)
-
-
-func _ease_in_out_cubic(t: float) -> float:
-	if t < 0.5:
-		return 4.0 * t * t * t
-	else:
-		var f := -2.0 * t + 2.0
-		return 1.0 - f * f * f / 2.0
 
 
 func _get_world_manager(user: Node) -> Node:
