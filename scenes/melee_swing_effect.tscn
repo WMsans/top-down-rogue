@@ -5,6 +5,4 @@
 [node name="MeleeSwingEffect" type="Node2D"]
 script = ExtResource("1_script")
 
-[node name="Line2D" type="Line2D" parent="."]
-width = 3.0
-default_color = Color(1, 1, 1, 0.6)
+[node name="Trails" type="Node2D" parent="."]
