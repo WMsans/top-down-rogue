@@ -119,16 +119,30 @@ func _clear_trails() -> void:
 
 
 func _update_trails(t: float) -> void:
-	var fade_alpha := 1.0 - t
+	var fade_alpha := 1.0
+	
+	if t >= SWING_PHASE_RATIO:
+		var return_t := (t - SWING_PHASE_RATIO) / (1.0 - SWING_PHASE_RATIO)
+		fade_alpha = 1.0 - return_t * return_t
 	
 	for i in range(TRAIL_COUNT):
 		var trail := _trails[i]
 		var trail_t: float = max(0.0, t - TRAIL_DELAY * float(i + 1))
 		if trail_t > 0:
-			var trail_eased := ease(trail_t, 2.0)
-			var trail_angle := lerpf(_start_angle, _end_angle, trail_eased)
-			trail.position = _get_position_at_angle(trail_angle, PIVOT_DISTANCE)
-			trail.rotation = trail_angle + PI / 2.0
+			if trail_t < SWING_PHASE_RATIO:
+				var swing_t := trail_t / SWING_PHASE_RATIO
+				var trail_eased := _elastic_out(swing_t)
+				var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+				var trail_angle := lerpf(_start_angle, overshoot_end, trail_eased)
+				trail.position = _get_position_at_angle(trail_angle, PIVOT_DISTANCE)
+				trail.rotation = trail_angle + PI / 2.0
+			else:
+				var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+				var return_t := (trail_t - SWING_PHASE_RATIO) / (1.0 - SWING_PHASE_RATIO)
+				var eased_return := ease(return_t, RETURN_EASE_POWER)
+				var trail_angle := lerpf(overshoot_end, _facing_angle, eased_return)
+				trail.position = _get_position_at_angle(trail_angle, PIVOT_DISTANCE)
+				trail.rotation = trail_angle + PI / 2.0
 		
 		var base_color := TRAIL_COLORS[i]
 		trail.modulate = Color(base_color.r, base_color.g, base_color.b, base_color.a * fade_alpha)
