@@ -102,7 +102,7 @@ func _update_trails(t: float) -> void:
 	
 	for i in range(TRAIL_COUNT):
 		var trail := _trails[i]
-		var trail_t := max(0.0, t - TRAIL_DELAY * float(i + 1))
+		var trail_t: float = max(0.0, t - TRAIL_DELAY * float(i + 1))
 		if trail_t > 0:
 			var trail_eased := ease(trail_t, 2.0)
 			var trail_angle := lerpf(_start_angle, _end_angle, trail_eased)
