@@ -12,6 +12,7 @@ var _cooldown_timer: float = 0.0
 
 func _init() -> void:
 	name = "Melee Weapon"
+	visual_scene = preload("res://scenes/weapon_visual.tscn")
 
 
 func use(user: Node) -> void:
@@ -25,14 +26,20 @@ func use(user: Node) -> void:
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	
+	trigger_visual(direction)
+	
 	var materials: Array[int] = [
 		MaterialRegistry.MAT_GAS,
 		MaterialRegistry.MAT_LAVA
 	]
 	world_manager.disperse_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, materials)
 	
-	_spawn_effect(user, direction)
 	_cooldown_timer = COOLDOWN
+
+
+func _do_visual(direction: Vector2) -> void:
+	if visual:
+		visual.swing(direction)
 
 
 func tick(delta: float) -> void:
@@ -61,11 +68,3 @@ func _get_facing_direction(user: Node) -> Vector2:
 		if vel is Vector2 and vel.length_squared() > 0.01:
 			return vel.normalized()
 	return Vector2.DOWN
-
-
-func _spawn_effect(user: Node, direction: Vector2) -> void:
-	var effect_scene := preload("res://scenes/melee_swing_effect.tscn")
-	var effect := effect_scene.instantiate()
-	effect.global_position = user.global_position
-	effect.setup(direction, WEAPON_TEXTURE)
-	user.get_tree().current_scene.add_child(effect)
