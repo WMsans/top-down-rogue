@@ -1,6 +1,7 @@
 class_name MeleeWeapon
 extends Weapon
 
+const WEAPON_TEXTURE := preload("res://textures/weapon.png")
 const RANGE: float = 40.0
 const ARC_ANGLE: float = PI / 2.0
 const COOLDOWN: float = 0.5
@@ -66,5 +67,5 @@ func _spawn_effect(user: Node, direction: Vector2) -> void:
 	var effect_scene := preload("res://scenes/melee_swing_effect.tscn")
 	var effect := effect_scene.instantiate()
 	effect.global_position = user.global_position
-	effect.rotation = direction.angle()
+	effect.setup(direction, WEAPON_TEXTURE)
 	user.get_tree().current_scene.add_child(effect)
