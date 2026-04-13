@@ -14,6 +14,10 @@ func _ready() -> void:
 	weapons[0] = TestWeaponScript.new()
 	weapons[1] = MeleeWeaponScript.new()
 	
+	_setup_weapon_visuals.call_deferred()
+
+
+func _setup_weapon_visuals() -> void:
 	for weapon in weapons:
 		if weapon != null and weapon.visual_scene != null:
 			var visual_instance := weapon.visual_scene.instantiate()
