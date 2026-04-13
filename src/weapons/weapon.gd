@@ -2,8 +2,8 @@ class_name Weapon
 extends RefCounted
 
 var name: String = "Weapon"
-var visual_scene: PackedScene = null
 var visual: Node2D = null
+var _sprite: Sprite2D = null
 
 
 func use(_user: Node) -> void:
@@ -18,10 +18,14 @@ func is_ready() -> bool:
 	return true
 
 
-func trigger_visual(direction: Vector2) -> void:
-	if visual:
-		_do_visual(direction)
+func has_visual() -> bool:
+	return false
 
 
-func _do_visual(_direction: Vector2) -> void:
+func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
+	visual = container
+	_sprite = sprite
+
+
+func update_visual(_delta: float, _user: Node) -> void:
 	pass
