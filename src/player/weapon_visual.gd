@@ -68,7 +68,7 @@ func _process_swing(delta: float) -> void:
 	if t < SWING_PHASE_RATIO:
 		var swing_t := t / SWING_PHASE_RATIO
 		var eased_t := _elastic_out(swing_t)
-		var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+		var overshoot_end: float = _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
 		var current_angle := lerpf(_start_angle, overshoot_end, eased_t)
 		
 		position = Vector2.ZERO
@@ -78,7 +78,7 @@ func _process_swing(delta: float) -> void:
 	else:
 		var return_t := (t - SWING_PHASE_RATIO) / (1.0 - SWING_PHASE_RATIO)
 		var eased_return := ease(return_t, RETURN_EASE_POWER)
-		var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+		var overshoot_end: float = _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
 		var current_angle := lerpf(overshoot_end, _facing_angle, eased_return)
 		
 		position = Vector2(cos(_facing_angle), sin(_facing_angle)) * PIVOT_DISTANCE
@@ -132,12 +132,12 @@ func _update_trails(t: float) -> void:
 			if trail_t < SWING_PHASE_RATIO:
 				var swing_t := trail_t / SWING_PHASE_RATIO
 				var trail_eased := _elastic_out(swing_t)
-				var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+				var overshoot_end: float = _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
 				var trail_angle := lerpf(_start_angle, overshoot_end, trail_eased)
 				trail.position = _get_position_at_angle(trail_angle, PIVOT_DISTANCE)
 				trail.rotation = trail_angle + PI / 2.0
 			else:
-				var overshoot_end := _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
+				var overshoot_end: float = _end_angle + OVERSHOOT_ANGLE * sign(_end_angle - _start_angle)
 				var return_t := (trail_t - SWING_PHASE_RATIO) / (1.0 - SWING_PHASE_RATIO)
 				var eased_return := ease(return_t, RETURN_EASE_POWER)
 				var trail_angle := lerpf(overshoot_end, _facing_angle, eased_return)
