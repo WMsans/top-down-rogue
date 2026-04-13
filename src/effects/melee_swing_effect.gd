@@ -13,8 +13,7 @@ const TRAIL_COLORS: Array[Color] = [
 	Color(1.0, 1.0, 1.0, 0.2)
 ]
 
-@onready var _trails_container: Node2D = $Trails
-
+var _trails_container: Node2D = null
 var _elapsed: float = 0.0
 var _start_angle: float = 0.0
 var _end_angle: float = 0.0
@@ -26,6 +25,7 @@ func setup(direction: Vector2, texture: Texture2D) -> void:
 	_weapon_texture = texture
 	_start_angle = direction.angle() - HALF_ARC
 	_end_angle = direction.angle() + HALF_ARC
+	_trails_container = $Trails
 	_spawn_trails()
 
 
