@@ -88,10 +88,7 @@ func use(user: Node) -> void:
 
 	_start_swing(direction)
 
-	var materials: Array[int] = [
-		MaterialRegistry.MAT_GAS,
-		MaterialRegistry.MAT_LAVA
-	]
+	var materials: Array[int] = MaterialRegistry.get_fluids()
 	world_manager.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
 
 	_cooldown_timer = COOLDOWN

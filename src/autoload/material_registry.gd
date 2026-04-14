@@ -11,6 +11,7 @@ class MaterialDef:
     var has_collider: bool
     var has_wall_extension: bool
     var tint_color: Color
+    var fluid: bool
 
     func _init(
         p_name: String,
@@ -20,7 +21,8 @@ class MaterialDef:
         p_burn_health: int,
         p_has_collider: bool,
         p_has_wall_extension: bool,
-        p_tint_color: Color = Color(0, 0, 0, 0)
+        p_tint_color: Color = Color(0, 0, 0, 0),
+        p_fluid: bool = false
     ):
         name = p_name
         texture_path = p_texture_path
@@ -30,6 +32,7 @@ class MaterialDef:
         has_collider = p_has_collider
         has_wall_extension = p_has_wall_extension
         tint_color = p_tint_color
+        fluid = p_fluid
 
 var materials: Array[MaterialDef] = []
 
@@ -70,7 +73,8 @@ func _init_materials():
         "GAS", "",
         false, 0, 0,
         false, false,
-        Color(0.4, 0.9, 0.3, 1.0)
+        Color(0.4, 0.9, 0.3, 1.0),
+        true
     )
     mat_gas.id = materials.size()
     materials.append(mat_gas)
@@ -80,7 +84,8 @@ func _init_materials():
         "LAVA", "",
         false, 0, 0,
         false, false,
-        Color(0.9, 0.4, 0.1, 1.0)
+        Color(0.9, 0.4, 0.1, 1.0),
+        true
     )
     mat_lava.id = materials.size()
     materials.append(mat_lava)
@@ -110,3 +115,10 @@ func get_tint_color(material_id: int) -> Color:
     if material_id < 0 or material_id >= materials.size():
         return Color(0, 0, 0, 0)
     return materials[material_id].tint_color
+
+func get_fluids() -> Array[int]:
+    var result: Array[int] = []
+    for mat in materials:
+        if mat.fluid:
+            result.append(mat.id)
+    return result
