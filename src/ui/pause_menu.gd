@@ -96,4 +96,4 @@ func _apply_theme() -> void:
 	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
 	t.set_color("font_hover_color", "Button", Color(0.741, 0.576, 0.976))
 	t.set_constant("separation", "VBoxContainer", 12)
-	theme = t
+	pause_panel.theme = t

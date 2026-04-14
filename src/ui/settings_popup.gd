@@ -76,15 +76,15 @@ func _on_volume_changed(value: float, bus_name: String) -> void:
 
 
 func _on_fullscreen_toggled() -> void:
-	if DisplayServer.get_window_flag(DisplayServer.WINDOW_FLAG_FULLSCREEN):
-		DisplayServer.set_window_flag(DisplayServer.WINDOW_FLAG_FULLSCREEN, false)
+	if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	else:
-		DisplayServer.set_window_flag(DisplayServer.WINDOW_FLAG_FULLSCREEN, true)
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	_update_fullscreen_text()
 
 
 func _update_fullscreen_text() -> void:
-	if DisplayServer.get_window_flag(DisplayServer.WINDOW_FLAG_FULLSCREEN):
+	if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN:
 		fullscreen_button.text = "ON"
 	else:
 		fullscreen_button.text = "OFF"
@@ -148,7 +148,7 @@ func _rebuild_key_bindings() -> void:
 		else:
 			key_button.text = "???"
 
-		var action := actions[i]
+		var action: String = actions[i]
 		key_button.pressed.connect(_on_key_binding_pressed.bind(action, key_button))
 		row.add_child(key_button)
 
