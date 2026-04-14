@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://c7y2m8wx1knpj"]
+[gd_scene format=3 uid="uid://c7y2m8wx1knpj"]
 
 [ext_resource type="Script" uid="uid://cj7qpo5fj27gp" path="res://src/ui/main_menu.gd" id="1_mn"]
 [ext_resource type="PackedScene" uid="uid://bqx7kc3no7exp" path="res://scenes/ui/settings_popup.tscn" id="2_sp"]
@@ -24,7 +24,8 @@ color = Color(0.102, 0.039, 0.18, 1)
 [node name="TitleSprite" type="Sprite2D" parent="." unique_id=1690448856]
 position = Vector2(576, 200)
 
-[node name="ButtonContainer" type="VBoxContainer" parent="." unique_name_access_owner=true unique_id=245531920]
+[node name="ButtonContainer" type="VBoxContainer" parent="." unique_id=245531920]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -39,19 +40,25 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="PlayButton" type="Button" parent="ButtonContainer" unique_name_access_owner=true unique_id=31766559]
+[node name="PlayButton" type="Button" parent="ButtonContainer" unique_id=31766559]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "PLAY"
 
-[node name="SettingsButton" type="Button" parent="ButtonContainer" unique_name_access_owner=true unique_id=405901494]
+[node name="SettingsButton" type="Button" parent="ButtonContainer" unique_id=405901494]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "SETTINGS"
 
-[node name="QuitButton" type="Button" parent="ButtonContainer" unique_name_access_owner=true unique_id=1656175076]
+[node name="QuitButton" type="Button" parent="ButtonContainer" unique_id=1656175076]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "QUIT"
 
-[node name="SettingsPopup" parent="." unique_name_access_owner=true instance=ExtResource("2_sp")]
+[node name="SettingsPopup" parent="." unique_id=1236389963 instance=ExtResource("2_sp")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
