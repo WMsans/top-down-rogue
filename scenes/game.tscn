@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://dhvbrthaofi0b" path="res://src/terrain/world_preview.gd" id="6"]
 [ext_resource type="PackedScene" uid="uid://dyro2k6hacg2y" path="res://scenes/player.tscn" id="7"]
 [ext_resource type="Script" uid="uid://41pttcuclgqw" path="res://src/debug/collision_overlay.gd" id="8"]
+[ext_resource type="PackedScene" uid="uid://dc5am8wxl3knp" path="res://scenes/ui/pause_menu.tscn" id="9"]
 
 [sub_resource type="Environment" id="Environment_o6xl0"]
 background_mode = 3
@@ -44,3 +45,5 @@ environment = SubResource("Environment_o6xl0")
 [node name="DirectionalLight2D" type="DirectionalLight2D" parent="." unique_id=1871237143]
 color = Color(0.95, 0.95, 0.95, 1)
 blend_mode = 1
+
+[node name="PauseMenu" parent="." instance=ExtResource("9")]
