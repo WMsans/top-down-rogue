@@ -1,9 +1,9 @@
 [gd_scene load_steps=3 format=3 uid="uid://c7y2m8wx1knpj"]
 
-[ext_resource type="Script" path="res://src/ui/main_menu.gd" id="1_mn"]
+[ext_resource type="Script" uid="uid://cj7qpo5fj27gp" path="res://src/ui/main_menu.gd" id="1_mn"]
 [ext_resource type="PackedScene" uid="uid://bqx7kc3no7exp" path="res://scenes/ui/settings_popup.tscn" id="2_sp"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=24682183]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_mn")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1756724303]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,11 +21,10 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.102, 0.039, 0.18, 1)
 
-[node name="TitleSprite" type="Sprite2D" parent="."]
+[node name="TitleSprite" type="Sprite2D" parent="." unique_id=1690448856]
 position = Vector2(576, 200)
 
-[node name="ButtonContainer" type="VBoxContainer" parent="."]
-unique_name_access_owner = true
+[node name="ButtonContainer" type="VBoxContainer" parent="." unique_name_access_owner=true unique_id=245531920]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -40,25 +39,19 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="PlayButton" type="Button" parent="ButtonContainer"]
-unique_name_access_owner = true
+[node name="PlayButton" type="Button" parent="ButtonContainer" unique_name_access_owner=true unique_id=31766559]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "PLAY"
 
-[node name="SettingsButton" type="Button" parent="ButtonContainer"]
-unique_name_access_owner = true
+[node name="SettingsButton" type="Button" parent="ButtonContainer" unique_name_access_owner=true unique_id=405901494]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "SETTINGS"
 
-[node name="QuitButton" type="Button" parent="ButtonContainer"]
-unique_name_access_owner = true
+[node name="QuitButton" type="Button" parent="ButtonContainer" unique_name_access_owner=true unique_id=1656175076]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "QUIT"
 
-[node name="SettingsPopup" parent="."]
-unique_name_access_owner = true
-instance = ExtResource("2_sp")
-visible = false
+[node name="SettingsPopup" parent="." unique_name_access_owner=true instance=ExtResource("2_sp")]
