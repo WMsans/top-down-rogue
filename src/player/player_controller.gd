@@ -5,14 +5,13 @@ const BODY_WIDTH := 8
 const BODY_HEIGHT := 12
 
 const ShadowGridScript := preload("res://src/core/shadow_grid.gd")
-const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 
 @export var acceleration: float = 800.0
 @export var friction: float = 600.0
 @export var max_speed: float = 120.0
 
-var weapons: Array[Weapon] = []
 var shadow_grid: Node
+var _last_facing: Vector2 = Vector2.DOWN
 
 @onready var _world_manager: Node2D = get_parent().get_node("WorldManager")
 
@@ -28,9 +27,6 @@ func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("gas_interactors")
 
-	weapons.resize(3)
-	weapons[0] = TestWeaponScript.new()
-
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var spawn_pos: Vector2i = _world_manager.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
@@ -43,12 +39,13 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var input_dir := _get_input_direction()
+	if input_dir != Vector2.ZERO:
+		_last_facing = input_dir
 	_apply_movement(input_dir, delta)
 	move_and_slide()
 
 	_world_manager.tracking_position = global_position
 	shadow_grid.update_sync(Vector2i(int(floor(position.x)), int(floor(position.y))))
-	_tick_weapons(delta)
 
 
 func _get_input_direction() -> Vector2:
@@ -77,22 +74,9 @@ func _apply_movement(input_dir: Vector2, delta: float) -> void:
 		velocity = velocity.normalized() * max_speed
 
 
-func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		var slot := -1
-		match event.keycode:
-			KEY_Z: slot = 0
-			KEY_X: slot = 1
-			KEY_C: slot = 2
-		if slot >= 0 and slot < weapons.size() and weapons[slot] != null:
-			weapons[slot].use(self)
-
-
-func _tick_weapons(delta: float) -> void:
-	for weapon in weapons:
-		if weapon != null and weapon.has_method("tick"):
-			weapon.tick(delta)
-
-
 func get_world_manager() -> Node:
 	return _world_manager
+
+
+func get_facing_direction() -> Vector2:
+	return _last_facing

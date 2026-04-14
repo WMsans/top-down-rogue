@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dyro2k6hacg2y"]
 
 [ext_resource type="Script" uid="uid://hixog1elal7b" path="res://src/player/player_controller.gd" id="1"]
+[ext_resource type="Script" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
@@ -39,3 +40,6 @@ shadow_enabled = true
 shadow_filter = 3
 shadow_filter_smooth = 2.0
 shadow_color = Color(0, 0, 0, 0.5)
+
+[node name="WeaponManager" type="Node" parent="."]
+script = ExtResource("weapon_manager")
