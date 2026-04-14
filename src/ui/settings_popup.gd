@@ -2,6 +2,8 @@ extends Control
 
 signal closed
 
+const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
+
 const SETTINGS_PATH := "user://settings.cfg"
 
 const SECTION_AUDIO := "audio"
@@ -21,6 +23,7 @@ var _rebinding_label: Label = null
 
 
 func _ready() -> void:
+	_apply_theme()
 	_connect_signals()
 	_apply_loaded_settings()
 
@@ -158,3 +161,16 @@ func _save_settings() -> void:
 	config.set_value(SECTION_AUDIO, "music", music_slider.value)
 	config.set_value(SECTION_AUDIO, "sfx", sfx_slider.value)
 	config.save(SETTINGS_PATH)
+
+
+func _apply_theme() -> void:
+	var t := Theme.new()
+	t.default_font = PIXEL_FONT
+	t.set_font_size("font_size", "Button", 16)
+	t.set_font_size("font_size", "Label", 16)
+	t.set_font_size("font_size", "HSlider", 12)
+	t.set_color("font_color", "Button", Color(0.976, 0.988, 0.953))
+	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
+	t.set_color("font_hover_color", "Button", Color(0.741, 0.576, 0.976))
+	t.set_constant("separation", "VBoxContainer", 8)
+	theme = t
