@@ -16,7 +16,7 @@ var _buttons: Array[Button] = []
 
 func _ready() -> void:
 	_apply_theme()
-	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_buttons = [resume_button, settings_button, main_menu_button]
 	_connect_buttons()
 	confirmation_panel.visible = false
