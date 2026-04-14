@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
+
 @onready var pause_panel: Control = %PausePanel
 @onready var resume_button: Button = %ResumeButton
 @onready var settings_button: Button = %SettingsButton
@@ -13,6 +15,7 @@ var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	_apply_theme()
 	process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 	_buttons = [resume_button, settings_button, main_menu_button]
 	_connect_buttons()
@@ -82,3 +85,15 @@ func _on_confirm_no() -> void:
 func _focus_first_button() -> void:
 	if _buttons.size() > 0:
 		_buttons[0].grab_focus()
+
+
+func _apply_theme() -> void:
+	var t := Theme.new()
+	t.default_font = PIXEL_FONT
+	t.set_font_size("font_size", "Button", 16)
+	t.set_font_size("font_size", "Label", 16)
+	t.set_color("font_color", "Button", Color(0.976, 0.988, 0.953))
+	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
+	t.set_color("font_hover_color", "Button", Color(0.741, 0.576, 0.976))
+	t.set_constant("separation", "VBoxContainer", 12)
+	theme = t

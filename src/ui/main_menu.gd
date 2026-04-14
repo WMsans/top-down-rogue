@@ -1,5 +1,7 @@
 extends Control
 
+const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
+
 @onready var play_button: Button = %PlayButton
 @onready var settings_button: Button = %SettingsButton
 @onready var quit_button: Button = %QuitButton
@@ -10,6 +12,7 @@ var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	_apply_theme()
 	_buttons = [play_button, settings_button, quit_button]
 	_connect_buttons()
 	_focus_first_button()
@@ -47,3 +50,15 @@ func _on_settings_closed() -> void:
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
+
+
+func _apply_theme() -> void:
+	var t := Theme.new()
+	t.default_font = PIXEL_FONT
+	t.set_font_size("font_size", "Button", 16)
+	t.set_font_size("font_size", "Label", 16)
+	t.set_color("font_color", "Button", Color(0.976, 0.988, 0.953))
+	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
+	t.set_color("font_hover_color", "Button", Color(0.741, 0.576, 0.976))
+	t.set_constant("separation", "VBoxContainer", 12)
+	theme = t
