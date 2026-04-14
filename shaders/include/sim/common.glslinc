@@ -1,0 +1,61 @@
+const int CHUNK_SIZE = 256;
+const int FIRE_TEMP = 255;
+const int HEAT_DISSIPATION = 2;
+const int HEAT_SPREAD = 10;
+const float SPREAD_PROB_MAX = 0.7;
+const int V_MAX_OUTFLOW = 8;
+const int THRESHOLD_BECOME_GAS = 1;
+const int THRESHOLD_BECOME_LAVA = 1;
+const int THRESHOLD_DISSIPATE = 1;
+const int MAX_INJECTIONS_PER_CHUNK = 32;
+const int DIFFUSION_RATE = 4;
+
+uint hash(uint n) {
+	n = (n >> 16) ^ n;
+	n *= 0xed5ad0bb;
+	n = (n >> 16) ^ n;
+	n *= 0xac4c1b51;
+	n = (n >> 16) ^ n;
+	return n;
+}
+
+int get_material(vec4 p) { return int(round(p.r * 255.0)); }
+int get_health(vec4 p) { return int(round(p.g * 255.0)); }
+int get_temperature(vec4 p) { return int(round(p.b * 255.0)); }
+
+vec4 make_pixel(int mat, int hp, int temp) {
+	return vec4(float(mat) / 255.0, float(hp) / 255.0, float(temp) / 255.0, 0.0);
+}
+
+int stochastic_div(int numerator, int denom, ivec2 pos, uint salt) {
+	if (denom <= 0) return 0;
+	int base = numerator / denom;
+	int rem = numerator - base * denom;
+	if (rem <= 0) return base;
+	uint rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed) ^ salt));
+	return base + (int(rng % uint(denom)) < rem ? 1 : 0);
+}
+
+vec4 read_neighbor(ivec2 pos) {
+	if (pos.x >= 0 && pos.x < CHUNK_SIZE && pos.y >= 0 && pos.y < CHUNK_SIZE) {
+		return imageLoad(chunk_tex, pos);
+	}
+	if (pos.y < 0) {
+		return imageLoad(neighbor_top, ivec2(pos.x, CHUNK_SIZE + pos.y));
+	}
+	if (pos.y >= CHUNK_SIZE) {
+		return imageLoad(neighbor_bottom, ivec2(pos.x, pos.y - CHUNK_SIZE));
+	}
+	if (pos.x < 0) {
+		return imageLoad(neighbor_left, ivec2(CHUNK_SIZE + pos.x, pos.y));
+	}
+	if (pos.x >= CHUNK_SIZE) {
+		return imageLoad(neighbor_right, ivec2(pos.x - CHUNK_SIZE, pos.y));
+	}
+	return vec4(0.0);
+}
+
+bool is_burning(vec4 p) {
+	int mat = get_material(p);
+	return IS_FLAMMABLE[mat] && get_temperature(p) > IGNITION_TEMP[mat];
+}
