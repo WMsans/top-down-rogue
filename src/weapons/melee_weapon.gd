@@ -92,7 +92,7 @@ func use(user: Node) -> void:
 		MaterialRegistry.MAT_GAS,
 		MaterialRegistry.MAT_LAVA
 	]
-	world_manager.disperse_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, materials)
+	world_manager.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
 
 	_cooldown_timer = COOLDOWN
 
