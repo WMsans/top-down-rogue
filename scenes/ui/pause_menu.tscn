@@ -1,15 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://dc5am8wxl3knp"]
+[gd_scene format=3 uid="uid://dc5am8wxl3knp"]
 
-[ext_resource type="Script" path="res://src/ui/pause_menu.gd" id="1_pm"]
+[ext_resource type="Script" uid="uid://t5e7r8fmedxh" path="res://src/ui/pause_menu.gd" id="1_pm"]
 [ext_resource type="PackedScene" uid="uid://bqx7kc3no7exp" path="res://scenes/ui/settings_popup.tscn" id="2_sp"]
 
-[node name="PauseMenu" type="CanvasLayer"]
-layer = 10
+[node name="PauseMenu" type="CanvasLayer" unique_id=2013037450]
 process_mode = 3
+layer = 10
 script = ExtResource("1_pm")
 
-[node name="PausePanel" type="Control" parent="."]
-unique_name_access_owner = true
+[node name="PausePanel" type="Control" parent="." unique_id=166618561]
+unique_name_in_owner = true
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,7 +17,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Dimmer" type="ColorRect" parent="PausePanel"]
+[node name="Dimmer" type="ColorRect" parent="PausePanel" unique_id=10712110]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,7 +26,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.5)
 
-[node name="CenterContainer" type="CenterContainer" parent="PausePanel"]
+[node name="CenterContainer" type="CenterContainer" parent="PausePanel" unique_id=50804748]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -34,46 +34,41 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PausePanel/CenterContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PausePanel/CenterContainer" unique_id=392039906]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PausedLabel" type="Label" parent="PausePanel/CenterContainer/VBoxContainer"]
+[node name="PausedLabel" type="Label" parent="PausePanel/CenterContainer/VBoxContainer" unique_id=970009467]
 layout_mode = 2
 text = "PAUSED"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="PausePanel/CenterContainer/VBoxContainer"]
-unique_name_access_owner = true
+[node name="ResumeButton" type="Button" parent="PausePanel/CenterContainer/VBoxContainer" unique_id=1663117715]
+unique_name_in_owner = true
 layout_mode = 2
 text = "RESUME"
 
-[node name="SettingsButton" type="Button" parent="PausePanel/CenterContainer/VBoxContainer"]
-unique_name_access_owner = true
+[node name="SettingsButton" type="Button" parent="PausePanel/CenterContainer/VBoxContainer" unique_id=79359953]
+unique_name_in_owner = true
 layout_mode = 2
 text = "SETTINGS"
 
-[node name="MainMenuButton" type="Button" parent="PausePanel/CenterContainer/VBoxContainer"]
-unique_name_access_owner = true
+[node name="MainMenuButton" type="Button" parent="PausePanel/CenterContainer/VBoxContainer" unique_id=773685461]
+unique_name_in_owner = true
 layout_mode = 2
 text = "MAIN MENU"
 
-[node name="SettingsPopup" parent="."]
-unique_name_access_owner = true
-instance = ExtResource("2_sp")
+[node name="ConfirmationPanel" type="Control" parent="." unique_id=611653628]
+unique_name_in_owner = true
 visible = false
-
-[node name="ConfirmationPanel" type="Control" parent="."]
-unique_name_access_owner = true
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-visible = false
 
-[node name="ConfirmationDimmer" type="ColorRect" parent="ConfirmationPanel"]
+[node name="ConfirmationDimmer" type="ColorRect" parent="ConfirmationPanel" unique_id=673516490]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -82,7 +77,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.3)
 
-[node name="ConfirmationBox" type="PanelContainer" parent="ConfirmationPanel"]
+[node name="ConfirmationBox" type="PanelContainer" parent="ConfirmationPanel" unique_id=1378624481]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -96,28 +91,32 @@ offset_bottom = 40.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ConfirmationPanel/ConfirmationBox"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ConfirmationPanel/ConfirmationBox" unique_id=1411021126]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MessageLabel" type="Label" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer"]
+[node name="MessageLabel" type="Label" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer" unique_id=2094664480]
 layout_mode = 2
 text = "Quit to main menu?
 All progress will be lost!"
 horizontal_alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer" unique_id=535091930]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="ConfirmYesButton" type="Button" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer/HBoxContainer"]
-unique_name_access_owner = true
+[node name="ConfirmYesButton" type="Button" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer/HBoxContainer" unique_id=719617688]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "YES"
 
-[node name="ConfirmNoButton" type="Button" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer/HBoxContainer"]
-unique_name_access_owner = true
+[node name="ConfirmNoButton" type="Button" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer/HBoxContainer" unique_id=701220310]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "NO"
+
+[node name="SettingsPopup" parent="." unique_id=2084564084 instance=ExtResource("2_sp")]
+unique_name_in_owner = true
+visible = false
