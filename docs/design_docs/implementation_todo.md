@@ -22,10 +22,10 @@ Based on gameplay.md design document.
 | Priority | Difficulty | Task | Description |
 |----------|------------|------|-------------|
 ~~| P0 | Medium | Player movement | Top-down character controller |
-| P0 | Medium | Melee swing mechanics | Basic attack with arc-based hitbox |
+~~| P0 | Medium | Melee swing mechanics | Basic attack with arc-based hitbox |
 ~~| P0 | Medium | Camera system | Follow player with appropriate zoom level |
 | P1 | Low | Player health/hitbox | Damage receiving and death handling |
-| P1 | Medium | Swing interaction with fluids | Swings can part/displace fluids and gases |
+~~| P1 | Medium | Swing interaction with fluids | Swings can part/displace fluids and gases |
 
 ---
 
