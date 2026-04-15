@@ -1,33 +1,33 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bwg73brg2igl1"]
 
-[node name="HealthUI" type="CanvasLayer"]
+[node name="HealthUI" type="CanvasLayer" unique_id=304403883]
 layer = 5
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=345736882]
 anchors_preset = -1
-anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
 offset_top = 8.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1933982590]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="HealthLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="HealthLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=554384511]
 unique_name_in_owner = true
 layout_mode = 2
 text = "100 / 100"
 
-[node name="BarBackground" type="ColorRect" parent="MarginContainer/VBoxContainer"]
+[node name="BarBackground" type="ColorRect" parent="MarginContainer/VBoxContainer" unique_id=1745470956]
 unique_name_in_owner = true
+clip_contents = true
 custom_minimum_size = Vector2(120, 10)
 layout_mode = 2
 color = Color(0.2, 0.2, 0.2, 1)
-clip_contents = true
 
-[node name="BarFill" type="ColorRect" parent="MarginContainer/VBoxContainer/BarBackground"]
+[node name="BarFill" type="ColorRect" parent="MarginContainer/VBoxContainer/BarBackground" unique_id=247572254]
 unique_name_in_owner = true
+layout_mode = 0
 offset_right = 120.0
 offset_bottom = 10.0
 color = Color(0.8, 0.2, 0.2, 1)
