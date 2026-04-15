@@ -40,7 +40,8 @@ A `Node` component added as a child to any scene that can be interacted with.
 A `Node` child of Player with an `Area2D` + `CollisionShape2D` detection radius (~32px).
 
 **Behavior:**
-- Tracks all `Interactable` nodes currently in range via `body_entered`/`body_exited` signals on the Area2D
+- The Area2D detects `PhysicsBody2D` nodes entering/exiting its range via `body_entered`/`body_exited` signals
+- On detection, traverses each body to find its `Interactable` child node (via `find_child("Interactable")` or iterating children for `Interactable` type)
 - Each frame, finds the closest interactable and calls `set_highlighted(true)` on it, `set_highlighted(false)` on the previous
 - On E key press (`interact` input action), calls `interact(player)` on the highlighted interactable
 - If no interactable is in range, E key does nothing
