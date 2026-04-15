@@ -12,6 +12,7 @@ class MaterialDef:
     var has_wall_extension: bool
     var tint_color: Color
     var fluid: bool
+    var damage: int
 
     func _init(
         p_name: String,
@@ -22,7 +23,8 @@ class MaterialDef:
         p_has_collider: bool,
         p_has_wall_extension: bool,
         p_tint_color: Color = Color(0, 0, 0, 0),
-        p_fluid: bool = false
+        p_fluid: bool = false,
+        p_damage: int = 0
     ):
         name = p_name
         texture_path = p_texture_path
@@ -33,6 +35,7 @@ class MaterialDef:
         has_wall_extension = p_has_wall_extension
         tint_color = p_tint_color
         fluid = p_fluid
+        damage = p_damage
 
 var materials: Array[MaterialDef] = []
 
@@ -85,7 +88,8 @@ func _init_materials():
         false, 0, 0,
         false, false,
         Color(0.9, 0.4, 0.1, 1.0),
-        true
+        true,
+        10
     )
     mat_lava.id = materials.size()
     materials.append(mat_lava)
@@ -122,3 +126,8 @@ func get_fluids() -> Array[int]:
         if mat.fluid:
             result.append(mat.id)
     return result
+
+func get_damage(material_id: int) -> int:
+    if material_id < 0 or material_id >= materials.size():
+        return 0
+    return materials[material_id].damage
