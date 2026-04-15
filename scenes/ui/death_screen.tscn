@@ -1,7 +1,10 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/death_screen.gd" id="death_screen_script"]
 
 [node name="DeathScreen" type="CanvasLayer"]
 layer = 20
+script = ExtResource("death_screen_script")
 
 [node name="Overlay" type="ColorRect" parent="."]
 unique_name_in_owner = true
