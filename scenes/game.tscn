@@ -58,7 +58,7 @@ visible = false
 [node name="DeathScreen" parent="." unique_id=2131573664 instance=ExtResource("11")]
 visible = false
 
-[node name="WeaponPopup" parent="." instance=ExtResource("12")]
+[node name="WeaponPopup" parent="." unique_id=460170947 instance=ExtResource("12")]
 
-[node name="WeaponButton" parent="." instance=ExtResource("13")]
+[node name="WeaponButton" parent="." unique_id=440977705 instance=ExtResource("13")]
 weapon_popup = NodePath("../WeaponPopup")
