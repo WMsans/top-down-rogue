@@ -17,6 +17,7 @@ var _last_facing: Vector2 = Vector2.DOWN
 
 
 func _ready() -> void:
+	add_to_group("player")
 	shadow_grid = ShadowGridScript.new()
 	shadow_grid.world_manager = _world_manager
 	add_child(shadow_grid)
@@ -36,6 +37,12 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if shadow_grid == null:
+		return
+
+	var health_component := get_node_or_null("HealthComponent")
+	if health_component and health_component.is_dead():
+		velocity = Vector2.ZERO
+		move_and_slide()
 		return
 
 	var input_dir := _get_input_direction()
