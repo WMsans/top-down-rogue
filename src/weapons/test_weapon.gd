@@ -1,7 +1,6 @@
 class_name TestWeapon
 extends Weapon
 
-const COOLDOWN: float = 0.5
 const GAS_RADIUS: float = 6.0
 const GAS_DENSITY: int = 200
 
@@ -10,6 +9,9 @@ var _cooldown_timer: float = 0.0
 
 func _init() -> void:
 	name = "Test Weapon"
+	cooldown = 0.5
+	damage = 1.0
+	icon_texture = preload("res://textures/DawnLike/Items/Wand.png")
 
 
 func use(user: Node) -> void:
@@ -22,7 +24,7 @@ func use(user: Node) -> void:
 	
 	var pos: Vector2 = user.global_position
 	world_manager.place_gas(pos, GAS_RADIUS, GAS_DENSITY)
-	_cooldown_timer = COOLDOWN
+	_cooldown_timer = cooldown
 
 
 func tick(delta: float) -> void:
