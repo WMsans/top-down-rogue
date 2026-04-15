@@ -4,7 +4,6 @@ extends Weapon
 const WEAPON_TEXTURE := preload("res://textures/weapon.png")
 const RANGE: float = 40.0
 const ARC_ANGLE: float = PI / 2.0
-const COOLDOWN: float = 0.5
 const PUSH_SPEED: float = 60.0
 
 # Visual constants
@@ -62,6 +61,9 @@ const IDLE_ROTATION_SPEED: float = 10.0
 
 func _init() -> void:
 	name = "Melee Weapon"
+	cooldown = 0.5
+	damage = 5.0
+	icon_texture = preload("res://textures/weapon.png")
 
 
 func has_visual() -> bool:
@@ -91,7 +93,7 @@ func use(user: Node) -> void:
 	var materials: Array[int] = MaterialRegistry.get_fluids()
 	world_manager.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
 
-	_cooldown_timer = COOLDOWN
+	_cooldown_timer = cooldown
 
 
 func tick(delta: float) -> void:
