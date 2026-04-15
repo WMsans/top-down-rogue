@@ -72,3 +72,26 @@ func swap_weapons(slot_a: int, slot_b: int) -> void:
 	var temp := weapons[slot_a]
 	weapons[slot_a] = weapons[slot_b]
 	weapons[slot_b] = temp
+
+
+func try_add_weapon(weapon: Weapon) -> bool:
+	for i in range(weapons.size()):
+		if weapons[i] == null:
+			weapons[i] = weapon
+			return true
+	return false
+
+
+func swap_weapon(slot_index: int, new_weapon: Weapon) -> Weapon:
+	if slot_index < 0 or slot_index >= weapons.size():
+		return null
+	var old_weapon: Weapon = weapons[slot_index]
+	weapons[slot_index] = new_weapon
+	return old_weapon
+
+
+func has_empty_slot() -> bool:
+	for weapon in weapons:
+		if weapon == null:
+			return true
+	return false
