@@ -57,7 +57,7 @@ _init():
 
 ### Fallback Icon
 
-When `icon_texture` is null, UI components use a fallback debug texture. This can be a simple `ColorRect` with a "?" label or a default placeholder image.
+When `icon_texture` is null, UI components fall back to a `ColorRect` (dark gray) with a white "?" `Label` centered inside it. No external placeholder image needed.
 
 ## 2. Weapon Button (HUD Element)
 
@@ -175,12 +175,12 @@ Main (Node2D)
 
 ### Scene Wiring
 
-- `WeaponButton` holds a reference to `WeaponPopup`
-- On button click: `WeaponPopup.open()` is called, which pauses the game and shows the overlay
-- `WeaponPopup` holds a reference to `WeaponManager` (accessed via the Player node)
+- `WeaponButton` has an `@export var weapon_popup: WeaponPopup` set in the editor (drag the WeaponPopup node instance into this field)
+- On button click: `weapon_popup.open(weapon_manager)` is called, which pauses the game and shows the overlay
+- `WeaponPopup.open()` takes a `WeaponManager` parameter (found via `get_node("/root/Main/Player/WeaponManager")`) and stores it for the duration the popup is open
 - On weapon swap: `WeaponPopup` calls `WeaponManager.swap_weapons(a, b)` and refreshes display
 - On close: `WeaponPopup` calls `SceneManager.set_paused(false)` and hides itself
-- `WeaponButton` and `WeaponPopup` both connect to `WeaponManager.weapon_activated` to update their displays
+- `WeaponButton` connects to `WeaponManager.weapon_activated` to update the displayed icon
 
 ## File Summary
 
