@@ -17,6 +17,7 @@ var _last_facing: Vector2 = Vector2.DOWN
 
 
 func _ready() -> void:
+	add_to_group("player")
 	shadow_grid = ShadowGridScript.new()
 	shadow_grid.world_manager = _world_manager
 	add_child(shadow_grid)
@@ -38,6 +39,12 @@ func _physics_process(delta: float) -> void:
 	if shadow_grid == null:
 		return
 
+	var health_component := get_node_or_null("HealthComponent")
+	if health_component and health_component.is_dead():
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
 	var input_dir := _get_input_direction()
 	if input_dir != Vector2.ZERO:
 		_last_facing = input_dir
@@ -50,13 +57,13 @@ func _physics_process(delta: float) -> void:
 
 func _get_input_direction() -> Vector2:
 	var dir := Vector2.ZERO
-	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+	if Input.is_action_pressed("move_left"):
 		dir.x -= 1
-	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+	if Input.is_action_pressed("move_right"):
 		dir.x += 1
-	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+	if Input.is_action_pressed("move_up"):
 		dir.y -= 1
-	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+	if Input.is_action_pressed("move_down"):
 		dir.y += 1
 	return dir.normalized() if dir != Vector2.ZERO else Vector2.ZERO
 

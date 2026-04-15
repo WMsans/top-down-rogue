@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://hixog1elal7b" path="res://src/player/player_controller.gd" id="1"]
 [ext_resource type="Script" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
+[ext_resource type="Script" path="res://src/player/health_component.gd" id="health_comp"]
+[ext_resource type="Script" path="res://src/player/lava_damage_checker.gd" id="lava_dmg"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
@@ -43,3 +45,9 @@ shadow_color = Color(0, 0, 0, 0.5)
 
 [node name="WeaponManager" type="Node" parent="."]
 script = ExtResource("weapon_manager")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("health_comp")
+
+[node name="LavaDamageChecker" type="Node" parent="."]
+script = ExtResource("lava_dmg")
