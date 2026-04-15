@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
 [ext_resource type="Script" path="res://src/player/health_component.gd" id="health_comp"]
 [ext_resource type="Script" path="res://src/player/lava_damage_checker.gd" id="lava_dmg"]
+[ext_resource type="Script" path="res://src/player/interaction_controller.gd" id="interaction_ctrl"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
@@ -51,3 +52,6 @@ script = ExtResource("health_comp")
 
 [node name="LavaDamageChecker" type="Node" parent="."]
 script = ExtResource("lava_dmg")
+
+[node name="InteractionController" type="Node" parent="."]
+script = ExtResource("interaction_ctrl")
