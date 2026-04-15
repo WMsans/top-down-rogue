@@ -10,6 +10,9 @@ const ICON_SIZE := Vector2(96, 96)
 
 var _weapon_manager: WeaponManager = null
 var _selected_slot: int = -1
+var _pickup_mode: bool = false
+var _pickup_weapon: Weapon = null
+var _pickup_callback: Callable
 
 
 func _ready() -> void:
@@ -27,9 +30,25 @@ func open(weapon_manager: WeaponManager) -> void:
 	visible = true
 
 
+func open_for_pickup(weapon_manager: WeaponManager, new_weapon: Weapon, callback: Callable) -> void:
+	_pickup_mode = true
+	_pickup_weapon = new_weapon
+	_pickup_callback = callback
+	_weapon_manager = weapon_manager
+	_selected_slot = -1
+	_build_cards()
+	_title_label.text = "Replace a slot:"
+	SceneManager.set_paused(true)
+	visible = true
+
+
 func close() -> void:
 	visible = false
 	_weapon_manager = null
+	_pickup_mode = false
+	_pickup_weapon = null
+	_pickup_callback = Callable()
+	_selected_slot = -1
 	_clear_cards()
 	SceneManager.set_paused(false)
 
@@ -116,14 +135,18 @@ func _add_icon(parent: VBoxContainer, weapon: Weapon) -> void:
 
 func _on_card_input(event: InputEvent, slot_index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _selected_slot == -1:
-			_selected_slot = slot_index
-			_highlight_slot(slot_index)
+		if _pickup_mode:
+			_pickup_callback.call(slot_index)
+			close()
 		else:
-			if _selected_slot != slot_index:
-				_swap_weapons(_selected_slot, slot_index)
-			_selected_slot = -1
-			_build_cards()
+			if _selected_slot == -1:
+				_selected_slot = slot_index
+				_highlight_slot(slot_index)
+			else:
+				if _selected_slot != slot_index:
+					_swap_weapons(_selected_slot, slot_index)
+				_selected_slot = -1
+				_build_cards()
 
 
 func _highlight_slot(slot_index: int) -> void:
