@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dyro2k6hacg2y" path="res://scenes/player.tscn" id="7"]
 [ext_resource type="Script" uid="uid://41pttcuclgqw" path="res://src/debug/collision_overlay.gd" id="8"]
 [ext_resource type="PackedScene" uid="uid://dc5am8wxl3knp" path="res://scenes/ui/pause_menu.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://scenes/ui/health_ui.tscn" id="10"]
+[ext_resource type="PackedScene" uid="uid://bwg73brg2igl1" path="res://scenes/ui/health_ui.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="11"]
 
 [sub_resource type="Environment" id="Environment_o6xl0"]
@@ -48,8 +48,10 @@ environment = SubResource("Environment_o6xl0")
 color = Color(0.95, 0.95, 0.95, 1)
 blend_mode = 1
 
-[node name="PauseMenu" parent="." instance=ExtResource("9")]
+[node name="PauseMenu" parent="." unique_id=904525513 instance=ExtResource("9")]
+visible = false
 
-[node name="HealthUI" parent="." instance=ExtResource("10")]
+[node name="HealthUI" parent="." unique_id=1316157124 instance=ExtResource("10")]
 
-[node name="DeathScreen" parent="." instance=ExtResource("11")]
+[node name="DeathScreen" parent="." unique_id=2131573664 instance=ExtResource("11")]
+visible = false
