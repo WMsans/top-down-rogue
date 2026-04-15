@@ -20,7 +20,7 @@ func _ready() -> void:
 	_detection_area.collision_mask = 2
 	_detection_area.monitoring = true
 	
-	add_child(_detection_area)
+	_player.add_child(_detection_area)
 	
 	_detection_area.body_entered.connect(_on_body_entered)
 	_detection_area.body_exited.connect(_on_body_exited)
