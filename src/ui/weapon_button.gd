@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
+const PIXEL_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf")
 
 @export var weapon_popup: NodePath
 
