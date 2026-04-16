@@ -1,7 +1,19 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://drejdwp6sokns"]
 
 [ext_resource type="PackedScene" path="res://scenes/drop.tscn" id="1"]
-[ext_resource type="Script" path="res://src/drops/weapon_drop.gd" id="2"]
+[ext_resource type="Script" uid="uid://h4qpqqpb053y" path="res://src/drops/weapon_drop.gd" id="2"]
+[ext_resource type="Shader" uid="uid://bgkst7g0qd22q" path="res://shaders/visual/outline.gdshader" id="3_vxjow"]
 
-[node name="WeaponDrop" instance=ExtResource("1")]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gtknk"]
+shader = ExtResource("3_vxjow")
+shader_parameter/outline_width = 0.0
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+
+[node name="WeaponDrop" unique_id=1813227618 instance=ExtResource("1")]
 script = ExtResource("2")
+
+[node name="Sprite2D" parent="." index="0"]
+material = SubResource("ShaderMaterial_gtknk")
+
+[node name="Interactable" parent="." index="2" node_paths=PackedStringArray("canvas_item")]
+canvas_item = NodePath("../Sprite2D")

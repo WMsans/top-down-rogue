@@ -5,7 +5,7 @@ signal highlighted
 signal unhighlighted
 
 @export var interaction_name: String = ""
-@export var outline_material: ShaderMaterial
+@export var canvas_item: CanvasItem
 
 var _is_highlighted: bool = false
 
@@ -14,8 +14,8 @@ func set_highlighted(enabled: bool) -> void:
 	if _is_highlighted == enabled:
 		return
 	_is_highlighted = enabled
-	if outline_material:
-		outline_material.set_shader_parameter("outline_width", 2.0 if enabled else 0.0)
+	if canvas_item and canvas_item.material is ShaderMaterial:
+		(canvas_item.material as ShaderMaterial).set_shader_parameter("outline_width", 1.0 if enabled else 0.0)
 	if enabled:
 		highlighted.emit()
 	else:
