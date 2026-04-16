@@ -24,6 +24,9 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	var weapon_popup := get_tree().root.find_child("WeaponPopup", true, false)
+	if weapon_popup != null and weapon_popup.visible:
+		return
 	if event.is_action_pressed("pause"):
 		if settings_popup.visible:
 			settings_popup.close()

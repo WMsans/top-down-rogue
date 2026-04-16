@@ -4,7 +4,10 @@ extends Node
 const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
 
+signal weapon_activated(slot_index: int)
+
 var weapons: Array[Weapon] = []
+var active_slot: int = 0
 var _player: Node = null
 var _visual: Node2D = null
 var _sprite: Sprite2D = null
@@ -41,6 +44,8 @@ func _input(event: InputEvent) -> void:
 			var weapon := weapons[slot]
 			_activate_weapon(weapon)
 			weapon.use(_player)
+			active_slot = slot
+			weapon_activated.emit(slot)
 
 
 func _activate_weapon(weapon: Weapon) -> void:
@@ -61,3 +66,32 @@ func _physics_process(delta: float) -> void:
 	for weapon in weapons:
 		if weapon != null:
 			weapon.tick(delta)
+
+
+func swap_weapons(slot_a: int, slot_b: int) -> void:
+	var temp := weapons[slot_a]
+	weapons[slot_a] = weapons[slot_b]
+	weapons[slot_b] = temp
+
+
+func try_add_weapon(weapon: Weapon) -> bool:
+	for i in range(weapons.size()):
+		if weapons[i] == null:
+			weapons[i] = weapon
+			return true
+	return false
+
+
+func swap_weapon(slot_index: int, new_weapon: Weapon) -> Weapon:
+	if slot_index < 0 or slot_index >= weapons.size():
+		return null
+	var old_weapon: Weapon = weapons[slot_index]
+	weapons[slot_index] = new_weapon
+	return old_weapon
+
+
+func has_empty_slot() -> bool:
+	for weapon in weapons:
+		if weapon == null:
+			return true
+	return false
