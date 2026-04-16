@@ -11,7 +11,7 @@ func _init() -> void:
 	name = "Test Weapon"
 	cooldown = 0.5
 	damage = 1.0
-	icon_texture = preload("res://textures/DawnLike/Items/Wand.png")
+	icon_texture = preload("res://textures/Assets/DawnLike/Items/Wand.png")
 
 
 func use(user: Node) -> void:

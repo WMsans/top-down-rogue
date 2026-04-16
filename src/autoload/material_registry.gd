@@ -57,7 +57,7 @@ func _init_materials():
     MAT_AIR = mat_air.id
     
     var mat_wood := MaterialDef.new(
-        "WOOD", "res://textures/PixelTextures/plank.png",
+        "WOOD", "res://textures/Environments/Walls/plank.png",
         true, 180, 255, true, true
     )
     mat_wood.id = materials.size()
@@ -65,7 +65,7 @@ func _init_materials():
     MAT_WOOD = mat_wood.id
     
     var mat_stone := MaterialDef.new(
-        "STONE", "res://textures/PixelTextures/stone.png",
+        "STONE", "res://textures/Environments/Walls/stone.png",
         false, 0, 0, true, true
     )
     mat_stone.id = materials.size()

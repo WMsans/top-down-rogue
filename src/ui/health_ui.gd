@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
+const PIXEL_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf")
 
 @onready var _bar_background: ColorRect = %BarBackground
 @onready var _bar_fill: ColorRect = %BarFill
