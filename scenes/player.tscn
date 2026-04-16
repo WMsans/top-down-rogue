@@ -1,9 +1,10 @@
 [gd_scene format=3 uid="uid://dyro2k6hacg2y"]
 
 [ext_resource type="Script" uid="uid://hixog1elal7b" path="res://src/player/player_controller.gd" id="1"]
-[ext_resource type="Script" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
-[ext_resource type="Script" path="res://src/player/health_component.gd" id="health_comp"]
-[ext_resource type="Script" path="res://src/player/lava_damage_checker.gd" id="lava_dmg"]
+[ext_resource type="Script" uid="uid://bogfvdcvn4onu" path="res://src/player/health_component.gd" id="health_comp"]
+[ext_resource type="Script" uid="uid://dc7o6nsvks1ye" path="res://src/player/interaction_controller.gd" id="interaction_ctrl"]
+[ext_resource type="Script" uid="uid://sy3jmlgfjlp3" path="res://src/player/lava_damage_checker.gd" id="lava_dmg"]
+[ext_resource type="Script" uid="uid://bifnu6yke7aff" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
@@ -37,17 +38,19 @@ shape = SubResource("1")
 
 [node name="PointLight2D" type="PointLight2D" parent="." unique_id=693124189]
 energy = 2.0
-texture = SubResource("GradientTexture2D_g2els")
 shadow_enabled = true
-shadow_filter = 3
-shadow_filter_smooth = 2.0
 shadow_color = Color(0, 0, 0, 0.5)
+shadow_filter_smooth = 2.0
+texture = SubResource("GradientTexture2D_g2els")
 
-[node name="WeaponManager" type="Node" parent="."]
+[node name="WeaponManager" type="Node" parent="." unique_id=2028646278]
 script = ExtResource("weapon_manager")
 
-[node name="HealthComponent" type="Node" parent="."]
+[node name="HealthComponent" type="Node" parent="." unique_id=591037567]
 script = ExtResource("health_comp")
 
-[node name="LavaDamageChecker" type="Node" parent="."]
+[node name="LavaDamageChecker" type="Node" parent="." unique_id=333495027]
 script = ExtResource("lava_dmg")
+
+[node name="InteractionController" type="Node" parent="." unique_id=349654319]
+script = ExtResource("interaction_ctrl")

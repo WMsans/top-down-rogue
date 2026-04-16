@@ -18,6 +18,7 @@ var _last_facing: Vector2 = Vector2.DOWN
 
 func _ready() -> void:
 	add_to_group("player")
+	collision_mask = 3
 	shadow_grid = ShadowGridScript.new()
 	shadow_grid.world_manager = _world_manager
 	add_child(shadow_grid)

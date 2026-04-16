@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" uid="uid://dc5am8wxl3knp" path="res://scenes/ui/pause_menu.tscn" id="9"]
 [ext_resource type="PackedScene" uid="uid://bwg73brg2igl1" path="res://scenes/ui/health_ui.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="11"]
+[ext_resource type="PackedScene" uid="uid://bq5fx8kwbtn7r" path="res://scenes/ui/weapon_popup.tscn" id="12"]
+[ext_resource type="PackedScene" uid="uid://bq3fx8kwbtn7q" path="res://scenes/ui/weapon_button.tscn" id="13"]
 
 [sub_resource type="Environment" id="Environment_o6xl0"]
 background_mode = 3
@@ -55,3 +57,8 @@ visible = false
 
 [node name="DeathScreen" parent="." unique_id=2131573664 instance=ExtResource("11")]
 visible = false
+
+[node name="WeaponPopup" parent="." unique_id=460170947 instance=ExtResource("12")]
+
+[node name="WeaponButton" parent="." unique_id=440977705 instance=ExtResource("13")]
+weapon_popup = NodePath("../WeaponPopup")
