@@ -11,7 +11,7 @@ func _ready() -> void:
 	_player = get_parent() as CharacterBody2D
 	_detection_area = Area2D.new()
 	_detection_area.name = "DetectionArea"
-	
+
 	var shape := CircleShape2D.new()
 	shape.radius = 32.0
 	var collision_shape := CollisionShape2D.new()
@@ -19,11 +19,11 @@ func _ready() -> void:
 	_detection_area.add_child(collision_shape)
 	_detection_area.collision_mask = 2
 	_detection_area.monitoring = true
-	
-	_player.add_child(_detection_area)
-	
+
 	_detection_area.body_entered.connect(_on_body_entered)
 	_detection_area.body_exited.connect(_on_body_exited)
+
+	_player.add_child.call_deferred(_detection_area)
 
 
 func _process(_delta: float) -> void:
