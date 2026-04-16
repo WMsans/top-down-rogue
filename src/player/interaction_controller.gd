@@ -13,7 +13,7 @@ func _ready() -> void:
 	_detection_area.name = "DetectionArea"
 
 	var shape := CircleShape2D.new()
-	shape.radius = 32.0
+	shape.radius = 12.0
 	var collision_shape := CollisionShape2D.new()
 	collision_shape.shape = shape
 	_detection_area.add_child(collision_shape)
