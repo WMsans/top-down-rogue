@@ -3,6 +3,7 @@ extends CanvasLayer
 const PIXEL_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf")
 const CARD_MIN_SIZE := Vector2(160, 200)
 const ICON_SIZE := Vector2(96, 96)
+const MODIFIER_ICON_SIZE := Vector2(32, 32)
 
 @onready var _overlay: ColorRect = %Overlay
 @onready var _cards_container: HBoxContainer = %CardsContainer
@@ -13,6 +14,7 @@ var _selected_slot: int = -1
 var _pickup_mode: bool = false
 var _pickup_weapon: Weapon = null
 var _pickup_callback: Callable
+var _modifier_tooltip: PanelContainer = null
 
 
 func _ready() -> void:
@@ -43,6 +45,7 @@ func open_for_pickup(weapon_manager: WeaponManager, new_weapon: Weapon, callback
 
 
 func close() -> void:
+	_cancel_modifier_tooltip()
 	visible = false
 	_weapon_manager = null
 	_pickup_mode = false
@@ -109,6 +112,8 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 		damage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(damage_label)
 
+		_add_modifier_slots(vbox, weapon)
+
 	return card
 
 
@@ -131,6 +136,98 @@ func _add_icon(parent: VBoxContainer, weapon: Weapon) -> void:
 		q_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		q_label.anchors_preset = Control.PRESET_FULL_RECT
 		fallback.add_child(q_label)
+
+
+func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon) -> void:
+	var slot_container := HBoxContainer.new()
+	slot_container.add_theme_constant_override("separation", 4)
+	slot_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	parent.add_child(slot_container)
+
+	for i in range(weapon.modifier_slot_count):
+		var modifier: Modifier = weapon.get_modifier_at(i)
+		if modifier != null:
+			var icon := TextureRect.new()
+			icon.custom_minimum_size = MODIFIER_ICON_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			if modifier.icon_texture != null:
+				icon.texture = modifier.icon_texture
+			else:
+				icon.texture = null
+			icon.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			icon.gui_input.connect(_on_modifier_icon_input.bind(modifier, icon))
+			icon.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, icon))
+			icon.mouse_exited.connect(_on_modifier_icon_mouse_exited)
+			slot_container.add_child(icon)
+		else:
+			var empty_slot := ColorRect.new()
+			empty_slot.custom_minimum_size = MODIFIER_ICON_SIZE
+			empty_slot.color = Color(0.2, 0.2, 0.2, 1)
+			slot_container.add_child(empty_slot)
+
+
+func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control) -> void:
+	_cancel_modifier_tooltip()
+	_modifier_tooltip = PanelContainer.new()
+	_modifier_tooltip.add_theme_constant_override("margin_left", 6)
+	_modifier_tooltip.add_theme_constant_override("margin_right", 6)
+	_modifier_tooltip.add_theme_constant_override("margin_top", 4)
+	_modifier_tooltip.add_theme_constant_override("margin_bottom", 4)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	_modifier_tooltip.add_child(vbox)
+
+	var name_label := Label.new()
+	name_label.text = modifier.name
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(name_label)
+
+	var desc_label := Label.new()
+	desc_label.text = modifier.get_description()
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(desc_label)
+
+	_apply_tooltip_theme(_modifier_tooltip, name_label, desc_label)
+
+	add_child(_modifier_tooltip)
+	_position_tooltip_near(icon)
+
+
+func _on_modifier_icon_mouse_exited() -> void:
+	_cancel_modifier_tooltip()
+
+
+func _on_modifier_icon_input(_event: InputEvent, _modifier: Modifier, _icon: Control) -> void:
+	pass
+
+
+func _position_tooltip_near(icon: Control) -> void:
+	if _modifier_tooltip == null:
+		return
+	await get_tree().process_frame
+	var icon_rect := icon.get_global_rect()
+	var tooltip_size := _modifier_tooltip.get_combined_minimum_size()
+	_modifier_tooltip.global_position = Vector2(
+		icon_rect.position.x + icon_rect.size.x / 2.0 - tooltip_size.x / 2.0,
+		icon_rect.position.y - tooltip_size.y - 4.0
+	)
+	_modifier_tooltip.size = tooltip_size
+
+
+func _cancel_modifier_tooltip() -> void:
+	if _modifier_tooltip != null:
+		_modifier_tooltip.queue_free()
+		_modifier_tooltip = null
+
+
+func _apply_tooltip_theme(tooltip: PanelContainer, name_label: Label, desc_label: Label) -> void:
+	var t := Theme.new()
+	t.default_font = PIXEL_FONT
+	t.set_font_size("font_size", "Label", 14)
+	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
+	name_label.theme = t
+	desc_label.theme = t
 
 
 func _on_card_input(event: InputEvent, slot_index: int) -> void:
