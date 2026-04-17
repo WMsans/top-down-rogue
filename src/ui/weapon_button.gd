@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const PIXEL_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf")
+const MODIFIER_ICON_SIZE := Vector2(16, 16)
 
 @export var weapon_popup: NodePath
 
@@ -82,6 +83,39 @@ func _update_tooltip() -> void:
 	_tooltip_name.text = str(stats["name"])
 	_tooltip_cooldown.text = "Cooldown: %.1fs" % stats["cooldown"]
 	_tooltip_damage.text = "Damage: %.0f" % stats["damage"]
+	_clear_modifier_icons()
+	_add_modifier_icons()
+
+
+func _clear_modifier_icons() -> void:
+	var row := _tooltip.get_node_or_null("VBoxContainer/ModifierRow")
+	if row != null:
+		for child in row.get_children():
+			child.queue_free()
+
+
+func _add_modifier_icons() -> void:
+	var vbox := _tooltip.get_node("VBoxContainer")
+	var row := vbox.get_node_or_null("ModifierRow")
+	if row == null:
+		row = HBoxContainer.new()
+		row.name = "ModifierRow"
+		row.add_theme_constant_override("separation", 2)
+		vbox.add_child(row)
+	for i in range(_current_weapon.modifier_slot_count):
+		var modifier: Modifier = _current_weapon.get_modifier_at(i)
+		if modifier != null:
+			var icon := TextureRect.new()
+			icon.custom_minimum_size = MODIFIER_ICON_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			if modifier.icon_texture != null:
+				icon.texture = modifier.icon_texture
+			row.add_child(icon)
+		else:
+			var empty := ColorRect.new()
+			empty.custom_minimum_size = MODIFIER_ICON_SIZE
+			empty.color = Color(0.2, 0.2, 0.2, 1)
+			row.add_child(empty)
 
 
 func _apply_theme() -> void:
