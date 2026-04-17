@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 const PIXEL_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf")
-const MODIFIER_ICON_SIZE := Vector2(16, 16)
+const MODIFIER_ICON_SIZE := Vector2(32, 32)
 
 @export var weapon_popup: NodePath
 
