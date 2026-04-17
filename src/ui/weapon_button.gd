@@ -1,6 +1,5 @@
 extends CanvasLayer
 
-const PIXEL_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf")
 const MODIFIER_ICON_SIZE := Vector2(32, 32)
 
 @export var weapon_popup: NodePath
@@ -17,7 +16,12 @@ var _current_weapon: Weapon = null
 
 
 func _ready() -> void:
-	_apply_theme()
+	theme = UiTheme.get_theme()
+	_tooltip_name.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
+	_tooltip_cooldown.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+	_tooltip_cooldown.add_theme_font_size_override("font_size", 14)
+	_tooltip_damage.add_theme_color_override("font_color", UiTheme.ACCENT)
+	_tooltip_damage.add_theme_font_size_override("font_size", 14)
 	_tooltip.visible = false
 	_fallback_icon.visible = false
 	_icon_button.texture_normal = null
@@ -69,11 +73,13 @@ func _on_button_pressed() -> void:
 func _on_mouse_entered() -> void:
 	if _current_weapon != null:
 		_update_tooltip()
-		_tooltip.visible = true
+		UiAnimations.fade_in(_tooltip, 0.15)
+	UiAnimations.bounce_on_hover(_icon_button, 1.08)
 
 
 func _on_mouse_exited() -> void:
 	_tooltip.visible = false
+	UiAnimations.reset_scale(_icon_button)
 
 
 func _update_tooltip() -> void:
@@ -114,15 +120,5 @@ func _add_modifier_icons() -> void:
 		else:
 			var empty := ColorRect.new()
 			empty.custom_minimum_size = MODIFIER_ICON_SIZE
-			empty.color = Color(0.2, 0.2, 0.2, 1)
+			empty.color = Color(0.165, 0.082, 0.098, 1)
 			row.add_child(empty)
-
-
-func _apply_theme() -> void:
-	var t := Theme.new()
-	t.default_font = PIXEL_FONT
-	t.set_font_size("font_size", "Label", 16)
-	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
-	_tooltip_name.theme = t
-	_tooltip_cooldown.theme = t
-	_tooltip_damage.theme = t
