@@ -6,43 +6,35 @@ const RANGE: float = 24.0
 const ARC_ANGLE: float = PI / 2.0
 const PUSH_SPEED: float = 60.0
 
-# Visual constants
 const PIVOT_DISTANCE: float = 6.0
 const HALF_ARC: float = PI / 3.5
 
-# Per-phase durations (seconds)
 const PREP_DURATION: float = 0.08
 const ACTION_DURATION: float = 0.12
 const SETTLE_DURATION: float = 0.18
 const RETURN_DURATION: float = 0.22
 
-# Swing angles
 const ANTICIPATION_PULLBACK: float = PI / 6.0
 const OVERSHOOT_ANGLE: float = PI / 4.0
 const SETTLE_BOUNCE_AMOUNT: float = PI / 12.0
 const SETTLE_BOUNCE_FREQ: float = 28.0
 
-# Squash & stretch targets
 const PREP_SCALE: Vector2 = Vector2(1.25, 0.75)
 const ACTION_SCALE: Vector2 = Vector2(0.7, 1.35)
 const SETTLE_SCALE: Vector2 = Vector2(1.1, 0.92)
 
-# Distance punch
 const PUNCH_DISTANCE: float = 14.0
 
-# Lerp speeds (exponential decay rate, higher = snappier)
 const LERP_SNAP: float = 16.0
 const LERP_SMOOTH: float = 10.0
 const LERP_EASE: float = 6.0
 
-# Trail
 const TRAIL_ANGLE_STEP: float = PI / 32.0
 const TRAIL_LIFETIME: float = 0.15
 const TRAIL_COLOR: Color = Color(2.0, 6.0, 8.0, 0.6)
 
 enum Phase { NONE, PREP, ACTION, SETTLE, RETURN }
 
-var _cooldown_timer: float = 0.0
 var _is_swinging: bool = false
 var _phase: int = Phase.NONE
 var _phase_time: float = 0.0
@@ -64,6 +56,8 @@ func _init() -> void:
 	cooldown = 0.5
 	damage = 5.0
 	icon_texture = WEAPON_TEXTURE
+	modifier_slot_count = 3
+	modifiers.resize(modifier_slot_count)
 
 
 func has_visual() -> bool:
@@ -77,44 +71,28 @@ func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 	_sprite.offset = Vector2(0, -tex_size.y / 2.0)
 
 
-func use(user: Node) -> void:
-	if _cooldown_timer > 0.0:
-		return
-
+func _use_impl(user: Node) -> void:
 	var world_manager := _get_world_manager(user)
 	if world_manager == null:
 		return
-
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
-
 	_start_swing(direction)
-
 	var materials: Array[int] = MaterialRegistry.get_fluids()
 	world_manager.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
 
-	_cooldown_timer = cooldown
 
-
-func tick(delta: float) -> void:
-	if _cooldown_timer > 0.0:
-		_cooldown_timer -= delta
-
-
-func is_ready() -> bool:
-	return _cooldown_timer <= 0.0
+func _tick_impl(_delta: float) -> void:
+	pass
 
 
 func update_visual(delta: float, user: Node) -> void:
 	if visual == null:
 		return
-
 	_facing_angle = _get_facing_direction(user).angle()
-
 	if _visual_angle != _visual_angle:
 		_visual_angle = _facing_angle
 	_visual_angle = lerp_angle(_visual_angle, _facing_angle, minf(1.0, IDLE_ROTATION_SPEED * delta))
-
 	if _is_swinging:
 		_process_swing(delta)
 	else:
