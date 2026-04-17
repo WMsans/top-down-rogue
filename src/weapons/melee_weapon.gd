@@ -2,7 +2,7 @@ class_name MeleeWeapon
 extends Weapon
 
 const WEAPON_TEXTURE := preload("res://textures/Weapons/sword_01c.png")
-const RANGE: float = 24.0
+const RANGE: float = 36.0
 const ARC_ANGLE: float = PI / 2.0
 const PUSH_SPEED: float = 60.0
 

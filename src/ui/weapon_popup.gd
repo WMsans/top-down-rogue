@@ -4,6 +4,7 @@ const PIXEL_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf")
 const CARD_MIN_SIZE := Vector2(160, 200)
 const ICON_SIZE := Vector2(96, 96)
 const MODIFIER_ICON_SIZE := Vector2(32, 32)
+const TOOLTIP_MAX_WIDTH := 180
 
 @onready var _overlay: ColorRect = %Overlay
 @onready var _cards_container: HBoxContainer = %CardsContainer
@@ -169,13 +170,14 @@ func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon) -> void:
 func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control) -> void:
 	_cancel_modifier_tooltip()
 	_modifier_tooltip = PanelContainer.new()
-	_modifier_tooltip.add_theme_constant_override("margin_left", 6)
-	_modifier_tooltip.add_theme_constant_override("margin_right", 6)
-	_modifier_tooltip.add_theme_constant_override("margin_top", 4)
-	_modifier_tooltip.add_theme_constant_override("margin_bottom", 4)
+	_modifier_tooltip.custom_minimum_size.x = TOOLTIP_MAX_WIDTH
+	_modifier_tooltip.add_theme_constant_override("margin_left", 8)
+	_modifier_tooltip.add_theme_constant_override("margin_right", 8)
+	_modifier_tooltip.add_theme_constant_override("margin_top", 6)
+	_modifier_tooltip.add_theme_constant_override("margin_bottom", 6)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 2)
+	vbox.add_theme_constant_override("separation", 4)
 	_modifier_tooltip.add_child(vbox)
 
 	var name_label := Label.new()
@@ -183,8 +185,12 @@ func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control) -> void:
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(name_label)
 
+	var separator := HSeparator.new()
+	vbox.add_child(separator)
+
 	var desc_label := Label.new()
 	desc_label.text = modifier.get_description()
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(desc_label)
 
@@ -208,8 +214,11 @@ func _position_tooltip_near(icon: Control) -> void:
 	await get_tree().process_frame
 	var icon_rect := icon.get_global_rect()
 	var tooltip_size := _modifier_tooltip.get_combined_minimum_size()
+	var pos_x := icon_rect.position.x + icon_rect.size.x / 2.0 - tooltip_size.x / 2.0
+	var viewport_width := get_viewport().get_visible_rect().size.x
+	pos_x = clampf(pos_x, 4.0, viewport_width - tooltip_size.x - 4.0)
 	_modifier_tooltip.global_position = Vector2(
-		icon_rect.position.x + icon_rect.size.x / 2.0 - tooltip_size.x / 2.0,
+		pos_x,
 		icon_rect.position.y - tooltip_size.y - 4.0
 	)
 	_modifier_tooltip.size = tooltip_size
