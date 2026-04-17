@@ -19,12 +19,51 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.102, 0.039, 0.18, 1)
+color = Color(0.102, 0.059, 0.071, 1)
 
-[node name="TitleSprite" type="Sprite2D" parent="." unique_id=1690448856]
-position = Vector2(576, 200)
+[node name="TitleTop" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -200.0
+offset_top = 50.0
+offset_right = 200.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(1, 0.843, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+horizontal_alignment = 1
+text = "TOP DOWN"
 
-[node name="ButtonContainer" type="VBoxContainer" parent="." unique_id=245531920]
+[node name="TitleBottom" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -200.0
+offset_top = 148.0
+offset_right = 200.0
+offset_bottom = 182.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.42, 0.208, 1)
+theme_override_constants/outline_size = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+horizontal_alignment = 1
+text = "ROGUE"
+
+[node name="MenuCard" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
@@ -32,30 +71,32 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -110.0
-offset_top = -60.0
-offset_right = 110.0
-offset_bottom = 60.0
+offset_left = -140.0
+offset_top = -80.0
+offset_right = 140.0
+offset_bottom = 80.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="ButtonContainer" type="VBoxContainer" parent="MenuCard" unique_id=245531920]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PlayButton" type="Button" parent="ButtonContainer" unique_id=31766559]
+[node name="PlayButton" type="Button" parent="MenuCard/ButtonContainer" unique_id=31766559]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.42, 0.208, 1)
 text = "PLAY"
 
-[node name="SettingsButton" type="Button" parent="ButtonContainer" unique_id=405901494]
+[node name="SettingsButton" type="Button" parent="MenuCard/ButtonContainer" unique_id=405901494]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "SETTINGS"
 
-[node name="QuitButton" type="Button" parent="ButtonContainer" unique_id=1656175076]
+[node name="QuitButton" type="Button" parent="MenuCard/ButtonContainer" unique_id=1656175076]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "QUIT"
 
 [node name="SettingsPopup" parent="." unique_id=1236389963 instance=ExtResource("2_sp")]
