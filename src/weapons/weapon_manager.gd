@@ -3,6 +3,7 @@ extends Node
 
 const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
+const LavaEmitterModifierScript := preload("res://src/weapons/lava_emitter_modifier.gd")
 
 signal weapon_activated(slot_index: int)
 
@@ -17,9 +18,10 @@ var _active_weapon: Weapon = null
 func _ready() -> void:
 	_player = get_parent()
 	weapons.resize(3)
-	weapons[0] = TestWeaponScript.new()
+	var test_weapon := TestWeaponScript.new()
+	test_weapon.add_modifier(0, LavaEmitterModifierScript.new())
+	weapons[0] = test_weapon
 	weapons[1] = MeleeWeaponScript.new()
-
 	_setup_visual.call_deferred()
 
 
@@ -42,10 +44,11 @@ func _input(event: InputEvent) -> void:
 			KEY_C: slot = 2
 		if slot >= 0 and slot < weapons.size() and weapons[slot] != null:
 			var weapon := weapons[slot]
-			_activate_weapon(weapon)
-			weapon.use(_player)
-			active_slot = slot
-			weapon_activated.emit(slot)
+			if weapon.is_ready():
+				_activate_weapon(weapon)
+				weapon.use(_player)
+				active_slot = slot
+				weapon_activated.emit(slot)
 
 
 func _activate_weapon(weapon: Weapon) -> void:
@@ -95,3 +98,12 @@ func has_empty_slot() -> bool:
 		if weapon == null:
 			return true
 	return false
+
+
+func add_modifier_to_weapon(weapon_slot: int, modifier_slot: int, modifier: Modifier) -> void:
+	if weapon_slot < 0 or weapon_slot >= weapons.size():
+		return
+	var weapon := weapons[weapon_slot]
+	if weapon == null:
+		return
+	weapon.add_modifier(modifier_slot, modifier)
