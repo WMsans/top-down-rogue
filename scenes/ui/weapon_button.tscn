@@ -11,7 +11,7 @@ anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -72.0
+offset_left = -80.0
 offset_top = 8.0
 offset_right = -8.0
 
@@ -21,15 +21,15 @@ theme_override_constants/separation = 4
 
 [node name="IconButton" type="TextureButton" parent="MarginContainer/VBoxContainer" unique_id=4218105528]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 stretch_mode = 5
 
 [node name="FallbackIcon" type="ColorRect" parent="MarginContainer/VBoxContainer" unique_id=4218105529]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
-color = Color(0.3, 0.3, 0.3, 1)
+color = Color(0.212, 0.110, 0.133, 1)
 
 [node name="FallbackLabel" type="Label" parent="MarginContainer/VBoxContainer/FallbackIcon"]
 layout_mode = 0
@@ -37,10 +37,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -4.0
-offset_top = -6.0
-offset_right = 4.0
-offset_bottom = 6.0
+offset_left = -6.0
+offset_top = -8.0
+offset_right = 6.0
+offset_bottom = 8.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "?"
