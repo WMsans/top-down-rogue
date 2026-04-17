@@ -36,9 +36,9 @@ const LERP_SMOOTH: float = 10.0
 const LERP_EASE: float = 6.0
 
 # Trail
-const TRAIL_INTERVAL: float = 0.02
+const TRAIL_ANGLE_STEP: float = PI / 32.0
 const TRAIL_LIFETIME: float = 0.15
-const TRAIL_COLOR: Color = Color(0.3, 0.9, 1.0, 0.6)
+const TRAIL_COLOR: Color = Color(2.0, 6.0, 8.0, 0.6)
 
 enum Phase { NONE, PREP, ACTION, SETTLE, RETURN }
 
@@ -51,7 +51,7 @@ var _end_angle: float = 0.0
 var _swing_dir: float = 1.0
 var _facing_angle: float = 0.0
 var _visual_angle: float = NAN
-var _trail_timer: float = 0.0
+var _last_trail_angle: float = 0.0
 var _swing_angle: float = 0.0
 var _swing_dist: float = PIVOT_DISTANCE
 var _swing_scale: Vector2 = Vector2.ONE
@@ -131,7 +131,7 @@ func _start_swing(direction: Vector2) -> void:
 	_swing_scale = Vector2.ONE
 	_phase = Phase.PREP
 	_phase_time = 0.0
-	_trail_timer = TRAIL_INTERVAL
+	_last_trail_angle = _swing_angle
 	_is_swinging = true
 
 
@@ -145,7 +145,6 @@ func _process_idle() -> void:
 
 func _process_swing(delta: float) -> void:
 	_phase_time += delta
-	_trail_timer += delta
 
 	var target_angle: float = _facing_angle
 	var target_dist: float = PIVOT_DISTANCE
@@ -165,6 +164,7 @@ func _process_swing(delta: float) -> void:
 			if _phase_time >= PREP_DURATION:
 				_phase = Phase.ACTION
 				_phase_time = 0.0
+				_last_trail_angle = _swing_angle
 
 		Phase.ACTION:
 			target_angle = _end_angle + OVERSHOOT_ANGLE * _swing_dir
@@ -221,13 +221,17 @@ func _process_swing(delta: float) -> void:
 	_sprite.rotation = _swing_angle + PI * 3.0 / 4.0
 	_sprite.scale = _swing_scale
 
-	var interval := TRAIL_INTERVAL * (0.5 if _phase == Phase.ACTION else 1.0)
-	if _trail_timer >= interval:
-		_trail_timer -= interval
-		_spawn_trail()
+	if _phase == Phase.ACTION or _phase == Phase.SETTLE:
+		var progress := angle_difference(_last_trail_angle, _swing_angle) * _swing_dir
+		var max_spawns := 8
+		while progress >= TRAIL_ANGLE_STEP and max_spawns > 0:
+			_last_trail_angle += TRAIL_ANGLE_STEP * _swing_dir
+			progress -= TRAIL_ANGLE_STEP
+			max_spawns -= 1
+			_spawn_trail_at_angle(_last_trail_angle)
 
 
-func _spawn_trail() -> void:
+func _spawn_trail_at_angle(angle: float) -> void:
 	var trail := Sprite2D.new()
 	trail.texture = WEAPON_TEXTURE
 	var tex_size := WEAPON_TEXTURE.get_size()
@@ -236,8 +240,9 @@ func _spawn_trail() -> void:
 	trail.z_index = -1
 	trail.z_as_relative = false
 	visual.get_tree().current_scene.add_child(trail)
-	trail.global_position = _sprite.global_position
-	trail.global_rotation = _sprite.global_rotation
+	var local_pos := Vector2(cos(angle), sin(angle)) * _swing_dist
+	trail.global_position = visual.global_position + local_pos.rotated(visual.global_rotation)
+	trail.global_rotation = visual.global_rotation + angle + PI * 3.0 / 4.0
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, TRAIL_LIFETIME)
 	tween.tween_callback(trail.queue_free)
