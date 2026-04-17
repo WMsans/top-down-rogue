@@ -16,7 +16,6 @@ const IDLE_ROTATION_SPEED: float = 10.0
 
 enum Phase { NONE, UP, DOWN }
 
-var _cooldown_timer: float = 0.0
 var _is_bouncing: bool = false
 var _phase: int = Phase.NONE
 var _phase_time: float = 0.0
@@ -30,6 +29,8 @@ func _init() -> void:
 	cooldown = 0.5
 	damage = 1.0
 	icon_texture = WEAPON_TEXTURE
+	modifier_slot_count = 3
+	modifiers.resize(modifier_slot_count)
 
 
 func has_visual() -> bool:
@@ -43,39 +44,26 @@ func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 	_sprite.offset = Vector2(0, -tex_size.y / 2.0)
 
 
-func use(user: Node) -> void:
-	if _cooldown_timer > 0.0:
-		return
-
+func _use_impl(user: Node) -> void:
 	var world_manager := _get_world_manager(user)
 	if world_manager == null:
 		return
-
 	var pos: Vector2 = _sprite.global_position if _sprite else user.global_position
 	world_manager.place_gas(pos, GAS_RADIUS, GAS_DENSITY)
 	_start_bounce()
-	_cooldown_timer = cooldown
 
 
-func tick(delta: float) -> void:
-	if _cooldown_timer > 0.0:
-		_cooldown_timer -= delta
-
-
-func is_ready() -> bool:
-	return _cooldown_timer <= 0.0
+func _tick_impl(_delta: float) -> void:
+	pass
 
 
 func update_visual(delta: float, user: Node) -> void:
 	if visual == null:
 		return
-
 	_facing_angle = _get_facing_direction(user).angle()
-
 	if _visual_angle != _visual_angle:
 		_visual_angle = _facing_angle
 	_visual_angle = lerp_angle(_visual_angle, _facing_angle, minf(1.0, IDLE_ROTATION_SPEED * delta))
-
 	if _is_bouncing:
 		_process_bounce(delta)
 	else:
