@@ -22,7 +22,7 @@ var _card_tween: Tween = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	theme = UiTheme.get_theme()
+	_cards_container.theme = UiTheme.get_theme()
 	_title_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
 	_title_label.add_theme_font_size_override("font_size", 28)
 	_title_label.add_theme_constant_override("outline_size", 2)

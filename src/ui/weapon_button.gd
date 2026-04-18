@@ -16,7 +16,7 @@ var _current_weapon: Weapon = null
 
 
 func _ready() -> void:
-	theme = UiTheme.get_theme()
+	_tooltip.theme = UiTheme.get_theme()
 	_tooltip_name.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
 	_tooltip_cooldown.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
 	_tooltip_cooldown.add_theme_font_size_override("font_size", 14)

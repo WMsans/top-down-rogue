@@ -16,7 +16,7 @@ var _buttons: Array[Button] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	theme = UiTheme.get_theme()
+	pause_panel.theme = UiTheme.get_theme()
 	main_menu_button.add_theme_color_override("font_color", UiTheme.DANGER)
 	main_menu_button.add_theme_color_override("font_hover_color", UiTheme.DANGER)
 	confirm_yes_button.add_theme_color_override("font_color", UiTheme.DANGER)
