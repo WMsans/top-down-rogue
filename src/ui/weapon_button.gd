@@ -73,6 +73,7 @@ func _on_button_pressed() -> void:
 func _on_mouse_entered() -> void:
 	if _current_weapon != null:
 		_update_tooltip()
+		_tooltip.visible = true
 		UiAnimations.fade_in(_tooltip, 0.15)
 	UiAnimations.bounce_on_hover(_icon_button, 1.08)
 

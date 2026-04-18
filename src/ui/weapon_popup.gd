@@ -136,7 +136,7 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 		damage_label.add_theme_font_size_override("font_size", 14)
 		vbox.add_child(damage_label)
 
-		_add_modifier_slots(vbox, weapon)
+		_add_modifier_slots(vbox, weapon, card)
 
 	return card
 
@@ -163,7 +163,7 @@ func _add_icon(parent: VBoxContainer, weapon: Weapon) -> void:
 		fallback.add_child(q_label)
 
 
-func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon) -> void:
+func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon, card: PanelContainer) -> void:
 	var slot_container := HBoxContainer.new()
 	slot_container.add_theme_constant_override("separation", 4)
 	slot_container.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -181,8 +181,8 @@ func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon) -> void:
 				icon.texture = null
 			icon.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 			icon.gui_input.connect(_on_modifier_icon_input.bind(modifier, icon))
-			icon.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, icon))
-			icon.mouse_exited.connect(_on_modifier_icon_mouse_exited)
+			icon.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, icon, card))
+			icon.mouse_exited.connect(_on_modifier_icon_mouse_exited.bind(card))
 			slot_container.add_child(icon)
 		else:
 			var empty_slot := ColorRect.new()
@@ -218,10 +218,12 @@ func _on_card_mouse_exited(card: PanelContainer) -> void:
 			card.add_theme_stylebox_override("panel", new_style)
 
 
-func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control) -> void:
+func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control, card: PanelContainer) -> void:
+	_on_card_mouse_entered(card)
 	_cancel_modifier_tooltip()
 	_modifier_tooltip = PanelContainer.new()
-	_modifier_tooltip.custom_minimum_size.x = TOOLTIP_MAX_WIDTH
+	_modifier_tooltip.theme = UiTheme.get_theme()
+	_modifier_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
@@ -233,23 +235,28 @@ func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control) -> void:
 	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
 	vbox.add_child(name_label)
 
-	var separator := HSeparator.new()
-	vbox.add_child(separator)
+	var description := modifier.get_description()
+	if description != "":
+		var separator := HSeparator.new()
+		vbox.add_child(separator)
 
-	var desc_label := Label.new()
-	desc_label.text = modifier.get_description()
-	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
-	desc_label.add_theme_font_size_override("font_size", 14)
-	vbox.add_child(desc_label)
+		var desc_label := Label.new()
+		desc_label.text = description
+		desc_label.custom_minimum_size.x = TOOLTIP_MAX_WIDTH
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+		desc_label.add_theme_font_size_override("font_size", 14)
+		vbox.add_child(desc_label)
 
 	add_child(_modifier_tooltip)
 	_position_tooltip_near(icon)
 
 
-func _on_modifier_icon_mouse_exited() -> void:
+func _on_modifier_icon_mouse_exited(card: PanelContainer) -> void:
 	_cancel_modifier_tooltip()
+	if not card.get_global_rect().has_point(card.get_global_mouse_position()):
+		_on_card_mouse_exited(card)
 
 
 func _on_modifier_icon_input(_event: InputEvent, _modifier: Modifier, _icon: Control) -> void:
