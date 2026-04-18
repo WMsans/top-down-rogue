@@ -13,7 +13,7 @@ var _health_component: HealthComponent
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	theme = UiTheme.get_theme()
+	_vbox.theme = UiTheme.get_theme()
 	_died_label.add_theme_font_size_override("font_size", 64)
 	_died_label.add_theme_color_override("font_color", UiTheme.DANGER)
 	_died_label.add_theme_constant_override("outline_size", 4)

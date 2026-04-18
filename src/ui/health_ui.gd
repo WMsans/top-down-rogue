@@ -4,7 +4,7 @@ const SHIMMER_SHADER := preload("res://shaders/ui/health_bar_shimmer.gdshader")
 
 @onready var _bar_background: PanelContainer = %BarBackground
 @onready var _bar_fill: ColorRect = %BarFill
-@onready var _health_label: Label = %HealthLabel
+@onready var _health_label: RichTextLabel = %HealthLabel
 
 var _health_component: HealthComponent
 var _low_health_tween: Tween = null
@@ -12,7 +12,7 @@ var _bar_bg_style: StyleBoxFlat
 
 
 func _ready() -> void:
-	theme = UiTheme.get_theme()
+	get_node("MarginContainer").theme = UiTheme.get_theme()
 	_bar_bg_style = _bar_background.get_theme_stylebox("panel") as StyleBoxFlat
 	if _bar_bg_style:
 		_bar_bg_style = _bar_bg_style.duplicate()
