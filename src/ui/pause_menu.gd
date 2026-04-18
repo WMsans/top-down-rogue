@@ -60,6 +60,7 @@ func _connect_buttons() -> void:
 
 
 func _show_pause() -> void:
+	visible = true
 	SceneManager.set_paused(true)
 	pause_panel.visible = true
 	confirmation_panel.visible = false
@@ -76,6 +77,7 @@ func _show_pause() -> void:
 
 func _resume_game() -> void:
 	pause_panel.visible = false
+	visible = false
 	SceneManager.set_paused(false)
 
 
@@ -95,6 +97,7 @@ func _on_main_menu_pressed() -> void:
 func _on_confirm_yes() -> void:
 	SceneManager.set_paused(false)
 	pause_panel.visible = false
+	visible = false
 	SceneManager.go_to_main_menu()
 
 
