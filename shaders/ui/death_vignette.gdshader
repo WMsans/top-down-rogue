@@ -12,7 +12,5 @@ void fragment() {
 	float pulse = 0.5 + 0.5 * sin(TIME * pulse_speed * 6.283);
 	float red_mix = vignette * vignette_intensity * (0.6 + 0.4 * pulse);
 
-	vec4 base = texture(TEXTURE, UV);
-	vec3 final_color = mix(base.rgb, vignette_color.rgb, red_mix);
-	COLOR = vec4(final_color, base.a * vignette);
+	COLOR = vec4(vignette_color.rgb, red_mix);
 }
