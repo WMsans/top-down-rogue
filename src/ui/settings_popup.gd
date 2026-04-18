@@ -32,12 +32,12 @@ func _ready() -> void:
 
 func _style_section_headers() -> void:
 	var gold := UiTheme.ACCENT_GOLD
-	var container := panel.get_node("VBoxContainer")
-	for child in container.get_children():
+	var content := panel.get_node("VBoxContainer/ScrollContainer/Content")
+	for child in content.get_children():
 		if child is Label and child.text.begins_with("--"):
 			child.add_theme_color_override("font_color", gold)
 			child.add_theme_font_size_override("font_size", 14)
-	var title_label: Label = container.get_node("Header/TitleLabel")
+	var title_label: Label = panel.get_node("VBoxContainer/Header/TitleLabel")
 	title_label.add_theme_color_override("font_color", gold)
 
 
