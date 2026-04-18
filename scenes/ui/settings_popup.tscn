@@ -30,9 +30,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -200.0
-offset_top = -250.0
+offset_top = -220.0
 offset_right = 200.0
-offset_bottom = 250.0
+offset_bottom = 220.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -56,80 +56,93 @@ text = "X"
 [node name="HSeparator" type="HSeparator" parent="Panel/VBoxContainer" unique_id=396721921]
 layout_mode = 2
 
-[node name="AudioLabel" type="Label" parent="Panel/VBoxContainer" unique_id=594144588]
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer" unique_id=1999900001]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 300)
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer" unique_id=1999900002]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="AudioLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=594144588]
 layout_mode = 2
 text = "-- AUDIO --"
 
-[node name="MasterRow" type="HBoxContainer" parent="Panel/VBoxContainer" unique_id=1174509552]
+[node name="MasterRow" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=1174509552]
 layout_mode = 2
 
-[node name="MasterLabel" type="Label" parent="Panel/VBoxContainer/MasterRow" unique_id=547856054]
+[node name="MasterLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content/MasterRow" unique_id=547856054]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Master"
 
-[node name="MasterSlider" type="HSlider" parent="Panel/VBoxContainer/MasterRow" unique_id=1591464521]
+[node name="MasterSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/Content/MasterRow" unique_id=1591464521]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 value = 80.0
 
-[node name="MusicRow" type="HBoxContainer" parent="Panel/VBoxContainer" unique_id=1285745546]
+[node name="MusicRow" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=1285745546]
 layout_mode = 2
 
-[node name="MusicLabel" type="Label" parent="Panel/VBoxContainer/MusicRow" unique_id=1217125006]
+[node name="MusicLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content/MusicRow" unique_id=1217125006]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Music"
 
-[node name="MusicSlider" type="HSlider" parent="Panel/VBoxContainer/MusicRow" unique_id=738429253]
+[node name="MusicSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/Content/MusicRow" unique_id=738429253]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 value = 60.0
 
-[node name="SfxRow" type="HBoxContainer" parent="Panel/VBoxContainer" unique_id=2037675328]
+[node name="SfxRow" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=2037675328]
 layout_mode = 2
 
-[node name="SfxLabel" type="Label" parent="Panel/VBoxContainer/SfxRow" unique_id=131120454]
+[node name="SfxLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content/SfxRow" unique_id=131120454]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "SFX"
 
-[node name="SfxSlider" type="HSlider" parent="Panel/VBoxContainer/SfxRow" unique_id=993557038]
+[node name="SfxSlider" type="HSlider" parent="Panel/VBoxContainer/ScrollContainer/Content/SfxRow" unique_id=993557038]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 value = 80.0
 
-[node name="HSeparator2" type="HSeparator" parent="Panel/VBoxContainer" unique_id=1600183954]
+[node name="HSeparator2" type="HSeparator" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=1600183954]
 layout_mode = 2
 
-[node name="DisplayLabel" type="Label" parent="Panel/VBoxContainer" unique_id=1645057361]
+[node name="DisplayLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=1645057361]
 layout_mode = 2
 text = "-- DISPLAY --"
 
-[node name="FullscreenRow" type="HBoxContainer" parent="Panel/VBoxContainer" unique_id=2088036721]
+[node name="FullscreenRow" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=2088036721]
 layout_mode = 2
 
-[node name="FullscreenLabel" type="Label" parent="Panel/VBoxContainer/FullscreenRow" unique_id=519357644]
+[node name="FullscreenLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content/FullscreenRow" unique_id=519357644]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Fullscreen"
 
-[node name="FullscreenButton" type="Button" parent="Panel/VBoxContainer/FullscreenRow" unique_id=371826267]
+[node name="FullscreenButton" type="Button" parent="Panel/VBoxContainer/ScrollContainer/Content/FullscreenRow" unique_id=371826267]
 unique_name_in_owner = true
 layout_mode = 2
 text = "OFF"
 
-[node name="HSeparator3" type="HSeparator" parent="Panel/VBoxContainer" unique_id=1814592564]
+[node name="HSeparator3" type="HSeparator" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=1814592564]
 layout_mode = 2
 
-[node name="KeysLabel" type="Label" parent="Panel/VBoxContainer" unique_id=766295084]
+[node name="KeysLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=766295084]
 layout_mode = 2
 text = "-- KEY BINDINGS --"
 
-[node name="KeyBindingsContainer" type="VBoxContainer" parent="Panel/VBoxContainer" unique_id=620256646]
+[node name="KeyBindingsContainer" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=620256646]
 unique_name_in_owner = true
 layout_mode = 2
 
