@@ -13,6 +13,9 @@ func _ready() -> void:
 func _pickup(player: Node) -> void:
 	var weapon_manager: WeaponManager = player.get_node("WeaponManager")
 	if not _has_weapon_with_empty_slot(weapon_manager):
+		var weapon_button := player.get_parent().get_node_or_null("WeaponButton")
+		if weapon_button != null:
+			weapon_button.flash_slots_full()
 		return
 	var popup = player.get_parent().get_node("WeaponPopup")
 	popup.open_for_modifier(weapon_manager, modifier, _on_modifier_applied)
