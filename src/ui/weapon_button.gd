@@ -13,6 +13,8 @@ const MODIFIER_ICON_SIZE := Vector2(32, 32)
 
 var _weapon_manager: WeaponManager = null
 var _current_weapon: Weapon = null
+var _outline_panel: Panel = null
+var _flash_tween: Tween = null
 
 
 func _ready() -> void:
@@ -32,6 +34,7 @@ func _ready() -> void:
 	if _weapon_manager != null:
 		_weapon_manager.weapon_activated.connect(_on_weapon_activated)
 		_update_display(_weapon_manager.active_slot)
+	_outline_panel = _create_outline_panel()
 
 
 func _find_weapon_manager() -> void:
@@ -123,3 +126,32 @@ func _add_modifier_icons() -> void:
 			empty.custom_minimum_size = MODIFIER_ICON_SIZE
 			empty.color = Color(0.165, 0.082, 0.098, 1)
 			row.add_child(empty)
+
+
+func _create_outline_panel() -> Panel:
+	var p := Panel.new()
+	p.set_anchors_preset(Control.PRESET_FULL_RECT)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.visible = false
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color.TRANSPARENT
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(1.0, 0.2, 0.2, 1.0)
+	style.draw_center = false
+	p.add_theme_stylebox_override("panel", style)
+	_icon_button.add_child(p)
+	return p
+
+
+func flash_slots_full() -> void:
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
+	_outline_panel.visible = true
+	UiAnimations.jitter_bounce(_icon_button)
+	_flash_tween = create_tween()
+	_flash_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_flash_tween.tween_interval(0.8)
+	_flash_tween.tween_callback(func() -> void: _outline_panel.visible = false)
