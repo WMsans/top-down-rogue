@@ -16,6 +16,8 @@ func _pickup(player: Node) -> void:
 		var weapon_button := player.get_parent().get_node_or_null("WeaponButton")
 		if weapon_button != null:
 			weapon_button.flash_slots_full()
+		else:
+			push_warning("ModifierDrop: WeaponButton not found in scene tree")
 		return
 	var popup = player.get_parent().get_node("WeaponPopup")
 	popup.open_for_modifier(weapon_manager, modifier, _on_modifier_applied)
