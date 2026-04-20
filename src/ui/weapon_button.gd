@@ -15,6 +15,7 @@ var _weapon_manager: WeaponManager = null
 var _current_weapon: Weapon = null
 var _outline_panel: Panel = null
 var _flash_tween: Tween = null
+var _bounce_tween: Tween = null
 
 
 func _ready() -> void:
@@ -150,7 +151,10 @@ func flash_slots_full() -> void:
 	if _flash_tween != null and _flash_tween.is_valid():
 		_flash_tween.kill()
 	_outline_panel.visible = true
-	UiAnimations.jitter_bounce(_icon_button)
+	if _bounce_tween != null and _bounce_tween.is_valid():
+		_bounce_tween.kill()
+		UiAnimations.reset_scale(_icon_button)
+	_bounce_tween = UiAnimations.jitter_bounce(_icon_button)
 	_flash_tween = create_tween()
 	_flash_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	_flash_tween.tween_interval(0.8)
