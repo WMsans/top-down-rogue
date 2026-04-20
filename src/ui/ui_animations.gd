@@ -54,6 +54,17 @@ static func pulse_glow(control: Control, property: String, from: float, to: floa
 	tween.tween_property(control, property, from, duration * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	return tween
 
+static func jitter_bounce(control: Control, duration: float = 0.35) -> Tween:
+	_update_pivot_center(control)
+	var tween := control.create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	var step := duration / 4.0
+	tween.tween_property(control, "scale", Vector2(1.12, 0.88), step).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "scale", Vector2(0.88, 1.12), step).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "scale", Vector2(1.06, 0.94), step).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "scale", Vector2.ONE, step).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	return tween
+
 static func stagger_slide_in(controls: Array[Control], delay_between: float = 0.1, pixels: float = 20.0, duration: float = 0.3) -> void:
 	for i in controls.size():
 		var control := controls[i]
