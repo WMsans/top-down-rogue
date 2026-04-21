@@ -20,6 +20,14 @@ config/icon="res://icon.svg"
 MaterialRegistry="*res://src/autoload/material_registry.gd"
 SceneManager="*res://src/autoload/scene_manager.gd"
 
+[display]
+
+window/size/viewport_width=320
+window/size/viewport_height=180
+window/size/mode=3
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/level_preview/plugin.cfg")
