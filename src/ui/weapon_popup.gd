@@ -499,11 +499,15 @@ func _estimate_modifier_positions(count: int, recorded: Array[Vector2], recorded
 
 func _build_transfer_cards(start_positions: Array[Dictionary]) -> void:
 	var cards: Array[Control] = []
+	var all_labels: Array[Label] = []
 	for i in range(_transfer_modifiers.size()):
 		var modifier: Modifier = _transfer_modifiers[i]
 		var card := _create_transfer_card(modifier, i)
 		_cards_container.add_child(card)
 		cards.append(card)
+		var labels: Array[Label] = card.get_meta("transfer_labels")
+		for label in labels:
+			all_labels.append(label)
 		if i < start_positions.size():
 			var start_pos: Vector2 = start_positions[i]["position"]
 			var start_sz: Vector2 = start_positions[i]["size"]
@@ -518,6 +522,11 @@ func _build_transfer_cards(start_positions: Array[Dictionary]) -> void:
 			tween.tween_property(card, "global_position", target_pos, 0.35).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
 			tween.tween_property(card, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
 	UiAnimations.stagger_slide_in(cards, 0.08, 10.0, 0.2)
+	var label_delay := 0.35 + 0.08 * max(_transfer_modifiers.size() - 1, 0)
+	for label in all_labels:
+		var label_tween := label.create_tween()
+		label_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		label_tween.tween_property(label, "modulate:a", 1.0, 0.25).set_delay(label_delay).set_trans(Tween.TRANS_LINEAR)
 
 
 func _create_transfer_card(modifier: Modifier, index: int) -> Control:
@@ -554,7 +563,10 @@ func _create_transfer_card(modifier: Modifier, index: int) -> Control:
 	name_label.text = modifier.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
+	name_label.modulate.a = 0.0
 	vbox.add_child(name_label)
+
+	var text_labels: Array[Label] = [name_label]
 
 	var desc_text := modifier.get_description()
 	if desc_text != "":
@@ -565,7 +577,11 @@ func _create_transfer_card(modifier: Modifier, index: int) -> Control:
 		desc_label.custom_minimum_size.x = CARD_MIN_SIZE.x - 24.0
 		desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
 		desc_label.add_theme_font_size_override("font_size", 14)
+		desc_label.modulate.a = 0.0
 		vbox.add_child(desc_label)
+		text_labels.append(desc_label)
+
+	card.set_meta("transfer_labels", text_labels)
 
 	return card
 
@@ -587,7 +603,8 @@ func _add_skip_button() -> void:
 	var vbox := %CardsContainer.get_parent() as VBoxContainer
 	if vbox:
 		vbox.add_child(_skip_button)
-		UiAnimations.fade_in(_skip_button, 0.3, 0.3)
+		var skip_delay := 0.35 + 0.08 * max(_transfer_modifiers.size() - 1, 0) + 0.4
+		UiAnimations.fade_in(_skip_button, 0.3, skip_delay)
 
 
 func _on_skip_pressed() -> void:
