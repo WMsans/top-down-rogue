@@ -1,36 +1,59 @@
-[gd_scene load_steps=2 format=3 uid="uid://bwg73brg2igl1"]
+[gd_scene load_steps=4 format=3 uid="uid://bwg73brg2igl1"]
 
 [ext_resource type="Script" path="res://src/ui/health_ui.gd" id="health_ui_script"]
+[ext_resource type="Shader" path="res://shaders/ui/health_bar_shimmer.gdshader" id="health_bar_shimmer_shader"]
 
-[node name="HealthUI" type="CanvasLayer" unique_id=304403883]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0.102, 0.059, 0.071, 1)
+border_color = Color(0.545, 0.227, 0.165, 1)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_shimmer"]
+shader = ExtResource("health_bar_shimmer_shader")
+
+[node name="HealthUI" type="CanvasLayer"]
 layer = 5
 script = ExtResource("health_ui_script")
 
-[node name="MarginContainer" type="MarginContainer" parent="." unique_id=345736882]
-anchors_preset = -1
-anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = 8.0
+[node name="MarginContainer" type="MarginContainer" parent="."]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 252.0
+offset_bottom = 44.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1933982590]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="HealthLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=554384511]
+[node name="BarBackground" type="Panel" parent="MarginContainer"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 32)
 layout_mode = 2
-text = "100 / 100"
-
-[node name="BarBackground" type="ColorRect" parent="MarginContainer/VBoxContainer" unique_id=1745470956]
-unique_name_in_owner = true
 clip_contents = true
-custom_minimum_size = Vector2(120, 10)
-layout_mode = 2
-color = Color(0.2, 0.2, 0.2, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_bar_bg")
 
-[node name="BarFill" type="ColorRect" parent="MarginContainer/VBoxContainer/BarBackground" unique_id=247572254]
+[node name="BarFill" type="ColorRect" parent="MarginContainer/BarBackground"]
 unique_name_in_owner = true
-layout_mode = 0
-offset_right = 120.0
-offset_bottom = 10.0
-color = Color(0.8, 0.2, 0.2, 1)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.42, 0.208, 1)
+material = SubResource("ShaderMaterial_shimmer")
+
+[node name="HealthLabel" type="RichTextLabel" parent="MarginContainer/BarBackground"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "100 / 100"

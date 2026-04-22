@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
+const MODIFIER_ICON_SIZE := Vector2(32, 32)
 
 @export var weapon_popup: NodePath
 
@@ -13,10 +13,18 @@ const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
 
 var _weapon_manager: WeaponManager = null
 var _current_weapon: Weapon = null
+var _outline_panel: Panel = null
+var _flash_tween: Tween = null
+var _bounce_tween: Tween = null
 
 
 func _ready() -> void:
-	_apply_theme()
+	_tooltip.theme = UiTheme.get_theme()
+	_tooltip_name.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
+	_tooltip_cooldown.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+	_tooltip_cooldown.add_theme_font_size_override("font_size", 14)
+	_tooltip_damage.add_theme_color_override("font_color", UiTheme.ACCENT)
+	_tooltip_damage.add_theme_font_size_override("font_size", 14)
 	_tooltip.visible = false
 	_fallback_icon.visible = false
 	_icon_button.texture_normal = null
@@ -27,6 +35,7 @@ func _ready() -> void:
 	if _weapon_manager != null:
 		_weapon_manager.weapon_activated.connect(_on_weapon_activated)
 		_update_display(_weapon_manager.active_slot)
+	_outline_panel = _create_outline_panel()
 
 
 func _find_weapon_manager() -> void:
@@ -69,10 +78,13 @@ func _on_mouse_entered() -> void:
 	if _current_weapon != null:
 		_update_tooltip()
 		_tooltip.visible = true
+		UiAnimations.fade_in(_tooltip, 0.15)
+	UiAnimations.bounce_on_hover(_icon_button, 1.08)
 
 
 func _on_mouse_exited() -> void:
 	_tooltip.visible = false
+	UiAnimations.reset_scale(_icon_button)
 
 
 func _update_tooltip() -> void:
@@ -82,13 +94,68 @@ func _update_tooltip() -> void:
 	_tooltip_name.text = str(stats["name"])
 	_tooltip_cooldown.text = "Cooldown: %.1fs" % stats["cooldown"]
 	_tooltip_damage.text = "Damage: %.0f" % stats["damage"]
+	_clear_modifier_icons()
+	_add_modifier_icons()
 
 
-func _apply_theme() -> void:
-	var t := Theme.new()
-	t.default_font = PIXEL_FONT
-	t.set_font_size("font_size", "Label", 16)
-	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
-	_tooltip_name.theme = t
-	_tooltip_cooldown.theme = t
-	_tooltip_damage.theme = t
+func _clear_modifier_icons() -> void:
+	var row := _tooltip.get_node_or_null("VBoxContainer/ModifierRow")
+	if row != null:
+		for child in row.get_children():
+			child.queue_free()
+
+
+func _add_modifier_icons() -> void:
+	var vbox := _tooltip.get_node("VBoxContainer")
+	var row := vbox.get_node_or_null("ModifierRow")
+	if row == null:
+		row = HBoxContainer.new()
+		row.name = "ModifierRow"
+		row.add_theme_constant_override("separation", 2)
+		vbox.add_child(row)
+	for i in range(_current_weapon.modifier_slot_count):
+		var modifier: Modifier = _current_weapon.get_modifier_at(i)
+		if modifier != null:
+			var icon := TextureRect.new()
+			icon.custom_minimum_size = MODIFIER_ICON_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			if modifier.icon_texture != null:
+				icon.texture = modifier.icon_texture
+			row.add_child(icon)
+		else:
+			var empty := ColorRect.new()
+			empty.custom_minimum_size = MODIFIER_ICON_SIZE
+			empty.color = Color(0.165, 0.082, 0.098, 1)
+			row.add_child(empty)
+
+
+func _create_outline_panel() -> Panel:
+	var p := Panel.new()
+	p.set_anchors_preset(Control.PRESET_FULL_RECT)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.visible = false
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color.TRANSPARENT
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(1.0, 0.2, 0.2, 1.0)
+	style.draw_center = false
+	p.add_theme_stylebox_override("panel", style)
+	_icon_button.add_child(p)
+	return p
+
+
+func flash_slots_full() -> void:
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
+	_outline_panel.visible = true
+	if _bounce_tween != null and _bounce_tween.is_valid():
+		_bounce_tween.kill()
+		UiAnimations.reset_scale(_icon_button)
+	_bounce_tween = UiAnimations.jitter_bounce(_icon_button)
+	_flash_tween = create_tween()
+	_flash_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_flash_tween.tween_interval(0.8)
+	_flash_tween.tween_callback(func() -> void: _outline_panel.visible = false)

@@ -6,7 +6,7 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8i0xm"]
 shader = ExtResource("2_8i0xm")
-shader_parameter/outline_width = 1.0000000475
+shader_parameter/outline_width = 0.0
 shader_parameter/outline_color = Color(1, 1, 1, 1)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
