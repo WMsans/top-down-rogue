@@ -10,6 +10,11 @@ signal unhighlighted
 var _is_highlighted: bool = false
 
 
+func _ready() -> void:
+	if canvas_item and canvas_item.material is ShaderMaterial:
+		canvas_item.material = (canvas_item.material as ShaderMaterial).duplicate()
+
+
 func set_highlighted(enabled: bool) -> void:
 	if _is_highlighted == enabled:
 		return

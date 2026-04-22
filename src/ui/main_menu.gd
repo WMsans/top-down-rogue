@@ -1,21 +1,25 @@
 extends Control
 
-const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
-
 @onready var play_button: Button = %PlayButton
 @onready var settings_button: Button = %SettingsButton
 @onready var quit_button: Button = %QuitButton
 @onready var settings_popup: Control = %SettingsPopup
 @onready var button_container: VBoxContainer = %ButtonContainer
+@onready var title_top: Label = %TitleTop
+@onready var title_bottom: Label = %TitleBottom
+@onready var menu_card: PanelContainer = %MenuCard
 
 var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
-	_apply_theme()
+	theme = UiTheme.get_theme()
+	play_button.add_theme_color_override("font_color", UiTheme.ACCENT)
 	_buttons = [play_button, settings_button, quit_button]
+	for btn in _buttons:
+		UiAnimations.setup_button_hover(btn)
 	_connect_buttons()
-	_focus_first_button()
+	_play_entrance()
 
 
 func _connect_buttons() -> void:
@@ -25,9 +29,14 @@ func _connect_buttons() -> void:
 	settings_popup.closed.connect(_on_settings_closed)
 
 
-func _focus_first_button() -> void:
-	if _buttons.size() > 0:
-		_buttons[0].grab_focus()
+func _play_entrance() -> void:
+	title_top.modulate.a = 0.0
+	title_bottom.modulate.a = 0.0
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.parallel().tween_property(title_top, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_LINEAR)
+	tween.parallel().tween_property(title_bottom, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_LINEAR).set_delay(0.1)
+	UiAnimations.slide_in_up(button_container, 20.0, 0.4)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -45,20 +54,8 @@ func _on_settings_pressed() -> void:
 
 
 func _on_settings_closed() -> void:
-	_focus_first_button()
+	play_button.grab_focus()
 
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
-
-
-func _apply_theme() -> void:
-	var t := Theme.new()
-	t.default_font = PIXEL_FONT
-	t.set_font_size("font_size", "Button", 16)
-	t.set_font_size("font_size", "Label", 16)
-	t.set_color("font_color", "Button", Color(0.976, 0.988, 0.953))
-	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
-	t.set_color("font_hover_color", "Button", Color(0.741, 0.576, 0.976))
-	t.set_constant("separation", "VBoxContainer", 12)
-	theme = t

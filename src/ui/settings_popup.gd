@@ -2,8 +2,6 @@ extends Control
 
 signal closed
 
-const PIXEL_FONT := preload("res://textures/DawnLike/GUI/SDS_8x8.ttf")
-
 const SETTINGS_PATH := "user://settings.cfg"
 
 const SECTION_AUDIO := "audio"
@@ -20,12 +18,33 @@ var _rebinding_label: Label = null
 @onready var close_button: Button = %CloseButton
 @onready var back_button: Button = %BackButton
 @onready var key_bindings_container: VBoxContainer = %KeyBindingsContainer
+@onready var panel: PanelContainer = %Panel
+@onready var dimmer: ColorRect = %Dimmer
 
 
 func _ready() -> void:
-	_apply_theme()
+	theme = UiTheme.get_theme()
+	_style_section_headers()
 	_connect_signals()
+	_setup_button_animations()
 	_apply_loaded_settings()
+
+
+func _style_section_headers() -> void:
+	var gold := UiTheme.ACCENT_GOLD
+	var content := panel.get_node("VBoxContainer/ScrollContainer/Content")
+	for child in content.get_children():
+		if child is Label and child.text.begins_with("--"):
+			child.add_theme_color_override("font_color", gold)
+			child.add_theme_font_size_override("font_size", 14)
+	var title_label: Label = panel.get_node("VBoxContainer/Header/TitleLabel")
+	title_label.add_theme_color_override("font_color", gold)
+
+
+func _setup_button_animations() -> void:
+	UiAnimations.setup_button_hover(close_button)
+	UiAnimations.setup_button_hover(back_button)
+	UiAnimations.setup_button_hover(fullscreen_button)
 
 
 func _connect_signals() -> void:
@@ -40,6 +59,14 @@ func _connect_signals() -> void:
 func open() -> void:
 	_apply_loaded_settings()
 	visible = true
+	dimmer.color.a = 0.0
+	panel.position.y += 30.0
+	panel.modulate.a = 0.0
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.parallel().tween_property(dimmer, "color:a", 0.7, 0.25).set_trans(Tween.TRANS_LINEAR)
+	tween.parallel().tween_property(panel, "position:y", panel.position.y - 30.0, 0.3).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_LINEAR)
 	back_button.grab_focus()
 
 
@@ -135,6 +162,8 @@ func _rebuild_key_bindings() -> void:
 		var name_label := Label.new()
 		name_label.text = labels[i]
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+		name_label.add_theme_font_size_override("font_size", 14)
 		row.add_child(name_label)
 
 		var key_button := Button.new()
@@ -150,6 +179,7 @@ func _rebuild_key_bindings() -> void:
 
 		var action: String = actions[i]
 		key_button.pressed.connect(_on_key_binding_pressed.bind(action, key_button))
+		UiAnimations.setup_button_hover(key_button)
 		row.add_child(key_button)
 
 		key_bindings_container.add_child(row)
@@ -161,16 +191,3 @@ func _save_settings() -> void:
 	config.set_value(SECTION_AUDIO, "music", music_slider.value)
 	config.set_value(SECTION_AUDIO, "sfx", sfx_slider.value)
 	config.save(SETTINGS_PATH)
-
-
-func _apply_theme() -> void:
-	var t := Theme.new()
-	t.default_font = PIXEL_FONT
-	t.set_font_size("font_size", "Button", 16)
-	t.set_font_size("font_size", "Label", 16)
-	t.set_font_size("font_size", "HSlider", 12)
-	t.set_color("font_color", "Button", Color(0.976, 0.988, 0.953))
-	t.set_color("font_color", "Label", Color(0.976, 0.988, 0.953))
-	t.set_color("font_hover_color", "Button", Color(0.741, 0.576, 0.976))
-	t.set_constant("separation", "VBoxContainer", 8)
-	theme = t
