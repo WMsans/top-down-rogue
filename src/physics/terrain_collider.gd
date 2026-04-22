@@ -6,8 +6,13 @@ const CELL_SIZE := 2
 ## Douglas-Peucker simplification tolerance (in pixels).
 const DP_EPSILON := 0.8
 
-## Distance to inset occluder polygons (in pixels). Matches near_air() radius.
-const OCCLUDER_INSET := 3.0
+## Distance to inset occluder polygons (in pixels). Larger than near_air() radius
+## so shadow casters sit strictly inside the dark wall-top region.
+const OCCLUDER_INSET := 4.0
+
+## Minimum polygon area (in pixels²) for an occluder to be kept after shrinking.
+## Polygons smaller than this lack a meaningful dark wall-top area and are dropped.
+const MIN_OCCLUDER_AREA := 16.0
 
 
 ## Build collision shape from material data and attach to a StaticBody2D.
@@ -200,6 +205,22 @@ static func _point_to_segment_distance(point: Vector2, seg_start: Vector2, seg_e
 	return point.distance_to(projection)
 
 
+## Signed area of a closed polygon (shoelace). Sign indicates winding direction.
+static func _signed_area(points: PackedVector2Array) -> float:
+	if points.size() < 3:
+		return 0.0
+	var sum := 0.0
+	for i in points.size():
+		var j := (i + 1) % points.size()
+		sum += points[i].x * points[j].y - points[j].x * points[i].y
+	return sum * 0.5
+
+
+## Absolute area of a closed polygon.
+static func _polygon_area(points: PackedVector2Array) -> float:
+	return absf(_signed_area(points))
+
+
 ## Shrink a closed polygon by offsetting vertices inward along their normals.
 ## Points must form a closed loop (first and last are implicit neighbors).
 ## Returns a new polygon with inset vertices, or empty if degenerate.
@@ -323,10 +344,17 @@ static func create_occluder_polygons(segments: PackedVector2Array) -> Array[Occl
 			current = next
 
 		if chain.size() >= 3 and closed:
-			var shrunk := shrink_polygon(chain, OCCLUDER_INSET)
-			if shrunk.size() >= 3:
-				var polygon := OccluderPolygon2D.new()
-				polygon.polygon = shrunk
-				result.append(polygon)
+			# Skip inner (air-hole) loops: they wind opposite to wall-enclosing loops
+			# and would otherwise cast shadows from air regions.
+			if _signed_area(chain) < 0.0:
+				continue
+			# Use Geometry2D for robust polygon shrinking — handles concave vertices,
+			# thin features, and splits/drops degenerate pieces cleanly.
+			var shrunk_polys := Geometry2D.offset_polygon(chain, -OCCLUDER_INSET, Geometry2D.JOIN_MITER)
+			for shrunk: PackedVector2Array in shrunk_polys:
+				if shrunk.size() >= 3 and _polygon_area(shrunk) >= MIN_OCCLUDER_AREA:
+					var polygon := OccluderPolygon2D.new()
+					polygon.polygon = shrunk
+					result.append(polygon)
 
 	return result
