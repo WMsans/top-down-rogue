@@ -522,7 +522,7 @@ func _build_transfer_cards(start_positions: Array[Dictionary]) -> void:
 			tween.tween_property(card, "global_position", target_pos, 0.35).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
 			tween.tween_property(card, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
 	UiAnimations.stagger_slide_in(cards, 0.08, 10.0, 0.2)
-	var label_delay := 0.35 + 0.08 * max(_transfer_modifiers.size() - 1, 0)
+	var label_delay: float = 0.35 + 0.08 * max(_transfer_modifiers.size() - 1, 0)
 	for label in all_labels:
 		var label_tween := label.create_tween()
 		label_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -603,7 +603,7 @@ func _add_skip_button() -> void:
 	var vbox := %CardsContainer.get_parent() as VBoxContainer
 	if vbox:
 		vbox.add_child(_skip_button)
-		var skip_delay := 0.35 + 0.08 * max(_transfer_modifiers.size() - 1, 0) + 0.4
+		var skip_delay: float = 0.35 + 0.08 * max(_transfer_modifiers.size() - 1, 0) + 0.4
 		UiAnimations.fade_in(_skip_button, 0.3, skip_delay)
 
 
