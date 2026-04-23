@@ -29,7 +29,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var view_size := viewport.get_visible_rect().size
 		var world_pos := (screen_pos - view_size * 0.5) / camera.zoom + camera.global_position
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			_spawn_modifier_drop(world_pos)
+			_spawn_weapon_drop(world_pos)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			world_manager.place_lava(world_pos, 5.0)
 

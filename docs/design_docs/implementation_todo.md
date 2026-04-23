@@ -34,19 +34,19 @@ Based on gameplay.md design document.
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
 | x | P0 | Medium | Weapon base stats | Damage, swing speed, reach, base damage type |
-| | P0 | Medium | 3-slot modifier system | Weapon holds up to 3 modifier slots |
+| x | P0 | Medium | 3-slot modifier system | Weapon holds up to 3 modifier slots |
 | x | P1 | Medium | Weapon pickup/drops | Enemies and chests drop weapons |
-| | P1 | High | Modifier transfer on pickup | Choose 1 modifier to carry to new weapon |
-| | P1 | Medium | Modifier permanence | Once slotted, cannot be removed |
+| x | P1 | High | Modifier transfer on pickup | Choose 1 modifier to carry to new weapon |
+| x | P1 | Medium | Modifier permanence | Once slotted, cannot be removed |
 
 ### Modifiers
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P0 | Medium | Modifier framework | Base class and slot system for all modifiers |
-| | P1 | Medium | Material generation modifiers | Oil trail, fire trail, poison gas on swing |
-| | P1 | Medium | Elemental modifiers | Fire damage, ice slow, electric chain |
-| | P1 | Low | Stat modifiers | Damage increase, cooldown reduction, range |
-| | P2 | Medium | Terrain modifiers | Deeper carving, wider swing arc |
+| x | P0 | Medium | Modifier framework | Base class and slot system for all modifiers |
+| x | P1 | Medium | Material generation modifiers | Oil trail, fire trail, poison gas on swing |
+| x | P1 | Medium | Elemental modifiers | Fire damage, ice slow, electric chain |
+| x | P1 | Low | Stat modifiers | Damage increase, cooldown reduction, range |
+| x | P2 | Medium | Terrain modifiers | Deeper carving, wider swing arc |
 
 ---
 
