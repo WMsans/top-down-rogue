@@ -12,11 +12,8 @@ func _ready() -> void:
 
 func _pickup(player: Node) -> void:
 	var weapon_manager: WeaponManager = player.get_node("WeaponManager")
-	if weapon_manager.try_add_weapon(weapon):
-		queue_free()
-	else:
-		var popup = player.get_parent().get_node("WeaponPopup")
-		popup.open_for_pickup(weapon_manager, weapon, _on_slot_selected.bind(player))
+	var popup = player.get_parent().get_node("WeaponPopup")
+	popup.open_for_pickup(weapon_manager, weapon, _on_slot_selected.bind(player))
 
 
 func _on_slot_selected(slot_index: int, modifier: Modifier, player: Node) -> void:
