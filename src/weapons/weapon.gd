@@ -75,6 +75,13 @@ func get_modifier_at(slot_index: int) -> Modifier:
 	return modifiers[slot_index]
 
 
+func find_empty_modifier_slot() -> int:
+	for i in range(modifier_slot_count):
+		if modifiers[i] == null:
+			return i
+	return -1
+
+
 func get_base_stats() -> Dictionary:
 	return {
 		"name": name,
