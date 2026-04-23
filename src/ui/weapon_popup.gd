@@ -27,6 +27,9 @@ var _transfer_slot: int = -1
 var _transfer_weapon: Weapon = null
 var _transfer_modifiers: Array[Modifier] = []
 var _skip_button: Button = null
+var _modifier_header_elements: Array[Control] = []
+var _transfer_card_nodes: Array[Control] = []
+var _transfer_placeholders: Array[Control] = []
 
 
 func _ready() -> void:
@@ -79,6 +82,7 @@ func close() -> void:
 	_cancel_modifier_tooltip()
 	_cancel_feedback()
 	_cancel_skip_button()
+	_clear_modifier_header()
 	_skip_button = null
 	visible = false
 	_weapon_manager = null
@@ -121,6 +125,7 @@ func _build_cards() -> void:
 
 
 func _add_modifier_header() -> void:
+	_clear_modifier_header()
 	var vbox := %CardsContainer.get_parent() as VBoxContainer
 	if vbox == null:
 		return
@@ -129,16 +134,27 @@ func _add_modifier_header() -> void:
 	icon.custom_minimum_size = ICON_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vbox.add_child(icon)
+	vbox.add_child_below_node(%TitleLabel, icon)
+	_modifier_header_elements.append(icon)
 	var name_label := Label.new()
 	name_label.text = _modifier_ref.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
-	vbox.add_child(name_label)
+	vbox.add_child_below_node(icon, name_label)
+	_modifier_header_elements.append(name_label)
 
 
 func _clear_cards() -> void:
 	_cancel_skip_button()
+	_clear_modifier_header()
+	for card in _transfer_card_nodes:
+		if is_instance_valid(card):
+			card.queue_free()
+	_transfer_card_nodes.clear()
+	for placeholder in _transfer_placeholders:
+		if is_instance_valid(placeholder):
+			placeholder.queue_free()
+	_transfer_placeholders.clear()
 	for child in _cards_container.get_children():
 		child.queue_free()
 
@@ -338,6 +354,13 @@ func _cancel_modifier_tooltip() -> void:
 		_modifier_tooltip = null
 
 
+func _clear_modifier_header() -> void:
+	for element in _modifier_header_elements:
+		if is_instance_valid(element):
+			element.queue_free()
+	_modifier_header_elements.clear()
+
+
 func _on_card_input(event: InputEvent, slot_index: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if _pickup_mode:
@@ -504,34 +527,60 @@ func _build_transfer_cards(start_positions: Array[Dictionary]) -> void:
 		var modifier: Modifier = _transfer_modifiers[i]
 		var card := _create_transfer_card(modifier, i)
 		_cards_container.add_child(card)
+		card.modulate.a = 0.0
 		cards.append(card)
 		var labels: Array[Label] = card.get_meta("transfer_labels")
 		for label in labels:
 			all_labels.append(label)
+	await get_tree().process_frame
+	if not is_instance_valid(self) or not visible:
+		return
+	var target_positions: Array[Vector2] = []
+	for card in cards:
+		target_positions.append(card.global_position)
+	for card in cards:
+		if is_instance_valid(card):
+			_cards_container.remove_child(card)
+			add_child(card)
+			var placeholder := Control.new()
+			placeholder.custom_minimum_size = CARD_MIN_SIZE
+			_cards_container.add_child(placeholder)
+			_transfer_placeholders.append(placeholder)
+	for i in range(cards.size()):
+		var card: Control = cards[i]
+		if not is_instance_valid(card):
+			continue
+		var target_pos: Vector2 = target_positions[i]
+		card.pivot_offset = card.size * 0.5
 		if i < start_positions.size():
 			var start_pos: Vector2 = start_positions[i]["position"]
 			var start_sz: Vector2 = start_positions[i]["size"]
-			var target_pos := card.global_position
 			var scale_ratio := Vector2(start_sz.x / CARD_MIN_SIZE.x, start_sz.y / CARD_MIN_SIZE.y)
-			card.global_position = start_pos
+			card.global_position = start_pos - (card.size - start_sz) * 0.5
 			card.scale = scale_ratio
-			card.pivot_offset = card.size * 0.5
-			var tween := card.create_tween()
-			tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-			tween.set_parallel(true)
+		else:
+			card.global_position = target_pos
+		card.modulate.a = 1.0
+		var tween := card.create_tween()
+		tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tween.set_parallel(true)
+		if i < start_positions.size():
 			tween.tween_property(card, "global_position", target_pos, 0.35).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
 			tween.tween_property(card, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	UiAnimations.stagger_slide_in(cards, 0.08, 10.0, 0.2)
 	var label_delay: float = 0.35 + 0.08 * max(_transfer_modifiers.size() - 1, 0)
 	for label in all_labels:
+		if not is_instance_valid(label):
+			continue
 		var label_tween := label.create_tween()
 		label_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		label_tween.tween_property(label, "modulate:a", 1.0, 0.25).set_delay(label_delay).set_trans(Tween.TRANS_LINEAR)
+	_transfer_card_nodes = cards
 
 
 func _create_transfer_card(modifier: Modifier, index: int) -> Control:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = CARD_MIN_SIZE
+	card.theme = UiTheme.get_theme()
 	card.gui_input.connect(_on_transfer_card_input.bind(index))
 	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
 	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
