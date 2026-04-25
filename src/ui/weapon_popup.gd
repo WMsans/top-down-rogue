@@ -78,6 +78,22 @@ func open_for_modifier(weapon_manager: WeaponManager, modifier: Modifier, callba
 	visible = true
 
 
+func open_for_inventory_modifier(weapon_manager: WeaponManager, inventory: ModifierInventory, modifier: Modifier, callback: Callable) -> void:
+	# Opens popup for equipping a modifier from inventory onto a weapon
+	_modifier_mode = true
+	_pickup_mode = false
+	_modifier_ref = modifier
+	_modifier_callback = callback
+	_weapon_manager = weapon_manager
+	_selected_slot = -1
+	# Store inventory reference to remove on equip
+	set_meta("inventory_ref", inventory)
+	_title_label.text = "Equip modifier to:"
+	_build_cards()
+	SceneManager.set_paused(true)
+	visible = true
+
+
 func close() -> void:
 	_cancel_modifier_tooltip()
 	_cancel_feedback()
@@ -396,6 +412,10 @@ func _handle_modifier_slot_click(slot_index: int) -> void:
 	if empty_slot == -1:
 		_show_feedback("No empty modifier slots!")
 		return
+	# Remove from inventory if applicable
+	var inventory := get_meta("inventory_ref") as ModifierInventory
+	if inventory:
+		inventory.remove_modifier(_modifier_ref)
 	_weapon_manager.add_modifier_to_weapon(slot_index, empty_slot, _modifier_ref)
 	_modifier_callback.call()
 	close()

@@ -8,6 +8,10 @@ const MODIFIER_DROP_SCENE := preload("res://scenes/modifier_drop.tscn")
 const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
 const LavaEmitterModifierScript := preload("res://src/weapons/lava_emitter_modifier.gd")
+const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
+const DUMMY_ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
+const SHOP_UI_SCENE := preload("res://scenes/economy/shop_ui.tscn")
+const ShopOfferScript := preload("res://src/economy/shop_offer.gd")
 
 var _weapon_scripts: Array[GDScript] = []
 var _modifier_scripts: Array[GDScript] = []
@@ -32,6 +36,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_spawn_weapon_drop(world_pos)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			world_manager.place_lava(world_pos, 5.0)
+		elif event.button_index == MOUSE_BUTTON_MIDDLE:
+			_spawn_dummy_enemy(world_pos)
 
 
 func _spawn_weapon_drop(pos: Vector2) -> void:
@@ -48,3 +54,54 @@ func _spawn_modifier_drop(pos: Vector2) -> void:
 	drop.modifier = modifier_script.new()
 	get_parent().add_child(drop)
 	drop.global_position = pos
+
+
+func _spawn_dummy_enemy(pos: Vector2) -> void:
+	var enemy: Node2D = DUMMY_ENEMY_SCENE.instantiate()
+	get_parent().add_child(enemy)
+	enemy.global_position = pos
+
+
+func _spawn_gold_drop(pos: Vector2) -> void:
+	var drop: GoldDrop = GOLD_DROP_SCENE.instantiate()
+	drop.set_amount(10)
+	get_parent().add_child(drop)
+	drop.global_position = pos
+
+
+func _open_test_shop() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+	var shop: ShopUI = SHOP_UI_SCENE.instantiate()
+	get_parent().add_child(shop)
+	var offerings: Array[ShopOffer] = [
+		ShopOfferScript.new(LavaEmitterModifierScript.new(), 50),
+	]
+	shop.open(offerings)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event.pressed or event.echo:
+		return
+	match event.keycode:
+		KEY_G:
+			var viewport := get_viewport()
+			var camera := viewport.get_camera_2d()
+			if camera == null:
+				return
+			var screen_pos := viewport.get_mouse_position()
+			var view_size := viewport.get_visible_rect().size
+			var world_pos := (screen_pos - view_size * 0.5) / camera.zoom + camera.global_position
+			_spawn_gold_drop(world_pos)
+		KEY_H:
+			var viewport := get_viewport()
+			var camera := viewport.get_camera_2d()
+			if camera == null:
+				return
+			var screen_pos := viewport.get_mouse_position()
+			var view_size := viewport.get_visible_rect().size
+			var world_pos := (screen_pos - view_size * 0.5) / camera.zoom + camera.global_position
+			_spawn_dummy_enemy(world_pos)
+		KEY_U:
+			_open_test_shop()
