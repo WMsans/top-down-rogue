@@ -22,7 +22,7 @@ SceneManager="*res://src/autoload/scene_manager.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/level_preview/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/level_preview/plugin.cfg")
 
 [input]
 
