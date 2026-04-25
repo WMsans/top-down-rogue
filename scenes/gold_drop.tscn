@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://new_gold_drop"]
+
+[ext_resource type="PackedScene" path="res://scenes/drop.tscn" id="1"]
+[ext_resource type="Script" path="res://src/drops/gold_drop.gd" id="2"]
+[ext_resource type="Shader" uid="uid://bgkst7g0qd22q" path="res://shaders/visual/outline.gdshader" id="3"]
+[ext_resource type="Texture2D" path="res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/coin_01a.png" id="4"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("3")
+shader_parameter/outline_width = 0.0
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+
+[node name="GoldDrop" instance=ExtResource("1")]
+script = ExtResource("2")
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("4")
+material = SubResource("ShaderMaterial_1")
+
+[node name="Interactable" parent="." index="2" node_paths=PackedStringArray("canvas_item")]
+canvas_item = NodePath("../Sprite2D")
