@@ -80,6 +80,28 @@ func _use_impl(user: Node) -> void:
 	_start_swing(direction)
 	var materials: Array[int] = MaterialRegistry.get_fluids()
 	world_manager.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
+	_hit_attackables_in_arc(user, pos, direction)
+
+
+func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) -> void:
+	var dmg: int = int(damage)
+	if dmg <= 0:
+		return
+	var dir_angle: float = direction.angle()
+	var half_arc: float = ARC_ANGLE / 2.0
+	for node in user.get_tree().get_nodes_in_group("attackable"):
+		if not (node is Node2D):
+			continue
+		if not node.has_method("on_hit_impact"):
+			continue
+		var to_target: Vector2 = node.global_position - origin
+		var dist: float = to_target.length()
+		if dist > RANGE or dist <= 0.001:
+			continue
+		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc:
+			continue
+		var hit_dir: Vector2 = to_target / dist
+		node.on_hit_impact(node.global_position, hit_dir, dmg)
 
 
 func _tick_impl(_delta: float) -> void:

@@ -13,6 +13,7 @@ var _hit_flash_tween: Tween = null
 
 
 func _ready() -> void:
+	add_to_group("attackable")
 	health = max_health
 
 
@@ -24,6 +25,10 @@ func hit(damage: int) -> void:
 	_on_hit()
 	if health <= 0:
 		die()
+
+
+func on_hit_impact(_impact_point: Vector2, _hit_dir: Vector2, damage: int) -> void:
+	hit(damage)
 
 
 func die() -> void:
