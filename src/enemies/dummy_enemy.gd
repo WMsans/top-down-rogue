@@ -32,6 +32,8 @@ func _setup_drop_table() -> void:
 
 
 func _process(delta: float) -> void:
+	global_position += _knockback_velocity * delta
+	_tick_knockback(delta)
 	if _player == null or not is_instance_valid(_player):
 		return
 	var dir: Vector2 = _player.global_position - global_position
