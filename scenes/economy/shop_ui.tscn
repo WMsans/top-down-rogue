@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://new_shop_ui"]
+[gd_scene format=3 uid="uid://81wgf6ee0aic"]
 
-[ext_resource type="Script" path="res://src/economy/shop_ui.gd" id="1"]
+[ext_resource type="Script" uid="uid://cw5if7wrurmqp" path="res://src/economy/shop_ui.gd" id="1"]
 
-[node name="ShopUI" type="CanvasLayer"]
+[node name="ShopUI" type="CanvasLayer" unique_id=2090859738]
+process_mode = 4
 layer = 16
 script = ExtResource("1")
-process_mode = 4
 
 [node name="Overlay" type="ColorRect" parent="." unique_id=1]
 unique_name_in_owner = true
@@ -16,7 +16,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.102, 0.059, 0.071, 0.87)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=480111824]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -29,7 +29,7 @@ grow_vertical = 2
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/ShopPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/ShopPanel" unique_id=1796200363]
 layout_mode = 2
 theme_override_constants/separation = 0
 
@@ -37,19 +37,18 @@ theme_override_constants/separation = 0
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HeaderHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar"]
+[node name="HeaderHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar" unique_id=550775237]
 layout_mode = 2
-theme_override_constants/separation = 0
 size_flags_horizontal = 3
+theme_override_constants/separation = 0
 
-[node name="Spacer" type="Control" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
+[node name="Spacer" type="Control" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox" unique_id=2137157040]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
+[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox" unique_id=1824966288]
 layout_mode = 2
-text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -63,26 +62,26 @@ vertical_alignment = 1
 [node name="BuyContainer" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=4]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 12
 alignment = 1
-size_flags_horizontal = 3
 
 [node name="ActionBar" type="PanelContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=9]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ActionHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar"]
+[node name="ActionHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar" unique_id=633147750]
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="RerollButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=10]
 unique_name_in_owner = true
 layout_mode = 2
-text = "REROLL"
 size_flags_horizontal = 3
+text = "REROLL"
 
 [node name="CloseButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=6]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CLOSE"
 size_flags_horizontal = 3
+text = "CLOSE"

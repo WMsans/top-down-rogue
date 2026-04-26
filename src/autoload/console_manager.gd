@@ -13,7 +13,13 @@ var _console_visible: bool = false
 var _panel: PanelContainer
 var _output: RichTextLabel
 var _suggestions: VBoxContainer
-var _input: LineEdit
+var _input_field: LineEdit
+
+var _suggestion_index: int = 0
+var _current_suggestions: Array[String] = []
+var _suggestions_active: bool = false
+var _autocomplete_prefix: String = ""
+var _autocomplete_suffix: String = ""
 
 
 func _ready() -> void:
@@ -78,31 +84,35 @@ func _build_ui() -> void:
 	vbox.add_child(_suggestions)
 	_suggestions.hide()
 
-	_input = LineEdit.new()
-	_input.add_theme_font_size_override("font_size", INPUT_FONT_SIZE)
-	_input.add_theme_color_override("font_color", Color.WHITE)
-	_input.placeholder_text = "Type command... (Tab to autocomplete)"
-	_input.add_theme_color_override("placeholder_color", Color(0.5, 0.5, 0.5))
-	_input.text_submitted.connect(_on_input_submitted)
-	_input.text_changed.connect(_on_text_changed)
-	vbox.add_child(_input)
+	_input_field = LineEdit.new()
+	_input_field.add_theme_font_size_override("font_size", INPUT_FONT_SIZE)
+	_input_field.add_theme_color_override("font_color", Color.WHITE)
+	_input_field.placeholder_text = "Type command... (Tab to autocomplete)"
+	_input_field.add_theme_color_override("placeholder_color", Color(0.5, 0.5, 0.5))
+	_input_field.text_submitted.connect(_on_input_submitted)
+	_input_field.text_changed.connect(_on_text_changed)
+	vbox.add_child(_input_field)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_QUOTELEFT:
 			_toggle()
+			get_viewport().set_input_as_handled()
 		elif _console_visible:
 			match event.keycode:
 				KEY_ESCAPE:
 					_close()
+					get_viewport().set_input_as_handled()
 				KEY_UP:
 					_cycle_history(-1)
+					get_viewport().set_input_as_handled()
 				KEY_DOWN:
 					_cycle_history(1)
+					get_viewport().set_input_as_handled()
 				KEY_TAB:
 					_autocomplete()
-			get_viewport().set_input_as_handled()
+					get_viewport().set_input_as_handled()
 
 
 func _toggle() -> void:
@@ -115,30 +125,30 @@ func _toggle() -> void:
 func _open() -> void:
 	_console_visible = true
 	show()
-	_input.clear()
-	_input.grab_focus()
+	_input_field.clear()
+	_input_field.grab_focus()
 	_history_index = _history.size()
-	_suggestions.hide()
+	_clear_suggestions()
 
 
 func _close() -> void:
 	_console_visible = false
 	hide()
-	_input.release_focus()
-	_suggestions.hide()
+	_input_field.release_focus()
+	_clear_suggestions()
 
 
 func _on_input_submitted(text: String) -> void:
 	var trimmed := text.strip_edges()
 	if trimmed.is_empty():
-		_input.clear()
+		_input_field.clear()
 		return
 	_execute(trimmed)
 	_history.append(trimmed)
 	if _history.size() > MAX_HISTORY:
 		_history.pop_front()
 	_history_index = _history.size()
-	_input.clear()
+	_input_field.clear()
 
 
 func _execute(input: String) -> void:
@@ -179,41 +189,78 @@ func _build_context() -> Dictionary:
 
 
 func _autocomplete() -> void:
-	var text := _input.text
-	var cursor := _input.caret_column
+	if _suggestions_active and not _current_suggestions.is_empty():
+		_suggestion_index = (_suggestion_index + 1) % _current_suggestions.size()
+		var suggestion := _current_suggestions[_suggestion_index]
+		_apply_suggestion(suggestion, _autocomplete_prefix, _autocomplete_suffix)
+		_highlight_suggestion(_suggestion_index)
+		return
+
+	var text := _input_field.text
+	var cursor := _input_field.caret_column
 	var suggestions := _registry.get_suggestions(text, cursor)
 
 	if suggestions.is_empty():
+		_clear_suggestions()
 		return
 
-	if suggestions.size() == 1:
-		var before := text.substr(0, cursor)
-		var after := text.substr(cursor)
-		var parts := before.rsplit(" ", true, 1)
-		if parts.size() == 1:
-			_input.text = suggestions[0] + " " + after
-			_input.caret_column = suggestions[0].length() + 1
-		else:
-			_input.text = parts[0] + " " + suggestions[0] + " " + after
-			_input.caret_column = parts[0].length() + 1 + suggestions[0].length() + 1
+	var before := text.substr(0, cursor)
+	var after := text.substr(cursor)
+	var parts := before.rsplit(" ", true, 1)
+	if parts.size() == 1:
+		_autocomplete_prefix = ""
+		_autocomplete_suffix = after
 	else:
-		_show_suggestions(suggestions)
+		_autocomplete_prefix = parts[0] + " "
+		_autocomplete_suffix = after
+
+	if suggestions.size() == 1:
+		_clear_suggestions()
+		_apply_suggestion(suggestions[0], _autocomplete_prefix, _autocomplete_suffix)
+	else:
+		_suggestion_index = 0
+		_current_suggestions = suggestions
+		_suggestions_active = true
+		_show_suggestions(suggestions, 0)
+		_apply_suggestion(suggestions[0], _autocomplete_prefix, _autocomplete_suffix)
 
 
-func _show_suggestions(list: Array[String]) -> void:
+func _show_suggestions(list: Array[String], selected_index: int) -> void:
 	for child in _suggestions.get_children():
 		child.queue_free()
-	for item in list:
+	for i in range(list.size()):
 		var label := Label.new()
-		label.text = item
+		label.text = list[i]
 		label.add_theme_font_size_override("font_size", 12)
-		label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+		if i == selected_index:
+			label.add_theme_color_override("font_color", Color.WHITE)
+		else:
+			label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 		_suggestions.add_child(label)
 	_suggestions.show()
 
+func _highlight_suggestion(index: int) -> void:
+	var children := _suggestions.get_children()
+	for i in range(children.size()):
+		var label := children[i] as Label
+		if label:
+			label.add_theme_color_override("font_color", Color.WHITE if i == index else Color(0.7, 0.7, 0.7))
+
+func _clear_suggestions() -> void:
+	_suggestions_active = false
+	_suggestion_index = 0
+	_current_suggestions.clear()
+	_suggestions.hide()
+
+func _apply_suggestion(suggestion: String, prefix: String, suffix: String) -> void:
+	_input_field.set_block_signals(true)
+	_input_field.text = prefix + suggestion + " " + suffix
+	_input_field.caret_column = prefix.length() + suggestion.length() + 1
+	_input_field.set_block_signals(false)
+
 
 func _on_text_changed(_new_text: String) -> void:
-	_suggestions.hide()
+	_clear_suggestions()
 
 
 func _cycle_history(direction: int) -> void:
@@ -221,10 +268,10 @@ func _cycle_history(direction: int) -> void:
 		return
 	_history_index = clampi(_history_index + direction, 0, _history.size())
 	if _history_index < _history.size():
-		_input.text = _history[_history_index]
-		_input.caret_column = _input.text.length()
+		_input_field.text = _history[_history_index]
+		_input_field.caret_column = _input_field.text.length()
 	else:
-		_input.clear()
+		_input_field.clear()
 	_history_index = clampi(_history_index, 0, _history.size())
 
 

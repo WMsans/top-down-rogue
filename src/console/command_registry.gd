@@ -60,7 +60,9 @@ func get_suggestions(input: String, cursor_pos: int) -> Array[String]:
 	var before_cursor := input.substr(0, cursor_pos)
 	var parts := before_cursor.split(" ", false)
 	if parts.is_empty():
-		return root.subcommands.keys()
+		var keys: Array[String] = []
+		keys.assign(root.subcommands.keys())
+		return keys
 
 	var current := root
 
@@ -75,4 +77,6 @@ func get_suggestions(input: String, cursor_pos: int) -> Array[String]:
 					matches.append(key)
 			return matches
 
-	return current.subcommands.keys()
+	var keys: Array[String] = []
+	keys.assign(current.subcommands.keys())
+	return keys
