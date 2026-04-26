@@ -6,12 +6,17 @@ const CARD_MIN_SIZE := Vector2(160, 200)
 const MODIFIER_ICON_SIZE := Vector2(48, 48)
 const CARD_GLOW_SHADER := preload("res://shaders/ui/card_hover_glow.gdshader")
 
+signal reroll_requested
+
 var _remove_cost: int = 50
 var _remove_count: int = 0
 var _offerings: Array[ShopOffer] = []
 
+@onready var _shop_panel: PanelContainer = %ShopPanel
+@onready var _header_bar: PanelContainer = %HeaderBar
+@onready var _action_bar: PanelContainer = %ActionBar
+@onready var _reroll_button: Button = %RerollButton
 @onready var _overlay: ColorRect = %Overlay
-@onready var _title_label: Label = %TitleLabel
 @onready var _gold_label: Label = %GoldLabel
 @onready var _buy_container: HBoxContainer = %BuyContainer
 @onready var _remove_button: Button = %RemoveButton
@@ -20,13 +25,39 @@ var _offerings: Array[ShopOffer] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	var theme := UiTheme.get_theme()
-	_title_label.theme = theme
-	_gold_label.theme = theme
 	_overlay.gui_input.connect(_on_overlay_input)
 	_close_button.pressed.connect(close)
 	_remove_button.pressed.connect(_on_remove_pressed)
+	_reroll_button.pressed.connect(_on_reroll_pressed)
+	UiAnimations.setup_button_hover(_reroll_button)
+	UiAnimations.setup_button_hover(_remove_button)
+	UiAnimations.setup_button_hover(_close_button)
+	_apply_bar_styles()
 	visible = false
+
+
+func _apply_bar_styles() -> void:
+	var header_style := StyleBoxFlat.new()
+	header_style.bg_color = UiTheme.SURFACE_BG
+	header_style.set_corner_radius_all(0)
+	header_style.set_corner_radius(CORNER_TOP_LEFT, 6)
+	header_style.set_corner_radius(CORNER_TOP_RIGHT, 6)
+	header_style.border_color = UiTheme.ACCENT
+	header_style.set_border_width_all(0)
+	header_style.set_border_width(MARGIN_BOTTOM, 2)
+	header_style.shadow_color = Color(0, 0, 0, 0)
+	_header_bar.add_theme_stylebox_override("panel", header_style)
+
+	var action_style := StyleBoxFlat.new()
+	action_style.bg_color = UiTheme.SURFACE_BG
+	action_style.set_corner_radius_all(0)
+	action_style.set_corner_radius(CORNER_BOTTOM_LEFT, 6)
+	action_style.set_corner_radius(CORNER_BOTTOM_RIGHT, 6)
+	action_style.border_color = UiTheme.PANEL_BORDER
+	action_style.set_border_width_all(0)
+	action_style.set_border_width(MARGIN_TOP, 1)
+	action_style.shadow_color = Color(0, 0, 0, 0)
+	_action_bar.add_theme_stylebox_override("panel", action_style)
 
 
 func open(offerings: Array[ShopOffer]) -> void:
@@ -37,6 +68,34 @@ func open(offerings: Array[ShopOffer]) -> void:
 	_build_remove_section()
 	SceneManager.set_paused(true)
 	visible = true
+	_play_entrance_animation()
+
+
+func _play_entrance_animation() -> void:
+	_header_bar.modulate.a = 0.0
+	_action_bar.modulate.a = 0.0
+	var header_tween := _header_bar.create_tween()
+	header_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	header_tween.tween_property(_header_bar, "modulate:a", 1.0, 0.2)
+
+	var action_tween := _action_bar.create_tween()
+	action_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	action_tween.tween_interval(0.1)
+	action_tween.tween_property(_action_bar, "modulate:a", 1.0, 0.2)
+
+	var cards: Array[Control] = []
+	for child in _buy_container.get_children():
+		var slot := child as Control
+		if slot:
+			slot.position.y += 20
+			slot.modulate.a = 0.0
+			cards.append(slot)
+	for i in cards.size():
+		var tween := cards[i].create_tween()
+		tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tween.tween_interval(0.08 * i)
+		tween.parallel().tween_property(cards[i], "position:y", cards[i].position.y - 20, 0.3).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(cards[i], "modulate:a", 1.0, 0.3)
 
 
 func close() -> void:
@@ -50,14 +109,28 @@ func _refresh_gold() -> void:
 	if player:
 		var wallet := player.get_node_or_null("WalletComponent")
 		if wallet:
-			_gold_label.text = "Gold: %d" % wallet.gold
+			_gold_label.text = "GOLD: %d" % wallet.gold
 
 
 func _build_buy_grid() -> void:
 	_clear_buy_grid()
 	for offer in _offerings:
+		var slot := VBoxContainer.new()
+		slot.alignment = BoxContainer.ALIGNMENT_CENTER
+		slot.add_theme_constant_override("separation", 4)
+		slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
 		var card := _create_offer_card(offer)
-		_buy_container.add_child(card)
+		slot.add_child(card)
+
+		var price_label := Label.new()
+		price_label.text = "%d gold" % offer.price
+		price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		price_label.add_theme_color_override("font_color", UiTheme.ACCENT)
+		price_label.add_theme_font_size_override("font_size", 18)
+		slot.add_child(price_label)
+
+		_buy_container.add_child(slot)
 
 
 func _clear_buy_grid() -> void:
@@ -65,7 +138,7 @@ func _clear_buy_grid() -> void:
 		child.queue_free()
 
 
-func _create_offer_card(offer: ShopOffer) -> Control:
+func _create_offer_card(offer: ShopOffer) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = CARD_MIN_SIZE
 	card.theme = UiTheme.get_theme()
@@ -77,6 +150,7 @@ func _create_offer_card(offer: ShopOffer) -> Control:
 
 	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
 	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
+	card.gui_input.connect(_on_card_gui_input.bind(offer, card))
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
@@ -108,19 +182,6 @@ func _create_offer_card(offer: ShopOffer) -> Control:
 		desc_label.add_theme_font_size_override("font_size", 13)
 		vbox.add_child(desc_label)
 
-	var price_label := Label.new()
-	price_label.text = "%d gold" % offer.price
-	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_label.add_theme_color_override("font_color", UiTheme.ACCENT)
-	vbox.add_child(price_label)
-
-	var buy_button := Button.new()
-	buy_button.text = "Buy"
-	buy_button.theme = UiTheme.get_theme()
-	buy_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	buy_button.pressed.connect(_on_buy_pressed.bind(offer, card))
-	vbox.add_child(buy_button)
-
 	return card
 
 
@@ -137,7 +198,7 @@ func _on_buy_pressed(offer: ShopOffer, card: Control) -> void:
 	# Move modifier from shop offer to player inventory
 	var mod: Modifier = offer.modifier
 	_offerings.erase(offer)
-	card.queue_free()
+	card.get_parent().queue_free()
 	inventory.add_modifier(mod)
 	_refresh_gold()
 
@@ -172,6 +233,10 @@ func _on_remove_pressed() -> void:
 	_remove_count += 1
 	_refresh_gold()
 	_build_remove_section()
+
+
+func _on_reroll_pressed() -> void:
+	reroll_requested.emit()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -211,3 +276,8 @@ func _on_card_mouse_exited(card: PanelContainer) -> void:
 		var new_style := style.duplicate() as StyleBoxFlat
 		new_style.border_color = UiTheme.PANEL_BORDER
 		card.add_theme_stylebox_override("panel", new_style)
+
+
+func _on_card_gui_input(event: InputEvent, offer: ShopOffer, card: PanelContainer) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_on_buy_pressed(offer, card)
