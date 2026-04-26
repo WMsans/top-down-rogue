@@ -57,7 +57,7 @@ func _spawn_modifier_drop(pos: Vector2) -> void:
 
 
 func _spawn_dummy_enemy(pos: Vector2) -> void:
-	var enemy: Node2D = DUMMY_ENEMY_SCENE.instantiate()
+	var enemy: CharacterBody2D = DUMMY_ENEMY_SCENE.instantiate()
 	get_parent().add_child(enemy)
 	enemy.global_position = pos
 

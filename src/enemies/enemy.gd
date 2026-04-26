@@ -1,11 +1,11 @@
 class_name Enemy
-extends Node2D
+extends CharacterBody2D
 
 signal died
 signal health_changed(current: int, maximum: int)
 
 @export var max_health: int = 20
-@export var speed: float = 20.0
+@export var speed: float = 0.0
 
 var health: int
 var drop_table: DropTable = null

@@ -34,7 +34,7 @@ func _setup_drop_table() -> void:
 func _process(delta: float) -> void:
 	if _player == null or not is_instance_valid(_player):
 		return
-	var dir := _player.global_position - global_position
+	var dir: Vector2 = _player.global_position - global_position
 	if dir.length() < 4.0:
 		return
 	global_position += dir.normalized() * speed * delta

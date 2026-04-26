@@ -150,8 +150,8 @@ func _build_remove_section() -> void:
 	if player:
 		var inventory := player.get_node_or_null("ModifierInventory")
 		var wallet := player.get_node_or_null("WalletComponent")
-		var can_afford := wallet and wallet.gold >= _remove_cost
-		var has_mods := inventory and inventory.has_modifiers()
+		var can_afford: bool = wallet != null and wallet.gold >= _remove_cost
+		var has_mods: bool = inventory != null and inventory.has_modifiers()
 		_remove_button.disabled = not (can_afford and has_mods)
 
 
@@ -163,7 +163,7 @@ func _on_remove_pressed() -> void:
 	var wallet := player.get_node_or_null("WalletComponent")
 	if not inventory or not wallet:
 		return
-	var mods := inventory.get_modifiers()
+	var mods: Array[Modifier] = inventory.get_modifiers()
 	if mods.size() == 0:
 		return
 	if not wallet.spend_gold(_remove_cost):
