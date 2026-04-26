@@ -12,6 +12,9 @@ const ShadowGridScript := preload("res://src/core/shadow_grid.gd")
 
 var shadow_grid: Node
 var _last_facing: Vector2 = Vector2.DOWN
+var _facing_left: bool = false
+
+@onready var _color_rect: ColorRect = $ColorRect
 
 @onready var _world_manager: Node2D = get_parent().get_node("WorldManager")
 
@@ -49,6 +52,12 @@ func _physics_process(delta: float) -> void:
 	var input_dir := _get_input_direction()
 	if input_dir != Vector2.ZERO:
 		_last_facing = input_dir
+		if input_dir.x < -0.01:
+			_facing_left = true
+		elif input_dir.x > 0.01:
+			_facing_left = false
+		if _color_rect != null:
+			_color_rect.scale.x = -1.0 if _facing_left else 1.0
 	_apply_movement(input_dir, delta)
 	move_and_slide()
 
@@ -88,3 +97,7 @@ func get_world_manager() -> Node:
 
 func get_facing_direction() -> Vector2:
 	return _last_facing
+
+
+func is_facing_left() -> bool:
+	return _facing_left
