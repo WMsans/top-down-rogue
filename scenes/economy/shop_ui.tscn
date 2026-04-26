@@ -49,21 +49,21 @@ mouse_filter = 2
 
 [node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
 layout_mode = 2
-text = "SHOP"
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="GoldLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox" unique_id=3]
 unique_name_in_owner = true
 layout_mode = 2
-text = "GOLD: 0"
+text = "0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="BuyContainer" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=4]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 size_flags_horizontal = 3
 
@@ -79,16 +79,10 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 text = "REROLL"
-size_flags_horizontal = 1
-
-[node name="RemoveButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=5]
-unique_name_in_owner = true
-layout_mode = 2
-text = "REMOVE MODIFIER"
-size_flags_horizontal = 1
+size_flags_horizontal = 3
 
 [node name="CloseButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=6]
 unique_name_in_owner = true
 layout_mode = 2
 text = "CLOSE"
-size_flags_horizontal = 1
+size_flags_horizontal = 3

@@ -75,9 +75,11 @@ func _open_test_shop() -> void:
 		return
 	var shop: ShopUI = SHOP_UI_SCENE.instantiate()
 	get_parent().add_child(shop)
-	var offerings: Array[ShopOffer] = [
-		ShopOfferScript.new(LavaEmitterModifierScript.new(), 50),
-	]
+	var offerings: Array[ShopOffer] = []
+	var prices: Array[int] = [35, 55, 80]
+	prices.shuffle()
+	for i in 3:
+		offerings.append(ShopOfferScript.new(LavaEmitterModifierScript.new(), prices[i]))
 	shop.open(offerings)
 
 
