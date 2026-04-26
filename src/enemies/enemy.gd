@@ -41,6 +41,7 @@ func on_hit_impact(_impact_point: Vector2, hit_dir: Vector2, damage: int) -> voi
 	if hit_dir.length_squared() > 0.0001:
 		_knockback_velocity += hit_dir.normalized() * KNOCKBACK_SPEED
 	var lethal: bool = damage >= health
+	ScreenShakeManager.shake(ScreenShakeManager.SHAKE_AMOUNT, ScreenShakeManager.SHAKE_DURATION, hit_dir)
 	var stop_duration: float = HitStopManager.HIT_STOP_BASE
 	if lethal:
 		stop_duration += HitStopManager.HIT_STOP_KILL_BONUS
