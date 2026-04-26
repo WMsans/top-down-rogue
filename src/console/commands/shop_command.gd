@@ -9,10 +9,10 @@ static func register(registry: CommandRegistry) -> void:
 
 
 static func _shop(_args: Array[String], ctx: Dictionary) -> String:
-	var player := ctx.get("player")
+	var player: Node = ctx.get("player")
 	if player == null:
 		return "error: no player found"
-	var scene := ctx.get("scene")
+	var scene: Node = ctx.get("scene")
 	if scene == null:
 		return "error: no scene available"
 	var shop: ShopUI = SHOP_UI_SCENE.instantiate()

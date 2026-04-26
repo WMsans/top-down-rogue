@@ -12,7 +12,7 @@ static func register(registry: CommandRegistry) -> void:
 
 
 static func _spawn_mat(type: String, args: Array[String], ctx: Dictionary) -> String:
-	var world_manager := ctx.get("world_manager")
+	var world_manager: Node = ctx.get("world_manager")
 	if world_manager == null:
 		return "error: no world manager in scene"
 
