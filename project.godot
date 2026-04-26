@@ -25,6 +25,7 @@ HitStopManager="*res://src/core/juice/hit_stop_manager.gd"
 ScreenShakeManager="*res://src/core/juice/screen_shake_manager.gd"
 HitSparkManager="*res://src/core/juice/hit_spark_manager.gd"
 DamageNumberManager="*res://src/core/juice/damage_number_manager.gd"
+ChromaticFlashManager="*res://src/core/juice/chromatic_flash_manager.gd"
 
 [editor_plugins]
 

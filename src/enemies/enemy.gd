@@ -44,6 +44,7 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 	DamageNumberManager.spawn(global_position, damage)
 	var lethal: bool = damage >= health
 	ScreenShakeManager.shake(ScreenShakeManager.SHAKE_AMOUNT, ScreenShakeManager.SHAKE_DURATION, hit_dir)
+	ChromaticFlashManager.flash()
 	var stop_duration: float = HitStopManager.HIT_STOP_BASE
 	if lethal:
 		stop_duration += HitStopManager.HIT_STOP_KILL_BONUS
