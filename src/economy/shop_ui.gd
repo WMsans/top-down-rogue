@@ -448,7 +448,8 @@ func _on_remove_pressed(card: PanelContainer) -> void:
 
 	var picked: Array = []
 	var on_pick := func(weapon: Weapon, slot_idx: int) -> void:
-		picked = [weapon, slot_idx]
+		picked.append(weapon)
+		picked.append(slot_idx)
 
 	visible = false
 	popup.open_for_remove(weapon_manager, on_pick)
