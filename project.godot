@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 
 MaterialRegistry="*res://src/autoload/material_registry.gd"
 SceneManager="*res://src/autoload/scene_manager.gd"
+ConsoleManager="*res://src/autoload/console_manager.gd"
+WeaponRegistry="*res://src/autoload/weapon_registry.gd"
 
 [editor_plugins]
 
