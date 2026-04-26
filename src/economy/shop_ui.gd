@@ -142,7 +142,7 @@ func _refresh_gold() -> void:
 	var old_gold := _displayed_gold
 	var gold_tween := create_tween()
 	gold_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	gold_tween.tween_method(_set_displayed_gold.bind(gold), old_gold, gold, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	gold_tween.tween_method(_set_displayed_gold, old_gold, gold, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_animate_gold_bounce()
 	_refresh_price_colors(gold)
 	_refresh_remove_affordability(gold)
