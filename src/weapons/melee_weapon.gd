@@ -137,7 +137,7 @@ func _start_swing(direction: Vector2) -> void:
 
 func _process_idle() -> void:
 	visual.position = Vector2(cos(_visual_angle), sin(_visual_angle)) * PIVOT_DISTANCE
-	visual.rotation = _visual_angle + PI * 3.0 / 4.0
+	visual.rotation = _visual_angle + PI / 2.0
 	_sprite.position = Vector2.ZERO
 	_sprite.rotation = 0.0
 	_sprite.scale = Vector2.ONE
@@ -218,7 +218,7 @@ func _process_swing(delta: float) -> void:
 	visual.position = Vector2.ZERO
 	visual.rotation = 0.0
 	_sprite.position = Vector2(cos(_swing_angle), sin(_swing_angle)) * _swing_dist
-	_sprite.rotation = _swing_angle + PI * 3.0 / 4.0
+	_sprite.rotation = _swing_angle + PI / 2.0
 	_sprite.scale = _swing_scale
 
 	if _phase == Phase.ACTION or _phase == Phase.SETTLE:
@@ -242,7 +242,7 @@ func _spawn_trail_at_angle(angle: float) -> void:
 	visual.get_tree().current_scene.add_child(trail)
 	var local_pos := Vector2(cos(angle), sin(angle)) * _swing_dist
 	trail.global_position = visual.global_position + local_pos.rotated(visual.global_rotation)
-	trail.global_rotation = visual.global_rotation + angle + PI * 3.0 / 4.0
+	trail.global_rotation = visual.global_rotation + angle + PI / 2.0
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, TRAIL_LIFETIME)
 	tween.tween_callback(trail.queue_free)
