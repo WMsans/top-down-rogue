@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dsytrqtiu7drc"]
 
 [ext_resource type="Script" uid="uid://dnc4ynn0e7115" path="res://src/core/world_manager.gd" id="1"]
-[ext_resource type="Script" uid="uid://crukmd5fv0uvt" path="res://src/input/input_handler.gd" id="3"]
 [ext_resource type="Script" uid="uid://dqlpamy716qt3" path="res://src/debug/debug_manager.gd" id="4"]
 [ext_resource type="Script" uid="uid://dy4pc44ix5jt0" path="res://src/debug/chunk_grid_overlay.gd" id="5"]
 [ext_resource type="Script" uid="uid://dhvbrthaofi0b" path="res://src/terrain/world_preview.gd" id="6"]
@@ -30,9 +29,6 @@ script = ExtResource("6")
 preview_size = 1
 
 [node name="Player" parent="." unique_id=1961013424 instance=ExtResource("7")]
-
-[node name="InputHandler" type="Node" parent="." unique_id=924507179]
-script = ExtResource("3")
 
 [node name="DebugManager" type="Node2D" parent="." unique_id=993138986]
 visible = false
