@@ -18,9 +18,7 @@ func _ready() -> void:
 
 
 func _sprite_modulate_green() -> void:
-	var sprite := get_node_or_null("Sprite2D")
-	if sprite:
-		sprite.modulate = Color(0.2, 0.8, 0.2)
+	_set_base_modulate(Color(0.2, 0.8, 0.2))
 
 
 func _setup_drop_table() -> void:
@@ -43,9 +41,4 @@ func _process(delta: float) -> void:
 
 
 func _on_hit() -> void:
-	var sprite := get_node_or_null("Sprite2D")
-	if sprite == null:
-		return
-	sprite.modulate = Color.WHITE
-	var tween := create_tween()
-	tween.tween_property(sprite, "modulate", Color(0.2, 0.8, 0.2), 0.15)
+	super._on_hit()
