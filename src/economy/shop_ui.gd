@@ -44,7 +44,7 @@ func _apply_bar_styles() -> void:
 	header_style.set_corner_radius(CORNER_TOP_RIGHT, 6)
 	header_style.border_color = UiTheme.ACCENT
 	header_style.set_border_width_all(0)
-	header_style.set_border_width(MARGIN_BOTTOM, 2)
+	header_style.set_border_width(SIDE_BOTTOM, 2)
 	header_style.shadow_color = Color(0, 0, 0, 0)
 	_header_bar.add_theme_stylebox_override("panel", header_style)
 
@@ -55,7 +55,7 @@ func _apply_bar_styles() -> void:
 	action_style.set_corner_radius(CORNER_BOTTOM_RIGHT, 6)
 	action_style.border_color = UiTheme.PANEL_BORDER
 	action_style.set_border_width_all(0)
-	action_style.set_border_width(MARGIN_TOP, 1)
+	action_style.set_border_width(SIDE_TOP, 1)
 	action_style.shadow_color = Color(0, 0, 0, 0)
 	_action_bar.add_theme_stylebox_override("panel", action_style)
 
