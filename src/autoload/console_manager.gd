@@ -146,7 +146,7 @@ func _execute(input: String) -> void:
 	var result := _registry.parse(input)
 
 	if result.error != "":
-		var is_incomplete := result.error.begins_with("incomplete:")
+		var is_incomplete: bool = result.error.begins_with("incomplete:")
 		var color := Color(1.0, 0.7, 0.3) if is_incomplete else Color.RED
 		_append_output(result.error, color)
 		return
@@ -156,9 +156,9 @@ func _execute(input: String) -> void:
 		return
 
 	var ctx := _build_context()
-	var output := command.execute.call(result.args, ctx)
+	var output: String = command.execute.call(result.args, ctx)
 	if output != "":
-		var is_error := output.begins_with("error:")
+		var is_error: bool = output.begins_with("error:")
 		_append_output(output, Color.RED if is_error else Color.WHITE)
 
 
