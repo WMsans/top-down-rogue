@@ -10,6 +10,8 @@ signal reroll_requested
 
 var _remove_cost: int = 50
 var _remove_count: int = 0
+var _reroll_cost: int = 50
+var _reroll_count: int = 0
 var _displayed_gold: int = 0
 var _offerings: Array[ShopOffer] = []
 var _price_labels: Array[Label] = []
@@ -32,6 +34,7 @@ func _ready() -> void:
 	_overlay.gui_input.connect(_on_overlay_input)
 	_close_button.pressed.connect(close)
 	_reroll_button.pressed.connect(_on_reroll_pressed)
+	_reroll_button.text = "Reroll — %d g" % _reroll_cost
 	UiAnimations.setup_button_hover(_reroll_button)
 	UiAnimations.setup_button_hover(_close_button)
 	_apply_bar_styles()
@@ -91,6 +94,9 @@ func _style_header_labels() -> void:
 func open(offerings: Array[ShopOffer]) -> void:
 	_offerings = offerings
 	_remove_count = 0
+	_reroll_count = 0
+	_reroll_cost = 50
+	_reroll_button.text = "Reroll — %d g" % _reroll_cost
 	var gold := _get_player_gold()
 	_displayed_gold = gold
 	_gold_label.text = "gold: %d" % gold
@@ -138,6 +144,7 @@ func _refresh_gold() -> void:
 	if gold == _displayed_gold:
 		_refresh_price_colors(gold)
 		_refresh_remove_affordability(gold)
+		_refresh_reroll_affordability(gold)
 		return
 	var old_gold := _displayed_gold
 	var gold_tween := create_tween()
@@ -146,6 +153,7 @@ func _refresh_gold() -> void:
 	_animate_gold_bounce()
 	_refresh_price_colors(gold)
 	_refresh_remove_affordability(gold)
+	_refresh_reroll_affordability(gold)
 
 
 func _set_displayed_gold(value: int) -> void:
@@ -177,6 +185,13 @@ func _refresh_remove_affordability(gold: int) -> void:
 			_remove_price_label.add_theme_color_override("font_color", UiTheme.TEXT_PRIMARY)
 		else:
 			_remove_price_label.add_theme_color_override("font_color", UiTheme.DANGER)
+
+
+func _refresh_reroll_affordability(gold: int) -> void:
+	if gold >= _reroll_cost:
+		_reroll_button.add_theme_color_override("font_color", UiTheme.TEXT_PRIMARY)
+	else:
+		_reroll_button.add_theme_color_override("font_color", UiTheme.DANGER)
 
 
 func _build_buy_grid() -> void:
@@ -232,6 +247,8 @@ func _build_buy_grid() -> void:
 	_remove_price_label = remove_label
 
 	_buy_container.add_child(remove_slot)
+
+	_refresh_reroll_affordability(gold)
 
 
 func _clear_buy_grid() -> void:
@@ -491,7 +508,27 @@ func _pulse_price_label(label: Label) -> void:
 
 
 func _on_reroll_pressed() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+	var wallet: WalletComponent = player.get_node_or_null("WalletComponent")
+	if not wallet:
+		return
+
+	if wallet.gold < _reroll_cost:
+		UiAnimations.jitter_bounce(_reroll_button)
+		_shake_gold_label()
+		return
+
+	if not wallet.spend_gold(_reroll_cost):
+		return
+
+	_reroll_count += 1
+	_reroll_cost = 50 * (1 << _reroll_count)
+	_reroll_button.text = "Reroll — %d g" % _reroll_cost
+
 	reroll_requested.emit()
+	_refresh_gold()
 
 
 func _get_player_gold() -> int:
