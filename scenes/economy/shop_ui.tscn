@@ -5,6 +5,7 @@
 [node name="ShopUI" type="CanvasLayer"]
 layer = 16
 script = ExtResource("1")
+process_mode = 4
 
 [node name="Overlay" type="ColorRect" parent="." unique_id=1]
 unique_name_in_owner = true
@@ -24,37 +25,70 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-layout_mode = 2
-theme_override_constants/separation = 16
-alignment = 1
-
-[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=2]
+[node name="ShopPanel" type="PanelContainer" parent="CenterContainer" unique_id=7]
 unique_name_in_owner = true
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/ShopPanel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HeaderBar" type="PanelContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=8]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HeaderHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar"]
+layout_mode = 2
+theme_override_constants/separation = 0
+size_flags_horizontal = 3
+
+[node name="Spacer" type="Control" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
 layout_mode = 2
 text = "SHOP"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="GoldLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=3]
+[node name="GoldLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox" unique_id=3]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Gold: 0"
-horizontal_alignment = 1
+text = "GOLD: 0"
+horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="BuyContainer" type="HBoxContainer" parent="CenterContainer/VBoxContainer" unique_id=4]
+[node name="BuyContainer" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=4]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
+size_flags_horizontal = 3
 
-[node name="RemoveButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=5]
+[node name="ActionBar" type="PanelContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=9]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Remove Modifier (50 gold)"
-size_flags_horizontal = 4
 
-[node name="CloseButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=6]
+[node name="ActionHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RerollButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=10]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Close"
-size_flags_horizontal = 4
+text = "REROLL"
+size_flags_horizontal = 1
+
+[node name="RemoveButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=5]
+unique_name_in_owner = true
+layout_mode = 2
+text = "REMOVE MODIFIER"
+size_flags_horizontal = 1
+
+[node name="CloseButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=6]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CLOSE"
+size_flags_horizontal = 1
