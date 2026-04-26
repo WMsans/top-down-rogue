@@ -359,17 +359,10 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 
 	if not wallet.spend_gold(offer.price):
 		UiAnimations.jitter_bounce(card)
+		_shake_gold_label()
 		var idx := _card_slots.find(slot)
 		if idx >= 0 and idx < _price_labels.size():
-			var label := _price_labels[idx]
-			label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1))
-			var flash_tween := label.create_tween()
-			flash_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-			flash_tween.tween_property(label, "modulate:a", 0.4, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			flash_tween.tween_property(label, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			flash_tween.tween_callback(func():
-				_refresh_gold()
-			)
+			_pulse_price_label(_price_labels[idx])
 		return
 
 	var mod: Modifier = offer.modifier
@@ -406,15 +399,9 @@ func _on_remove_pressed(card: PanelContainer) -> void:
 		return
 	if not wallet.spend_gold(_remove_cost):
 		UiAnimations.jitter_bounce(card)
+		_shake_gold_label()
 		if _remove_price_label:
-			_remove_price_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1))
-			var flash_tween := _remove_price_label.create_tween()
-			flash_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-			flash_tween.tween_property(_remove_price_label, "modulate:a", 0.4, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			flash_tween.tween_property(_remove_price_label, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			flash_tween.tween_callback(func():
-				_refresh_gold()
-			)
+			_pulse_price_label(_remove_price_label)
 		return
 	inventory.remove_modifier(mods[-1])
 	_remove_count += 1
@@ -422,6 +409,25 @@ func _on_remove_pressed(card: PanelContainer) -> void:
 	if _remove_price_label:
 		_remove_price_label.text = "%d gold" % _remove_cost
 	_refresh_gold()
+
+
+func _shake_gold_label() -> void:
+	var base_pos := _gold_label.position
+	var tween := _gold_label.create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_gold_label.add_theme_color_override("font_color", UiTheme.DANGER)
+	for offset in [6.0, -5.0, 4.0, -3.0, 0.0]:
+		tween.tween_property(_gold_label, "position:x", base_pos.x + offset, 0.05).set_trans(Tween.TRANS_SINE)
+	tween.tween_callback(func():
+		_gold_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
+	)
+
+
+func _pulse_price_label(label: Label) -> void:
+	var tween := label.create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(label, "scale", Vector2(1.15, 1.15), 0.1).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _on_reroll_pressed() -> void:
