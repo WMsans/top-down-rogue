@@ -37,6 +37,8 @@ func _register_commands() -> void:
 	SpawnMatCommands.register(_registry)
 	var ShopCommands := preload("res://src/console/commands/shop_command.gd")
 	ShopCommands.register(_registry)
+	var GoldCommands := preload("res://src/console/commands/gold_command.gd")
+	GoldCommands.register(_registry)
 
 
 func _build_ui() -> void:

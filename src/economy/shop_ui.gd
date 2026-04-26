@@ -352,21 +352,41 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return
-	var wallet := player.get_node_or_null("WalletComponent")
-	var inventory := player.get_node_or_null("ModifierInventory")
-	if not wallet or not inventory:
+	var wallet: WalletComponent = player.get_node_or_null("WalletComponent")
+	var weapon_manager: WeaponManager = player.get_node_or_null("WeaponManager")
+	if not wallet or not weapon_manager:
 		return
 
-	if not wallet.spend_gold(offer.price):
+	if wallet.gold < offer.price:
 		UiAnimations.jitter_bounce(card)
 		_shake_gold_label()
-		var idx := _card_slots.find(slot)
-		if idx >= 0 and idx < _price_labels.size():
-			_pulse_price_label(_price_labels[idx])
+		var idx_fail := _card_slots.find(slot)
+		if idx_fail >= 0 and idx_fail < _price_labels.size():
+			_pulse_price_label(_price_labels[idx_fail])
 		return
 
-	var mod: Modifier = offer.modifier
-	inventory.add_modifier(mod)
+	if not _has_weapon_with_empty_slot(weapon_manager):
+		UiAnimations.jitter_bounce(card)
+		return
+
+	var popup := player.get_parent().get_node_or_null("WeaponPopup")
+	if not popup:
+		return
+
+	var equipped := [false]
+	var on_equip := func() -> void:
+		equipped[0] = true
+
+	visible = false
+	popup.open_for_modifier(weapon_manager, offer.modifier, on_equip)
+	await popup.visibility_changed
+	visible = true
+	SceneManager.set_paused(true)
+
+	if not equipped[0]:
+		return
+
+	wallet.spend_gold(offer.price)
 
 	var idx := _card_slots.find(slot)
 	if idx >= 0:
@@ -386,24 +406,63 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 	_refresh_gold()
 
 
+func _has_weapon_with_empty_slot(weapon_manager: WeaponManager) -> bool:
+	for weapon in weapon_manager.weapons:
+		if weapon != null and weapon.find_empty_modifier_slot() != -1:
+			return true
+	return false
+
+
+func _has_any_equipped_modifier(weapon_manager: WeaponManager) -> bool:
+	for weapon in weapon_manager.weapons:
+		if weapon == null:
+			continue
+		for m_idx in range(weapon.modifier_slot_count):
+			if weapon.get_modifier_at(m_idx) != null:
+				return true
+	return false
+
+
+
 func _on_remove_pressed(card: PanelContainer) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return
-	var inventory := player.get_node_or_null("ModifierInventory")
-	var wallet := player.get_node_or_null("WalletComponent")
-	if not inventory or not wallet:
+	var wallet: WalletComponent = player.get_node_or_null("WalletComponent")
+	var weapon_manager: WeaponManager = player.get_node_or_null("WeaponManager")
+	if not wallet or not weapon_manager:
 		return
-	var mods: Array[Modifier] = inventory.get_modifiers()
-	if mods.size() == 0:
+	if not _has_any_equipped_modifier(weapon_manager):
+		UiAnimations.jitter_bounce(card)
 		return
-	if not wallet.spend_gold(_remove_cost):
+	if wallet.gold < _remove_cost:
 		UiAnimations.jitter_bounce(card)
 		_shake_gold_label()
 		if _remove_price_label:
 			_pulse_price_label(_remove_price_label)
 		return
-	inventory.remove_modifier(mods[-1])
+
+	var popup := get_tree().get_first_node_in_group("player").get_parent().get_node_or_null("WeaponPopup")
+	if not popup:
+		return
+
+	var picked: Array = []
+	var on_pick := func(weapon: Weapon, slot_idx: int) -> void:
+		picked = [weapon, slot_idx]
+
+	visible = false
+	popup.open_for_remove(weapon_manager, on_pick)
+	await popup.visibility_changed
+	visible = true
+	SceneManager.set_paused(true)
+
+	if picked.is_empty():
+		return
+	if not wallet.spend_gold(_remove_cost):
+		return
+	var weapon: Weapon = picked[0]
+	var slot_idx: int = picked[1]
+	weapon.modifiers[slot_idx] = null
 	_remove_count += 1
 	_remove_cost = 50 + _remove_count * 25
 	if _remove_price_label:

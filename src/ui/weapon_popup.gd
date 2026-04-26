@@ -27,6 +27,9 @@ var _transfer_slot: int = -1
 var _transfer_weapon: Weapon = null
 var _transfer_modifiers: Array[Modifier] = []
 var _skip_button: Button = null
+var _remove_mode: bool = false
+var _remove_callback: Callable
+var _remove_weapon: Weapon = null
 var _modifier_header_elements: Array[Control] = []
 var _transfer_card_nodes: Array[Control] = []
 var _transfer_placeholders: Array[Control] = []
@@ -78,6 +81,20 @@ func open_for_modifier(weapon_manager: WeaponManager, modifier: Modifier, callba
 	visible = true
 
 
+func open_for_remove(weapon_manager: WeaponManager, callback: Callable) -> void:
+	_remove_mode = true
+	_modifier_mode = false
+	_pickup_mode = false
+	_remove_callback = callback
+	_weapon_manager = weapon_manager
+	_remove_weapon = null
+	_selected_slot = -1
+	_title_label.text = "Remove modifier from:"
+	_build_cards()
+	SceneManager.set_paused(true)
+	visible = true
+
+
 func open_for_inventory_modifier(weapon_manager: WeaponManager, inventory: ModifierInventory, modifier: Modifier, callback: Callable) -> void:
 	# Opens popup for equipping a modifier from inventory onto a weapon
 	_modifier_mode = true
@@ -113,6 +130,9 @@ func close() -> void:
 	_transfer_slot = -1
 	_transfer_weapon = null
 	_transfer_modifiers = []
+	_remove_mode = false
+	_remove_callback = Callable()
+	_remove_weapon = null
 	_clear_cards()
 	SceneManager.set_paused(false)
 
@@ -150,13 +170,16 @@ func _add_modifier_header() -> void:
 	icon.custom_minimum_size = ICON_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vbox.add_child_below_node(%TitleLabel, icon)
+	var title_index := (%TitleLabel as Node).get_index()
+	vbox.add_child(icon)
+	vbox.move_child(icon, title_index + 1)
 	_modifier_header_elements.append(icon)
 	var name_label := Label.new()
 	name_label.text = _modifier_ref.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
-	vbox.add_child_below_node(icon, name_label)
+	vbox.add_child(name_label)
+	vbox.move_child(name_label, title_index + 2)
 	_modifier_header_elements.append(name_label)
 
 
@@ -392,6 +415,8 @@ func _on_card_input(event: InputEvent, slot_index: int) -> void:
 					close()
 		elif _modifier_mode:
 			_handle_modifier_slot_click(slot_index)
+		elif _remove_mode:
+			_handle_remove_weapon_click(slot_index)
 		else:
 			if _selected_slot == -1:
 				_selected_slot = slot_index
@@ -401,6 +426,98 @@ func _on_card_input(event: InputEvent, slot_index: int) -> void:
 					_swap_weapons(_selected_slot, slot_index)
 				_selected_slot = -1
 				_build_cards()
+
+
+func _handle_remove_weapon_click(slot_index: int) -> void:
+	var weapon: Weapon = _weapon_manager.weapons[slot_index]
+	if weapon == null:
+		_show_feedback("No weapon in that slot!")
+		return
+	var equipped_count := 0
+	for i in range(weapon.modifier_slot_count):
+		if weapon.get_modifier_at(i) != null:
+			equipped_count += 1
+	if equipped_count == 0:
+		_show_feedback("No modifiers on that weapon!")
+		return
+	_remove_weapon = weapon
+	_title_label.text = "Remove which modifier?"
+	_build_remove_modifier_cards(weapon)
+
+
+func _build_remove_modifier_cards(weapon: Weapon) -> void:
+	_clear_cards()
+	var cards: Array[Control] = []
+	for i in range(weapon.modifier_slot_count):
+		var modifier: Modifier = weapon.get_modifier_at(i)
+		if modifier == null:
+			continue
+		var card := _create_remove_modifier_card(modifier, i)
+		_cards_container.add_child(card)
+		cards.append(card)
+	UiAnimations.stagger_slide_in(cards, 0.1, 20.0, 0.3)
+
+
+func _create_remove_modifier_card(modifier: Modifier, slot_index: int) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.theme = UiTheme.get_theme()
+	card.custom_minimum_size = CARD_MIN_SIZE
+	var glow_mat := ShaderMaterial.new()
+	glow_mat.shader = CARD_GLOW_SHADER
+	glow_mat.set_shader_parameter("glow_enabled", false)
+	card.material = glow_mat
+	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
+	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
+	card.gui_input.connect(_on_remove_modifier_card_input.bind(slot_index))
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 6)
+	card.add_child(vbox)
+
+	if modifier.icon_texture != null:
+		var icon := TextureRect.new()
+		icon.texture = modifier.icon_texture
+		icon.custom_minimum_size = ICON_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		vbox.add_child(icon)
+
+	var name_label := Label.new()
+	name_label.text = modifier.name
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
+	vbox.add_child(name_label)
+
+	var desc := modifier.get_description()
+	if desc != "":
+		var desc_label := Label.new()
+		desc_label.text = desc
+		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+		desc_label.add_theme_font_size_override("font_size", 12)
+		vbox.add_child(desc_label)
+
+	var slot_label := Label.new()
+	slot_label.text = "slot %d" % (slot_index + 1)
+	slot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	slot_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+	slot_label.add_theme_font_size_override("font_size", 11)
+	vbox.add_child(slot_label)
+
+	return card
+
+
+func _on_remove_modifier_card_input(event: InputEvent, slot_index: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if _remove_weapon == null:
+			return
+		var weapon := _remove_weapon
+		var cb := _remove_callback
+		cb.call(weapon, slot_index)
+		close()
 
 
 func _handle_modifier_slot_click(slot_index: int) -> void:
