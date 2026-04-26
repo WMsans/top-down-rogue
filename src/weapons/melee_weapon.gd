@@ -24,11 +24,12 @@ const HOLD_SCALE: Vector2 = Vector2(1.05, 0.95)
 const PUNCH_DISTANCE: float = 14.0
 const HOLD_DISTANCE: float = 8.0
 
+const REST_FORWARD: float = 4.0
+const REST_ABOVE: float = -3.0
+
 const TRAIL_ANGLE_STEP: float = PI / 32.0
 const TRAIL_LIFETIME: float = 0.15
 const TRAIL_COLOR: Color = Color(2.0, 6.0, 8.0, 0.6)
-
-const IDLE_ROTATION_SPEED: float = 10.0
 
 enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
 
@@ -40,14 +41,16 @@ var _end_angle: float = 0.0
 var _swing_dir: float = 1.0
 var _swing_toggle: float = 1.0
 var _facing_angle: float = 0.0
-var _visual_angle: float = NAN
-var _last_trail_angle: float = 0.0
-var _swing_angle: float = 0.0
-var _swing_dist: float = PIVOT_DISTANCE
-var _swing_scale: Vector2 = Vector2.ONE
-var _from_angle: float = 0.0
-var _from_dist: float = PIVOT_DISTANCE
+var _facing_sign: float = 1.0
+
+var _pose_pos: Vector2 = Vector2.ZERO
+var _pose_rot: float = 0.0
+var _pose_scale: Vector2 = Vector2.ONE
+var _from_pos: Vector2 = Vector2.ZERO
+var _from_rot: float = 0.0
 var _from_scale: Vector2 = Vector2.ONE
+
+var _last_trail_angle: float = 0.0
 
 
 func _init() -> void:
@@ -110,14 +113,29 @@ func _tick_impl(_delta: float) -> void:
 func update_visual(delta: float, user: Node) -> void:
 	if visual == null:
 		return
-	_facing_angle = _get_facing_direction(user).angle()
-	if is_nan(_visual_angle):
-		_visual_angle = _facing_angle
-	_visual_angle = lerp_angle(_visual_angle, _facing_angle, minf(1.0, IDLE_ROTATION_SPEED * delta))
+	var dir := _get_facing_direction(user)
+	_facing_angle = dir.angle()
+	_update_facing_sign(user, dir)
 	if _is_swinging:
 		_process_swing(delta)
 	else:
 		_process_idle()
+
+
+func _update_facing_sign(user: Node, dir: Vector2) -> void:
+	if user.has_method("is_facing_left"):
+		_facing_sign = -1.0 if user.is_facing_left() else 1.0
+	elif absf(dir.x) > 0.01:
+		_facing_sign = signf(dir.x)
+
+
+func _rest_pos() -> Vector2:
+	var forward := Vector2(cos(_facing_angle), sin(_facing_angle)) * REST_FORWARD
+	return forward + Vector2(0.0, REST_ABOVE)
+
+
+func _rest_rot() -> float:
+	return _facing_angle + PI / 2.0
 
 
 func _start_swing(direction: Vector2) -> void:
@@ -126,11 +144,6 @@ func _start_swing(direction: Vector2) -> void:
 	_swing_dir = _swing_toggle
 	_start_angle = _facing_angle - HALF_ARC * _swing_dir
 	_end_angle = _facing_angle + HALF_ARC * _swing_dir
-	if is_nan(_visual_angle):
-		_visual_angle = _facing_angle
-	_swing_angle = _visual_angle
-	_swing_dist = PIVOT_DISTANCE
-	_swing_scale = Vector2.ONE
 	_capture_from()
 	_phase = Phase.PREP
 	_phase_time = 0.0
@@ -139,17 +152,16 @@ func _start_swing(direction: Vector2) -> void:
 
 
 func _capture_from() -> void:
-	_from_angle = _swing_angle
-	_from_dist = _swing_dist
-	_from_scale = _swing_scale
+	_from_pos = _pose_pos
+	_from_rot = _pose_rot
+	_from_scale = _pose_scale
 
 
 func _process_idle() -> void:
-	visual.position = Vector2(cos(_visual_angle), sin(_visual_angle)) * PIVOT_DISTANCE
-	visual.rotation = _visual_angle + PI / 2.0
-	_sprite.position = Vector2.ZERO
-	_sprite.rotation = 0.0
-	_sprite.scale = Vector2.ONE
+	_pose_pos = _rest_pos()
+	_pose_rot = _rest_rot()
+	_pose_scale = Vector2.ONE
+	_apply_pose()
 
 
 func _ease_out_quad(t: float) -> float:
@@ -183,62 +195,74 @@ func _ease_out_elastic(t: float) -> float:
 func _process_swing(_delta: float) -> void:
 	_phase_time += _delta
 
-	var target_angle: float = _facing_angle
-	var target_dist: float = PIVOT_DISTANCE
+	var target_pos: Vector2 = Vector2.ZERO
+	var target_rot: float = 0.0
 	var target_scale: Vector2 = Vector2.ONE
 	var eased: float = 0.0
 	var t: float = 0.0
+	var target_angle: float = 0.0
 
 	match _phase:
 		Phase.PREP:
 			t = _phase_time / PREP_DURATION
 			eased = _ease_out_quad(t)
 			target_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
-			target_dist = PIVOT_DISTANCE * 0.85
+			target_pos = Vector2(cos(target_angle), sin(target_angle)) * (PIVOT_DISTANCE * 0.85)
+			target_rot = target_angle + PI / 2.0
 			target_scale = PREP_SCALE
 			if t >= 1.0:
-				_apply_pose(target_angle, target_dist, target_scale)
+				_pose_pos = target_pos
+				_pose_rot = target_rot
+				_pose_scale = target_scale
 				_capture_from()
 				_phase = Phase.ACTION
 				_phase_time = 0.0
-				_last_trail_angle = _swing_angle
+				_last_trail_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
+				_apply_pose()
 				return
 
 		Phase.ACTION:
 			t = _phase_time / ACTION_DURATION
 			eased = _ease_out_cubic(t)
 			target_angle = _end_angle + OVERSHOOT_ANGLE * _swing_dir
-			target_dist = PUNCH_DISTANCE
+			target_pos = Vector2(cos(target_angle), sin(target_angle)) * PUNCH_DISTANCE
+			target_rot = target_angle + PI / 2.0
 			target_scale = ACTION_SCALE
 			if t >= 1.0:
-				_apply_pose(target_angle, target_dist, target_scale)
+				_pose_pos = target_pos
+				_pose_rot = target_rot
+				_pose_scale = target_scale
 				_capture_from()
 				_phase = Phase.HOLD
 				_phase_time = 0.0
+				_apply_pose()
 				return
 
 		Phase.HOLD:
 			t = _phase_time / HOLD_DURATION
 			eased = _ease_in_out_cubic(t)
 			target_angle = _end_angle
-			target_dist = HOLD_DISTANCE
+			target_pos = Vector2(cos(target_angle), sin(target_angle)) * HOLD_DISTANCE
+			target_rot = target_angle + PI / 2.0
 			target_scale = HOLD_SCALE
 			if t >= 1.0:
-				_apply_pose(target_angle, target_dist, target_scale)
+				_pose_pos = target_pos
+				_pose_rot = target_rot
+				_pose_scale = target_scale
 				_capture_from()
 				_phase = Phase.RETURN
 				_phase_time = 0.0
+				_apply_pose()
 				return
 
 		Phase.RETURN:
 			t = _phase_time / RETURN_DURATION
 			eased = _ease_out_elastic(t)
-			target_angle = _facing_angle
-			target_dist = PIVOT_DISTANCE
+			target_pos = _rest_pos()
+			target_rot = _rest_rot()
 			target_scale = Vector2.ONE
 			if t >= 1.0:
 				_is_swinging = false
-				_visual_angle = _facing_angle
 				_process_idle()
 				return
 
@@ -247,31 +271,33 @@ func _process_swing(_delta: float) -> void:
 			_process_idle()
 			return
 
-	_swing_angle = lerp_angle(_from_angle, target_angle, eased)
-	_swing_dist = lerpf(_from_dist, target_dist, eased)
-	_swing_scale = _from_scale.lerp(target_scale, eased)
-
-	_apply_pose(_swing_angle, _swing_dist, _swing_scale)
+	_pose_pos = _from_pos.lerp(target_pos, eased)
+	_pose_rot = lerp_angle(_from_rot, target_rot, eased)
+	_pose_scale = _from_scale.lerp(target_scale, eased)
+	_apply_pose()
 
 	if _phase == Phase.ACTION:
-		var progress := angle_difference(_last_trail_angle, _swing_angle) * _swing_dir
+		var current_angle := atan2(_pose_pos.y, _pose_pos.x)
+		var current_dist := _pose_pos.length()
+		var progress := angle_difference(_last_trail_angle, current_angle) * _swing_dir
 		var max_spawns := 8
 		while progress >= TRAIL_ANGLE_STEP and max_spawns > 0:
 			_last_trail_angle += TRAIL_ANGLE_STEP * _swing_dir
 			progress -= TRAIL_ANGLE_STEP
 			max_spawns -= 1
-			_spawn_trail_at_angle(_last_trail_angle)
+			_spawn_trail_at_angle(_last_trail_angle, current_dist)
 
 
-func _apply_pose(angle: float, dist: float, scl: Vector2) -> void:
+func _apply_pose() -> void:
 	visual.position = Vector2.ZERO
 	visual.rotation = 0.0
-	_sprite.position = Vector2(cos(angle), sin(angle)) * dist
-	_sprite.rotation = angle + PI / 2.0
-	_sprite.scale = scl
+	_sprite.position = _pose_pos
+	_sprite.rotation = _pose_rot
+	_sprite.scale = _pose_scale
+	_sprite.flip_h = _facing_sign < 0.0
 
 
-func _spawn_trail_at_angle(angle: float) -> void:
+func _spawn_trail_at_angle(angle: float, dist: float) -> void:
 	var trail := Sprite2D.new()
 	trail.texture = WEAPON_TEXTURE
 	var tex_size := WEAPON_TEXTURE.get_size()
@@ -280,7 +306,7 @@ func _spawn_trail_at_angle(angle: float) -> void:
 	trail.z_index = -1
 	trail.z_as_relative = false
 	visual.get_tree().current_scene.add_child(trail)
-	var local_pos := Vector2(cos(angle), sin(angle)) * _swing_dist
+	var local_pos := Vector2(cos(angle), sin(angle)) * dist
 	trail.global_position = visual.global_position + local_pos.rotated(visual.global_rotation)
 	trail.global_rotation = visual.global_rotation + angle + PI / 2.0
 	var tween := trail.create_tween()
