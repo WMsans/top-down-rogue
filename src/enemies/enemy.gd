@@ -9,11 +9,17 @@ signal health_changed(current: int, maximum: int)
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
+const FLASH_COLOR: Color = Color(3.0, 3.0, 3.0)
+const FLASH_DECAY: float = 0.12
+const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
+const SQUASH_DURATION: float = 0.18
 
 var health: int
 var drop_table: DropTable = null
-var _hit_flash_tween: Tween = null
 var _knockback_velocity: Vector2 = Vector2.ZERO
+var _base_modulate: Color = Color.WHITE
+var _flash_tween: Tween = null
+var _squash_tween: Tween = null
 
 
 func _ready() -> void:
@@ -52,8 +58,40 @@ func die() -> void:
 	queue_free()
 
 
+func _set_base_modulate(c: Color) -> void:
+	_base_modulate = c
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.modulate = c
+
+
+func _play_hit_flash() -> void:
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite == null:
+		return
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+	sprite.modulate = FLASH_COLOR
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(sprite, "modulate", _base_modulate, FLASH_DECAY)
+
+
+func _play_squash() -> void:
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite == null:
+		return
+	if _squash_tween and _squash_tween.is_valid():
+		_squash_tween.kill()
+	sprite.scale = SQUASH_SCALE
+	_squash_tween = create_tween()
+	_squash_tween.set_trans(Tween.TRANS_ELASTIC)
+	_squash_tween.set_ease(Tween.EASE_OUT)
+	_squash_tween.tween_property(sprite, "scale", Vector2.ONE, SQUASH_DURATION)
+
+
 func _on_hit() -> void:
-	pass
+	_play_hit_flash()
+	_play_squash()
 
 
 func _on_death() -> void:
