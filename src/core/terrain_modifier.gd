@@ -4,6 +4,7 @@ extends RefCounted
 const CHUNK_SIZE := 256
 
 var world_manager: Node2D
+var terrain_physical: Node
 
 
 func _init(manager: Node2D) -> void:
@@ -48,6 +49,10 @@ func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
 
+	if terrain_physical:
+		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
+
 
 func place_lava(world_pos: Vector2, radius: float) -> void:
 	var center_x := int(floor(world_pos.x))
@@ -83,6 +88,10 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
 
+	if terrain_physical:
+		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
+
 
 func place_fire(world_pos: Vector2, radius: float) -> void:
 	var center_x := int(floor(world_pos.x))
@@ -117,6 +126,10 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 			modified = true
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+
+	if terrain_physical:
+		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
 
 
 func disperse_materials_in_arc(
@@ -199,6 +212,10 @@ func disperse_materials_in_arc(
 
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+
+	if terrain_physical:
+		var affected_rect := Rect2i(origin_int.x - r_int, origin_int.y - r_int, r_int * 2 + 1, r_int * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
 
 
 func clear_and_push_materials_in_arc(
@@ -294,3 +311,8 @@ func clear_and_push_materials_in_arc(
 
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+
+	if terrain_physical:
+		var affected_rect := Rect2i(origin_int.x - r_int, origin_int.y - r_int, r_int * 2 + 1, r_int * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
+}
