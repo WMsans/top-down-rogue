@@ -4,6 +4,13 @@ extends Drop
 var modifier: Modifier = null
 
 
+func get_pickup_type() -> int:
+	return Drop.PickupType.MODIFIER
+
+func get_pickup_payload():
+	return modifier
+
+
 func _ready() -> void:
 	super._ready()
 	if modifier and modifier.icon_texture:

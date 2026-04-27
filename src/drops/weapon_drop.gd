@@ -4,6 +4,13 @@ extends Drop
 var weapon: Weapon = null
 
 
+func get_pickup_type() -> int:
+	return Drop.PickupType.WEAPON
+
+func get_pickup_payload():
+	return weapon
+
+
 func _ready() -> void:
 	super._ready()
 	if weapon and weapon.icon_texture:
