@@ -20,6 +20,7 @@ var _facing_left: bool = false
 
 
 func _ready() -> void:
+	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
 	collision_mask = 3
 	shadow_grid = ShadowGridScript.new()

@@ -4,9 +4,9 @@
 [ext_resource type="Script" uid="uid://bogfvdcvn4onu" path="res://src/player/health_component.gd" id="health_comp"]
 [ext_resource type="Script" uid="uid://dc7o6nsvks1ye" path="res://src/player/interaction_controller.gd" id="interaction_ctrl"]
 [ext_resource type="Script" uid="uid://sy3jmlgfjlp3" path="res://src/player/lava_damage_checker.gd" id="lava_dmg"]
+[ext_resource type="Script" uid="uid://ctx460qf7e2bi" path="res://src/player/modifier_inventory.gd" id="modifier_inv"]
+[ext_resource type="Script" uid="uid://c1kx0v278iqqj" path="res://src/player/wallet_component.gd" id="wallet_comp"]
 [ext_resource type="Script" uid="uid://bifnu6yke7aff" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
-[ext_resource type="Script" path="res://src/player/wallet_component.gd" id="wallet_comp"]
-[ext_resource type="Script" path="res://src/player/modifier_inventory.gd" id="modifier_inv"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
@@ -57,8 +57,8 @@ script = ExtResource("lava_dmg")
 [node name="InteractionController" type="Node" parent="." unique_id=349654319]
 script = ExtResource("interaction_ctrl")
 
-[node name="WalletComponent" type="Node" parent="."]
+[node name="WalletComponent" type="Node" parent="." unique_id=513916264]
 script = ExtResource("wallet_comp")
 
-[node name="ModifierInventory" type="Node" parent="."]
+[node name="ModifierInventory" type="Node" parent="." unique_id=732510805]
 script = ExtResource("modifier_inv")
