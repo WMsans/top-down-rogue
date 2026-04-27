@@ -4,19 +4,19 @@ const _Weapon = preload("res://src/weapons/weapon.gd")
 const _Modifier = preload("res://src/weapons/modifier.gd")
 
 class WeaponDropEntry:
-	var script: GDScript
+	var weapon_script: GDScript
 	var weight: float
 
 	func _init(p_script: GDScript, p_weight: float = 1.0) -> void:
-		script = p_script
+		weapon_script = p_script
 		weight = p_weight
 
 class ModifierDropEntry:
-	var script: GDScript
+	var modifier_script: GDScript
 	var weight: float
 
 	func _init(p_script: GDScript, p_weight: float = 1.0) -> void:
-		script = p_script
+		modifier_script = p_script
 		weight = p_weight
 
 var weapon_scripts: Dictionary = {}
@@ -61,8 +61,8 @@ func get_random_weapon(tier: int) -> _Weapon:
 	for entry in entries:
 		cumulative += entry.weight
 		if roll <= cumulative:
-			return entry.script.new()
-	return entries[0].script.new()
+			return entry.weapon_script.new()
+	return entries[0].weapon_script.new()
 
 
 func get_random_modifier(tier: int) -> _Modifier:
@@ -79,5 +79,5 @@ func get_random_modifier(tier: int) -> _Modifier:
 	for entry in entries:
 		cumulative += entry.weight
 		if roll <= cumulative:
-			return entry.script.new()
-	return entries[0].script.new()
+			return entry.modifier_script.new()
+	return entries[0].modifier_script.new()
