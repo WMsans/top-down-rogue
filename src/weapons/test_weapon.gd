@@ -45,11 +45,8 @@ func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 
 
 func _use_impl(user: Node) -> void:
-	var world_manager := _get_world_manager(user)
-	if world_manager == null:
-		return
 	var pos: Vector2 = _sprite.global_position if _sprite else user.global_position
-	world_manager.place_gas(pos, GAS_RADIUS, GAS_DENSITY)
+	TerrainSurface.place_gas(pos, GAS_RADIUS, GAS_DENSITY)
 	_start_bounce()
 
 
@@ -123,15 +120,6 @@ func _process_bounce(delta: float) -> void:
 	_sprite.position = Vector2.ZERO
 	_sprite.rotation = 0.0
 	_sprite.scale = _bounce_scale
-
-
-func _get_world_manager(user: Node) -> Node:
-	if user.has_method("get_world_manager"):
-		return user.get_world_manager()
-	var parent := user.get_parent()
-	if parent:
-		return parent.get_node_or_null("WorldManager")
-	return null
 
 
 func _get_facing_direction(user: Node) -> Vector2:

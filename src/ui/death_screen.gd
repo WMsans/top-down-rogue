@@ -10,7 +10,7 @@ extends CanvasLayer
 @onready var _panel: PanelContainer = %DeathPanel
 @onready var _vignette: ColorRect = %VignetteOverlay
 
-var _health_component: HealthComponent
+var _inventory: PlayerInventory
 
 
 func _ready() -> void:
@@ -45,8 +45,10 @@ func _ready() -> void:
 
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
-		_health_component = player.get_node("HealthComponent")
-		_health_component.died.connect(_on_player_died)
+		var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+		if inventory:
+			_inventory = inventory
+			inventory.player_died.connect(_on_player_died)
 
 
 func _on_player_died() -> void:
@@ -57,7 +59,7 @@ func _on_player_died() -> void:
 
 
 func _populate_stats() -> void:
-	var max_hp := _health_component.max_health if _health_component else 0
+	var max_hp := _inventory.get_max_health() if _inventory else 0
 	var secondary := UiTheme.TEXT_SECONDARY.to_html(false)
 	var primary := UiTheme.TEXT_PRIMARY.to_html(false)
 	_stats_label.text = "[center][color=#%s]Max HP:[/color] [color=#%s]%d[/color][/center]" % [

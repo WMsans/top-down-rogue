@@ -1,5 +1,8 @@
 extends Control
 
+const _UiTheme = preload("res://src/ui/ui_theme.gd")
+const _UiAnimations = preload("res://src/ui/ui_animations.gd")
+
 @onready var play_button: Button = %PlayButton
 @onready var settings_button: Button = %SettingsButton
 @onready var quit_button: Button = %QuitButton

@@ -5,9 +5,9 @@ var rd: RenderingDevice
 var chunks: Dictionary = {}
 var compute_device: ComputeDevice
 var chunk_manager: ChunkManager
-var collision_manager: CollisionManager
+var terrain_physical: TerrainPhysical
+var _collision_helper: RefCounted
 var terrain_modifier: TerrainModifier
-var terrain_reader: TerrainReader
 
 @onready var chunk_container: Node2D = $ChunkContainer
 var collision_container: Node2D
@@ -29,13 +29,22 @@ func _ready() -> void:
 	compute_device.init_material_textures()
 
 	chunk_manager = ChunkManager.new(self)
-	collision_manager = CollisionManager.new(self)
+	terrain_physical = TerrainPhysical.new()
+	terrain_physical.name = "TerrainPhysical"
+	terrain_physical.world_manager = self
+	add_child(terrain_physical)
+
+	_collision_helper = TerrainCollisionHelper.new()
+	_collision_helper.world_manager = self
+
 	terrain_modifier = TerrainModifier.new(self)
-	terrain_reader = TerrainReader.new(self)
+	terrain_modifier.terrain_physical = terrain_physical
 
 	collision_container = Node2D.new()
 	collision_container.name = "CollisionContainer"
 	add_child(collision_container)
+
+	TerrainSurface.register_adapter(self)
 
 
 func _exit_tree() -> void:
@@ -48,7 +57,8 @@ func _process(delta: float) -> void:
 		return
 	_update_chunks()
 	_run_simulation()
-	collision_manager.rebuild_dirty_collisions(chunks, delta)
+	_collision_helper.rebuild_dirty(chunks, delta)
+	terrain_physical.set_center(Vector2i(tracking_position))
 
 
 func _update_chunks() -> void:
@@ -136,9 +146,95 @@ func get_chunk_container() -> Node2D:
 	return chunk_container
 
 
+const CHUNK_SIZE := 256
+
+
 func read_region(region: Rect2i) -> PackedByteArray:
-	return terrain_reader.read_region(region)
+	var width: int = region.size.x
+	var height: int = region.size.y
+	var result := PackedByteArray()
+	result.resize(width * height)
+	result.fill(255)
+
+	var min_chunk := Vector2i(
+		floori(float(region.position.x) / CHUNK_SIZE),
+		floori(float(region.position.y) / CHUNK_SIZE)
+	)
+	var max_chunk := Vector2i(
+		floori(float(region.end.x - 1) / CHUNK_SIZE),
+		floori(float(region.end.y - 1) / CHUNK_SIZE)
+	)
+
+	for cx in range(min_chunk.x, max_chunk.x + 1):
+		for cy in range(min_chunk.y, max_chunk.y + 1):
+			var chunk_coord := Vector2i(cx, cy)
+			if not chunks.has(chunk_coord):
+				continue
+
+			var chunk: Chunk = chunks[chunk_coord]
+			var chunk_data: PackedByteArray = rd.texture_get_data(chunk.rd_texture, 0)
+
+			var chunk_origin := chunk_coord * CHUNK_SIZE
+
+			var chunk_rect := Rect2i(chunk_origin, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
+			var overlap := region.intersection(chunk_rect)
+
+			for y in range(overlap.position.y, overlap.end.y):
+				for x in range(overlap.position.x, overlap.end.x):
+					var local_x: int = x - chunk_origin.x
+					var local_y: int = y - chunk_origin.y
+					var chunk_idx: int = (local_y * CHUNK_SIZE + local_x) * 4
+					var material: int = chunk_data[chunk_idx]
+
+					var result_x: int = x - region.position.x
+					var result_y: int = y - region.position.y
+					result[result_y * width + result_x] = material
+
+	return result
 
 
-func find_spawn_position(search_origin: Vector2i, body_size: Vector2i) -> Vector2i:
-	return terrain_reader.find_spawn_position(search_origin, body_size)
+func find_spawn_position(search_origin: Vector2i, body_size: Vector2i, max_radius: float = 800.0) -> Vector2i:
+	var max_r: float = max(max_radius, float(body_size.x) + float(body_size.y))
+	var max_ri := int(max_r)
+	var search_rect := Rect2i(
+		search_origin - Vector2i(max_ri, max_ri),
+		Vector2i(max_ri * 2, max_ri * 2)
+	)
+	var region_data := read_region(search_rect)
+	var region_w: int = search_rect.size.x
+	var region_h: int = search_rect.size.y
+
+	var center := Vector2i(max_ri, max_ri)
+	var dir := Vector2i(1, 0)
+	var pos := center
+	var steps_in_leg := 1
+	var steps_taken := 0
+	var legs_completed := 0
+
+	for _i in range(region_w * region_h):
+		if _pocket_fits(region_data, region_w, region_h, pos, body_size):
+			return search_rect.position + pos
+
+		pos += dir
+		steps_taken += 1
+		if steps_taken >= steps_in_leg:
+			steps_taken = 0
+			legs_completed += 1
+			dir = Vector2i(-dir.y, dir.x)
+			if legs_completed % 2 == 0:
+				steps_in_leg += 1
+
+	push_warning("No valid spawn pocket found, falling back to search_origin")
+	return search_origin
+
+
+func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left: Vector2i, size: Vector2i) -> bool:
+	if top_left.x < 0 or top_left.y < 0:
+		return false
+	if top_left.x + size.x > region_w or top_left.y + size.y > region_h:
+		return false
+	for y in range(top_left.y, top_left.y + size.y):
+		for x in range(top_left.x, top_left.x + size.x):
+			if data[y * region_w + x] != MaterialRegistry.MAT_AIR:
+				return false
+	return true

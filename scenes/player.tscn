@@ -1,11 +1,7 @@
 [gd_scene format=3 uid="uid://dyro2k6hacg2y"]
 
 [ext_resource type="Script" uid="uid://hixog1elal7b" path="res://src/player/player_controller.gd" id="1"]
-[ext_resource type="Script" uid="uid://bogfvdcvn4onu" path="res://src/player/health_component.gd" id="health_comp"]
-[ext_resource type="Script" uid="uid://dc7o6nsvks1ye" path="res://src/player/interaction_controller.gd" id="interaction_ctrl"]
 [ext_resource type="Script" uid="uid://sy3jmlgfjlp3" path="res://src/player/lava_damage_checker.gd" id="lava_dmg"]
-[ext_resource type="Script" uid="uid://ctx460qf7e2bi" path="res://src/player/modifier_inventory.gd" id="modifier_inv"]
-[ext_resource type="Script" uid="uid://c1kx0v278iqqj" path="res://src/player/wallet_component.gd" id="wallet_comp"]
 [ext_resource type="Script" uid="uid://bifnu6yke7aff" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
 
 [sub_resource type="RectangleShape2D" id="1"]
@@ -48,17 +44,5 @@ texture = SubResource("GradientTexture2D_g2els")
 [node name="WeaponManager" type="Node" parent="." unique_id=2028646278]
 script = ExtResource("weapon_manager")
 
-[node name="HealthComponent" type="Node" parent="." unique_id=591037567]
-script = ExtResource("health_comp")
-
 [node name="LavaDamageChecker" type="Node" parent="." unique_id=333495027]
 script = ExtResource("lava_dmg")
-
-[node name="InteractionController" type="Node" parent="." unique_id=349654319]
-script = ExtResource("interaction_ctrl")
-
-[node name="WalletComponent" type="Node" parent="." unique_id=513916264]
-script = ExtResource("wallet_comp")
-
-[node name="ModifierInventory" type="Node" parent="." unique_id=732510805]
-script = ExtResource("modifier_inv")

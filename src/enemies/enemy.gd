@@ -40,15 +40,15 @@ func hit(damage: int) -> void:
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
 	if hit_dir.length_squared() > 0.0001:
 		_knockback_velocity += hit_dir.normalized() * KNOCKBACK_SPEED
-	HitSparkManager.spawn(impact_point, hit_dir)
-	DamageNumberManager.spawn(global_position, damage)
 	var lethal: bool = damage >= health
-	ScreenShakeManager.shake(ScreenShakeManager.SHAKE_AMOUNT, ScreenShakeManager.SHAKE_DURATION, hit_dir)
-	ChromaticFlashManager.flash()
-	var stop_duration: float = HitStopManager.HIT_STOP_BASE
-	if lethal:
-		stop_duration += HitStopManager.HIT_STOP_KILL_BONUS
-	HitStopManager.stop(stop_duration)
+	var spec := HitSpec.new()
+	spec.position = impact_point
+	spec.direction = hit_dir
+	spec.damage = float(damage)
+	spec.is_kill = lethal
+	spec.source_color = Color.WHITE
+	spec.source_radius = 8.0
+	HitReaction.play(spec)
 	hit(damage)
 
 
