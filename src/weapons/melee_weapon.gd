@@ -343,9 +343,9 @@ func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> voi
 	trail.material = mat
 	trail.z_index = -1
 	trail.z_as_relative = false
-	visual.get_tree().current_scene.add_child(trail)
-	trail.global_position = visual.global_position + local_pos.rotated(visual.global_rotation)
-	trail.global_rotation = visual.global_rotation + _blade_to_sprite_rot(blade_angle)
+	visual.add_child(trail)
+	trail.position = local_pos
+	trail.rotation = _blade_to_sprite_rot(blade_angle)
 	trail.scale = scale
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, TRAIL_LIFETIME)
