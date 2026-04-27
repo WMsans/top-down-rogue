@@ -1,3 +1,4 @@
+class_name TerrainPhysical
 extends Node
 
 ## CPU-side cache: Vector2i(world_x, world_y) -> int (material_id)

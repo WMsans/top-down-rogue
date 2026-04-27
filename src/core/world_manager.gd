@@ -194,7 +194,7 @@ func read_region(region: Rect2i) -> PackedByteArray:
 
 
 func find_spawn_position(search_origin: Vector2i, body_size: Vector2i, max_radius: float = 800.0) -> Vector2i:
-	var max_r := max(max_radius, float(body_size.x) + float(body_size.y))
+	var max_r: float = max(max_radius, float(body_size.x) + float(body_size.y))
 	var max_ri := int(max_r)
 	var search_rect := Rect2i(
 		search_origin - Vector2i(max_ri, max_ri),
