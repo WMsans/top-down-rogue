@@ -22,6 +22,7 @@ SceneManager="*res://src/autoload/scene_manager.gd"
 ConsoleManager="*res://src/autoload/console_manager.gd"
 WeaponRegistry="*res://src/autoload/weapon_registry.gd"
 HitReaction="*res://src/core/juice/hit_reaction.gd"
+TerrainSurface="*res://src/core/terrain_surface.gd"
 
 [editor_plugins]
 
