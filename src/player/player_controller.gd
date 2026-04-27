@@ -15,6 +15,9 @@ var _facing_left: bool = false
 
 
 func _ready() -> void:
+	var inventory := PlayerInventory.new()
+	inventory.name = "PlayerInventory"
+	add_child(inventory)
 	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
 	collision_mask = 3
@@ -30,8 +33,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var health_component := get_node_or_null("HealthComponent")
-	if health_component and health_component.is_dead():
+	var inventory := get_node_or_null("PlayerInventory")
+	if inventory and inventory.is_dead():
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
