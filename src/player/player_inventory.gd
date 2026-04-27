@@ -22,7 +22,7 @@ var _is_invincible: bool = false
 var _blink_timer: float = 0.0
 var _color_rect: ColorRect
 
-var weapons: Array = []  # Array[Weapon], size MAX_WEAPON_SLOTS, null for empty
+var weapons: Array = [null, null, null]  # Array[Weapon], size MAX_WEAPON_SLOTS, null for empty
 var active_weapon_slot: int = 0
 
 
