@@ -12,16 +12,16 @@ class DropEntry:
 	var max_count: int = 1
 	var gold_per_drop: int = 0
 	var item_tier: int = ItemTier.COMMON
-	var scene: PackedScene = null
+	var packed_scene: PackedScene = null
 
-	func _init(p_kind: int = DropKind.SCENE, p_weight: float = 1.0, p_min: int = 1, p_max: int = 1, p_gold: int = 0, p_item_tier: int = ItemTier.COMMON, p_scene: PackedScene = null) -> void:
+	func _init(p_kind: int = DropKind.SCENE, p_weight: float = 1.0, p_min: int = 1, p_max: int = 1, p_gold: int = 0, p_item_tier: int = ItemTier.COMMON, p_packed_scene: PackedScene = null) -> void:
 		kind = p_kind
 		weight = p_weight
 		min_count = p_min
 		max_count = p_max
 		gold_per_drop = p_gold
 		item_tier = p_item_tier
-		scene = p_scene
+		packed_scene = p_packed_scene
 
 	static func gold(p_weight: float, p_min: int, p_max: int, p_gold_per_drop: int) -> DropEntry:
 		return DropEntry.new(DropKind.GOLD, p_weight, p_min, p_max, p_gold_per_drop)
@@ -32,8 +32,8 @@ class DropEntry:
 	static func modifier_pool(p_weight: float, p_tier: int, p_min: int = 1, p_max: int = 1) -> DropEntry:
 		return DropEntry.new(DropKind.MODIFIER_POOL, p_weight, p_min, p_max, 0, p_tier)
 
-	static func scene(p_scene: PackedScene, p_weight: float = 1.0, p_min: int = 1, p_max: int = 1) -> DropEntry:
-		return DropEntry.new(DropKind.SCENE, p_weight, p_min, p_max, 0, ItemTier.COMMON, p_scene)
+	static func from_scene(p_packed_scene: PackedScene, p_weight: float = 1.0, p_min: int = 1, p_max: int = 1) -> DropEntry:
+		return DropEntry.new(DropKind.SCENE, p_weight, p_min, p_max, 0, ItemTier.COMMON, p_packed_scene)
 
 const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
 const WEAPON_DROP_SCENE := preload("res://scenes/weapon_drop.tscn")
@@ -133,9 +133,9 @@ func _resolve_modifier_pool(position: Vector2, parent: Node, entry: DropEntry) -
 
 
 func _resolve_scene(position: Vector2, parent: Node, entry: DropEntry) -> void:
-	if entry.scene == null:
+	if entry.packed_scene == null:
 		return
-	var drop: Node = entry.scene.instantiate()
+	var drop: Node = entry.packed_scene.instantiate()
 	if drop.has_method("set_amount") and entry.gold_per_drop > 0:
 		drop.set_amount(entry.gold_per_drop)
 	var offset := Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))

@@ -30,12 +30,13 @@ func test_drop_entry_modifier_pool_constructor() -> void:
 	assert_that(entry.max_count).is_equal(2)
 
 
-func test_drop_entry_scene_constructor() -> void:
-	var entry := _DropTable.DropEntry.scene(null, 0.5, 1, 3)
+func test_drop_entry_from_scene_constructor() -> void:
+	var entry := _DropTable.DropEntry.from_scene(null, 0.5, 1, 3)
 	assert_that(entry.kind).is_equal(_DropTable.DropKind.SCENE)
 	assert_that(entry.weight).is_equal(0.5)
 	assert_that(entry.min_count).is_equal(1)
 	assert_that(entry.max_count).is_equal(3)
+	assert_that(entry.packed_scene).is_null()
 
 
 func test_from_enemy_tier_creates_table_for_easy() -> void:
