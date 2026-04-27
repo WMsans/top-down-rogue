@@ -1,12 +1,6 @@
 class_name DummyEnemy
 extends Enemy
 
-const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
-const WEAPON_DROP_SCENE := preload("res://scenes/weapon_drop.tscn")
-const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
-const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
-const LavaEmitterModifierScript := preload("res://src/weapons/lava_emitter_modifier.gd")
-
 var _player: Node = null
 
 
@@ -22,11 +16,7 @@ func _sprite_modulate_green() -> void:
 
 
 func _setup_drop_table() -> void:
-	drop_table = DropTable.new()
-	var weapon_drop_entry := DropTable.DropEntry.new(WEAPON_DROP_SCENE, 1.0, 1, 1)
-	drop_table.add_entry(weapon_drop_entry)
-	var gold_entry := DropTable.DropEntry.new(GOLD_DROP_SCENE, 1.0, 2, 5, 5)
-	drop_table.add_entry(gold_entry)
+	drop_table = DropTable.from_enemy_tier(enemy_tier)
 
 
 func _process(delta: float) -> void:
