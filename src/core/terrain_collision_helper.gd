@@ -1,4 +1,4 @@
-class_name CollisionManager
+class_name TerrainCollisionHelper
 extends RefCounted
 
 const CHUNK_SIZE := 256
@@ -10,11 +10,7 @@ var _collision_rebuild_timer: float = 0.0
 var _collision_rebuild_index: int = 0
 
 
-func _init(manager: Node2D) -> void:
-	world_manager = manager
-
-
-func rebuild_dirty_collisions(chunks: Dictionary, delta: float) -> void:
+func rebuild_dirty(chunks: Dictionary, delta: float) -> void:
 	if chunks.is_empty():
 		return
 
