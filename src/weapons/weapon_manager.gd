@@ -42,6 +42,8 @@ func _input(event: InputEvent) -> void:
 			KEY_Z: slot = 0
 			KEY_X: slot = 1
 			KEY_C: slot = 2
+		if _inventory == null:
+			return
 		var weapon = _inventory.get_weapon(slot)
 		if slot >= 0 and slot < PlayerInventory.MAX_WEAPON_SLOTS and weapon != null:
 			if weapon.is_ready():
@@ -66,8 +68,9 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _inventory == null:
+		return
 	for i in range(PlayerInventory.MAX_WEAPON_SLOTS):
 		var weapon = _inventory.get_weapon(i)
 		if weapon != null:
 			weapon.tick(delta)
-

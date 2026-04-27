@@ -315,4 +315,3 @@ func clear_and_push_materials_in_arc(
 	if terrain_physical:
 		var affected_rect := Rect2i(origin_int.x - r_int, origin_int.y - r_int, r_int * 2 + 1, r_int * 2 + 1)
 		terrain_physical.invalidate_rect(affected_rect)
-}

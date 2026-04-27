@@ -115,10 +115,10 @@ func equip_weapon(slot: int, weapon) -> void:
 	weapon_changed.emit(slot)
 
 
-func remove_weapon(slot: int):
+func remove_weapon(slot: int) -> Weapon:
 	if slot < 0 or slot >= MAX_WEAPON_SLOTS:
 		return null
-	var old := weapons[slot]
+	var old: Weapon = weapons[slot]
 	weapons[slot] = null
 	weapon_changed.emit(slot)
 	return old
