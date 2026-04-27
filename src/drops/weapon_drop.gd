@@ -31,5 +31,7 @@ func _on_slot_selected(slot_index: int, modifier: Modifier, player: Node) -> voi
 			weapon.add_modifier(empty_slot, modifier)
 		else:
 			weapon.add_modifier(0, modifier)
-	weapon_manager.swap_weapon(slot_index, weapon)
+	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+	if inventory:
+		inventory.equip_weapon(slot_index, weapon)
 	queue_free()
