@@ -62,13 +62,9 @@ static func from_enemy_tier(tier: int, drops_gold: bool = true, drops_weapon: bo
 	if drops_gold:
 		table.add_entry(DropEntry.gold(1.0, _TIER_GOLD_MIN[tier], _TIER_GOLD_MAX[tier], _TIER_GOLD_PER_DROP[tier]))
 	if drops_weapon:
-		var weights: Dictionary = _TIER_ITEM_WEIGHTS[tier]
-		for item_tier in weights:
-			table.add_entry(DropEntry.weapon_pool(_TIER_WEAPON_WEIGHT[tier] * float(weights[item_tier]), item_tier))
+		table.add_entry(DropEntry.weapon_pool(_TIER_WEAPON_WEIGHT[tier], tier))
 	if drops_modifier:
-		var weights: Dictionary = _TIER_ITEM_WEIGHTS[tier]
-		for item_tier in weights:
-			table.add_entry(DropEntry.modifier_pool(_TIER_MODIFIER_WEIGHT[tier] * float(weights[item_tier]), item_tier))
+		table.add_entry(DropEntry.modifier_pool(_TIER_MODIFIER_WEIGHT[tier], tier))
 	return table
 
 
@@ -111,7 +107,8 @@ func _resolve_gold(position: Vector2, parent: Node, entry: DropEntry) -> void:
 
 
 func _resolve_weapon_pool(position: Vector2, parent: Node, entry: DropEntry) -> void:
-	var weapon := WeaponRegistry.get_random_weapon(entry.item_tier)
+	var tier := resolve_item_tier(entry.item_tier)
+	var weapon := WeaponRegistry.get_random_weapon(tier)
 	if weapon == null:
 		return
 	var drop: Node = WEAPON_DROP_SCENE.instantiate()
@@ -122,7 +119,8 @@ func _resolve_weapon_pool(position: Vector2, parent: Node, entry: DropEntry) -> 
 
 
 func _resolve_modifier_pool(position: Vector2, parent: Node, entry: DropEntry) -> void:
-	var modifier := WeaponRegistry.get_random_modifier(entry.item_tier)
+	var tier := resolve_item_tier(entry.item_tier)
+	var modifier := WeaponRegistry.get_random_modifier(tier)
 	if modifier == null:
 		return
 	var drop: Node = MODIFIER_DROP_SCENE.instantiate()
