@@ -16,13 +16,17 @@ var _active_weapon: Weapon = null
 
 func _ready() -> void:
 	_player = get_parent()
+	_setup_visual.call_deferred()
+	_setup_weapons.call_deferred()
+
+
+func _setup_weapons() -> void:
 	_inventory = _player.get_node_or_null("PlayerInventory")
 	if _inventory:
 		var test_weapon := TestWeaponScript.new()
 		test_weapon.add_modifier(0, LavaEmitterModifierScript.new())
 		_inventory.equip_weapon(0, test_weapon)
 		_inventory.equip_weapon(1, MeleeWeaponScript.new())
-	_setup_visual.call_deferred()
 
 
 func _setup_visual() -> void:
