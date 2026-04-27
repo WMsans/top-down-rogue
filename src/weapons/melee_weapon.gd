@@ -37,6 +37,9 @@ const PIVOT_HOLD: float = 3.0
 const TRAIL_ANGLE_STEP: float = PI / 32.0
 const TRAIL_LIFETIME: float = 0.25
 const TRAIL_COLOR: Color = Color(2.0, 6.0, 8.0, 0.6)
+const TRAIL_SHADER := preload("res://shaders/weapons/melee_trail.gdshader")
+const TRAIL_DRIFT: float = 6.0
+const TRAIL_SCALE_FADE: float = 0.55
 
 enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
 
@@ -331,10 +334,13 @@ func _apply_pose() -> void:
 
 
 func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = TRAIL_SHADER
 	var trail := Sprite2D.new()
 	trail.texture = WEAPON_TEXTURE
 	trail.offset = _pommel_offset
 	trail.modulate = TRAIL_COLOR
+	trail.material = mat
 	trail.z_index = -1
 	trail.z_as_relative = false
 	visual.get_tree().current_scene.add_child(trail)
