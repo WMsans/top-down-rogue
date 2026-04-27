@@ -92,14 +92,11 @@ static func _compute_pommel_offset(tex: Texture2D) -> Vector2:
 
 
 func _use_impl(user: Node) -> void:
-	var world_manager := _get_world_manager(user)
-	if world_manager == null:
-		return
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
 	var materials: Array[int] = MaterialRegistry.get_fluids()
-	world_manager.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
 	_hit_attackables_in_arc(user, pos, direction)
 
 
@@ -350,15 +347,6 @@ func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> voi
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, TRAIL_LIFETIME)
 	tween.tween_callback(trail.queue_free)
-
-
-func _get_world_manager(user: Node) -> Node:
-	if user.has_method("get_world_manager"):
-		return user.get_world_manager()
-	var parent := user.get_parent()
-	if parent:
-		return parent.get_node_or_null("WorldManager")
-	return null
 
 
 func _get_facing_direction(user: Node) -> Vector2:
