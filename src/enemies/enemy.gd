@@ -6,6 +6,7 @@ signal health_changed(current: int, maximum: int)
 
 @export var max_health: int = 20
 @export var speed: float = 0.0
+@export var enemy_tier: int = DropTable.EnemyTier.NORMAL
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
