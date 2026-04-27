@@ -54,17 +54,18 @@ func read_region(region: Rect2i) -> PackedByteArray:
 	return result
 
 
-func find_spawn_position(search_origin: Vector2i, body_size: Vector2i) -> Vector2i:
-	var max_radius := CHUNK_SIZE * 4
+func find_spawn_position(search_origin: Vector2i, body_size: Vector2i, max_radius: float = 800.0) -> Vector2i:
+	var max_r := max(max_radius, float(body_size.x) + float(body_size.y))
+	var max_ri := int(max_r)
 	var search_rect := Rect2i(
-		search_origin - Vector2i(max_radius, max_radius),
-		Vector2i(max_radius * 2, max_radius * 2)
+		search_origin - Vector2i(max_ri, max_ri),
+		Vector2i(max_ri * 2, max_ri * 2)
 	)
 	var region_data := read_region(search_rect)
 	var region_w: int = search_rect.size.x
 	var region_h: int = search_rect.size.y
 
-	var center := Vector2i(max_radius, max_radius)
+	var center := Vector2i(max_ri, max_ri)
 	var dir := Vector2i(1, 0)
 	var pos := center
 	var steps_in_leg := 1

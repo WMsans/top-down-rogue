@@ -37,6 +37,8 @@ func _ready() -> void:
 	collision_container.name = "CollisionContainer"
 	add_child(collision_container)
 
+	TerrainSurface.register_adapter(self)
+
 
 func _exit_tree() -> void:
 	chunk_manager.clear_all_chunks()
@@ -140,5 +142,5 @@ func read_region(region: Rect2i) -> PackedByteArray:
 	return terrain_reader.read_region(region)
 
 
-func find_spawn_position(search_origin: Vector2i, body_size: Vector2i) -> Vector2i:
-	return terrain_reader.find_spawn_position(search_origin, body_size)
+func find_spawn_position(search_origin: Vector2i, body_size: Vector2i, max_radius: float = 800.0) -> Vector2i:
+	return terrain_reader.find_spawn_position(search_origin, body_size, max_radius)
