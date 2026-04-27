@@ -63,7 +63,7 @@ Based on gameplay.md design document.
 ### Loot
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Medium | Enemy drop tables | Define what enemies can drop |
+| x | P1 | Medium | Enemy drop tables | Define what enemies can drop |
 | | P1 | Medium | Chest system | Random weapon drops from chests |
 | x | P1 | Low | Pickup interaction | Player collects dropped items |
 
