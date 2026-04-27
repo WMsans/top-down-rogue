@@ -55,17 +55,17 @@ Based on gameplay.md design document.
 ### Shops
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Medium | Shop UI | Buy/sell interface |
-| | P1 | Medium | Currency system | Gold/credits dropped by enemies |
-| | P1 | Medium | Shop spawning | Generate shops in levels |
-| | P1 | Low | Modifier inventory | Track owned but unequipped modifiers |
+| x | P1 | Medium | Shop UI | Buy/sell interface |
+| x | P1 | Medium | Currency system | Gold/credits dropped by enemies |
+| x | P1 | Medium | Shop spawning | Generate shops in levels |
+| x | P1 | Low | Modifier inventory | Track owned but unequipped modifiers |
 
 ### Loot
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
 | | P1 | Medium | Enemy drop tables | Define what enemies can drop |
 | | P1 | Medium | Chest system | Random weapon drops from chests |
-| | P1 | Low | Pickup interaction | Player collects dropped items |
+| x | P1 | Low | Pickup interaction | Player collects dropped items |
 
 ---
 
@@ -74,7 +74,7 @@ Based on gameplay.md design document.
 ### Enemy Foundation
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Medium | Enemy base class | Shared behavior for all enemies |
+| x | P1 | Medium | Enemy base class | Shared behavior for all enemies |
 | | P1 | Medium | Basic melee enemies | Simple AI for melee attackers |
 | | P1 | Medium | Enemy spawning | Place enemies in procedural levels |
 | | P2 | Medium | Ranged enemies | Projectile-based enemies |
