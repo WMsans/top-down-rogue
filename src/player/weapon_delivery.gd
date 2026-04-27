@@ -3,7 +3,7 @@ extends Node
 
 var _player: Node2D
 var _inventory: PlayerInventory
-var _popup = null
+var _popup: CanvasLayer
 var _pending_callback: Callable
 var _test_mode: bool = false
 var _test_response_accepted: bool = false
@@ -112,7 +112,7 @@ func _on_remove_modifier_applied(weapon: Weapon, slot_idx: int) -> void:
 	_pending_callback = Callable()
 
 
-func _get_weapon_popup():
+func _get_weapon_popup() -> CanvasLayer:
 	if _popup and is_instance_valid(_popup):
 		return _popup
 	var root := _player.get_parent()

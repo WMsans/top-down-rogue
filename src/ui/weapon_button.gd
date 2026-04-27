@@ -34,7 +34,8 @@ func _ready() -> void:
 	_find_weapon_manager()
 	if _weapon_manager != null:
 		_weapon_manager.weapon_activated.connect(_on_weapon_activated)
-		var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+		var player := get_tree().get_first_node_in_group("player")
+		var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory") if player else null
 		if inventory:
 			_update_display(inventory.active_weapon_slot)
 	_outline_panel = _create_outline_panel()
