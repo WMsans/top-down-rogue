@@ -3,13 +3,12 @@ extends Node2D
 const LINE_COLOR := Color(1.0, 0.0, 1.0, 0.8)
 const LINE_WIDTH := 2.0
 
-@onready var world_manager: Node2D = get_parent().get_parent().get_node("WorldManager")
-
 func _process(_delta: float) -> void:
 	if is_visible_in_tree() and Engine.is_editor_hint() == false:
 		queue_redraw()
 
 func _draw() -> void:
+	var world_manager := get_parent().get_parent().get_node_or_null("WorldManager")
 	if world_manager == null:
 		return
 
