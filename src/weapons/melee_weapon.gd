@@ -314,7 +314,7 @@ func _process_swing(_delta: float) -> void:
 	if _phase == Phase.ACTION:
 		var current_blade := _pose_rot + LOCAL_BLADE_ANGLE
 		var progress := angle_difference(_last_trail_angle, current_blade) * _swing_dir
-		var max_spawns := 8
+		var max_spawns := 32
 		while progress >= TRAIL_ANGLE_STEP and max_spawns > 0:
 			_last_trail_angle += TRAIL_ANGLE_STEP * _swing_dir
 			progress -= TRAIL_ANGLE_STEP
