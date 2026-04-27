@@ -1,5 +1,8 @@
 extends Control
 
+const _UiTheme = preload("res://src/ui/ui_theme.gd")
+const _UiAnimations = preload("res://src/ui/ui_animations.gd")
+
 signal closed
 
 const SETTINGS_PATH := "user://settings.cfg"

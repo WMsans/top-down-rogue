@@ -1,5 +1,7 @@
 extends Node
 
+const _HitSpec = preload("res://src/core/juice/hit_spec.gd")
+
 # HitStop constants
 const HIT_STOP_BASE: float = 0.06
 const HIT_STOP_KILL_BONUS: float = 0.04
