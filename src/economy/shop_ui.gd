@@ -370,8 +370,7 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 	if not player:
 		return
 	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
-	var weapon_manager: WeaponManager = player.get_node_or_null("WeaponManager")
-	if not inventory or not weapon_manager:
+	if not inventory:
 		return
 
 	if inventory.gold < offer.price:
@@ -386,41 +385,41 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 		UiAnimations.jitter_bounce(card)
 		return
 
-	var popup := player.get_parent().get_node_or_null("WeaponPopup")
-	if not popup:
+	var delivery: WeaponDelivery = player.get_node_or_null("WeaponDelivery")
+	if delivery == null:
 		return
 
-	var equipped := [false]
-	var on_equip := func() -> void:
-		equipped[0] = true
+	var spec := WeaponOfferSpec.new()
+	spec.type = WeaponOfferSpec.OfferType.MODIFIER
+	spec.modifier = offer.modifier
+	spec.suggested_slot = 0
 
-	visible = false
-	popup.open_for_modifier(weapon_manager, offer.modifier, on_equip)
-	await popup.visibility_changed
-	visible = true
-	SceneManager.set_paused(true)
+	var offer_price := offer.price
+	var card_ref := card
+	var slot_ref := slot
 
-	if not equipped[0]:
-		return
+	delivery.offer(spec, func(accepted: bool, _result_slot: int) -> void:
+		if not accepted:
+			return
+		inventory.spend_gold(offer_price)
 
-	inventory.spend_gold(offer.price)
+		var idx := _card_slots.find(slot_ref)
+		if idx >= 0:
+			_offerings[idx] = null
+			if idx < _price_labels.size():
+				_price_labels[idx].text = "SOLD"
+				_price_labels[idx].add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+			card_ref.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			for child in card_ref.get_children():
+				child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			if card_ref.material is ShaderMaterial:
+				card_ref.material.set_shader_parameter("glow_enabled", false)
+			var dim_tween := card_ref.create_tween()
+			dim_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+			dim_tween.tween_property(card_ref, "modulate:a", 0.4, 0.2)
 
-	var idx := _card_slots.find(slot)
-	if idx >= 0:
-		_offerings[idx] = null
-		if idx < _price_labels.size():
-			_price_labels[idx].text = "SOLD"
-			_price_labels[idx].add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		for child in card.get_children():
-			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		if card.material is ShaderMaterial:
-			card.material.set_shader_parameter("glow_enabled", false)
-		var dim_tween := card.create_tween()
-		dim_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-		dim_tween.tween_property(card, "modulate:a", 0.4, 0.2)
-
-	_refresh_gold()
+		_refresh_gold()
+	)
 
 
 func _has_weapon_with_empty_slot(inventory: PlayerInventory) -> bool:
@@ -448,8 +447,7 @@ func _on_remove_pressed(card: PanelContainer) -> void:
 	if not player:
 		return
 	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
-	var weapon_manager: WeaponManager = player.get_node_or_null("WeaponManager")
-	if not inventory or not weapon_manager:
+	if not inventory:
 		return
 	if not _has_any_equipped_modifier(inventory):
 		UiAnimations.jitter_bounce(card)
@@ -461,33 +459,26 @@ func _on_remove_pressed(card: PanelContainer) -> void:
 			_pulse_price_label(_remove_price_label)
 		return
 
-	var popup := get_tree().get_first_node_in_group("player").get_parent().get_node_or_null("WeaponPopup")
-	if not popup:
+	var delivery: WeaponDelivery = player.get_node_or_null("WeaponDelivery")
+	if delivery == null:
 		return
 
-	var picked: Array = []
-	var on_pick := func(weapon: Weapon, slot_idx: int) -> void:
-		picked.append(weapon)
-		picked.append(slot_idx)
+	var spec := WeaponOfferSpec.new()
+	spec.type = WeaponOfferSpec.OfferType.REMOVE_MODIFIER
 
-	visible = false
-	popup.open_for_remove(weapon_manager, on_pick)
-	await popup.visibility_changed
-	visible = true
-	SceneManager.set_paused(true)
+	var remove_cost := _remove_cost
+	delivery.offer(spec, func(accepted: bool, _result_slot: int) -> void:
+		if not accepted:
+			return
 
-	if picked.is_empty():
-		return
-	if not inventory.spend_gold(_remove_cost):
-		return
-	var weapon: Weapon = picked[0]
-	var slot_idx: int = picked[1]
-	weapon.modifiers[slot_idx] = null
-	_remove_count += 1
-	_remove_cost = 50 + _remove_count * 25
-	if _remove_price_label:
-		_remove_price_label.text = "%d gold" % _remove_cost
-	_refresh_gold()
+		if not inventory.spend_gold(remove_cost):
+			return
+		_remove_count += 1
+		_remove_cost = 50 + _remove_count * 25
+		if _remove_price_label:
+			_remove_price_label.text = "%d gold" % _remove_cost
+		_refresh_gold()
+	)
 
 
 func _shake_gold_label() -> void:
