@@ -17,9 +17,9 @@ static func _gold(args: Array[String], ctx: Dictionary) -> String:
 	if player == null:
 		return "error: no player found"
 
-	var wallet: WalletComponent = player.get_node_or_null("WalletComponent")
-	if wallet == null:
-		return "error: player has no wallet"
+	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+	if inventory == null:
+		return "error: player has no inventory"
 
-	wallet.add_gold(amount)
+	inventory.add_gold(amount)
 	return "Gave " + str(amount) + " gold"

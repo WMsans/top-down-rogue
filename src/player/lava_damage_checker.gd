@@ -20,8 +20,8 @@ func _physics_process(_delta: float) -> void:
 	if _terrain_physical == null:
 		return
 	var player := get_parent()
-	var health_component := player.get_node_or_null("HealthComponent")
-	if health_component and health_component.is_dead():
+	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+	if inventory and inventory.is_dead():
 		return
 
 	var total_damage := 0
@@ -36,5 +36,5 @@ func _physics_process(_delta: float) -> void:
 			var cell: TerrainCell = _terrain_physical.query(Vector2(sample_x, sample_y))
 			total_damage += int(cell.damage)
 
-	if total_damage > 0 and health_component:
-		health_component.take_damage(total_damage)
+	if total_damage > 0 and inventory:
+		inventory.take_damage(total_damage)

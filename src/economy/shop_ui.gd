@@ -369,12 +369,12 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return
-	var wallet: WalletComponent = player.get_node_or_null("WalletComponent")
+	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
 	var weapon_manager: WeaponManager = player.get_node_or_null("WeaponManager")
-	if not wallet or not weapon_manager:
+	if not inventory or not weapon_manager:
 		return
 
-	if wallet.gold < offer.price:
+	if inventory.gold < offer.price:
 		UiAnimations.jitter_bounce(card)
 		_shake_gold_label()
 		var idx_fail := _card_slots.find(slot)
@@ -382,7 +382,7 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 			_pulse_price_label(_price_labels[idx_fail])
 		return
 
-	if not _has_weapon_with_empty_slot(weapon_manager):
+	if not _has_weapon_with_empty_slot(inventory):
 		UiAnimations.jitter_bounce(card)
 		return
 
@@ -403,7 +403,7 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 	if not equipped[0]:
 		return
 
-	wallet.spend_gold(offer.price)
+	inventory.spend_gold(offer.price)
 
 	var idx := _card_slots.find(slot)
 	if idx >= 0:
@@ -423,15 +423,17 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 	_refresh_gold()
 
 
-func _has_weapon_with_empty_slot(weapon_manager: WeaponManager) -> bool:
-	for weapon in weapon_manager.weapons:
+func _has_weapon_with_empty_slot(inventory: PlayerInventory) -> bool:
+	for i in range(PlayerInventory.MAX_WEAPON_SLOTS):
+		var weapon = inventory.get_weapon(i)
 		if weapon != null and weapon.find_empty_modifier_slot() != -1:
 			return true
 	return false
 
 
-func _has_any_equipped_modifier(weapon_manager: WeaponManager) -> bool:
-	for weapon in weapon_manager.weapons:
+func _has_any_equipped_modifier(inventory: PlayerInventory) -> bool:
+	for i in range(PlayerInventory.MAX_WEAPON_SLOTS):
+		var weapon = inventory.get_weapon(i)
 		if weapon == null:
 			continue
 		for m_idx in range(weapon.modifier_slot_count):
@@ -445,14 +447,14 @@ func _on_remove_pressed(card: PanelContainer) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return
-	var wallet: WalletComponent = player.get_node_or_null("WalletComponent")
+	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
 	var weapon_manager: WeaponManager = player.get_node_or_null("WeaponManager")
-	if not wallet or not weapon_manager:
+	if not inventory or not weapon_manager:
 		return
-	if not _has_any_equipped_modifier(weapon_manager):
+	if not _has_any_equipped_modifier(inventory):
 		UiAnimations.jitter_bounce(card)
 		return
-	if wallet.gold < _remove_cost:
+	if inventory.gold < _remove_cost:
 		UiAnimations.jitter_bounce(card)
 		_shake_gold_label()
 		if _remove_price_label:
@@ -476,7 +478,7 @@ func _on_remove_pressed(card: PanelContainer) -> void:
 
 	if picked.is_empty():
 		return
-	if not wallet.spend_gold(_remove_cost):
+	if not inventory.spend_gold(_remove_cost):
 		return
 	var weapon: Weapon = picked[0]
 	var slot_idx: int = picked[1]
@@ -511,16 +513,16 @@ func _on_reroll_pressed() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return
-	var wallet: WalletComponent = player.get_node_or_null("WalletComponent")
-	if not wallet:
+	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+	if not inventory:
 		return
 
-	if wallet.gold < _reroll_cost:
+	if inventory.gold < _reroll_cost:
 		UiAnimations.jitter_bounce(_reroll_button)
 		_shake_gold_label()
 		return
 
-	if not wallet.spend_gold(_reroll_cost):
+	if not inventory.spend_gold(_reroll_cost):
 		return
 
 	_reroll_count += 1
@@ -534,9 +536,9 @@ func _on_reroll_pressed() -> void:
 func _get_player_gold() -> int:
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
-		var wallet := player.get_node_or_null("WalletComponent")
-		if wallet:
-			return wallet.gold
+		var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+		if inventory:
+			return inventory.gold
 	return 0
 
 

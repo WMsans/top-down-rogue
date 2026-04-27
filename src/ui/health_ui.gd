@@ -6,7 +6,7 @@ const SHIMMER_SHADER := preload("res://shaders/ui/health_bar_shimmer.gdshader")
 @onready var _bar_fill: ColorRect = %BarFill
 @onready var _health_label: RichTextLabel = %HealthLabel
 
-var _health_component: HealthComponent
+var _inventory: PlayerInventory
 var _low_health_tween: Tween = null
 var _bar_bg_style: StyleBoxFlat
 
@@ -27,10 +27,12 @@ func _ready() -> void:
 
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
-		_health_component = player.get_node("HealthComponent")
-		_health_component.health_changed.connect(_on_health_changed)
-		_health_component.died.connect(_on_died)
-		_on_health_changed(_health_component.max_health, _health_component.max_health)
+		var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+		if inventory:
+			inventory.health_changed.connect(_on_health_changed)
+			inventory.player_died.connect(_on_died)
+			_on_health_changed(inventory.get_health(), inventory.get_max_health())
+			_inventory = inventory
 
 
 func _on_health_changed(current: int, maximum: int) -> void:
@@ -52,7 +54,7 @@ func _on_health_changed(current: int, maximum: int) -> void:
 
 func _on_died() -> void:
 	_bar_fill.anchor_right = 0.0
-	_render_label(0, _health_component.max_health, true)
+	_render_label(0, _inventory.get_max_health() if _inventory else 0, true)
 	_stop_low_health_pulse()
 
 

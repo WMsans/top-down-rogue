@@ -48,7 +48,7 @@ func _physics_process(delta: float) -> void:
 		position += _velocity * delta
 
 	if dist_sq <= PICKUP_RANGE * PICKUP_RANGE:
-		var wallet := player.get_node_or_null("WalletComponent")
-		if wallet:
-			wallet.add_gold(amount)
+		var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+		if inventory:
+			inventory.add_gold(amount)
 		queue_free()
