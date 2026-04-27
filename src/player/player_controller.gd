@@ -20,6 +20,9 @@ func _ready() -> void:
 	collision_mask = 3
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("gas_interactors")
+	var pickup_context := PickupContext.new()
+	pickup_context.name = "PickupContext"
+	add_child(pickup_context)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
