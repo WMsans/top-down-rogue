@@ -128,9 +128,9 @@ func get_fluids() -> Array[int]:
     return result
 
 func is_fluid(material_id: int) -> bool:
-	if material_id < 0 or material_id >= materials.size():
-		return false
-	return materials[material_id].fluid
+    if material_id < 0 or material_id >= materials.size():
+        return false
+    return materials[material_id].fluid
 
 
 func get_damage(material_id: int) -> int:

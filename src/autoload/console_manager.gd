@@ -1,5 +1,8 @@
 extends CanvasLayer
 
+const _CommandRegistry = preload("res://src/console/command_registry.gd")
+const _ConsoleCommand = preload("res://src/console/console_command.gd")
+
 const OUTPUT_FONT_SIZE := 14
 const INPUT_FONT_SIZE := 14
 const MAX_HISTORY := 50
