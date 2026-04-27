@@ -35,7 +35,7 @@ const PIVOT_PUNCH: float = 4.0
 const PIVOT_HOLD: float = 3.0
 
 const TRAIL_ANGLE_STEP: float = PI / 32.0
-const TRAIL_LIFETIME: float = 0.15
+const TRAIL_LIFETIME: float = 0.25
 const TRAIL_COLOR: Color = Color(2.0, 6.0, 8.0, 0.6)
 
 enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
