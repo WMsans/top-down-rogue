@@ -6,7 +6,12 @@ const RANGE: float = 36.0
 const ARC_ANGLE: float = PI / 2.0
 const PUSH_SPEED: float = 60.0
 
-const PIVOT_DISTANCE: float = 6.0
+# Sprite is 18x18 with pommel at (15, 15) and blade pointing top-left.
+# Shift the texture so the pommel sits at the sprite origin (the rotation pivot),
+# and remember the blade's local direction at rotation=0 for converting blade
+# angles into sprite rotations.
+const POMMEL_PIXEL: Vector2 = Vector2(15.0, 15.0)
+const LOCAL_BLADE_ANGLE: float = -3.0 * PI / 4.0
 const HALF_ARC: float = PI / 3.5
 
 const PREP_DURATION: float = 0.06
@@ -21,11 +26,13 @@ const PREP_SCALE: Vector2 = Vector2(1.25, 0.75)
 const ACTION_SCALE: Vector2 = Vector2(0.7, 1.35)
 const HOLD_SCALE: Vector2 = Vector2(1.05, 0.95)
 
-const PUNCH_DISTANCE: float = 14.0
-const HOLD_DISTANCE: float = 8.0
-
-const REST_FORWARD: float = 4.0
-const REST_ABOVE: float = -3.0
+# Pommel rests above the player body; small forward shifts drive the swing's
+# weight transfer while the blade rotation does the visible work.
+const REST_ABOVE: float = 0.0
+const REST_FORWARD: float = 3.0
+const PIVOT_BACK: float = 2.0
+const PIVOT_PUNCH: float = 4.0
+const PIVOT_HOLD: float = 3.0
 
 const TRAIL_ANGLE_STEP: float = PI / 32.0
 const TRAIL_LIFETIME: float = 0.15
@@ -51,6 +58,7 @@ var _from_rot: float = 0.0
 var _from_scale: Vector2 = Vector2.ONE
 
 var _last_trail_angle: float = 0.0
+var _pommel_offset: Vector2 = Vector2.ZERO
 
 
 func _init() -> void:
@@ -69,8 +77,15 @@ func has_visual() -> bool:
 func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 	super.setup_visual(container, sprite)
 	_sprite.texture = WEAPON_TEXTURE
-	var tex_size := WEAPON_TEXTURE.get_size()
-	_sprite.offset = Vector2(0, -tex_size.y / 2.0)
+	_pommel_offset = _compute_pommel_offset(WEAPON_TEXTURE)
+	_sprite.offset = _pommel_offset
+
+
+static func _compute_pommel_offset(tex: Texture2D) -> Vector2:
+	var tex_size := tex.get_size()
+	# Sprite2D is centered by default: texture pixel p draws at (p - tex_size/2) + offset.
+	# Solve for offset so POMMEL_PIXEL lands at the sprite origin.
+	return tex_size * 0.5 - POMMEL_PIXEL
 
 
 func _use_impl(user: Node) -> void:
@@ -125,21 +140,39 @@ func update_visual(delta: float, user: Node) -> void:
 func _update_facing_sign(user: Node, dir: Vector2) -> void:
 	if user.has_method("is_facing_left"):
 		_facing_sign = -1.0 if user.is_facing_left() else 1.0
-	elif absf(dir.x) > 0.01:
+		return
+	if absf(dir.x) > 0.01:
 		_facing_sign = signf(dir.x)
+		return
+	var c: float = cos(_facing_angle)
+	if absf(c) > 0.01:
+		_facing_sign = signf(c)
+
+
+func _facing_unit() -> Vector2:
+	return Vector2(cos(_facing_angle), sin(_facing_angle))
 
 
 func _rest_pos() -> Vector2:
-	var forward := Vector2(cos(_facing_angle), sin(_facing_angle)) * REST_FORWARD
-	return forward + Vector2(0.0, REST_ABOVE)
+	return Vector2(_facing_sign * REST_FORWARD, REST_ABOVE)
+
+
+func _rest_blade_angle() -> float:
+	return _facing_angle
+
+
+func _blade_to_sprite_rot(blade_angle: float) -> float:
+	return blade_angle - LOCAL_BLADE_ANGLE
 
 
 func _rest_rot() -> float:
-	return _facing_angle + PI / 2.0
+	return _blade_to_sprite_rot(_rest_blade_angle())
 
 
 func _start_swing(direction: Vector2) -> void:
 	_facing_angle = direction.angle()
+	if absf(direction.x) > 0.01:
+		_facing_sign = signf(direction.x)
 	_swing_toggle = -_swing_toggle
 	_swing_dir = _swing_toggle
 	_start_angle = _facing_angle - HALF_ARC * _swing_dir
@@ -189,26 +222,28 @@ func _ease_out_elastic(t: float) -> float:
 	if x >= 1.0:
 		return 1.0
 	const C: float = (2.0 * PI) / 3.0
-	return pow(2.0, -10.0 * x) * sin((x * 10.0 - 0.75) * C) + 1.0
+	return pow(2.0, -8.0 * x) * sin((x * 6.0 - 0.75) * C) + 1.0
 
 
 func _process_swing(_delta: float) -> void:
 	_phase_time += _delta
 
-	var target_pos: Vector2 = Vector2.ZERO
+	var rest := _rest_pos()
+	var facing := _facing_unit()
+	var target_pos: Vector2 = rest
 	var target_rot: float = 0.0
 	var target_scale: Vector2 = Vector2.ONE
 	var eased: float = 0.0
 	var t: float = 0.0
-	var target_angle: float = 0.0
+	var blade_angle: float = 0.0
 
 	match _phase:
 		Phase.PREP:
 			t = _phase_time / PREP_DURATION
 			eased = _ease_out_quad(t)
-			target_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
-			target_pos = Vector2(cos(target_angle), sin(target_angle)) * (PIVOT_DISTANCE * 0.85)
-			target_rot = target_angle + PI / 2.0
+			blade_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
+			target_pos = rest - facing * PIVOT_BACK
+			target_rot = _blade_to_sprite_rot(blade_angle)
 			target_scale = PREP_SCALE
 			if t >= 1.0:
 				_pose_pos = target_pos
@@ -217,16 +252,16 @@ func _process_swing(_delta: float) -> void:
 				_capture_from()
 				_phase = Phase.ACTION
 				_phase_time = 0.0
-				_last_trail_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
+				_last_trail_angle = blade_angle
 				_apply_pose()
 				return
 
 		Phase.ACTION:
 			t = _phase_time / ACTION_DURATION
 			eased = _ease_out_cubic(t)
-			target_angle = _end_angle + OVERSHOOT_ANGLE * _swing_dir
-			target_pos = Vector2(cos(target_angle), sin(target_angle)) * PUNCH_DISTANCE
-			target_rot = target_angle + PI / 2.0
+			blade_angle = _end_angle + OVERSHOOT_ANGLE * _swing_dir
+			target_pos = rest + facing * PIVOT_PUNCH
+			target_rot = _blade_to_sprite_rot(blade_angle)
 			target_scale = ACTION_SCALE
 			if t >= 1.0:
 				_pose_pos = target_pos
@@ -241,9 +276,9 @@ func _process_swing(_delta: float) -> void:
 		Phase.HOLD:
 			t = _phase_time / HOLD_DURATION
 			eased = _ease_in_out_cubic(t)
-			target_angle = _end_angle
-			target_pos = Vector2(cos(target_angle), sin(target_angle)) * HOLD_DISTANCE
-			target_rot = target_angle + PI / 2.0
+			blade_angle = _end_angle
+			target_pos = rest + facing * PIVOT_HOLD
+			target_rot = _blade_to_sprite_rot(blade_angle)
 			target_scale = HOLD_SCALE
 			if t >= 1.0:
 				_pose_pos = target_pos
@@ -258,7 +293,7 @@ func _process_swing(_delta: float) -> void:
 		Phase.RETURN:
 			t = _phase_time / RETURN_DURATION
 			eased = _ease_out_elastic(t)
-			target_pos = _rest_pos()
+			target_pos = rest
 			target_rot = _rest_rot()
 			target_scale = Vector2.ONE
 			if t >= 1.0:
@@ -277,15 +312,14 @@ func _process_swing(_delta: float) -> void:
 	_apply_pose()
 
 	if _phase == Phase.ACTION:
-		var current_angle := atan2(_pose_pos.y, _pose_pos.x)
-		var current_dist := _pose_pos.length()
-		var progress := angle_difference(_last_trail_angle, current_angle) * _swing_dir
+		var current_blade := _pose_rot + LOCAL_BLADE_ANGLE
+		var progress := angle_difference(_last_trail_angle, current_blade) * _swing_dir
 		var max_spawns := 8
 		while progress >= TRAIL_ANGLE_STEP and max_spawns > 0:
 			_last_trail_angle += TRAIL_ANGLE_STEP * _swing_dir
 			progress -= TRAIL_ANGLE_STEP
 			max_spawns -= 1
-			_spawn_trail_at_angle(_last_trail_angle, current_dist)
+			_spawn_trail(_pose_pos, _last_trail_angle, _pose_scale)
 
 
 func _apply_pose() -> void:
@@ -294,21 +328,19 @@ func _apply_pose() -> void:
 	_sprite.position = _pose_pos
 	_sprite.rotation = _pose_rot
 	_sprite.scale = _pose_scale
-	_sprite.flip_h = _facing_sign < 0.0
 
 
-func _spawn_trail_at_angle(angle: float, dist: float) -> void:
+func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> void:
 	var trail := Sprite2D.new()
 	trail.texture = WEAPON_TEXTURE
-	var tex_size := WEAPON_TEXTURE.get_size()
-	trail.offset = Vector2(0, -tex_size.y / 2.0)
+	trail.offset = _pommel_offset
 	trail.modulate = TRAIL_COLOR
 	trail.z_index = -1
 	trail.z_as_relative = false
 	visual.get_tree().current_scene.add_child(trail)
-	var local_pos := Vector2(cos(angle), sin(angle)) * dist
 	trail.global_position = visual.global_position + local_pos.rotated(visual.global_rotation)
-	trail.global_rotation = visual.global_rotation + angle + PI / 2.0
+	trail.global_rotation = visual.global_rotation + _blade_to_sprite_rot(blade_angle)
+	trail.scale = scale
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, TRAIL_LIFETIME)
 	tween.tween_callback(trail.queue_free)
