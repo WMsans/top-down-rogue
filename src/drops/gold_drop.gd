@@ -18,6 +18,16 @@ func set_amount(value: int) -> void:
 	amount = value
 
 
+func get_pickup_type() -> int:
+	return Drop.PickupType.GOLD
+
+func get_pickup_payload():
+	return amount
+
+func should_auto_pickup() -> bool:
+	return true
+
+
 func _ready() -> void:
 	_sprite.modulate = Color(1.0, 0.84, 0.0)
 	_sprite.scale = Vector2(0.6, 0.6)
