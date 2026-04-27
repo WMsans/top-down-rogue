@@ -27,10 +27,10 @@ func _ready() -> void:
 
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
-		var wallet := player.get_node_or_null("WalletComponent")
-		if wallet:
-			wallet.gold_changed.connect(_on_gold_changed)
-			_on_gold_changed(wallet.gold)
+		var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
+		if inventory:
+			inventory.gold_changed.connect(_on_gold_changed)
+			_on_gold_changed(inventory.gold)
 
 
 func _on_gold_changed(amount: int) -> void:

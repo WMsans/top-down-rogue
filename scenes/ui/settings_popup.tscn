@@ -58,9 +58,9 @@ layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer" unique_id=1999900001]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 300)
 horizontal_scroll_mode = 0
 
 [node name="Content" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer" unique_id=1999900002]

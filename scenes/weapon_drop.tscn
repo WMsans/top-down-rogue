@@ -14,6 +14,3 @@ script = ExtResource("2")
 
 [node name="Sprite2D" parent="." index="0"]
 material = SubResource("ShaderMaterial_gtknk")
-
-[node name="Interactable" parent="." index="2" node_paths=PackedStringArray("canvas_item")]
-canvas_item = NodePath("../Sprite2D")

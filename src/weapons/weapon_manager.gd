@@ -7,8 +7,7 @@ const LavaEmitterModifierScript := preload("res://src/weapons/lava_emitter_modif
 
 signal weapon_activated(slot_index: int)
 
-var weapons: Array[Weapon] = []
-var active_slot: int = 0
+var _inventory: PlayerInventory
 var _player: Node = null
 var _visual: Node2D = null
 var _sprite: Sprite2D = null
@@ -17,12 +16,17 @@ var _active_weapon: Weapon = null
 
 func _ready() -> void:
 	_player = get_parent()
-	weapons.resize(3)
-	var test_weapon := TestWeaponScript.new()
-	test_weapon.add_modifier(0, LavaEmitterModifierScript.new())
-	weapons[0] = test_weapon
-	weapons[1] = MeleeWeaponScript.new()
 	_setup_visual.call_deferred()
+	_setup_weapons.call_deferred()
+
+
+func _setup_weapons() -> void:
+	_inventory = _player.get_node_or_null("PlayerInventory")
+	if _inventory:
+		var test_weapon := TestWeaponScript.new()
+		test_weapon.add_modifier(0, LavaEmitterModifierScript.new())
+		_inventory.equip_weapon(0, test_weapon)
+		_inventory.equip_weapon(1, MeleeWeaponScript.new())
 
 
 func _setup_visual() -> void:
@@ -42,12 +46,14 @@ func _input(event: InputEvent) -> void:
 			KEY_Z: slot = 0
 			KEY_X: slot = 1
 			KEY_C: slot = 2
-		if slot >= 0 and slot < weapons.size() and weapons[slot] != null:
-			var weapon := weapons[slot]
+		if _inventory == null:
+			return
+		var weapon = _inventory.get_weapon(slot)
+		if slot >= 0 and slot < PlayerInventory.MAX_WEAPON_SLOTS and weapon != null:
 			if weapon.is_ready():
 				_activate_weapon(weapon)
 				weapon.use(_player)
-				active_slot = slot
+				_inventory.active_weapon_slot = slot
 				weapon_activated.emit(slot)
 
 
@@ -66,44 +72,9 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	for weapon in weapons:
+	if _inventory == null:
+		return
+	for i in range(PlayerInventory.MAX_WEAPON_SLOTS):
+		var weapon = _inventory.get_weapon(i)
 		if weapon != null:
 			weapon.tick(delta)
-
-
-func swap_weapons(slot_a: int, slot_b: int) -> void:
-	var temp := weapons[slot_a]
-	weapons[slot_a] = weapons[slot_b]
-	weapons[slot_b] = temp
-
-
-func try_add_weapon(weapon: Weapon) -> bool:
-	for i in range(weapons.size()):
-		if weapons[i] == null:
-			weapons[i] = weapon
-			return true
-	return false
-
-
-func swap_weapon(slot_index: int, new_weapon: Weapon) -> Weapon:
-	if slot_index < 0 or slot_index >= weapons.size():
-		return null
-	var old_weapon: Weapon = weapons[slot_index]
-	weapons[slot_index] = new_weapon
-	return old_weapon
-
-
-func has_empty_slot() -> bool:
-	for weapon in weapons:
-		if weapon == null:
-			return true
-	return false
-
-
-func add_modifier_to_weapon(weapon_slot: int, modifier_slot: int, modifier: Modifier) -> void:
-	if weapon_slot < 0 or weapon_slot >= weapons.size():
-		return
-	var weapon := weapons[weapon_slot]
-	if weapon == null:
-		return
-	weapon.add_modifier(modifier_slot, modifier)
