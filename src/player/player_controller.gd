@@ -26,6 +26,9 @@ func _ready() -> void:
 	var pickup_context := PickupContext.new()
 	pickup_context.name = "PickupContext"
 	add_child(pickup_context)
+	var delivery := WeaponDelivery.new()
+	delivery.name = "WeaponDelivery"
+	add_child(delivery)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
