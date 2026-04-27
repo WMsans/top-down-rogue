@@ -21,11 +21,7 @@ MaterialRegistry="*res://src/autoload/material_registry.gd"
 SceneManager="*res://src/autoload/scene_manager.gd"
 ConsoleManager="*res://src/autoload/console_manager.gd"
 WeaponRegistry="*res://src/autoload/weapon_registry.gd"
-HitStopManager="*res://src/core/juice/hit_stop_manager.gd"
-ScreenShakeManager="*res://src/core/juice/screen_shake_manager.gd"
-HitSparkManager="*res://src/core/juice/hit_spark_manager.gd"
-DamageNumberManager="*res://src/core/juice/damage_number_manager.gd"
-ChromaticFlashManager="*res://src/core/juice/chromatic_flash_manager.gd"
+HitReaction="*res://src/core/juice/hit_reaction.gd"
 
 [editor_plugins]
 
