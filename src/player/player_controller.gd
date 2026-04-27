@@ -14,10 +14,12 @@ var _facing_left: bool = false
 @onready var _color_rect: ColorRect = $ColorRect
 
 
-func _ready() -> void:
+func _enter_tree() -> void:
 	var inventory := PlayerInventory.new()
 	inventory.name = "PlayerInventory"
 	add_child(inventory)
+
+func _ready() -> void:
 	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
 	collision_mask = 3
