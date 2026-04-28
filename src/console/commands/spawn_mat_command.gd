@@ -6,9 +6,10 @@ const GAS_DENSITY: int = 200
 
 static func register(registry: CommandRegistry) -> void:
 	for mat in MaterialRegistry.materials:
-		if mat.fluid:
-			var type := mat.name.to_lower()
-			registry.register("spawn_mat " + type, "Place " + type + " at mouse", _spawn_mat.bind(type))
+		if mat.id == MaterialRegistry.MAT_AIR:
+			continue
+		var type := mat.name.to_lower()
+		registry.register("spawn_mat " + type, "Place " + type + " at mouse", _spawn_mat.bind(type))
 
 
 static func _spawn_mat(type: String, args: Array[String], ctx: Dictionary) -> String:
@@ -26,9 +27,18 @@ static func _spawn_mat(type: String, args: Array[String], ctx: Dictionary) -> St
 
 	var world_pos: Vector2 = ctx.get("world_pos", Vector2.ZERO)
 
-	if type == "gas":
+	var mat_id: int = -1
+	for mat in MaterialRegistry.materials:
+		if mat.name.to_lower() == type:
+			mat_id = mat.id
+			break
+
+	if mat_id == -1:
+		return "error: unknown material '" + type + "'"
+
+	if mat_id == MaterialRegistry.MAT_GAS:
 		world_manager.place_gas(world_pos, radius, density)
 	else:
-		world_manager.call("place_" + type, world_pos, radius)
+		world_manager.place_material(world_pos, radius, mat_id)
 
 	return "Placed " + type + " at mouse"
