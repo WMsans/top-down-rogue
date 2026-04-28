@@ -8,8 +8,10 @@ static func register(registry: CommandRegistry) -> void:
 	for mat in MaterialRegistry.materials:
 		if mat.id == MaterialRegistry.MAT_AIR:
 			continue
-		var type := mat.name.to_lower()
-		registry.register("spawn_mat " + type, "Place " + type + " at mouse", _spawn_mat.bind(type))
+		var mat_type := mat.name.to_lower()
+		registry.register("spawn_mat " + mat_type, "Place " + mat_type + " at mouse",
+			func(args: Array[String], ctx: Dictionary) -> String: return _spawn_mat(mat_type, args, ctx)
+		)
 
 
 static func _spawn_mat(type: String, args: Array[String], ctx: Dictionary) -> String:
