@@ -107,11 +107,11 @@ Main (Node2D)
 ```ini
 [display]
 
-window/size/viewport_width=<W>            ; logical UI design size — see decision below
-window/size/viewport_height=<H>
+window/size/viewport_width=320            ; logical UI design size
+window/size/viewport_height=180
 window/size/window_width_override=1280    ; initial window size; tune to taste
 window/size/window_height_override=720
-window/stretch/mode="canvas_items"        ; UI renders at native res, logical W×H
+window/stretch/mode="canvas_items"        ; UI renders at native res, logical 320×180
 window/stretch/aspect="keep"              ; preserve aspect; revisit if letterboxing is unwanted
 
 [rendering]
@@ -122,18 +122,11 @@ rendering_device/driver.windows="d3d12"              ; unchanged
 ```
 
 Rationale:
-- `stretch/mode = "canvas_items"` makes the root viewport render at native screen resolution (UI is crisp) while UI Control nodes use a stable logical W×H coordinate system.
+- `stretch/mode = "canvas_items"` makes the root viewport render at native screen resolution (UI is crisp) while UI Control nodes use a stable logical 320×180 coordinate system.
 - HDR-2D moves off the root (UI doesn't need it; saves bandwidth) and onto the SubViewport (where the world lives).
+- The logical UI canvas (320×180) is decoupled from the world SubViewport (192×108). The two coordinate systems do not need to match — the SubViewportContainer handles scaling between them.
 
-**Decision required during implementation: the logical UI viewport size (W×H).** Existing UI scenes were authored against 192×108. Three candidate values:
-
-| Candidate | Effect on existing UI | Effect on UI crispness |
-|---|---|---|
-| **192×108** (unchanged) | No re-layout. Anchors / sizes already correct. | Crisp — `canvas_items` mode rasterizes at native screen res regardless of logical size. Text/sprite assets must be high-DPI sources for them to look sharp at native; bitmap pixel-fonts will *upscale* even at native res. |
-| **640×360** | Most existing layouts need anchor/size sweep, but ratios scale predictably (×3.33). | Crisp; gives finer-grained Control coordinates. |
-| **1920×1080** | Largest re-layout effort. | Crisp; one-to-one with most target screens. |
-
-Recommended starting point: **192×108** (unchanged). Verify in-game; if Control coordinates feel too coarse for new UI work, bump to 640×360 in a follow-up. This decision is reversible — it does not affect world rendering performance.
+**Logical UI viewport: 320×180.** Existing UI scenes were authored against 192×108, so this is a uniform 1.667× scale-up. Anchored-from-edge layouts continue to work with no change; centered or percent-based layouts may need a one-pass review. This logical size is large enough to author finer-grained UI without the cost or layout shock of jumping to 640×360 or 1920×1080.
 
 ### Post-FX placement
 
@@ -176,7 +169,7 @@ The change is mostly tscn-level. Code touch-points:
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| UI scenes break if logical viewport size is changed from 192×108 | Medium (only if W×H is bumped) | Default plan: keep 192×108 logical viewport so no re-layout is needed. If a larger logical viewport is chosen later, do a one-pass anchor/size review per UI scene. |
+| UI layouts shift when logical viewport scales from 192×108 to 320×180 | Medium | Anchored-from-edge layouts are unaffected. Sweep each UI scene (PauseMenu, HealthUI, DeathScreen, CurrencyHUD, WeaponPopup, WeaponButton, ChestUI, ShopUI, FPSHud, MainMenu, SettingsPopup) for centered or percent-based positioning that needs adjustment. |
 | A script does manual screen→world coord math via the root viewport | Low–Medium | Audit `get_viewport()` / `get_viewport_rect()` / `get_viewport_transform()` callers. |
 | `DirectionalLight2D` left outside SubViewport stops lighting world | Certain if missed | Move into SubViewport per Section 1; verify visually. |
 | `WorldEnvironment` glow disappears | Certain if missed | Move into SubViewport; enable `hdr_2d` on SubViewport; verify visually. |
