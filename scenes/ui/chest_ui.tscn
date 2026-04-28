@@ -1,13 +1,13 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dvhvibginfyur"]
 
-[ext_resource type="Script" path="res://src/ui/chest_ui.gd" id="1"]
+[ext_resource type="Script" uid="uid://cb4urr7e1y0va" path="res://src/ui/chest_ui.gd" id="1"]
 
-[node name="ChestUI" type="CanvasLayer"]
+[node name="ChestUI" type="CanvasLayer" unique_id=1784824297]
 process_mode = 4
 layer = 16
 script = ExtResource("1")
 
-[node name="Overlay" type="ColorRect" parent="."]
+[node name="Overlay" type="ColorRect" parent="." unique_id=1706634103]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,7 +16,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.102, 0.059, 0.071, 0.87)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=370574196]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -25,41 +25,52 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ShopPanel" type="PanelContainer" parent="CenterContainer"]
+[node name="ShopPanel" type="PanelContainer" parent="CenterContainer" unique_id=1380097070]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/ShopPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/ShopPanel" unique_id=818704503]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="HeaderBar" type="PanelContainer" parent="CenterContainer/ShopPanel/VBoxContainer"]
+[node name="HeaderBar" type="PanelContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=1627558214]
+unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HeaderHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar"]
+[node name="HeaderHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar" unique_id=1845190945]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Spacer" type="Control" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
+[node name="Spacer" type="Control" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox" unique_id=1693498814]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
+[node name="TitleLabel" type="Label" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox" unique_id=184190127]
 unique_name_in_owner = true
 layout_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CloseButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/HeaderBar/HeaderHBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "SKIP"
-
-[node name="CardContainer" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer"]
+[node name="CardContainer" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=305863383]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 alignment = 1
+
+[node name="ActionBar" type="PanelContainer" parent="CenterContainer/ShopPanel/VBoxContainer" unique_id=654275044]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ActionHBox" type="HBoxContainer" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar" unique_id=1192528051]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="SkipButton" type="Button" parent="CenterContainer/ShopPanel/VBoxContainer/ActionBar/ActionHBox" unique_id=1088420340]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Skip"
