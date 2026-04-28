@@ -29,8 +29,8 @@ func build_arrays() -> void:
 			if img.get_width() != size_class or img.get_height() != size_class:
 				var padded := Image.create(size_class, size_class, false, Image.FORMAT_RGBA8)
 				padded.fill(Color(0, 0, 0, 0))
-				var ox := (size_class - img.get_width()) / 2
-				var oy := (size_class - img.get_height()) / 2
+				var ox : int = (size_class - img.get_width()) / 2
+				var oy : int = (size_class - img.get_height()) / 2
 				padded.blit_rect(img, Rect2i(0, 0, img.get_width(), img.get_height()), Vector2i(ox, oy))
 				img = padded
 			entry["image"] = img
