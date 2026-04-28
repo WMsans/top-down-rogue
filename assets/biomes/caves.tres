@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="BiomeDef" format=3]
+
+[ext_resource type="Script" path="res://src/core/room_template.gd" id="1_iq0d2"]
+[ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_7cf3p"]
+[ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_5ujno"]
+
+[sub_resource type="Resource" id="Resource_fs00u"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/boss_arena.png"
+size_class = 128
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_xxuj2"]
+script = ExtResource("2_7cf3p")
+material_id = 5
+noise_threshold = 0.7
+seed_offset = 11
+
+[sub_resource type="Resource" id="Resource_aw3ws"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/blob_a.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_5taqv"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/blob_b.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_kxn1b"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/corridor_a.png"
+weight = 1.5
+size_class = 128
+
+[sub_resource type="Resource" id="Resource_yk633"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/secret_a.png"
+size_class = 32
+is_secret = true
+
+[resource]
+script = ExtResource("3_5ujno")
+display_name = "Caves"
+pool_materials = [SubResource("Resource_xxuj2")]
+room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633")]
+boss_templates = [SubResource("Resource_fs00u")]

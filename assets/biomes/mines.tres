@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="BiomeDef" format=3]
+
+[ext_resource type="Script" path="res://src/core/room_template.gd" id="1_2liv1"]
+[ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_crnbk"]
+[ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_53h6i"]
+
+[sub_resource type="Resource" id="Resource_og1t1"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/boss_arena.png"
+size_class = 128
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_o2tgn"]
+script = ExtResource("2_crnbk")
+material_id = 6
+noise_scale = 0.006
+noise_threshold = 0.65
+seed_offset = 21
+
+[sub_resource type="Resource" id="Resource_ogj5k"]
+script = ExtResource("2_crnbk")
+material_id = 1
+noise_scale = 0.02
+noise_threshold = 0.85
+seed_offset = 22
+
+[sub_resource type="Resource" id="Resource_x6yix"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/corridor_a.png"
+weight = 1.5
+size_class = 128
+
+[sub_resource type="Resource" id="Resource_iria1"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/corridor_b.png"
+weight = 1.5
+size_class = 128
+
+[sub_resource type="Resource" id="Resource_1rrex"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/arena_a.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_7f5de"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/secret_a.png"
+size_class = 32
+is_secret = true
+
+[resource]
+script = ExtResource("3_53h6i")
+display_name = "Mines"
+cave_noise_scale = 0.01
+cave_threshold = 0.45
+ridge_weight = 0.4
+pool_materials = [SubResource("Resource_o2tgn"), SubResource("Resource_ogj5k")]
+room_templates = [SubResource("Resource_x6yix"), SubResource("Resource_iria1"), SubResource("Resource_1rrex"), SubResource("Resource_7f5de")]
+boss_templates = [SubResource("Resource_og1t1")]
+tint = Color(0.9, 0.85, 0.75, 1)
