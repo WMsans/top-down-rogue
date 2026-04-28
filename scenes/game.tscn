@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="11"]
 [ext_resource type="PackedScene" uid="uid://bq5fx8kwbtn7r" path="res://scenes/ui/weapon_popup.tscn" id="12"]
 [ext_resource type="PackedScene" uid="uid://bq3fx8kwbtn7q" path="res://scenes/ui/weapon_button.tscn" id="13"]
-[ext_resource type="Script" path="res://src/ui/currency_hud.gd" id="currency_hud"]
+[ext_resource type="Script" uid="uid://cylk5iq7fmvxu" path="res://src/ui/currency_hud.gd" id="currency_hud"]
 
 [sub_resource type="Environment" id="Environment_o6xl0"]
 background_mode = 3
@@ -55,7 +55,7 @@ visible = false
 [node name="DeathScreen" parent="." unique_id=2131573664 instance=ExtResource("11")]
 visible = false
 
-[node name="CurrencyHUD" type="CanvasLayer" parent="."]
+[node name="CurrencyHUD" type="CanvasLayer" parent="." unique_id=1449870148]
 script = ExtResource("currency_hud")
 
 [node name="WeaponPopup" parent="." unique_id=460170947 instance=ExtResource("12")]
