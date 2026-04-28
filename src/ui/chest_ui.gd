@@ -91,7 +91,6 @@ func _clear_cards() -> void:
 	for child in _card_container.get_children():
 		child.queue_free()
 	_card_slots.clear()
-	_price_labels.clear()
 
 
 func _create_weapon_card(weapon: Weapon, index: int) -> PanelContainer:
