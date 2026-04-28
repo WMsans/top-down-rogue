@@ -4,6 +4,7 @@ const WEAPON_DROP_SCENE := preload("res://scenes/weapon_drop.tscn")
 const MODIFIER_DROP_SCENE := preload("res://scenes/modifier_drop.tscn")
 const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
 const DUMMY_ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
+const CHEST_SCENE := preload("res://scenes/chest.tscn")
 
 
 static func register(registry: CommandRegistry) -> void:
@@ -17,6 +18,7 @@ static func register(registry: CommandRegistry) -> void:
 
 	registry.register("spawn enemy dummy", "Spawn a dummy enemy", _spawn_enemy)
 	registry.register("spawn gold", "Spawn a gold drop (default 10)", _spawn_gold)
+	registry.register("spawn chest", "Spawn a chest", _spawn_chest)
 
 
 static func _spawn_weapon(type: String, _args: Array[String], ctx: Dictionary) -> String:
@@ -69,3 +71,13 @@ static func _spawn_gold(args: Array[String], ctx: Dictionary) -> String:
 	scene.add_child(drop)
 	drop.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned " + str(amount) + " gold"
+
+
+static func _spawn_chest(_args: Array[String], ctx: Dictionary) -> String:
+	var scene: Node = ctx.get("scene")
+	if scene == null:
+		return "error: no scene available"
+	var chest: Chest = CHEST_SCENE.instantiate()
+	scene.add_child(chest)
+	chest.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned chest"

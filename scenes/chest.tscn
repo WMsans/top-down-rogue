@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/drops/chest.gd" id="1"]
+[ext_resource type="Shader" uid="uid://bgkst7g0qd22q" path="res://shaders/visual/outline.gdshader" id="2"]
+[ext_resource type="Texture2D" uid="uid://cxpaomrp0gmhj" path="res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/32x32/gift_01a.png" id="3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_chest"]
+shader = ExtResource("2")
+shader_parameter/outline_width = 0.0
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chest"]
+size = Vector2(28, 20)
+
+[node name="Chest" type="StaticBody2D"]
+script = ExtResource("1")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("3")
+material = SubResource("ShaderMaterial_chest")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_chest")
