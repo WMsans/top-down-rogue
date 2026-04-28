@@ -9,8 +9,8 @@ const CHOICE_COUNT := 3
 
 var _weapons: Array[Weapon] = []
 var _opened: bool = false
+var _looted: bool = false
 var _chest_ui: CanvasLayer = null
-var _consume_timer: SceneTreeTimer = null
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -34,12 +34,24 @@ func _ready() -> void:
 
 
 func interact(_player: Node) -> void:
-	if _opened:
+	if _opened or _looted:
 		return
 	_opened = true
 	_sprite.texture = CHEST_OPEN_TEXTURE
 	set_collision_layer_value(1, false)
 	set_collision_layer_value(2, false)
+	_generate_weapons()
+	_open_chest_ui()
+
+
+func set_highlighted(enabled: bool) -> void:
+	if _looted:
+		return
+	if _sprite and _sprite.material is ShaderMaterial:
+		(_sprite.material as ShaderMaterial).set_shader_parameter("outline_width", 1.0 if enabled else 0.0)
+
+
+func _generate_weapons() -> void:
 	_weapons.clear()
 	var seen_scripts: Dictionary = {}
 	for i in CHOICE_COUNT:
@@ -59,28 +71,37 @@ func interact(_player: Node) -> void:
 			weapon = WeaponRegistry.get_random_weapon(tier)
 		if weapon != null:
 			_weapons.append(weapon)
-	_open_chest_ui()
-
-
-func set_highlighted(enabled: bool) -> void:
-	if _sprite and _sprite.material is ShaderMaterial:
-		(_sprite.material as ShaderMaterial).set_shader_parameter("outline_width", 1.0 if enabled else 0.0)
 
 
 func _open_chest_ui() -> void:
 	if _weapons.is_empty():
-		_opened = false
-		_sprite.texture = CHEST_CLOSED_TEXTURE
+		_close_chest()
 		return
 	var root := get_tree().current_scene
 	if root == null:
-		_opened = false
-		_sprite.texture = CHEST_CLOSED_TEXTURE
+		_close_chest()
 		return
 	var ui := _get_or_create_chest_ui(root)
 	if ui == null:
+		_close_chest()
 		return
 	ui.open_with_weapons(_weapons, _on_weapon_chosen)
+
+
+func _close_chest() -> void:
+	_opened = false
+	_sprite.texture = CHEST_CLOSED_TEXTURE
+	set_collision_layer_value(1, true)
+	set_collision_layer_value(2, true)
+
+
+func _mark_looted() -> void:
+	_looted = true
+	_opened = true
+	_sprite.texture = CHEST_OPEN_TEXTURE
+	set_collision_layer_value(1, true)
+	set_collision_layer_value(2, false)
+	set_highlighted(false)
 
 
 func _get_or_create_chest_ui(root: Node) -> CanvasLayer:
@@ -99,28 +120,21 @@ func _get_or_create_chest_ui(root: Node) -> CanvasLayer:
 
 func _on_weapon_chosen(weapon: Weapon) -> void:
 	if weapon == null:
-		queue_free()
+		_close_chest()
 		return
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
-		queue_free()
+		_mark_looted()
 		return
 	var delivery: WeaponDelivery = player.get_node_or_null("WeaponDelivery")
 	if delivery == null:
-		queue_free()
+		_mark_looted()
 		return
 	var spec := WeaponOfferSpec.new()
 	spec.type = WeaponOfferSpec.OfferType.WEAPON
 	spec.weapon = weapon
 	delivery.offer(spec, _on_delivery_result)
-	_consume_timer = get_tree().create_timer(30.0)
-	_consume_timer.timeout.connect(_consume)
 
 
 func _on_delivery_result(_accepted: bool, _slot: int) -> void:
-	_consume()
-
-
-func _consume() -> void:
-	if is_instance_valid(self):
-		queue_free()
+	_mark_looted()
