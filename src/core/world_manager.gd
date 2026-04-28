@@ -134,6 +134,10 @@ func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius
 	terrain_modifier.clear_and_push_materials_in_arc(origin, direction, radius, arc_angle, push_speed, edge_fraction, materials)
 
 
+func place_material(world_pos: Vector2, radius: float, material_id: int) -> void:
+	terrain_modifier.place_material(world_pos, radius, material_id)
+
+
 func place_fire(world_pos: Vector2, radius: float) -> void:
 	terrain_modifier.place_fire(world_pos, radius)
 
