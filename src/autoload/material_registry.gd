@@ -100,7 +100,7 @@ func _init_materials():
     MAT_LAVA = mat_lava.id
 
     var mat_dirt := MaterialDef.new(
-        "DIRT", "",
+        "DIRT", "res://textures/Environments/Walls/dirt.png",
         false, 0, 0,
         true, true,
         Color(0.45, 0.32, 0.18, 1.0)
@@ -110,7 +110,7 @@ func _init_materials():
     MAT_DIRT = mat_dirt.id
 
     var mat_coal := MaterialDef.new(
-        "COAL", "",
+        "COAL", "res://textures/Environments/Walls/coal.png",
         true, 220, 200,
         true, true,
         Color(0.12, 0.12, 0.14, 1.0)
@@ -120,7 +120,7 @@ func _init_materials():
     MAT_COAL = mat_coal.id
 
     var mat_ice := MaterialDef.new(
-        "ICE", "",
+        "ICE", "res://textures/Environments/Walls/ice.png",
         false, 0, 0,
         true, true,
         Color(0.7, 0.85, 0.95, 1.0)
