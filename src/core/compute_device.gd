@@ -72,13 +72,15 @@ func init_material_textures() -> void:
 	var images: Array[Image] = []
 	for m in MaterialRegistry.materials:
 		if m.texture_path.is_empty():
-			var ref_img: Image
+			var ref_size: Vector2i = Vector2i(16, 16)
 			if images.size() > 0:
-				ref_img = images[0]
-			else:
-				ref_img = Image.create(16, 16, false, Image.FORMAT_RGBA8)
-				ref_img.fill(Color.TRANSPARENT)
-			images.append(TextureArrayBuilder.create_placeholder_image(ref_img.get_size(), Color.TRANSPARENT))
+				ref_size = images[0].get_size()
+			# Encode in sRGB; the shader applies srgb_to_linear when sampling.
+			var fill_color := Color.TRANSPARENT
+			if m.tint_color.a > 0.0:
+				fill_color = m.tint_color.linear_to_srgb()
+				fill_color.a = 1.0
+			images.append(TextureArrayBuilder.create_placeholder_image(ref_size, fill_color))
 		else:
 			images.append(Image.load_from_file(m.texture_path))
 	material_textures = TextureArrayBuilder.build_from_images(images)
