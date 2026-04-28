@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="BiomeDef" format=3]
+
+[ext_resource type="Script" path="res://src/core/room_template.gd" id="1_6wibb"]
+[ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_n64xd"]
+[ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_i6yci"]
+
+[sub_resource type="Resource" id="Resource_1nay3"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/boss_arena.png"
+size_class = 128
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_40u6d"]
+script = ExtResource("2_n64xd")
+material_id = 8
+noise_scale = 0.007
+noise_threshold = 0.62
+seed_offset = 41
+
+[sub_resource type="Resource" id="Resource_bwax5"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/blob_water_a.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_oment"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/blob_water_b.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_2nk8f"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/corridor_a.png"
+weight = 1.5
+size_class = 128
+
+[resource]
+script = ExtResource("3_i6yci")
+display_name = "Frozen Depths"
+cave_noise_scale = 0.009
+cave_threshold = 0.4
+ridge_weight = 0.2
+octaves = 4
+background_material = 7
+pool_materials = [SubResource("Resource_40u6d")]
+room_templates = [SubResource("Resource_bwax5"), SubResource("Resource_oment"), SubResource("Resource_2nk8f")]
+boss_templates = [SubResource("Resource_1nay3")]
+tint = Color(0.7, 0.85, 1, 1)

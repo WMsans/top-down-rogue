@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="BiomeDef" format=3]
+
+[ext_resource type="Script" path="res://src/core/room_template.gd" id="1_ngues"]
+[ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_e61lu"]
+[ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_wsrpv"]
+
+[sub_resource type="Resource" id="Resource_2rwkq"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/boss_arena.png"
+size_class = 128
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_0f0hf"]
+script = ExtResource("2_e61lu")
+material_id = 2
+noise_scale = 0.012
+noise_threshold = 0.72
+seed_offset = 51
+
+[sub_resource type="Resource" id="Resource_xes3i"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/arena_a.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_wmkmb"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/arena_b.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_flwj0"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/shop_a.png"
+size_class = 32
+
+[resource]
+script = ExtResource("3_wsrpv")
+display_name = "Vault"
+cave_noise_scale = 0.014
+cave_threshold = 0.55
+ridge_weight = 0.5
+background_material = 1
+pool_materials = [SubResource("Resource_0f0hf")]
+room_templates = [SubResource("Resource_xes3i"), SubResource("Resource_wmkmb"), SubResource("Resource_flwj0")]
+boss_templates = [SubResource("Resource_2rwkq")]
+tint = Color(1, 0.95, 0.85, 1)
