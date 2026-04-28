@@ -1,0 +1,65 @@
+// Stamps PNG room templates into the chunk texture.
+// Stamp buffer at set=1 binding=0; texture arrays at set=3 (one per size class).
+
+layout(set = 1, binding = 0, std430) readonly buffer StampBuffer {
+    int count;
+    int _pad[3];
+    // Each stamp packed as two vec4s:
+    //  s0: world_center.xy, template_index (z), packed_meta (w)
+    //  packed_meta encoding (as int, fits in float exactly up to 2^24):
+    //    bits  0..7  = size_class (16/32/64/128 → use as-is)
+    //    bits  8..15 = rotation_steps (0/1/2/3 = 0/90/180/270 deg)
+    //    bits 16..23 = flags (bit0 = is_secret)
+    vec4 stamps[128];
+} stamp_buf;
+
+layout(set = 3, binding = 0) uniform sampler2DArray template_array_16;
+layout(set = 3, binding = 1) uniform sampler2DArray template_array_32;
+layout(set = 3, binding = 2) uniform sampler2DArray template_array_64;
+layout(set = 3, binding = 3) uniform sampler2DArray template_array_128;
+
+vec4 sample_template(int size_class, int idx, vec2 uv) {
+    if (size_class == 16)  return texture(template_array_16,  vec3(uv, float(idx)));
+    if (size_class == 32)  return texture(template_array_32,  vec3(uv, float(idx)));
+    if (size_class == 64)  return texture(template_array_64,  vec3(uv, float(idx)));
+    return texture(template_array_128, vec3(uv, float(idx)));
+}
+
+vec2 rotate_local(vec2 local, int rot_steps, float size) {
+    // rot_steps: 0=0°, 1=90°, 2=180°, 3=270° (CCW)
+    if (rot_steps == 0) return local;
+    if (rot_steps == 1) return vec2(local.y, size - 1.0 - local.x);
+    if (rot_steps == 2) return vec2(size - 1.0 - local.x, size - 1.0 - local.y);
+    return vec2(size - 1.0 - local.y, local.x);
+}
+
+void stage_pixel_scene_stamp(Context ctx) {
+    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+    if (pos.x >= 256 || pos.y >= 256) return;
+
+    vec2 world_pos = vec2(ctx.chunk_coord * 256) + vec2(pos);
+
+    for (int i = 0; i < stamp_buf.count; i++) {
+        vec4 s = stamp_buf.stamps[i];
+        vec2 center = s.xy;
+        int idx = int(round(s.z));
+        int meta = int(round(s.w));
+        int size_class = meta & 0xFF;
+        int rot_steps = (meta >> 8) & 0xFF;
+
+        float half_size = float(size_class) * 0.5;
+        vec2 delta = world_pos - center;
+        if (abs(delta.x) >= half_size || abs(delta.y) >= half_size) continue;
+
+        vec2 local = delta + vec2(half_size);  // [0, size)
+        vec2 src = rotate_local(local, rot_steps, float(size_class));
+        vec2 uv = (src + vec2(0.5)) / float(size_class);
+        vec4 t = sample_template(size_class, idx, uv);
+
+        if (t.a < 0.5) continue;  // skip mask
+
+        int r = int(round(t.r * 255.0));
+        int mat = (r == 255) ? biome.background_material : r;
+        imageStore(chunk_tex, pos, vec4(float(mat) / 255.0, 0.0, 0.0, 0.0));
+    }
+}
