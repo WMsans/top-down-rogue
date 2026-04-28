@@ -17,8 +17,10 @@ var shadow_grid: Node = null
 
 var _gen_uniform_sets_to_free: Array[RID] = []
 
+signal chunks_generated(new_coords: Array[Vector2i])
 
 func _ready() -> void:
+	add_to_group("world_manager")
 	rd = RenderingServer.get_rendering_device()
 
 	compute_device = ComputeDevice.new()
@@ -27,6 +29,11 @@ func _ready() -> void:
 	compute_device.init_collider_storage_buffer()
 	compute_device.render_shader = preload("res://shaders/visual/render_chunk.gdshader")
 	compute_device.init_material_textures()
+	compute_device.init_gen_stamp_buffer()
+	compute_device.init_gen_biome_buffer()
+	# Bind biome buffer + template arrays from current biome
+	compute_device.upload_biome_buffer(LevelManager.current_biome)
+	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
 
 	chunk_manager = ChunkManager.new(self)
 	terrain_physical = TerrainPhysical.new()
@@ -85,7 +92,11 @@ func _update_chunks() -> void:
 			new_chunks.append(coord)
 
 	if not new_chunks.is_empty():
-		_gen_uniform_sets_to_free = compute_device.dispatch_generation(chunks, new_chunks, 0)
+		var stamp_bytes := LevelManager.build_stamp_bytes(new_chunks)
+		_gen_uniform_sets_to_free = compute_device.dispatch_generation(
+			chunks, new_chunks, LevelManager.world_seed, stamp_bytes
+		)
+		chunks_generated.emit(new_chunks)
 
 	if not new_chunks.is_empty() or not to_remove.is_empty():
 		chunk_manager.rebuild_sim_uniform_sets(new_chunks, to_remove)
@@ -238,3 +249,15 @@ func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left:
 			if data[y * region_w + x] != MaterialRegistry.MAT_AIR:
 				return false
 	return true
+
+
+func reset() -> void:
+	chunk_manager.clear_all_chunks()
+	for us in _gen_uniform_sets_to_free:
+		rd.free_rid(us)
+	_gen_uniform_sets_to_free.clear()
+	for child in chunk_container.get_children():
+		child.queue_free()
+	tracking_position = Vector2.ZERO
+	compute_device.upload_biome_buffer(LevelManager.current_biome)
+	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())

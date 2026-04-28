@@ -18,6 +18,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 MaterialRegistry="*res://src/autoload/material_registry.gd"
+BiomeRegistry="*res://src/autoload/biome_registry.gd"
+LevelManager="*res://src/autoload/level_manager.gd"
 SceneManager="*res://src/autoload/scene_manager.gd"
 ConsoleManager="*res://src/autoload/console_manager.gd"
 WeaponRegistry="*res://src/autoload/weapon_registry.gd"
