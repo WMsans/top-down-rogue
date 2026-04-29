@@ -13,6 +13,7 @@ const PUSH_SPEED: float = 60.0
 const POMMEL_PIXEL: Vector2 = Vector2(15.0, 15.0)
 const LOCAL_BLADE_ANGLE: float = -3.0 * PI / 4.0
 const HALF_ARC: float = PI / 3.5
+const IDLE_ROTATION_SPEED: float = 10.0
 
 const PREP_DURATION: float = 0.06
 const ACTION_DURATION: float = 0.09
@@ -52,6 +53,7 @@ var _swing_dir: float = 1.0
 var _swing_toggle: float = 1.0
 var _facing_angle: float = 0.0
 var _facing_sign: float = 1.0
+var _visual_angle: float = NAN
 
 var _pose_pos: Vector2 = Vector2.ZERO
 var _pose_rot: float = 0.0
@@ -130,6 +132,9 @@ func update_visual(delta: float, user: Node) -> void:
 		return
 	var dir := _get_facing_direction(user)
 	_facing_angle = dir.angle()
+	if _visual_angle != _visual_angle:
+		_visual_angle = _facing_angle
+	_visual_angle = lerp_angle(_visual_angle, _facing_angle, minf(1.0, IDLE_ROTATION_SPEED * delta))
 	_update_facing_sign(user, dir)
 	if _is_swinging:
 		_process_swing(delta)
@@ -158,7 +163,7 @@ func _rest_pos() -> Vector2:
 
 
 func _rest_blade_angle() -> float:
-	return _facing_angle
+	return _visual_angle
 
 
 func _blade_to_sprite_rot(blade_angle: float) -> float:
