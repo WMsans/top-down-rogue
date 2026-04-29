@@ -31,6 +31,8 @@ func _ready() -> void:
 func hit(damage: int) -> void:
 	if damage <= 0:
 		return
+	if GameModeManager.is_creative():
+		damage = max_health
 	health -= damage
 	health_changed.emit(health, max_health)
 	_on_hit()
