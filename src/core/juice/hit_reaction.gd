@@ -147,11 +147,18 @@ func _do_screen_shake(damage: float, is_kill: bool, dir: Vector2) -> void:
 	_shake_dir_bias = dir
 
 
+func _get_world_camera() -> Camera2D:
+	var player := get_tree().get_first_node_in_group("player") as Node
+	if player == null:
+		return null
+	return player.get_node_or_null("Camera2D") as Camera2D
+
+
 func _process(delta: float) -> void:
 	if _shake_duration > 0.0:
 		_shake_elapsed += delta
 		if _shake_elapsed >= _shake_duration:
-			var cam := get_viewport().get_camera_2d()
+			var cam := _get_world_camera()
 			if cam:
 				cam.offset = Vector2.ZERO
 			_shake_duration = 0.0
@@ -160,7 +167,7 @@ func _process(delta: float) -> void:
 			var current: float = _shake_amount * t
 			var rand_offset := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * current
 			var bias := _shake_dir_bias * 0.5 * current
-			var cam := get_viewport().get_camera_2d()
+			var cam := _get_world_camera()
 			if cam:
 				cam.offset = rand_offset + bias
 
