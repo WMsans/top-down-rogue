@@ -120,7 +120,7 @@ func _init_materials():
 		Color(0.12, 0.12, 0.14, 1.0),
 		false,
 		0,
-		4.0
+		20.0
 	)
 	mat_coal.id = materials.size()
 	materials.append(mat_coal)

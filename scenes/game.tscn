@@ -20,18 +20,17 @@ glow_enabled = true
 [node name="Main" type="Node2D" unique_id=194821170]
 
 [node name="GameViewport" type="SubViewportContainer" parent="." unique_id=300000001]
+texture_filter = 1
 offset_right = 1920.0
 offset_bottom = 1080.0
 stretch = true
 stretch_shrink = 6
-texture_filter = 1
-mouse_filter = 1
 
 [node name="SubViewport" type="SubViewport" parent="GameViewport" unique_id=300000002]
 handle_input_locally = false
+use_hdr_2d = true
 canvas_item_default_texture_filter = 0
 size = Vector2i(320, 180)
-use_hdr_2d = true
 render_target_update_mode = 4
 
 [node name="WorldManager" type="Node2D" parent="GameViewport/SubViewport" unique_id=1684191940]
