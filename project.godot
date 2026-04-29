@@ -28,11 +28,12 @@ TerrainSurface="*res://src/core/terrain_surface.gd"
 
 [display]
 
-window/size/viewport_width=192
-window/size/viewport_height=108
-window/size/window_width_override=192
-window/size/window_height_override=108
-window/stretch/mode="viewport"
+window/size/viewport_width=320
+window/size/viewport_height=180
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 
 [editor_plugins]
 
@@ -83,4 +84,4 @@ interact={
 
 textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
-viewport/hdr_2d=true
+viewport/hdr_2d=false
