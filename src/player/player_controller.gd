@@ -25,6 +25,7 @@ func _ready() -> void:
 	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
 	collision_mask = 3
+	collision_layer = 1
 	_original_collision_layer = collision_layer
 	_original_collision_mask = collision_mask
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
