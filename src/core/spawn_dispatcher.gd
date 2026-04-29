@@ -12,16 +12,15 @@ var _world_manager: Node = null
 var _spawn_parent: Node = null
 
 
-func _ready() -> void:
-	call_deferred("_late_connect")
-
-
-func _late_connect() -> void:
-	_world_manager = get_tree().get_first_node_in_group("world_manager")
-	if _world_manager == null:
-		push_error("SpawnDispatcher: world_manager not found")
+func _process(_delta: float) -> void:
+	if _world_manager != null and is_instance_valid(_world_manager):
 		return
+	var wm := get_tree().get_first_node_in_group("world_manager")
+	if wm == null:
+		return
+	_world_manager = wm
 	_spawn_parent = _world_manager.get_chunk_container()
+	_spawned_sectors.clear()
 	_world_manager.chunks_generated.connect(_on_chunks_generated)
 
 
