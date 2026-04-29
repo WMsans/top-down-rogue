@@ -29,7 +29,9 @@ mouse_filter = 1
 
 [node name="SubViewport" type="SubViewport" parent="GameViewport" unique_id=300000002]
 handle_input_locally = false
+canvas_item_default_texture_filter = 0
 size = Vector2i(320, 180)
+use_hdr_2d = true
 render_target_update_mode = 4
 
 [node name="WorldManager" type="Node2D" parent="GameViewport/SubViewport" unique_id=1684191940]
