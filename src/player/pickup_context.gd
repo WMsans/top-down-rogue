@@ -36,6 +36,8 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if ConsoleManager.is_open():
+		return
 	if get_tree().paused:
 		return
 	if event.is_action_pressed("interact") and _highlighted:

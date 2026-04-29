@@ -138,6 +138,10 @@ func _open() -> void:
 	_clear_suggestions()
 
 
+func is_open() -> bool:
+	return _console_visible
+
+
 func _close() -> void:
 	_console_visible = false
 	hide()
