@@ -81,10 +81,14 @@ func take_damage(amount: int) -> void:
 	_invincible_timer = invincibility_duration
 	health_changed.emit(_current_health, max_health)
 	if _current_health <= 0:
-		_is_dead = true
-		if _color_rect:
-			_color_rect.visible = true
-		player_died.emit()
+		if GameModeManager.is_creative():
+			_current_health = max_health
+			health_changed.emit(_current_health, max_health)
+		else:
+			_is_dead = true
+			if _color_rect:
+				_color_rect.visible = true
+			player_died.emit()
 
 
 func heal(amount: int) -> void:
