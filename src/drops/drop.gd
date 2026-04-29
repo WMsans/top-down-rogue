@@ -20,6 +20,8 @@ func _ready() -> void:
 	gravity_scale = 0.0
 	linear_damp = linear_damp_value
 	mass = 1.0
+	if _sprite and _sprite.material is ShaderMaterial:
+		_sprite.material = _sprite.material.duplicate()
 
 
 func interact(player: Node) -> void:
