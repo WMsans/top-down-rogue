@@ -5,6 +5,7 @@ var _player: Node2D
 var _inventory: PlayerInventory
 var _popup: CanvasLayer
 var _pending_callback: Callable
+var _pending_spec: WeaponOfferSpec
 var _test_mode: bool = false
 var _test_response_accepted: bool = false
 var _test_response_slot: int = 0
@@ -29,6 +30,7 @@ func _offer_weapon(spec: WeaponOfferSpec, callback: Callable) -> void:
 	if not _inventory:
 		callback.call(false, -1)
 		return
+	_pending_spec = spec
 	if _test_mode:
 		if _test_response_accepted:
 			var old := _inventory.remove_weapon(_test_response_slot)
@@ -94,9 +96,22 @@ func _offer_remove_modifier(spec: WeaponOfferSpec, callback: Callable) -> void:
 
 
 func _on_weapon_slot_selected(slot_index: int, modifier) -> void:
+	if not _inventory or not _pending_spec:
+		if _pending_callback.is_valid():
+			_pending_callback.call(false, -1)
+		_pending_callback = Callable()
+		_pending_spec = null
+		return
+	var old: Weapon = _inventory.remove_weapon(slot_index)
+	_inventory.equip_weapon(slot_index, _pending_spec.weapon)
+	if modifier != null and _pending_spec.weapon:
+		var free_slot: int = _pending_spec.weapon.find_empty_modifier_slot()
+		if free_slot >= 0:
+			_pending_spec.weapon.add_modifier(free_slot, modifier)
 	if _pending_callback.is_valid():
 		_pending_callback.call(true, slot_index)
 	_pending_callback = Callable()
+	_pending_spec = null
 
 
 func _on_modifier_applied() -> void:
