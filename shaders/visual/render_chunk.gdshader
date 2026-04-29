@@ -122,7 +122,7 @@ vec3 material_color(vec4 data, ivec2 pixel_pos) {
 		return vec3(1.0, 0.0, 1.0);
 	}
 	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
-	return apply_temperature_tint(base_color, data.b);
+	return apply_temperature_tint(base_color, data.b) * MATERIAL_GLOW[mat];
 }
 
 vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, ivec2 pixel_pos) {
@@ -132,7 +132,7 @@ vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, 
 	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
 	vec3 tex_color = srgb_to_linear(srgb);
 	vec3 tint = get_temperature_tint(src_data.b);
-	return tex_color * tint;
+	return tex_color * tint * MATERIAL_GLOW[material];
 }
 
 // Check if any air pixel exists within euclidean distance 3 of pos.
@@ -162,7 +162,7 @@ void fragment() {
 	float fluid_alpha = 0.0;
 	if (mat == MAT_GAS || mat == MAT_LAVA) {
 		vec4 tint = MATERIAL_TINT[mat];
-		fluid_tint = vec4(tint.rgb, 1.0);
+		fluid_tint = vec4(tint.rgb * MATERIAL_GLOW[mat], 1.0);
 		// Ensure visibility even at low density: minimum 25% alpha, scales to tint.a at max
 		fluid_alpha = mix(0.25, tint.a, data.g);
 		mat = MAT_AIR;
