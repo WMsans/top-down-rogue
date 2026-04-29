@@ -30,7 +30,6 @@ TerrainSurface="*res://src/core/terrain_surface.gd"
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/stretch/mode="disabled"
 
 [editor_plugins]
 
