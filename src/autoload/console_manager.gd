@@ -179,18 +179,25 @@ func _execute(input: String) -> void:
 
 func _build_context() -> Dictionary:
 	var ctx: Dictionary = {}
-	var viewport := get_viewport()
-	var camera := viewport.get_camera_2d()
+	var camera := _find_world_camera()
 	if camera:
+		var viewport := camera.get_viewport()
 		var screen_pos := viewport.get_mouse_position()
 		var view_size := viewport.get_visible_rect().size
 		ctx["world_pos"] = (screen_pos - view_size * 0.5) / camera.zoom + camera.global_position
 	else:
 		ctx["world_pos"] = Vector2.ZERO
 	ctx["player"] = get_tree().get_first_node_in_group("player")
-	ctx["world_manager"] = get_tree().current_scene.get_node_or_null("WorldManager") if get_tree().current_scene else null
+	ctx["world_manager"] = get_tree().get_first_node_in_group("world_manager")
 	ctx["scene"] = get_tree().current_scene
 	return ctx
+
+
+func _find_world_camera() -> Camera2D:
+	var player := get_tree().get_first_node_in_group("player") as Node
+	if player == null:
+		return null
+	return player.get_node_or_null("Camera2D") as Camera2D
 
 
 func _autocomplete() -> void:
