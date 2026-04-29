@@ -10,6 +10,8 @@ const BODY_HEIGHT := 12
 
 var _last_facing: Vector2 = Vector2.DOWN
 var _facing_left: bool = false
+var _original_collision_layer: int
+var _original_collision_mask: int
 
 @onready var _color_rect: ColorRect = $ColorRect
 
@@ -23,6 +25,8 @@ func _ready() -> void:
 	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
 	collision_mask = 3
+	_original_collision_layer = collision_layer
+	_original_collision_mask = collision_mask
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("gas_interactors")
 	var pickup_context := PickupContext.new()
@@ -39,6 +43,12 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var inventory := get_node_or_null("PlayerInventory")
+	if GameModeManager.is_creative():
+		collision_layer = 0
+		collision_mask = 0
+	else:
+		collision_layer = _original_collision_layer
+		collision_mask = _original_collision_mask
 	if inventory and inventory.is_dead():
 		velocity = Vector2.ZERO
 		move_and_slide()
