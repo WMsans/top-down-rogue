@@ -185,17 +185,23 @@ func _execute(input: String) -> void:
 
 func _build_context() -> Dictionary:
 	var ctx: Dictionary = {}
-	var viewport := get_viewport()
-	var camera := viewport.get_camera_2d()
+	var world_manager_node := get_tree().get_first_node_in_group("world_manager")
+	ctx["world_manager"] = world_manager_node
+	ctx["player"] = get_tree().get_first_node_in_group("player")
+	ctx["scene"] = get_tree().current_scene
+
+	var camera: Camera2D = null
+	if world_manager_node:
+		var world_vp := world_manager_node.get_viewport()
+		if world_vp:
+			camera = world_vp.get_camera_2d()
 	if camera:
-		var screen_pos := viewport.get_mouse_position()
-		var view_size := viewport.get_visible_rect().size
+		var cam_vp := camera.get_viewport()
+		var screen_pos := cam_vp.get_mouse_position()
+		var view_size := cam_vp.get_visible_rect().size
 		ctx["world_pos"] = (screen_pos - view_size * 0.5) / camera.zoom + camera.global_position
 	else:
 		ctx["world_pos"] = Vector2.ZERO
-	ctx["player"] = get_tree().get_first_node_in_group("player")
-	ctx["world_manager"] = get_tree().current_scene.get_node_or_null("WorldManager") if get_tree().current_scene else null
-	ctx["scene"] = get_tree().current_scene
 	return ctx
 
 
