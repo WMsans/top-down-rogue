@@ -41,6 +41,8 @@ var _shake_amount: float = 0.0
 var _shake_duration: float = 0.0
 var _shake_elapsed: float = 0.0
 var _shake_dir_bias: Vector2 = Vector2.ZERO
+var _shake_smoothing_was_enabled: bool = false
+var _shake_active: bool = false
 
 # Hit stop state
 var _active_stop_timer: SceneTreeTimer = null
@@ -134,6 +136,20 @@ func _drive_damage_motion(t: float, label: Label, initial_vel: Vector2, start_po
 
 # ---- ScreenShake adapter ----
 
+func _find_active_camera() -> Camera2D:
+	# The world (and its Camera2D) lives inside a SubViewport, so the autoload's
+	# own get_viewport() returns the root window viewport which has no camera.
+	# Locate the player's camera via the player group instead.
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		var vp := player.get_viewport()
+		if vp:
+			var cam := vp.get_camera_2d()
+			if cam:
+				return cam
+	return get_viewport().get_camera_2d()
+
+
 func _do_screen_shake(damage: float, is_kill: bool, dir: Vector2) -> void:
 	var amount := SHAKE_AMOUNT
 	var duration := SHAKE_DURATION
@@ -145,22 +161,37 @@ func _do_screen_shake(damage: float, is_kill: bool, dir: Vector2) -> void:
 	_shake_duration = duration
 	_shake_elapsed = 0.0
 	_shake_dir_bias = dir
+	var cam := _find_active_camera()
+	if cam:
+		# position_smoothing averages rapid offset changes to ~0 and freezes during
+		# hit-stop (time_scale=0). Disable it for the duration of the shake.
+		if not _shake_active:
+			_shake_smoothing_was_enabled = cam.position_smoothing_enabled
+		cam.position_smoothing_enabled = false
+		_shake_active = true
+		var rand_offset := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * amount
+		var bias := dir * 0.5 * amount
+		cam.offset = rand_offset + bias
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if _shake_duration > 0.0:
-		_shake_elapsed += delta
+		# Use unscaled real time so shake progresses (and visibly oscillates)
+		# even while Engine.time_scale is 0 during hit-stop.
+		_shake_elapsed += get_process_delta_time()
+		var cam := _find_active_camera()
 		if _shake_elapsed >= _shake_duration:
-			var cam := get_viewport().get_camera_2d()
 			if cam:
 				cam.offset = Vector2.ZERO
+				if _shake_active:
+					cam.position_smoothing_enabled = _shake_smoothing_was_enabled
+			_shake_active = false
 			_shake_duration = 0.0
 		else:
 			var t: float = 1.0 - (_shake_elapsed / _shake_duration)
 			var current: float = _shake_amount * t
 			var rand_offset := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * current
 			var bias := _shake_dir_bias * 0.5 * current
-			var cam := get_viewport().get_camera_2d()
 			if cam:
 				cam.offset = rand_offset + bias
 
