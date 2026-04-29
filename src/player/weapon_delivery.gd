@@ -61,7 +61,7 @@ func _offer_modifier(spec: WeaponOfferSpec, callback: Callable) -> void:
 				found = true
 				break
 		if not found:
-			var wpn_button := _player.get_parent().get_node_or_null("WeaponButton")
+			var wpn_button := get_tree().current_scene.get_node_or_null("WeaponButton")
 			if wpn_button and wpn_button.has_method("flash_slots_full"):
 				wpn_button.flash_slots_full()
 			callback.call(false, -1)
@@ -115,7 +115,7 @@ func _on_remove_modifier_applied(weapon: Weapon, slot_idx: int) -> void:
 func _get_weapon_popup() -> CanvasLayer:
 	if _popup and is_instance_valid(_popup):
 		return _popup
-	var root := _player.get_parent()
+	var root := get_tree().current_scene
 	if root:
 		_popup = root.get_node_or_null("WeaponPopup")
 	return _popup
