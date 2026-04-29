@@ -40,6 +40,8 @@ func _setup_visual() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if ConsoleManager.is_open():
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var slot := -1
 		match event.keycode:

@@ -73,6 +73,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _get_input_direction() -> Vector2:
+	if ConsoleManager.is_open():
+		return Vector2.ZERO
 	var dir := Vector2.ZERO
 	if Input.is_action_pressed("move_left"):
 		dir.x -= 1
