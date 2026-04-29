@@ -43,11 +43,12 @@ func hit(damage: int) -> void:
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
 	if hit_dir.length_squared() > 0.0001:
 		_knockback_velocity += hit_dir.normalized() * KNOCKBACK_SPEED
-	var lethal: bool = damage >= health
+	var display_damage: int = max_health if GameModeManager.is_creative() else damage
+	var lethal: bool = display_damage >= health
 	var spec := HitSpec.new()
 	spec.position = impact_point
 	spec.direction = hit_dir
-	spec.damage = float(damage)
+	spec.damage = float(display_damage)
 	spec.is_kill = lethal
 	spec.source_color = Color.WHITE
 	spec.source_radius = 8.0
