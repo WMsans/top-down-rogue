@@ -21,16 +21,25 @@ static func register(registry: CommandRegistry) -> void:
 	registry.register("spawn chest", "Spawn a chest", _spawn_chest)
 
 
+static func _get_spawn_parent(ctx: Dictionary) -> Node:
+	var wm: Node = ctx.get("world_manager")
+	if wm != null and wm.has_method("get_chunk_container"):
+		var container: Node = wm.get_chunk_container()
+		if container != null:
+			return container
+	return ctx.get("scene")
+
+
 static func _spawn_weapon(type: String, _args: Array[String], ctx: Dictionary) -> String:
 	var script: GDScript = WeaponRegistry.weapon_scripts.get(type)
 	if script == null:
 		return "error: unknown weapon type '" + type + "'"
-	var scene: Node = ctx.get("scene")
-	if scene == null:
-		return "error: no scene available"
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
 	var drop: WeaponDrop = WEAPON_DROP_SCENE.instantiate()
 	drop.weapon = script.new()
-	scene.add_child(drop)
+	parent.add_child(drop)
 	drop.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned " + type + " weapon"
 
@@ -39,22 +48,22 @@ static func _spawn_mod(type: String, _args: Array[String], ctx: Dictionary) -> S
 	var script: GDScript = WeaponRegistry.modifier_scripts.get(type)
 	if script == null:
 		return "error: unknown modifier type '" + type + "'"
-	var scene: Node = ctx.get("scene")
-	if scene == null:
-		return "error: no scene available"
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
 	var drop: ModifierDrop = MODIFIER_DROP_SCENE.instantiate()
 	drop.modifier = script.new()
-	scene.add_child(drop)
+	parent.add_child(drop)
 	drop.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned " + type + " modifier"
 
 
 static func _spawn_enemy(_args: Array[String], ctx: Dictionary) -> String:
-	var scene: Node = ctx.get("scene")
-	if scene == null:
-		return "error: no scene available"
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
 	var enemy: CharacterBody2D = DUMMY_ENEMY_SCENE.instantiate()
-	scene.add_child(enemy)
+	parent.add_child(enemy)
 	enemy.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned dummy enemy"
 
@@ -63,21 +72,21 @@ static func _spawn_gold(args: Array[String], ctx: Dictionary) -> String:
 	var amount := 10
 	if args.size() > 0 and args[0].is_valid_int():
 		amount = args[0].to_int()
-	var scene: Node = ctx.get("scene")
-	if scene == null:
-		return "error: no scene available"
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
 	var drop: GoldDrop = GOLD_DROP_SCENE.instantiate()
 	drop.set_amount(amount)
-	scene.add_child(drop)
+	parent.add_child(drop)
 	drop.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned " + str(amount) + " gold"
 
 
 static func _spawn_chest(_args: Array[String], ctx: Dictionary) -> String:
-	var scene: Node = ctx.get("scene")
-	if scene == null:
-		return "error: no scene available"
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
 	var chest: Chest = CHEST_SCENE.instantiate()
-	scene.add_child(chest)
+	parent.add_child(chest)
 	chest.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned chest"
