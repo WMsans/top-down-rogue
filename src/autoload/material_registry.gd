@@ -26,7 +26,7 @@ class MaterialDef:
 		p_tint_color: Color = Color(0, 0, 0, 0),
 		p_fluid: bool = false,
 		p_damage: int = 0,
-		p_glow: float = 1.0
+		p_glow: float = 0.0
 	):
 		name = p_name
 		texture_path = p_texture_path
@@ -192,5 +192,11 @@ func get_damage(material_id: int) -> int:
 
 func get_glow(material_id: int) -> float:
 	if material_id < 0 or material_id >= materials.size():
-		return 1.0
+		return 0.0
 	return materials[material_id].glow
+
+
+func is_emitter(material_id: int) -> bool:
+	if material_id < 0 or material_id >= materials.size():
+		return false
+	return materials[material_id].glow > 0.0
