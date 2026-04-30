@@ -181,7 +181,7 @@ Windows entries omitted from the `.gdextension` manifest.
 
 ### 5.3 Pins
 
-godot-cpp pinned to a specific commit on the `4.x` branch matching engine 4.6. Submodule SHA recorded in this repo. Godot editor pinned to 4.6. C++17.
+godot-cpp pinned to commit `973a98f9b877327a5f51abe58e035bf7eeabf3e4` (master branch as of bootstrap). Submodule SHA recorded in this repo at `gdextension/godot-cpp`. Godot editor pinned to 4.6. C++17.
 
 ### 5.4 Wrapper `gdextension/build.sh`
 
