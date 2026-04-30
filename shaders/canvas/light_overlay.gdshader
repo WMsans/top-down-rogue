@@ -5,11 +5,17 @@ global uniform sampler2D light_grid_tex : filter_linear, repeat_disable;
 global uniform vec4 light_grid_world_rect;
 global uniform float light_intensity_k;
 global uniform vec3 light_ambient;
+global uniform vec2 light_camera_origin;
+global uniform vec2 light_camera_size;
 
 void fragment() {
-	// Convert SCREEN_UV -> world-space pixel.
-	vec2 screen_px = SCREEN_UV / SCREEN_PIXEL_SIZE;
-	vec2 world_px = (inverse(CANVAS_MATRIX) * vec4(screen_px, 0.0, 1.0)).xy;
+	if (light_grid_world_rect.z <= 0.0 || light_grid_world_rect.w <= 0.0
+			|| light_camera_size.x <= 0.0 || light_camera_size.y <= 0.0) {
+		COLOR = vec4(light_ambient, 1.0);
+		return;
+	}
+
+	vec2 world_px = light_camera_origin + UV * light_camera_size;
 
 	vec2 rel = world_px - light_grid_world_rect.xy;
 	vec2 grid_uv = rel / light_grid_world_rect.zw;

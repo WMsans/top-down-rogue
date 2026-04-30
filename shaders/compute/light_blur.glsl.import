@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://bmnewew6yq2ws"
+path="res://.godot/imported/light_blur.glsl-df8a3b7d4d798b5026a3b1744f5eb05f.res"
+
+[deps]
+
+source_file="res://shaders/compute/light_blur.glsl"
+dest_files=["res://.godot/imported/light_blur.glsl-df8a3b7d4d798b5026a3b1744f5eb05f.res"]
+
+[params]
+

@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://c742elsj7avoi"]
+
+[ext_resource type="Script" uid="uid://d2w7qx12g78pp" path="res://src/core/lighting_overlay.gd" id="1_i1u2s"]
+[ext_resource type="Shader" uid="uid://cfijp571eaixw" path="res://shaders/canvas/light_overlay.gdshader" id="1_xn5lq"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_13kn3"]
+shader = ExtResource("1_xn5lq")
+
+[node name="LightingOverlay" type="CanvasLayer" unique_id=771406736]
+
+[node name="Overlay" type="ColorRect" parent="." unique_id=536685811]
+material = SubResource("ShaderMaterial_13kn3")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_i1u2s")

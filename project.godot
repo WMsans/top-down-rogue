@@ -104,3 +104,11 @@ light_ambient={
 "type": "vec3",
 "value": Vector3(0.05, 0.05, 0.05)
 }
+light_camera_origin={
+"type": "vec2",
+"value": Vector2(0, 0)
+}
+light_camera_size={
+"type": "vec2",
+"value": Vector2(1, 1)
+}

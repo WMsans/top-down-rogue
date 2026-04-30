@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://clxxida8yyqrr"
+path="res://.godot/imported/emission_reduce.glsl-cda55a8be36f1f35556f42703ec3d452.res"
+
+[deps]
+
+source_file="res://shaders/compute/emission_reduce.glsl"
+dest_files=["res://.godot/imported/emission_reduce.glsl-cda55a8be36f1f35556f42703ec3d452.res"]
+
+[params]
+

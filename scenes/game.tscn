@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="11"]
 [ext_resource type="PackedScene" uid="uid://bq5fx8kwbtn7r" path="res://scenes/ui/weapon_popup.tscn" id="12"]
 [ext_resource type="PackedScene" uid="uid://bq3fx8kwbtn7q" path="res://scenes/ui/weapon_button.tscn" id="13"]
+[ext_resource type="PackedScene" uid="uid://c742elsj7avoi" path="res://scenes/lighting_overlay.tscn" id="13_kvuet"]
 [ext_resource type="Script" uid="uid://cylk5iq7fmvxu" path="res://src/ui/currency_hud.gd" id="currency_hud"]
 
 [sub_resource type="Environment" id="Environment_o6xl0"]
@@ -60,6 +61,8 @@ environment = SubResource("Environment_o6xl0")
 [node name="DirectionalLight2D" type="DirectionalLight2D" parent="GameViewport/SubViewport" unique_id=1871237143]
 color = Color(0.95, 0.95, 0.95, 1)
 blend_mode = 1
+
+[node name="LightingOverlay" parent="GameViewport/SubViewport" unique_id=771406736 instance=ExtResource("13_kvuet")]
 
 [node name="PauseMenu" parent="." unique_id=904525513 instance=ExtResource("9")]
 visible = false
