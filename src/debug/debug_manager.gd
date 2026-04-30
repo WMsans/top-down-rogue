@@ -1,6 +1,7 @@
 extends Node2D
 
 var _debug_label: Label
+var canvas: CanvasLayer
 
 func _ready() -> void:
 	visible = false
@@ -15,9 +16,8 @@ func _process(_delta: float) -> void:
 	_debug_label.text = "FPS: %d\nX: %.0f\nY: %.0f" % [fps, pos.x, pos.y]
 
 func _build_hud() -> void:
-	var canvas := CanvasLayer.new()
+	canvas = CanvasLayer.new()
 	canvas.layer = 100
-	add_child(canvas)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 8)
@@ -44,3 +44,7 @@ func _build_hud() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_F3:
 		visible = !visible
+		if visible: 
+			add_child(canvas)
+		else:
+			remove_child(canvas)
