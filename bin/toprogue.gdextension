@@ -1,0 +1,13 @@
+[configuration]
+
+entry_symbol = "toprogue_library_init"
+compatibility_minimum = "4.6"
+
+[libraries]
+
+macos.template_debug.arm64       = "res://bin/lib/libtoprogue.macos.template_debug.dev.arm64.dylib"
+macos.template_release.arm64     = "res://bin/lib/libtoprogue.macos.template_release.arm64.dylib"
+macos.template_debug.x86_64      = "res://bin/lib/libtoprogue.macos.template_debug.dev.x86_64.dylib"
+macos.template_release.x86_64    = "res://bin/lib/libtoprogue.macos.template_release.x86_64.dylib"
+linux.template_debug.x86_64      = "res://bin/lib/libtoprogue.linux.template_debug.dev.x86_64.so"
+linux.template_release.x86_64    = "res://bin/lib/libtoprogue.linux.template_release.x86_64.so"
