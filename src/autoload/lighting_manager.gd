@@ -16,6 +16,8 @@ var _frame_counter: int = 0
 
 var emission_shader: RID
 var emission_pipeline: RID
+var compose_shader: RID
+var compose_pipeline: RID
 
 # Vector2i chunk_coord -> RID emission_tile_tex (RGBA16F, TILE_SIZE x TILE_SIZE)
 var emission_tiles: Dictionary = {}
@@ -42,6 +44,10 @@ func _init_pipelines() -> void:
 	emission_shader = rd.shader_create_from_spirv(emission_file.get_spirv())
 	emission_pipeline = rd.compute_pipeline_create(emission_shader)
 
+	var compose_file := load("res://shaders/compute/light_compose.glsl") as RDShaderFile
+	compose_shader = rd.shader_create_from_spirv(compose_file.get_spirv())
+	compose_pipeline = rd.compute_pipeline_create(compose_shader)
+
 
 func _exit_tree() -> void:
 	if rd == null:
@@ -55,6 +61,10 @@ func _exit_tree() -> void:
 		rd.free_rid(emission_pipeline)
 	if emission_shader.is_valid():
 		rd.free_rid(emission_shader)
+	if compose_pipeline.is_valid():
+		rd.free_rid(compose_pipeline)
+	if compose_shader.is_valid():
+		rd.free_rid(compose_shader)
 
 
 func _compute_loaded_aabb() -> Rect2i:
@@ -129,6 +139,47 @@ func _tick() -> void:
 	if not _ensure_grid_textures():
 		return
 	_dispatch_emission_reduce()
+	_dispatch_compose()
+
+
+func _dispatch_compose() -> void:
+	if not main_grid_tex.is_valid():
+		return
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, compose_pipeline)
+	var groups := TILE_SIZE / 8
+	var created_sets: Array[RID] = []
+
+	for coord_v in emission_tiles.keys():
+		var coord: Vector2i = coord_v
+		var tile_rid: RID = emission_tiles[coord]
+		var dst := (coord - loaded_aabb.position) * TILE_SIZE
+
+		var u_src := RDUniform.new()
+		u_src.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_src.binding = 0
+		u_src.add_id(tile_rid)
+
+		var u_dst := RDUniform.new()
+		u_dst.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_dst.binding = 1
+		u_dst.add_id(main_grid_tex)
+
+		var set_rid := rd.uniform_set_create([u_src, u_dst], compose_shader, 0)
+		created_sets.append(set_rid)
+
+		var pc := PackedByteArray()
+		pc.resize(16)
+		pc.encode_s32(0, dst.x)
+		pc.encode_s32(4, dst.y)
+
+		rd.compute_list_bind_uniform_set(compute_list, set_rid, 0)
+		rd.compute_list_set_push_constant(compute_list, pc, pc.size())
+		rd.compute_list_dispatch(compute_list, groups, groups, 1)
+
+	rd.compute_list_end()
+	for s in created_sets:
+		rd.free_rid(s)
 
 
 func _get_chunks() -> Dictionary:
