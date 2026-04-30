@@ -5,3 +5,17 @@
 /.claude
 .worktrees/
 build/
+
+# godot-cpp GDExtension build outputs
+bin/lib/
+gdextension/bin/
+gdextension/godot-cpp/bin/
+gdextension/godot-cpp/gen/
+
+# SCons
+.sconsign.dblite
+.sconf_temp/
+config.log
+*.o
+*.os
+*.obj
