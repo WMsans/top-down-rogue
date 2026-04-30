@@ -85,3 +85,22 @@ interact={
 textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
 viewport/hdr_2d=true
+
+[shader_globals]
+
+light_grid_tex={
+"type": "sampler2D",
+"value": ""
+}
+light_grid_world_rect={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+light_intensity_k={
+"type": "float",
+"value": 1.0
+}
+light_ambient={
+"type": "vec3",
+"value": Vector3(0.05, 0.05, 0.05)
+}

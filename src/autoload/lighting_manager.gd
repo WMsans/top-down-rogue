@@ -21,6 +21,8 @@ var compose_pipeline: RID
 var blur_shader: RID
 var blur_pipeline: RID
 
+var main_grid_2d: Texture2DRD
+
 # Vector2i chunk_coord -> RID emission_tile_tex (RGBA16F, TILE_SIZE x TILE_SIZE)
 var emission_tiles: Dictionary = {}
 
@@ -151,6 +153,25 @@ func _tick() -> void:
 	_dispatch_emission_reduce()
 	_dispatch_compose()
 	_dispatch_blur()
+	_publish_grid_globals()
+
+
+func _publish_grid_globals() -> void:
+	if main_grid_2d == null:
+		main_grid_2d = Texture2DRD.new()
+	main_grid_2d.texture_rd_rid = main_grid_tex
+	RenderingServer.global_shader_parameter_set("light_grid_tex", main_grid_2d)
+
+	var origin_px := Vector2(loaded_aabb.position) * float(CHUNK_SIZE)
+	var size_px := Vector2(loaded_aabb.size) * float(CHUNK_SIZE)
+	RenderingServer.global_shader_parameter_set(
+		"light_grid_world_rect",
+		Vector4(origin_px.x, origin_px.y, size_px.x, size_px.y),
+	)
+	RenderingServer.global_shader_parameter_set("light_intensity_k", intensity_k)
+	RenderingServer.global_shader_parameter_set(
+		"light_ambient", Vector3(ambient.r, ambient.g, ambient.b)
+	)
 
 
 func _dispatch_blur() -> void:
