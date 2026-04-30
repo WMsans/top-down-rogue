@@ -26,6 +26,7 @@ WeaponRegistry="*res://src/autoload/weapon_registry.gd"
 HitReaction="*res://src/core/juice/hit_reaction.gd"
 TerrainSurface="*res://src/core/terrain_surface.gd"
 GameModeManager="*res://src/autoload/game_mode_manager.gd"
+LightingManager="*res://src/autoload/lighting_manager.gd"
 
 [display]
 
