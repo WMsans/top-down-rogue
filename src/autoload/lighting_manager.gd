@@ -18,6 +18,8 @@ var emission_shader: RID
 var emission_pipeline: RID
 var compose_shader: RID
 var compose_pipeline: RID
+var blur_shader: RID
+var blur_pipeline: RID
 
 # Vector2i chunk_coord -> RID emission_tile_tex (RGBA16F, TILE_SIZE x TILE_SIZE)
 var emission_tiles: Dictionary = {}
@@ -48,6 +50,10 @@ func _init_pipelines() -> void:
 	compose_shader = rd.shader_create_from_spirv(compose_file.get_spirv())
 	compose_pipeline = rd.compute_pipeline_create(compose_shader)
 
+	var blur_file := load("res://shaders/compute/light_blur.glsl") as RDShaderFile
+	blur_shader = rd.shader_create_from_spirv(blur_file.get_spirv())
+	blur_pipeline = rd.compute_pipeline_create(blur_shader)
+
 
 func _exit_tree() -> void:
 	if rd == null:
@@ -65,6 +71,10 @@ func _exit_tree() -> void:
 		rd.free_rid(compose_pipeline)
 	if compose_shader.is_valid():
 		rd.free_rid(compose_shader)
+	if blur_pipeline.is_valid():
+		rd.free_rid(blur_pipeline)
+	if blur_shader.is_valid():
+		rd.free_rid(blur_shader)
 
 
 func _compute_loaded_aabb() -> Rect2i:
@@ -140,6 +150,68 @@ func _tick() -> void:
 		return
 	_dispatch_emission_reduce()
 	_dispatch_compose()
+	_dispatch_blur()
+
+
+func _dispatch_blur() -> void:
+	if not main_grid_tex.is_valid():
+		return
+	var groups_x := (grid_size.x + 7) / 8
+	var groups_y := (grid_size.y + 7) / 8
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, blur_pipeline)
+	var created_sets: Array[RID] = []
+
+	# Horizontal: main -> scratch
+	var u0 := RDUniform.new()
+	u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u0.binding = 0
+	u0.add_id(main_grid_tex)
+	var u1 := RDUniform.new()
+	u1.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u1.binding = 1
+	u1.add_id(scratch_grid_tex)
+	var s0 := rd.uniform_set_create([u0, u1], blur_shader, 0)
+	created_sets.append(s0)
+
+	var pc_h := PackedByteArray()
+	pc_h.resize(16)
+	pc_h.encode_s32(0, grid_size.x)
+	pc_h.encode_s32(4, grid_size.y)
+	pc_h.encode_s32(8, 1)
+	pc_h.encode_s32(12, 0)
+	rd.compute_list_bind_uniform_set(compute_list, s0, 0)
+	rd.compute_list_set_push_constant(compute_list, pc_h, pc_h.size())
+	rd.compute_list_dispatch(compute_list, groups_x, groups_y, 1)
+
+	rd.compute_list_add_barrier(compute_list)
+
+	# Vertical: scratch -> main
+	var u2 := RDUniform.new()
+	u2.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u2.binding = 0
+	u2.add_id(scratch_grid_tex)
+	var u3 := RDUniform.new()
+	u3.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u3.binding = 1
+	u3.add_id(main_grid_tex)
+	var s1 := rd.uniform_set_create([u2, u3], blur_shader, 0)
+	created_sets.append(s1)
+
+	var pc_v := PackedByteArray()
+	pc_v.resize(16)
+	pc_v.encode_s32(0, grid_size.x)
+	pc_v.encode_s32(4, grid_size.y)
+	pc_v.encode_s32(8, 0)
+	pc_v.encode_s32(12, 1)
+	rd.compute_list_bind_uniform_set(compute_list, s1, 0)
+	rd.compute_list_set_push_constant(compute_list, pc_v, pc_v.size())
+	rd.compute_list_dispatch(compute_list, groups_x, groups_y, 1)
+
+	rd.compute_list_end()
+	for s in created_sets:
+		rd.free_rid(s)
 
 
 func _dispatch_compose() -> void:
