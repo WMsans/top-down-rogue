@@ -20,6 +20,13 @@ var emission_pipeline: RID
 # Vector2i chunk_coord -> RID emission_tile_tex (RGBA16F, TILE_SIZE x TILE_SIZE)
 var emission_tiles: Dictionary = {}
 
+var main_grid_tex: RID
+var scratch_grid_tex: RID
+var loaded_aabb: Rect2i = Rect2i()
+var grid_size: Vector2i = Vector2i.ZERO
+
+const MAX_GRID_CELLS: int = 1024 * 1024
+
 
 func _ready() -> void:
 	rd = RenderingServer.get_rendering_device()
@@ -39,6 +46,7 @@ func _init_pipelines() -> void:
 func _exit_tree() -> void:
 	if rd == null:
 		return
+	_free_grid_textures()
 	for tex in emission_tiles.values():
 		if tex.is_valid():
 			rd.free_rid(tex)
@@ -47,6 +55,62 @@ func _exit_tree() -> void:
 		rd.free_rid(emission_pipeline)
 	if emission_shader.is_valid():
 		rd.free_rid(emission_shader)
+
+
+func _compute_loaded_aabb() -> Rect2i:
+	if emission_tiles.is_empty():
+		return Rect2i()
+	var any_set := false
+	var min_c := Vector2i.ZERO
+	var max_c := Vector2i.ZERO
+	for coord_v in emission_tiles.keys():
+		var coord: Vector2i = coord_v
+		if not any_set:
+			min_c = coord
+			max_c = coord
+			any_set = true
+		else:
+			min_c.x = min(min_c.x, coord.x)
+			min_c.y = min(min_c.y, coord.y)
+			max_c.x = max(max_c.x, coord.x)
+			max_c.y = max(max_c.y, coord.y)
+	return Rect2i(min_c, max_c - min_c + Vector2i.ONE)
+
+
+func _ensure_grid_textures() -> bool:
+	var aabb := _compute_loaded_aabb()
+	if aabb.size == Vector2i.ZERO:
+		return false
+	if aabb == loaded_aabb and main_grid_tex.is_valid():
+		return true
+	_free_grid_textures()
+	loaded_aabb = aabb
+	grid_size = Vector2i(aabb.size.x * TILE_SIZE, aabb.size.y * TILE_SIZE)
+	if grid_size.x * grid_size.y > MAX_GRID_CELLS:
+		push_warning("LightingManager: grid size %s exceeds cap; skipping" % grid_size)
+		grid_size = Vector2i.ZERO
+		loaded_aabb = Rect2i()
+		return false
+	var tf := RDTextureFormat.new()
+	tf.width = grid_size.x
+	tf.height = grid_size.y
+	tf.format = RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT
+	tf.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+	)
+	main_grid_tex = rd.texture_create(tf, RDTextureView.new())
+	scratch_grid_tex = rd.texture_create(tf, RDTextureView.new())
+	return true
+
+
+func _free_grid_textures() -> void:
+	if main_grid_tex.is_valid():
+		rd.free_rid(main_grid_tex)
+		main_grid_tex = RID()
+	if scratch_grid_tex.is_valid():
+		rd.free_rid(scratch_grid_tex)
+		scratch_grid_tex = RID()
 
 
 func _process(_delta: float) -> void:
@@ -61,6 +125,8 @@ func _process(_delta: float) -> void:
 
 func _tick() -> void:
 	if rd == null:
+		return
+	if not _ensure_grid_textures():
 		return
 	_dispatch_emission_reduce()
 
