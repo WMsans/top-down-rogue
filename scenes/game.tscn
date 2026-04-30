@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://dnc4ynn0e7115" path="res://src/core/world_manager.gd" id="1"]
 [ext_resource type="Script" uid="uid://dqlpamy716qt3" path="res://src/debug/debug_manager.gd" id="4"]
 [ext_resource type="Script" uid="uid://dy4pc44ix5jt0" path="res://src/debug/chunk_grid_overlay.gd" id="5"]
-[ext_resource type="Script" uid="uid://dhvbrthaofi0b" path="res://src/terrain/world_preview.gd" id="6"]
 [ext_resource type="PackedScene" uid="uid://dyro2k6hacg2y" path="res://scenes/player.tscn" id="7"]
 [ext_resource type="Script" uid="uid://41pttcuclgqw" path="res://src/debug/collision_overlay.gd" id="8"]
 [ext_resource type="PackedScene" uid="uid://dc5am8wxl3knp" path="res://scenes/ui/pause_menu.tscn" id="9"]
@@ -37,10 +36,6 @@ render_target_update_mode = 4
 script = ExtResource("1")
 
 [node name="ChunkContainer" type="Node2D" parent="GameViewport/SubViewport/WorldManager" unique_id=241049915]
-
-[node name="WorldPreview" type="Node2D" parent="GameViewport/SubViewport/WorldManager" unique_id=613443267]
-script = ExtResource("6")
-preview_size = 1
 
 [node name="Player" parent="GameViewport/SubViewport" unique_id=1961013424 instance=ExtResource("7")]
 
