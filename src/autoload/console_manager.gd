@@ -44,6 +44,8 @@ func _register_commands() -> void:
 	GoldCommands.register(_registry)
 	var GamemodeCommands := preload("res://src/console/commands/gamemode_command.gd")
 	GamemodeCommands.register(_registry)
+	var LightingCommands := preload("res://src/console/commands/lighting_command.gd")
+	LightingCommands.register(_registry)
 
 
 func _build_ui() -> void:
