@@ -112,10 +112,12 @@ func create_chunk(coord: Vector2i) -> void:
 	chunk.occluder_instances = []
 
 	chunks[coord] = chunk
+	LightingManager.register_chunk(chunk)
 
 
 func unload_chunk(coord: Vector2i) -> void:
 	var chunk: Chunk = world_manager.chunks[coord]
+	LightingManager.unregister_chunk(chunk)
 	free_chunk_resources(chunk)
 	world_manager.chunks.erase(coord)
 
@@ -223,6 +225,7 @@ func clear_all_chunks() -> void:
 	var chunks: Dictionary = world_manager.chunks
 	for coord in chunks:
 		var chunk: Chunk = chunks[coord]
+		LightingManager.unregister_chunk(chunk)
 		free_chunk_resources(chunk)
 	chunks.clear()
 

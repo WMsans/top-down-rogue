@@ -17,6 +17,9 @@ var _frame_counter: int = 0
 var emission_shader: RID
 var emission_pipeline: RID
 
+# Vector2i chunk_coord -> RID emission_tile_tex (RGBA16F, TILE_SIZE x TILE_SIZE)
+var emission_tiles: Dictionary = {}
+
 
 func _ready() -> void:
 	rd = RenderingServer.get_rendering_device()
@@ -36,6 +39,10 @@ func _init_pipelines() -> void:
 func _exit_tree() -> void:
 	if rd == null:
 		return
+	for tex in emission_tiles.values():
+		if tex.is_valid():
+			rd.free_rid(tex)
+	emission_tiles.clear()
 	if emission_pipeline.is_valid():
 		rd.free_rid(emission_pipeline)
 	if emission_shader.is_valid():
@@ -56,9 +63,30 @@ func _tick() -> void:
 	pass
 
 
-func register_chunk(_chunk) -> void:
-	pass
+func register_chunk(chunk) -> void:
+	if rd == null or not enabled:
+		return
+	if emission_tiles.has(chunk.coord):
+		return
+	var tf := RDTextureFormat.new()
+	tf.width = TILE_SIZE
+	tf.height = TILE_SIZE
+	tf.format = RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT
+	tf.usage_bits = (
+		RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+		| RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+	)
+	emission_tiles[chunk.coord] = rd.texture_create(tf, RDTextureView.new())
 
 
-func unregister_chunk(_chunk) -> void:
-	pass
+func unregister_chunk(chunk) -> void:
+	if rd == null:
+		return
+	var tex_var = emission_tiles.get(chunk.coord, null)
+	if tex_var == null:
+		return
+	var tex: RID = tex_var
+	if tex.is_valid():
+		rd.free_rid(tex)
+	emission_tiles.erase(chunk.coord)
