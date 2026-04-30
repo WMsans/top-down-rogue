@@ -1,7 +1,7 @@
 # Lava Dynamic Lighting — Design
 
 **Date:** 2026-04-29
-**Status:** Approved (brainstorming phase)
+**Status:** Approved (brainstorming phase) — amended 2026-04-29 with G1 GPU-pipeline redesign (see "Implementation amendment" below)
 **Scope:** Implement soft, world-space dynamic lighting for emissive falling-sand materials (lava first, future emitters supported), composing additively with the existing Godot Light2D pipeline.
 
 ---
@@ -165,6 +165,59 @@ Register `lighting <on|off|reload>` via `command_registry.gd` for runtime toggli
 ### Perf
 
 `_tick()` budget: <1 ms with a typical 5×5 chunk window and a few hundred dirty emitter pixels. Per-frame cost outside ticks: just the overlay shader.
+
+---
+
+---
+
+## Implementation amendment — G1 GPU pipeline (2026-04-29)
+
+The original architecture above assumed CPU-side accumulation by walking each dirty chunk's cells. This is incompatible with the project's reality: chunk cells live in GPU `RID` textures (`Chunk.rd_texture`, RGBA8) driven by compute shaders in `shaders/compute/simulation.glsl`. CPU-walking would require `RenderingDevice.texture_get_data` per dirty chunk every tick — a synchronous GPU→CPU readback that stalls the pipeline.
+
+The accumulation, compose, and blur are therefore moved entirely to the GPU. Everything else in the spec is unchanged: same R1 cell size, same K3 kernel, same overlay integration, same X1 additive composition, same `tint_color × glow` rule, same console command surface.
+
+### Pipeline (replaces "Architecture" steps 1–4 above)
+
+1. **Emission reduce** (compute) — for every loaded chunk, dispatch `emission_reduce.glsl`. Input: chunk's `rd_texture`. Output: a per-chunk **emission tile** texture sized `(CHUNK_SIZE/4) × (CHUNK_SIZE/4)` (= 64×64) in `RGBA16F`. Each invocation handles one 4×4 block: loads 16 cells, decodes material id with `get_material(pixel)`, sums `MATERIAL_TINT[m].rgb * MATERIAL_GLOW[m]` over the block, writes to the tile cell.
+2. **Compose** (compute) — `light_compose.glsl`. Inputs: an array of chunk emission tiles + their grid offsets. Output: the main **light grid texture** sized to the loaded-chunk AABB, `RGBA16F`. Implementation: dispatch one compute pass per loaded chunk that copies its emission tile into the corresponding region of the main grid (or one big pass that maps each grid cell to the owning chunk tile).
+3. **Blur** (compute) — `light_blur.glsl`. Two dispatches: horizontal pass (main grid → scratch), then vertical (scratch → main grid). 11-tap Gaussian, weights as `const float[]` in the shader.
+4. **Sample** (canvas shader) — the main grid is exposed as a `Texture2DRD` global shader parameter (`light_grid_tex`) plus a `vec4 light_grid_world_rect` uniform. The overlay `ColorRect` shader samples it bilinearly each frame in world space and additively blends.
+
+### Material data path
+
+`MATERIAL_TINT[]` and `MATERIAL_GLOW[]` are already auto-generated into `shaders/generated/materials.glslinc` by `tools/generate_material_glsl.gd`. The new compute shader simply `#includes` that file — no runtime LUT buffer needed.
+
+### Dirty tracking simplification
+
+Re-reducing every loaded chunk every tick is cheap on GPU (a 5×5 chunk window = 25 chunks × 256² = 1.6M invocations every 4 frames, sub-millisecond on modern GPUs) **and** is necessary anyway because the falling-sand simulation moves emitter cells inside chunks each frame without informing the CPU. So G1 drops the "dirty-chunk lazy" optimization from the original spec — every loaded chunk's emission tile is recomputed each tick. This is simpler, more correct, and still well under budget.
+
+### Resources owned by `LightingManager` (replaces "Components" `LightingManager` body)
+
+- `emission_pipeline`, `compose_pipeline`, `blur_pipeline` — compute pipelines.
+- `emission_tiles : Dictionary[Vector2i → RID]` — per-chunk emission tile textures.
+- `main_grid_tex : RID`, `scratch_grid_tex : RID` — RGBA16F textures sized to current loaded-chunk AABB.
+- `main_grid_2d : Texture2DRD` — wrapper exposed to canvas shaders.
+- `loaded_aabb : Rect2i` — current AABB in chunk coords.
+
+### Tick cadence
+
+Frame counter; runs the four-phase pipeline every `tick_interval` frames (default 4). The overlay always samples the most recent `main_grid_tex`.
+
+### Hooks (replaces "Hooks into existing code" body)
+
+- `chunk_manager.gd::create_chunk` calls `LightingManager.register_chunk(chunk)`. `chunk_manager.gd::unload_chunk` calls `LightingManager.unregister_chunk(chunk)`.
+- No terrain-mutation hooks needed (re-reduce-everything model).
+- `material_registry.gd`: add `is_emitter` helper as before (used by tests, not the GPU pipeline).
+
+### Memory ballpark (revised)
+
+- Per-chunk emission tile: 64 × 64 × 8 bytes (RGBA16F) = 32 KB per chunk × 25 chunks = **800 KB**.
+- Main grid + scratch (5×5 chunks → 320×320 cells): 320² × 8 × 2 = **640 KB**.
+- Total: ~1.4 MB. Same order as the original CPU plan.
+
+### What stays unchanged from the original design
+
+Spec Sections 1–4 ("Problem", "Goals", "Non-goals", "Requirements") are unchanged. The "Edge cases", "Testing", and "Future extensions" sections still apply with one substitution: anywhere the test plan mentions "single-cell impulse splat", read it as "single emitter pixel reduces to exactly one tile cell with `tint_color × glow * (1/16)`" (the 1/16 factor is the 4×4 block average; intensity_k absorbs it).
 
 ---
 
