@@ -60,7 +60,56 @@ func _process(_delta: float) -> void:
 
 
 func _tick() -> void:
-	pass
+	if rd == null:
+		return
+	_dispatch_emission_reduce()
+
+
+func _get_chunks() -> Dictionary:
+	var world_manager = get_node_or_null("/root/Main")
+	if world_manager == null:
+		return {}
+	if not "chunks" in world_manager:
+		return {}
+	return world_manager.chunks
+
+
+func _dispatch_emission_reduce() -> void:
+	var chunks := _get_chunks()
+	if chunks.is_empty():
+		return
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, emission_pipeline)
+	var groups := TILE_SIZE / 8
+
+	var created_sets: Array[RID] = []
+
+	for coord in chunks:
+		var chunk = chunks[coord]
+		var tile_var = emission_tiles.get(coord, null)
+		if tile_var == null:
+			continue
+		var tile_rid: RID = tile_var
+
+		var u_chunk := RDUniform.new()
+		u_chunk.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_chunk.binding = 0
+		u_chunk.add_id(chunk.rd_texture)
+
+		var u_tile := RDUniform.new()
+		u_tile.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_tile.binding = 1
+		u_tile.add_id(tile_rid)
+
+		var set_rid := rd.uniform_set_create([u_chunk, u_tile], emission_shader, 0)
+		created_sets.append(set_rid)
+		rd.compute_list_bind_uniform_set(compute_list, set_rid, 0)
+		rd.compute_list_dispatch(compute_list, groups, groups, 1)
+
+	rd.compute_list_end()
+	for s in created_sets:
+		rd.free_rid(s)
 
 
 func register_chunk(chunk) -> void:
