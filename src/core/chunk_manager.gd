@@ -230,10 +230,6 @@ func clear_all_chunks() -> void:
 func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2i]:
 	var chunks: Dictionary = world_manager.chunks
 
-	for us in world_manager._gen_uniform_sets_to_free:
-		world_manager.rd.free_rid(us)
-	world_manager._gen_uniform_sets_to_free.clear()
-
 	var new_chunks: Array[Vector2i] = []
 	for coord in coords:
 		if not chunks.has(coord):
@@ -243,7 +239,9 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2
 	if new_chunks.is_empty():
 		return new_chunks
 
-	world_manager._gen_uniform_sets_to_free = world_manager.compute_device.dispatch_generation(chunks, new_chunks, seed_val)
+	world_manager._generator_for(LevelManager.current_biome).generate_chunks(
+		chunks, new_chunks, seed_val, LevelManager.current_biome, PackedByteArray()
+	)
 
 	rebuild_sim_uniform_sets(new_chunks, [])
 	update_render_neighbors(new_chunks, [])

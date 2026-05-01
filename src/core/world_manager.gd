@@ -14,7 +14,8 @@ var collision_container: Node2D
 var tracking_position: Vector2 = Vector2.ZERO
 var shadow_grid: Node = null
 
-var _gen_uniform_sets_to_free: Array[RID] = []
+var _generator: Generator
+var _simplex_cave_generator: SimplexCaveGenerator
 
 signal chunks_generated(new_coords: Array[Vector2i])
 
@@ -27,11 +28,9 @@ func _ready() -> void:
 	compute_device.init_dummy_texture()
 	compute_device.render_shader = preload("res://shaders/visual/render_chunk.gdshader")
 	compute_device.init_material_textures()
-	compute_device.init_gen_stamp_buffer()
-	compute_device.init_gen_biome_buffer()
-	# Bind biome buffer + template arrays from current biome
-	compute_device.upload_biome_buffer(LevelManager.current_biome)
-	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
+
+	_generator = Generator.new()
+	_simplex_cave_generator = SimplexCaveGenerator.new()
 
 	chunk_manager = ChunkManager.new(self)
 	terrain_physical = TerrainPhysical.new()
@@ -67,10 +66,6 @@ func _process(delta: float) -> void:
 
 
 func _update_chunks() -> void:
-	for us in _gen_uniform_sets_to_free:
-		rd.free_rid(us)
-	_gen_uniform_sets_to_free.clear()
-
 	var desired := chunk_manager.get_desired_chunks(tracking_position)
 	var desired_set: Dictionary = {}
 	for coord in desired:
@@ -91,14 +86,21 @@ func _update_chunks() -> void:
 
 	if not new_chunks.is_empty():
 		var stamp_bytes := LevelManager.build_stamp_bytes(new_chunks)
-		_gen_uniform_sets_to_free = compute_device.dispatch_generation(
-			chunks, new_chunks, LevelManager.world_seed, stamp_bytes
+		_generator_for(LevelManager.current_biome).generate_chunks(
+			chunks, new_chunks, LevelManager.world_seed,
+			LevelManager.current_biome, stamp_bytes
 		)
 		chunks_generated.emit(new_chunks)
 
 	if not new_chunks.is_empty() or not to_remove.is_empty():
 		chunk_manager.rebuild_sim_uniform_sets(new_chunks, to_remove)
 		chunk_manager.update_render_neighbors(new_chunks, to_remove)
+
+
+func _generator_for(biome: BiomeDef) -> RefCounted:
+	if biome != null and biome.use_simplex_cave_generator:
+		return _simplex_cave_generator
+	return _generator
 
 
 func _run_simulation() -> void:
@@ -255,11 +257,6 @@ func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left:
 
 func reset() -> void:
 	chunk_manager.clear_all_chunks()
-	for us in _gen_uniform_sets_to_free:
-		rd.free_rid(us)
-	_gen_uniform_sets_to_free.clear()
 	for child in chunk_container.get_children():
 		child.queue_free()
 	tracking_position = Vector2.ZERO
-	compute_device.upload_biome_buffer(LevelManager.current_biome)
-	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())

@@ -70,6 +70,13 @@ void BiomeDef::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_tint"), &BiomeDef::get_tint);
 	ClassDB::bind_method(D_METHOD("set_tint", "v"), &BiomeDef::set_tint);
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "tint"), "set_tint", "get_tint");
+
+	ClassDB::bind_method(D_METHOD("get_use_simplex_cave_generator"),
+			&BiomeDef::get_use_simplex_cave_generator);
+	ClassDB::bind_method(D_METHOD("set_use_simplex_cave_generator", "v"),
+			&BiomeDef::set_use_simplex_cave_generator);
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_simplex_cave_generator"),
+			"set_use_simplex_cave_generator", "get_use_simplex_cave_generator");
 }
 
 } // namespace toprogue

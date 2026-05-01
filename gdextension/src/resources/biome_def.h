@@ -26,6 +26,7 @@ public:
 	godot::TypedArray<RoomTemplate> boss_templates;
 	int secret_ring_thickness = 3;
 	godot::Color tint = godot::Color(1, 1, 1, 1);
+	bool use_simplex_cave_generator = false;
 
 	BiomeDef() = default;
 
@@ -55,6 +56,8 @@ public:
 	void set_secret_ring_thickness(int v) { secret_ring_thickness = v; }
 	godot::Color get_tint() const { return tint; }
 	void set_tint(const godot::Color &v) { tint = v; }
+	bool get_use_simplex_cave_generator() const { return use_simplex_cave_generator; }
+	void set_use_simplex_cave_generator(bool v) { use_simplex_cave_generator = v; }
 
 protected:
 	static void _bind_methods();
