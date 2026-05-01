@@ -44,7 +44,7 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	// SectorGrid takes a Ref<BiomeDef>; BiomeDef must already be registered (it is, above).
 	GDREGISTER_CLASS(GenerationContext);
 	GDREGISTER_CLASS(Chunk);
-	GDREGISTER_CLASS(RoomSlot);   // Inner type of SectorGrid; register before SectorGrid.
+	GDREGISTER_CLASS(RoomSlot); // Inner type of SectorGrid; register before SectorGrid.
 	GDREGISTER_CLASS(SectorGrid);
 
 	g_material_table = memnew(MaterialTable);

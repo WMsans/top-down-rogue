@@ -13,29 +13,29 @@
 namespace toprogue {
 
 class TemplatePack : public godot::RefCounted {
-    GDCLASS(TemplatePack, godot::RefCounted);
+	GDCLASS(TemplatePack, godot::RefCounted);
 
-    struct Entry {
-        godot::Ref<RoomTemplate> tmpl;
-        godot::Ref<godot::Image> image;
-    };
+	struct Entry {
+		godot::Ref<RoomTemplate> tmpl;
+		godot::Ref<godot::Image> image;
+	};
 
-    godot::HashMap<int, godot::Vector<Entry>> _by_size;
-    godot::HashMap<int, godot::Ref<godot::Texture2DArray>> _arrays;
+	godot::HashMap<int, godot::Vector<Entry>> _by_size;
+	godot::HashMap<int, godot::Ref<godot::Texture2DArray>> _arrays;
 
 public:
-    TemplatePack() = default;
+	TemplatePack() = default;
 
-    int  register_template(const godot::Ref<RoomTemplate> &tmpl);
-    void build_arrays();
-    godot::Ref<godot::Texture2DArray> get_array(int size_class) const;
-    godot::Ref<godot::Image>          get_image(int size_class, int index) const;
-    godot::Array                      collect_markers(int size_class, int index) const;
-    godot::Array                      get_size_classes() const;
-    int                               template_count(int size_class) const;
+	int register_template(const godot::Ref<RoomTemplate> &tmpl);
+	void build_arrays();
+	godot::Ref<godot::Texture2DArray> get_array(int size_class) const;
+	godot::Ref<godot::Image> get_image(int size_class, int index) const;
+	godot::Array collect_markers(int size_class, int index) const;
+	godot::Array get_size_classes() const;
+	int template_count(int size_class) const;
 
 protected:
-    static void _bind_methods();
+	static void _bind_methods();
 };
 
 } // namespace toprogue
