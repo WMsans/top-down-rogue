@@ -19,8 +19,10 @@
 #include "terrain/generation_context.h"
 #include "terrain/sector_grid.h"
 #include "terrain/terrain_collision_helper.h"
+#include "terrain/chunk_manager.h"
 #include "terrain/terrain_modifier.h"
 #include "terrain/terrain_physical.h"
+#include "terrain/world_manager.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/classes/engine.hpp>
@@ -71,6 +73,10 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 
 	// Simulation
 	GDREGISTER_CLASS(Simulator);
+
+	// Terrain managers (depend on all above)
+	GDREGISTER_CLASS(ChunkManager);
+	GDREGISTER_CLASS(WorldManager);
 
 	g_material_table = memnew(MaterialTable);
 	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
