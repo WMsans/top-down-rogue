@@ -3,9 +3,7 @@ extends SceneTree
 
 # Run: godot --headless --script tools/generate_biome_resources.gd
 
-const _BiomeDef = preload("res://src/core/biome_def.gd")
-const _PoolDef = preload("res://src/core/pool_def.gd")
-const _RoomTemplate = preload("res://src/core/room_template.gd")
+# BiomeDef, PoolDef, RoomTemplate now registered as native C++ classes
 
 func _init() -> void:
 	_generate_caves()
@@ -17,7 +15,7 @@ func _init() -> void:
 	quit()
 
 func _make_pool(mat_id: int, scale: float, threshold: float, seed_off: int) -> Resource:
-	var p: Resource = _PoolDef.new()
+	var p: Resource = PoolDef.new()
 	p.material_id = mat_id
 	p.noise_scale = scale
 	p.noise_threshold = threshold
@@ -25,7 +23,7 @@ func _make_pool(mat_id: int, scale: float, threshold: float, seed_off: int) -> R
 	return p
 
 func _make_template(path: String, weight: float, size_class: int, is_secret: bool = false, is_boss: bool = false, rotatable: bool = true) -> Resource:
-	var rt: Resource = _RoomTemplate.new()
+	var rt: Resource = RoomTemplate.new()
 	rt.png_path = path
 	rt.weight = weight
 	rt.size_class = size_class
@@ -35,7 +33,7 @@ func _make_template(path: String, weight: float, size_class: int, is_secret: boo
 	return rt
 
 func _make_biome() -> Resource:
-	var b: Resource = _BiomeDef.new()
+	var b: Resource = BiomeDef.new()
 	b.pool_materials = []
 	b.room_templates = []
 	b.boss_templates = []
