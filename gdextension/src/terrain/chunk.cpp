@@ -127,17 +127,6 @@ void Chunk::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_coord", "v"), &Chunk::set_coord);
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "coord"), "set_coord", "get_coord");
 
-	ClassDB::bind_method(D_METHOD("get_rd_texture"), &Chunk::get_rd_texture);
-	ClassDB::bind_method(D_METHOD("set_rd_texture", "v"), &Chunk::set_rd_texture);
-	ADD_PROPERTY(PropertyInfo(Variant::RID, "rd_texture"),
-			"set_rd_texture", "get_rd_texture");
-
-	ClassDB::bind_method(D_METHOD("get_texture_2d_rd"), &Chunk::get_texture_2d_rd);
-	ClassDB::bind_method(D_METHOD("set_texture_2d_rd", "v"), &Chunk::set_texture_2d_rd);
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture_2d_rd",
-						 PROPERTY_HINT_RESOURCE_TYPE, "Texture2DRD"),
-			"set_texture_2d_rd", "get_texture_2d_rd");
-
 	ClassDB::bind_method(D_METHOD("get_mesh_instance"), &Chunk::get_mesh_instance);
 	ClassDB::bind_method(D_METHOD("set_mesh_instance", "v"), &Chunk::set_mesh_instance);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "mesh_instance",
@@ -149,16 +138,6 @@ void Chunk::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "wall_mesh_instance",
 						 PROPERTY_HINT_NODE_TYPE, "MeshInstance2D"),
 			"set_wall_mesh_instance", "get_wall_mesh_instance");
-
-	ClassDB::bind_method(D_METHOD("get_sim_uniform_set"), &Chunk::get_sim_uniform_set);
-	ClassDB::bind_method(D_METHOD("set_sim_uniform_set", "v"), &Chunk::set_sim_uniform_set);
-	ADD_PROPERTY(PropertyInfo(Variant::RID, "sim_uniform_set"),
-			"set_sim_uniform_set", "get_sim_uniform_set");
-
-	ClassDB::bind_method(D_METHOD("get_injection_buffer"), &Chunk::get_injection_buffer);
-	ClassDB::bind_method(D_METHOD("set_injection_buffer", "v"), &Chunk::set_injection_buffer);
-	ADD_PROPERTY(PropertyInfo(Variant::RID, "injection_buffer"),
-			"set_injection_buffer", "get_injection_buffer");
 
 	ClassDB::bind_method(D_METHOD("get_static_body"), &Chunk::get_static_body);
 	ClassDB::bind_method(D_METHOD("set_static_body", "v"), &Chunk::set_static_body);

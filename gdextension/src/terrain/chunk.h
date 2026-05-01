@@ -6,11 +6,9 @@
 #include <godot_cpp/classes/mutex.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/classes/static_body2d.hpp>
-#include <godot_cpp/classes/texture2drd.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/rect2i.hpp>
-#include <godot_cpp/variant/rid.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
@@ -42,14 +40,10 @@ public:
 	static constexpr int CHUNK_SIZE = 256;
 	static constexpr int CELL_COUNT = CHUNK_SIZE * CHUNK_SIZE;
 
-	// --- Legacy GPU-pipeline fields (mirror chunk.gd 1:1) ---------------
+	// --- Chunk fields ---------------------------------------------------
 	godot::Vector2i coord;
-	godot::RID rd_texture;
-	godot::Ref<godot::Texture2DRD> texture_2d_rd;
 	godot::MeshInstance2D *mesh_instance = nullptr;
 	godot::MeshInstance2D *wall_mesh_instance = nullptr;
-	godot::RID sim_uniform_set;
-	godot::RID injection_buffer;
 	godot::StaticBody2D *static_body = nullptr;
 	godot::TypedArray<godot::LightOccluder2D> occluder_instances;
 
@@ -89,21 +83,13 @@ public:
 
 	static int get_chunk_size() { return CHUNK_SIZE; }
 
-	// --- Legacy field bindings -----------------------------------------
+	// --- Field bindings -------------------------------------------------
 	godot::Vector2i get_coord() const { return coord; }
 	void set_coord(const godot::Vector2i &v) { coord = v; }
-	godot::RID get_rd_texture() const { return rd_texture; }
-	void set_rd_texture(const godot::RID &v) { rd_texture = v; }
-	godot::Ref<godot::Texture2DRD> get_texture_2d_rd() const { return texture_2d_rd; }
-	void set_texture_2d_rd(const godot::Ref<godot::Texture2DRD> &v) { texture_2d_rd = v; }
 	godot::MeshInstance2D *get_mesh_instance() const { return mesh_instance; }
 	void set_mesh_instance(godot::MeshInstance2D *v) { mesh_instance = v; }
 	godot::MeshInstance2D *get_wall_mesh_instance() const { return wall_mesh_instance; }
 	void set_wall_mesh_instance(godot::MeshInstance2D *v) { wall_mesh_instance = v; }
-	godot::RID get_sim_uniform_set() const { return sim_uniform_set; }
-	void set_sim_uniform_set(const godot::RID &v) { sim_uniform_set = v; }
-	godot::RID get_injection_buffer() const { return injection_buffer; }
-	void set_injection_buffer(const godot::RID &v) { injection_buffer = v; }
 	godot::StaticBody2D *get_static_body() const { return static_body; }
 	void set_static_body(godot::StaticBody2D *v) { static_body = v; }
 	godot::TypedArray<godot::LightOccluder2D> get_occluder_instances() const { return occluder_instances; }

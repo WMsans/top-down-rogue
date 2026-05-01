@@ -6,7 +6,6 @@
 #include "chunk.h"
 
 #include <godot_cpp/classes/light_occluder2d.hpp>
-#include <godot_cpp/classes/rendering_device.hpp>
 #include <godot_cpp/classes/static_body2d.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -47,22 +46,15 @@ void TerrainCollisionHelper::rebuild_chunk_collision_cpu(const Variant &chunk_v)
 		return;
 	}
 
-	Object *rd_obj = world_manager->get("rd");
-	RenderingDevice *rd = Object::cast_to<RenderingDevice>(rd_obj);
-	if (rd == nullptr) {
-		return;
-	}
-
-	PackedByteArray chunk_data = rd->texture_get_data(chunk->rd_texture, 0);
-
+	// Read material data directly from chunk's cells[] array.
 	PackedByteArray material_data;
 	material_data.resize(CHUNK_SIZE * CHUNK_SIZE);
 	MaterialTable *mt = MaterialTable::get_singleton();
+	const Cell *cells = chunk->cells_ptr();
 	for (int y = 0; y < CHUNK_SIZE; y++) {
 		for (int x = 0; x < CHUNK_SIZE; x++) {
-			int src = (y * CHUNK_SIZE + x) * 4;
-			int mat = chunk_data[src];
-			material_data[y * CHUNK_SIZE + x] = mt->has_collider(mat) ? mat : 0;
+			int mat = cells[y * CHUNK_SIZE + x].material;
+			material_data[y * CHUNK_SIZE + x] = mt->has_collider(mat) ? static_cast<uint8_t>(mat) : 0;
 		}
 	}
 
