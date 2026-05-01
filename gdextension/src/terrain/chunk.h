@@ -3,15 +3,18 @@
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/light_occluder2d.hpp>
 #include <godot_cpp/classes/mesh_instance2d.hpp>
+#include <godot_cpp/classes/mutex.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/classes/static_body2d.hpp>
 #include <godot_cpp/classes/texture2drd.hpp>
+#include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/rect2i.hpp>
 #include <godot_cpp/variant/rid.hpp>
 #include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
+#include <atomic>
 #include <cstdint>
 
 namespace toprogue {
@@ -23,6 +26,14 @@ struct Cell {
 	uint8_t flags;
 };
 static_assert(sizeof(Cell) == 4, "Cell must be 4 bytes; spec §6.1");
+
+#pragma pack(push, 1)
+struct InjectionAABB {
+	int16_t min_x, min_y, max_x, max_y;
+	int8_t vel_x, vel_y;
+	uint8_t target_kind;
+};
+#pragma pack(pop)
 
 class Chunk : public godot::RefCounted {
 	GDCLASS(Chunk, godot::RefCounted);
@@ -45,7 +56,6 @@ public:
 	// --- New spec §6.1 sim fields ---------------------------------------
 	Cell cells[CELL_COUNT] = {};
 	godot::Rect2i dirty_rect;
-	godot::Rect2i next_dirty_rect;
 	bool sleeping = true;
 	bool collider_dirty = false;
 	godot::Ref<Chunk> neighbor_up;
@@ -53,6 +63,27 @@ public:
 	godot::Ref<Chunk> neighbor_left;
 	godot::Ref<Chunk> neighbor_right;
 	godot::Ref<godot::ImageTexture> texture;
+
+	// --- Atomic next_dirty_rect (spec §6.4) ----------------------------
+private:
+	std::atomic<int32_t> next_min_x{ INT32_MAX };
+	std::atomic<int32_t> next_min_y{ INT32_MAX };
+	std::atomic<int32_t> next_max_x{ INT32_MIN };
+	std::atomic<int32_t> next_max_y{ INT32_MIN };
+
+public:
+	bool extend_next_dirty_rect(int x0, int y0, int x1, int y1);
+	godot::Rect2i take_next_dirty_rect();
+	void reset_next_dirty_rect();
+
+	// --- Per-chunk injection queue (spec §8.6) -------------------------
+private:
+	godot::Vector<InjectionAABB> injection_queue;
+	godot::Mutex injection_queue_mutex;
+
+public:
+	void push_injection(const InjectionAABB &aabb);
+	godot::Vector<InjectionAABB> take_injections();
 
 	Chunk() = default;
 
@@ -98,8 +129,15 @@ public:
 	godot::Ref<Chunk> get_neighbor_right() const { return neighbor_right; }
 	void set_neighbor_right(const godot::Ref<Chunk> &v) { neighbor_right = v; }
 
+	Cell *cells_ptr() { return cells; }
+	const Cell *cells_ptr() const { return cells; }
+
 	godot::Ref<godot::ImageTexture> get_texture() const { return texture; }
 	void set_texture(const godot::Ref<godot::ImageTexture> &v) { texture = v; }
+
+	// upload_texture will be implemented in Task 8
+	void upload_texture();
+	void upload_texture_full();
 
 protected:
 	static void _bind_methods();
