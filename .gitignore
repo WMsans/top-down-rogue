@@ -20,3 +20,5 @@ config.log
 *.os
 *.obj
 /reports
+/gdextension/.cache/clangd/index
+/gdextension/compile_commands.json
