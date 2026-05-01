@@ -19,6 +19,7 @@
 #include "terrain/generation_context.h"
 #include "terrain/sector_grid.h"
 #include "terrain/terrain_collision_helper.h"
+#include "terrain/terrain_modifier.h"
 #include "terrain/terrain_physical.h"
 
 #include <gdextension_interface.h>
@@ -61,6 +62,7 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(TerrainCollider);
 	GDREGISTER_CLASS(GasInjector);
 	GDREGISTER_CLASS(TerrainCollisionHelper);
+	GDREGISTER_CLASS(TerrainModifier);
 	GDREGISTER_CLASS(TerrainPhysical);
 
 	// Generation
