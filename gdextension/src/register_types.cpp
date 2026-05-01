@@ -1,6 +1,7 @@
 #include "register_types.h"
 
 #include "sim/material_table.h"
+#include "sim/simulator.h"
 
 #include "resources/biome_def.h"
 #include "resources/pool_def.h"
@@ -65,6 +66,9 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	// Generation
 	GDREGISTER_CLASS(Generator);
 	GDREGISTER_CLASS(SimplexCaveGenerator);
+
+	// Simulation
+	GDREGISTER_CLASS(Simulator);
 
 	g_material_table = memnew(MaterialTable);
 	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
