@@ -18,9 +18,13 @@ using namespace godot;
 namespace toprogue {
 
 void TerrainCollisionHelper::rebuild_dirty(const Dictionary &chunks, double delta) {
-	if (chunks.is_empty()) return;
+	if (chunks.is_empty()) {
+		return;
+	}
 	_collision_rebuild_timer += delta;
-	if (_collision_rebuild_timer < COLLISION_REBUILD_INTERVAL) return;
+	if (_collision_rebuild_timer < COLLISION_REBUILD_INTERVAL) {
+		return;
+	}
 	_collision_rebuild_timer = 0.0;
 
 	Array coords = chunks.keys();
@@ -36,12 +40,18 @@ void TerrainCollisionHelper::rebuild_dirty(const Dictionary &chunks, double delt
 
 void TerrainCollisionHelper::rebuild_chunk_collision_cpu(const Variant &chunk_v) {
 	Ref<Chunk> chunk = chunk_v;
-	if (chunk.is_null()) return;
-	if (world_manager == nullptr) return;
+	if (chunk.is_null()) {
+		return;
+	}
+	if (world_manager == nullptr) {
+		return;
+	}
 
 	Object *rd_obj = world_manager->get("rd");
 	RenderingDevice *rd = Object::cast_to<RenderingDevice>(rd_obj);
-	if (rd == nullptr) return;
+	if (rd == nullptr) {
+		return;
+	}
 
 	PackedByteArray chunk_data = rd->texture_get_data(chunk->rd_texture, 0);
 
@@ -63,20 +73,26 @@ void TerrainCollisionHelper::rebuild_chunk_collision_cpu(const Variant &chunk_v)
 		TypedArray<Node> children = body->get_children();
 		for (int i = 0; i < children.size(); i++) {
 			Node *c = Object::cast_to<Node>(children[i]);
-			if (c) c->queue_free();
+			if (c) {
+				c->queue_free();
+			}
 		}
 	}
 
 	PackedVector2Array segs = ColliderBuilder::build_segments(material_data, CHUNK_SIZE);
 	CollisionShape2D *shape = TerrainCollider::build_from_segments(segs, body, world_offset);
-	if (shape) body->add_child(shape);
+	if (shape) {
+		body->add_child(shape);
+	}
 
 	Node *occluder_parent = Object::cast_to<Node>(world_manager->get("collision_container").operator Object *());
 	TypedArray<LightOccluder2D> existing = chunk->occluder_instances;
 	for (int i = 0; i < existing.size(); i++) {
 		Object *o = existing[i];
 		Node *n = Object::cast_to<Node>(o);
-		if (n && n->is_inside_tree()) n->queue_free();
+		if (n && n->is_inside_tree()) {
+			n->queue_free();
+		}
 	}
 	existing.clear();
 	chunk->occluder_instances = existing;
@@ -105,7 +121,7 @@ void TerrainCollisionHelper::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_world_manager"), &TerrainCollisionHelper::get_world_manager);
 	ClassDB::bind_method(D_METHOD("set_world_manager", "v"), &TerrainCollisionHelper::set_world_manager);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world_manager",
-							  PROPERTY_HINT_NODE_TYPE, "Node2D"),
+						 PROPERTY_HINT_NODE_TYPE, "Node2D"),
 			"set_world_manager", "get_world_manager");
 }
 

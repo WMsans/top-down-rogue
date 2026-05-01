@@ -88,11 +88,17 @@ static Rect2 _world_aabb_of(Node2D *node) {
 
 static Vector2 _get_node_velocity(Node2D *node) {
 	CharacterBody2D *char_body = Object::cast_to<CharacterBody2D>(node);
-	if (char_body) return char_body->get_velocity();
+	if (char_body) {
+		return char_body->get_velocity();
+	}
 	RigidBody2D *rigid = Object::cast_to<RigidBody2D>(node);
-	if (rigid) return rigid->get_linear_velocity();
+	if (rigid) {
+		return rigid->get_linear_velocity();
+	}
 	Variant v = node->get(StringName("velocity"));
-	if (v.get_type() == Variant::VECTOR2) return Vector2(v);
+	if (v.get_type() == Variant::VECTOR2) {
+		return Vector2(v);
+	}
 	return Vector2(0, 0);
 }
 
@@ -110,29 +116,37 @@ PackedByteArray GasInjector::build_payload(SceneTree *scene, const Vector2i &coo
 
 	for (int i = 0; i < gas_nodes.size() && count < MAX_INJECTIONS_PER_CHUNK; i++) {
 		Node2D *node = Object::cast_to<Node2D>(gas_nodes[i].operator Object *());
-		if (!node) continue;
+		if (!node) {
+			continue;
+		}
 
 		Vector2 linvel = _get_node_velocity(node);
-		if (linvel.length_squared() < MIN_SPEED_SQ) continue;
+		if (linvel.length_squared() < MIN_SPEED_SQ) {
+			continue;
+		}
 
 		Rect2 aabb_world = _world_aabb_of(node);
-		if (!chunk_world_rect.intersects(aabb_world)) continue;
+		if (!chunk_world_rect.intersects(aabb_world)) {
+			continue;
+		}
 
 		Vector2i min_local(
-			static_cast<int>(std::floor(aabb_world.position.x - chunk_world_rect.position.x)),
-			static_cast<int>(std::floor(aabb_world.position.y - chunk_world_rect.position.y))
-		);
+				static_cast<int>(std::floor(aabb_world.position.x - chunk_world_rect.position.x)),
+				static_cast<int>(std::floor(aabb_world.position.y - chunk_world_rect.position.y)));
 		Vector2i max_local(
-			static_cast<int>(std::ceil(aabb_world.get_end().x - chunk_world_rect.position.x)),
-			static_cast<int>(std::ceil(aabb_world.get_end().y - chunk_world_rect.position.y))
-		);
+				static_cast<int>(std::ceil(aabb_world.get_end().x - chunk_world_rect.position.x)),
+				static_cast<int>(std::ceil(aabb_world.get_end().y - chunk_world_rect.position.y)));
 		min_local = min_local.clamp(Vector2i(0, 0), Vector2i(CHUNK_SIZE, CHUNK_SIZE));
 		max_local = max_local.clamp(Vector2i(0, 0), Vector2i(CHUNK_SIZE, CHUNK_SIZE));
-		if (max_local.x <= min_local.x || max_local.y <= min_local.y) continue;
+		if (max_local.x <= min_local.x || max_local.y <= min_local.y) {
+			continue;
+		}
 
 		int vx = CLAMP(static_cast<int>(std::round(linvel.x * VELOCITY_SCALE)), -8, 7);
 		int vy = CLAMP(static_cast<int>(std::round(linvel.y * VELOCITY_SCALE)), -8, 7);
-		if (vx == 0 && vy == 0) continue;
+		if (vx == 0 && vy == 0) {
+			continue;
+		}
 
 		int offset = HEADER_BYTES + count * BODY_BYTES;
 		out.encode_s32(offset + 0, min_local.x);

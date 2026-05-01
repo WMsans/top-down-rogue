@@ -53,7 +53,7 @@ void TerrainPhysical::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_world_manager"), &TerrainPhysical::get_world_manager);
 	ClassDB::bind_method(D_METHOD("set_world_manager", "v"), &TerrainPhysical::set_world_manager);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world_manager",
-							  PROPERTY_HINT_NODE_TYPE, "Node2D"),
+						 PROPERTY_HINT_NODE_TYPE, "Node2D"),
 			"set_world_manager", "get_world_manager");
 }
 
