@@ -1,6 +1,9 @@
 #include "chunk.h"
 
+#include <godot_cpp/classes/image.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/core/mutex_lock.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <cstring>
@@ -8,6 +11,71 @@
 using namespace godot;
 
 namespace toprogue {
+
+// --- Atomic dirty rect helpers (spec §6.4) -------------------------------
+
+bool Chunk::extend_next_dirty_rect(int x0, int y0, int x1, int y1) {
+	bool changed = false;
+
+	int32_t old_v = next_min_x.load(std::memory_order_relaxed);
+	while (x0 < old_v && !next_min_x.compare_exchange_weak(old_v, x0, std::memory_order_relaxed)) {
+	}
+	if (x0 < old_v)
+		changed = true;
+
+	old_v = next_min_y.load(std::memory_order_relaxed);
+	while (y0 < old_v && !next_min_y.compare_exchange_weak(old_v, y0, std::memory_order_relaxed)) {
+	}
+	if (y0 < old_v)
+		changed = true;
+
+	old_v = next_max_x.load(std::memory_order_relaxed);
+	while (x1 > old_v && !next_max_x.compare_exchange_weak(old_v, x1, std::memory_order_relaxed)) {
+	}
+	if (x1 > old_v)
+		changed = true;
+
+	old_v = next_max_y.load(std::memory_order_relaxed);
+	while (y1 > old_v && !next_max_y.compare_exchange_weak(old_v, y1, std::memory_order_relaxed)) {
+	}
+	if (y1 > old_v)
+		changed = true;
+
+	return changed;
+}
+
+Rect2i Chunk::take_next_dirty_rect() {
+	int32_t mx = next_min_x.exchange(INT32_MAX, std::memory_order_relaxed);
+	int32_t my = next_min_y.exchange(INT32_MAX, std::memory_order_relaxed);
+	int32_t Mx = next_max_x.exchange(INT32_MIN, std::memory_order_relaxed);
+	int32_t My = next_max_y.exchange(INT32_MIN, std::memory_order_relaxed);
+
+	if (Mx < mx || My < my) {
+		return Rect2i();
+	}
+	return Rect2i(mx, my, Mx - mx, My - my);
+}
+
+void Chunk::reset_next_dirty_rect() {
+	next_min_x.store(INT32_MAX, std::memory_order_relaxed);
+	next_min_y.store(INT32_MAX, std::memory_order_relaxed);
+	next_max_x.store(INT32_MIN, std::memory_order_relaxed);
+	next_max_y.store(INT32_MIN, std::memory_order_relaxed);
+}
+
+// --- Injection queue (spec §8.6) -----------------------------------------
+
+void Chunk::push_injection(const InjectionAABB &aabb) {
+	MutexLock lock(injection_queue_mutex);
+	injection_queue.push_back(aabb);
+}
+
+Vector<InjectionAABB> Chunk::take_injections() {
+	MutexLock lock(injection_queue_mutex);
+	Vector<InjectionAABB> out = injection_queue;
+	injection_queue.clear();
+	return out;
+}
 
 PackedByteArray Chunk::get_cells_data() const {
 	PackedByteArray out;
