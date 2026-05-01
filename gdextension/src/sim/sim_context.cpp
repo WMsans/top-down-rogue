@@ -17,7 +17,9 @@ uint32_t SimContext::hash3(int x, int y, uint32_t salt) const {
 }
 
 bool SimContext::stochastic_div(int x, int y, uint32_t salt, int divisor) const {
-	if (divisor <= 0) return false;
+	if (divisor <= 0) {
+		return false;
+	}
 	uint32_t rng = hash3(x, y, salt);
 	return (static_cast<int>(rng % static_cast<uint32_t>(divisor)) == 0);
 }
@@ -57,21 +59,27 @@ Chunk *SimContext::resolve_target(int x, int y, int &out_x, int &out_y) const {
 Cell *SimContext::cell_at(int x, int y) {
 	int lx, ly;
 	Chunk *target = resolve_target(x, y, lx, ly);
-	if (!target) return nullptr;
+	if (!target) {
+		return nullptr;
+	}
 	return &target->cells[ly * Chunk::CHUNK_SIZE + lx];
 }
 
 const Cell *SimContext::cell_at(int x, int y) const {
 	int lx, ly;
 	Chunk *target = const_cast<SimContext *>(this)->resolve_target(x, y, lx, ly);
-	if (!target) return nullptr;
+	if (!target) {
+		return nullptr;
+	}
 	return &target->cells[ly * Chunk::CHUNK_SIZE + lx];
 }
 
 void SimContext::write_cell(int x, int y, const Cell &c) {
 	int lx, ly;
 	Chunk *target = resolve_target(x, y, lx, ly);
-	if (!target) return;
+	if (!target) {
+		return;
+	}
 	target->cells[ly * Chunk::CHUNK_SIZE + lx] = c;
 	target->extend_next_dirty_rect(lx, ly, lx + 1, ly + 1);
 	wake(target, lx, ly);
@@ -85,8 +93,12 @@ void SimContext::swap_cell(int x_a, int y_a, int x_b, int y_b) {
 
 	Cell ca = EMPTY_CELL;
 	Cell cb = EMPTY_CELL;
-	if (ta) ca = ta->cells[lya * Chunk::CHUNK_SIZE + lxa];
-	if (tb) cb = tb->cells[lyb * Chunk::CHUNK_SIZE + lxb];
+	if (ta) {
+		ca = ta->cells[lya * Chunk::CHUNK_SIZE + lxa];
+	}
+	if (tb) {
+		cb = tb->cells[lyb * Chunk::CHUNK_SIZE + lxb];
+	}
 
 	if (ta) {
 		ta->cells[lya * Chunk::CHUNK_SIZE + lxa] = cb;
@@ -102,16 +114,28 @@ void SimContext::swap_cell(int x_a, int y_a, int x_b, int y_b) {
 
 bool SimContext::is_solid(int x, int y) const {
 	const Cell *c = cell_at(x, y);
-	if (!c) return true; // out of world bounds = solid (containment)
-	if (c->material == static_cast<uint8_t>(air_id)) return false;
-	if (c->material == static_cast<uint8_t>(gas_id)) return false;
-	if (c->material == static_cast<uint8_t>(lava_id)) return false;
-	if (c->material == static_cast<uint8_t>(water_id)) return false;
+	if (!c) {
+		return true; // out of world bounds = solid (containment)
+	}
+	if (c->material == static_cast<uint8_t>(air_id)) {
+		return false;
+	}
+	if (c->material == static_cast<uint8_t>(gas_id)) {
+		return false;
+	}
+	if (c->material == static_cast<uint8_t>(lava_id)) {
+		return false;
+	}
+	if (c->material == static_cast<uint8_t>(water_id)) {
+		return false;
+	}
 	return true;
 }
 
 void SimContext::wake(Chunk *target, int x, int y) {
-	if (!target) return;
+	if (!target) {
+		return;
+	}
 	target->set_sleeping(false);
 }
 

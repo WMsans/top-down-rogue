@@ -1,10 +1,10 @@
 #include "simulator.h"
 
 #include "../sim/material_table.h"
+#include "rules/burning.h"
+#include "rules/gas.h"
 #include "rules/injection.h"
 #include "rules/lava.h"
-#include "rules/gas.h"
-#include "rules/burning.h"
 
 #include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -57,7 +57,9 @@ void Simulator::tick() {
 			}
 		}
 
-		if (_phase_chunks.size() == 0) continue;
+		if (_phase_chunks.size() == 0) {
+			continue;
+		}
 
 		WorkerThreadPool *pool = WorkerThreadPool::get_singleton();
 		Callable task = callable_mp(this, &Simulator::_group_task_body);
@@ -70,13 +72,19 @@ void Simulator::tick() {
 }
 
 void Simulator::_group_task_body(int32_t index) {
-	if (index < 0 || index >= _phase_chunks.size()) return;
+	if (index < 0 || index >= _phase_chunks.size()) {
+		return;
+	}
 	tick_chunk(_phase_chunks[index]);
 }
 
 void Simulator::tick_chunk(Chunk *chunk) {
-	if (!chunk) return;
-	if (chunk->get_sleeping()) return;
+	if (!chunk) {
+		return;
+	}
+	if (chunk->get_sleeping()) {
+		return;
+	}
 
 	MaterialTable *mt = MaterialTable::get_singleton();
 
@@ -103,7 +111,9 @@ void Simulator::rotate_dirty_rects() {
 	Array keys = _chunks.keys();
 	for (int i = 0; i < keys.size(); i++) {
 		Ref<Chunk> c = _chunks[keys[i]];
-		if (!c.is_valid()) continue;
+		if (!c.is_valid()) {
+			continue;
+		}
 
 		Rect2i next = c->take_next_dirty_rect();
 		if (next.size.x > 0 && next.size.y > 0) {

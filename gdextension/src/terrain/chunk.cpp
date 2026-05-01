@@ -20,26 +20,30 @@ bool Chunk::extend_next_dirty_rect(int x0, int y0, int x1, int y1) {
 	int32_t old_v = next_min_x.load(std::memory_order_relaxed);
 	while (x0 < old_v && !next_min_x.compare_exchange_weak(old_v, x0, std::memory_order_relaxed)) {
 	}
-	if (x0 < old_v)
+	if (x0 < old_v) {
 		changed = true;
+	}
 
 	old_v = next_min_y.load(std::memory_order_relaxed);
 	while (y0 < old_v && !next_min_y.compare_exchange_weak(old_v, y0, std::memory_order_relaxed)) {
 	}
-	if (y0 < old_v)
+	if (y0 < old_v) {
 		changed = true;
+	}
 
 	old_v = next_max_x.load(std::memory_order_relaxed);
 	while (x1 > old_v && !next_max_x.compare_exchange_weak(old_v, x1, std::memory_order_relaxed)) {
 	}
-	if (x1 > old_v)
+	if (x1 > old_v) {
 		changed = true;
+	}
 
 	old_v = next_max_y.load(std::memory_order_relaxed);
 	while (y1 > old_v && !next_max_y.compare_exchange_weak(old_v, y1, std::memory_order_relaxed)) {
 	}
-	if (y1 > old_v)
+	if (y1 > old_v) {
 		changed = true;
+	}
 
 	return changed;
 }
@@ -96,7 +100,9 @@ void Chunk::upload_texture_full() {
 }
 
 void Chunk::upload_texture() {
-	if (dirty_rect.size.x == 0 || dirty_rect.size.y == 0) return;
+	if (dirty_rect.size.x == 0 || dirty_rect.size.y == 0) {
+		return;
+	}
 	// TODO: Dirty-only upload via partial update.
 	// Per §10.1 risk #4, full re-upload is acceptable for now.
 	upload_texture_full();

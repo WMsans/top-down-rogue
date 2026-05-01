@@ -1,11 +1,11 @@
 #include "chunk_manager.h"
 
-#include "chunk.h"
-#include "sector_grid.h"
-#include "../resources/biome_def.h"
-#include "../sim/material_table.h"
 #include "../generation/generator.h"
 #include "../generation/simplex_cave_generator.h"
+#include "../resources/biome_def.h"
+#include "../sim/material_table.h"
+#include "chunk.h"
+#include "sector_grid.h"
 
 #include <godot_cpp/classes/camera2d.hpp>
 #include <godot_cpp/classes/engine.hpp>
@@ -88,10 +88,14 @@ void ChunkManager::_init_material_textures() {
 
 TypedArray<Vector2i> ChunkManager::get_desired_chunks(Vector2 tracking_position) const {
 	TypedArray<Vector2i> result;
-	if (!_node) return result;
+	if (!_node) {
+		return result;
+	}
 
 	Viewport *vp = _node->get_viewport();
-	if (!vp) return result;
+	if (!vp) {
+		return result;
+	}
 
 	Vector2 vp_size = vp->get_visible_rect().size;
 	Camera2D *cam = vp->get_camera_2d();
@@ -193,7 +197,9 @@ Ref<Chunk> ChunkManager::create_chunk(Vector2i coord) {
 // --- unload_chunk -----------------------------------------------------------
 
 void ChunkManager::unload_chunk(Vector2i coord) {
-	if (!_chunks.has(coord)) return;
+	if (!_chunks.has(coord)) {
+		return;
+	}
 	Ref<Chunk> chunk = _chunks[coord];
 	free_chunk_resources(chunk.ptr());
 	_chunks.erase(coord);
@@ -202,7 +208,9 @@ void ChunkManager::unload_chunk(Vector2i coord) {
 // --- free_chunk_resources ---------------------------------------------------
 
 void ChunkManager::free_chunk_resources(Chunk *chunk) {
-	if (!chunk) return;
+	if (!chunk) {
+		return;
+	}
 
 	if (chunk->mesh_instance && chunk->mesh_instance->is_inside_tree()) {
 		chunk->mesh_instance->queue_free();
@@ -227,28 +235,34 @@ void ChunkManager::free_chunk_resources(Chunk *chunk) {
 // --- wire_neighbors ---------------------------------------------------------
 
 void ChunkManager::wire_neighbors(Chunk *chunk) {
-	if (!chunk) return;
+	if (!chunk) {
+		return;
+	}
 	Vector2i coord = chunk->coord;
 
-	if (_chunks.has(coord + Vector2i(0, -1)))
+	if (_chunks.has(coord + Vector2i(0, -1))) {
 		chunk->set_neighbor_up(_chunks[coord + Vector2i(0, -1)]);
-	else
+	} else {
 		chunk->set_neighbor_up(Ref<Chunk>());
+	}
 
-	if (_chunks.has(coord + Vector2i(0, 1)))
+	if (_chunks.has(coord + Vector2i(0, 1))) {
 		chunk->set_neighbor_down(_chunks[coord + Vector2i(0, 1)]);
-	else
+	} else {
 		chunk->set_neighbor_down(Ref<Chunk>());
+	}
 
-	if (_chunks.has(coord + Vector2i(-1, 0)))
+	if (_chunks.has(coord + Vector2i(-1, 0))) {
 		chunk->set_neighbor_left(_chunks[coord + Vector2i(-1, 0)]);
-	else
+	} else {
 		chunk->set_neighbor_left(Ref<Chunk>());
+	}
 
-	if (_chunks.has(coord + Vector2i(1, 0)))
+	if (_chunks.has(coord + Vector2i(1, 0))) {
 		chunk->set_neighbor_right(_chunks[coord + Vector2i(1, 0)]);
-	else
+	} else {
 		chunk->set_neighbor_right(Ref<Chunk>());
+	}
 }
 
 // --- update_render_neighbors ------------------------------------------------
@@ -276,7 +290,9 @@ void ChunkManager::update_render_neighbors(const TypedArray<Vector2i> &loaded,
 	Array keys = to_update.keys();
 	for (int i = 0; i < keys.size(); i++) {
 		Vector2i coord = keys[i];
-		if (!_chunks.has(coord)) continue;
+		if (!_chunks.has(coord)) {
+			continue;
+		}
 
 		Ref<Chunk> chunk = _chunks[coord];
 		Vector2i north_coord = coord + Vector2i(0, -1);

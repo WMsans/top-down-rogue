@@ -12,10 +12,14 @@ static constexpr int THRESHOLD_BECOME_LAVA = 1;
 static constexpr int THRESHOLD_DISSIPATE = 1;
 
 static int stochastic_div_amount(int numerator, int divisor, int x, int y, uint32_t salt, SimContext &ctx) {
-	if (divisor <= 0) return 0;
+	if (divisor <= 0) {
+		return 0;
+	}
 	int base = numerator / divisor;
 	int rem = numerator - base * divisor;
-	if (rem <= 0) return base;
+	if (rem <= 0) {
+		return base;
+	}
 	uint32_t rng = ctx.hash3(x, y, salt);
 	return base + ((rng % static_cast<uint32_t>(divisor)) < static_cast<uint32_t>(rem) ? 1 : 0);
 }
@@ -27,17 +31,23 @@ static bool is_solid_for_lava(int mat, int air_id) {
 }
 
 static bool is_hot_lava(Cell c, int target_material, int lava_id) {
-	if (static_cast<int>(c.material) != lava_id) return false;
+	if (static_cast<int>(c.material) != lava_id) {
+		return false;
+	}
 	int temp = static_cast<int>(c.temperature);
 	return temp > MaterialTable::get_singleton()->get_ignition_temp(target_material);
 }
 
 void run_lava(SimContext &ctx) {
 	Chunk *chunk = ctx.chunk;
-	if (!chunk) return;
+	if (!chunk) {
+		return;
+	}
 
 	godot::Rect2i dr = chunk->dirty_rect;
-	if (dr.size.x <= 0 || dr.size.y <= 0) return;
+	if (dr.size.x <= 0 || dr.size.y <= 0) {
+		return;
+	}
 
 	int air_id = static_cast<int>(ctx.air_id);
 	int lava_id = static_cast<int>(ctx.lava_id);
@@ -50,19 +60,23 @@ void run_lava(SimContext &ctx) {
 	for (int y = y0; y < y1; y++) {
 		for (int x = x0; x < x1; x++) {
 			const Cell *self = ctx.cell_at(x, y);
-			if (!self) continue;
+			if (!self) {
+				continue;
+			}
 			int material = static_cast<int>(self->material);
-			if (material != lava_id && material != air_id) continue;
+			if (material != lava_id && material != air_id) {
+				continue;
+			}
 
 			Cell n_up_cell, n_down_cell, n_left_cell, n_right_cell;
 			const Cell *n_up_ptr = ctx.cell_at(x, y - 1);
 			const Cell *n_down_ptr = ctx.cell_at(x, y + 1);
 			const Cell *n_left_ptr = ctx.cell_at(x - 1, y);
 			const Cell *n_right_ptr = ctx.cell_at(x + 1, y);
-			n_up_cell = n_up_ptr ? *n_up_ptr : Cell{0, 0, 0, 0};
-			n_down_cell = n_down_ptr ? *n_down_ptr : Cell{0, 0, 0, 0};
-			n_left_cell = n_left_ptr ? *n_left_ptr : Cell{0, 0, 0, 0};
-			n_right_cell = n_right_ptr ? *n_right_ptr : Cell{0, 0, 0, 0};
+			n_up_cell = n_up_ptr ? *n_up_ptr : Cell{ 0, 0, 0, 0 };
+			n_down_cell = n_down_ptr ? *n_down_ptr : Cell{ 0, 0, 0, 0 };
+			n_left_cell = n_left_ptr ? *n_left_ptr : Cell{ 0, 0, 0, 0 };
+			n_right_cell = n_right_ptr ? *n_right_ptr : Cell{ 0, 0, 0, 0 };
 
 			int n_mat_up = static_cast<int>(n_up_cell.material);
 			int n_mat_down = static_cast<int>(n_down_cell.material);
@@ -70,8 +84,8 @@ void run_lava(SimContext &ctx) {
 			int n_mat_right = static_cast<int>(n_right_cell.material);
 
 			bool any_lava_neighbor =
-				n_mat_up == lava_id || n_mat_down == lava_id ||
-				n_mat_left == lava_id || n_mat_right == lava_id;
+					n_mat_up == lava_id || n_mat_down == lava_id ||
+					n_mat_left == lava_id || n_mat_right == lava_id;
 
 			if (material == air_id && !any_lava_neighbor) {
 				continue;
@@ -93,10 +107,18 @@ void run_lava(SimContext &ctx) {
 				return mat != air_id && mat != lava_id;
 			};
 
-			if (is_solid_lava(n_mat_up)) comp_up = 0;
-			if (is_solid_lava(n_mat_down)) comp_down = 0;
-			if (is_solid_lava(n_mat_left)) comp_left = 0;
-			if (is_solid_lava(n_mat_right)) comp_right = 0;
+			if (is_solid_lava(n_mat_up)) {
+				comp_up = 0;
+			}
+			if (is_solid_lava(n_mat_down)) {
+				comp_down = 0;
+			}
+			if (is_solid_lava(n_mat_left)) {
+				comp_left = 0;
+			}
+			if (is_solid_lava(n_mat_right)) {
+				comp_right = 0;
+			}
 
 			int out_up = stochastic_div_amount(density * comp_up, V_MAX_OUTFLOW, x, y, 1u, ctx);
 			int out_down = stochastic_div_amount(density * comp_down, V_MAX_OUTFLOW, x, y, 2u, ctx);
@@ -154,21 +176,29 @@ void run_lava(SimContext &ctx) {
 
 			int total_in = in_up + in_down + in_left + in_right;
 
-			if (is_solid_lava(n_mat_up) && vy < 0) vy = -vy;
-			if (is_solid_lava(n_mat_down) && vy > 0) vy = -vy;
-			if (is_solid_lava(n_mat_left) && vx < 0) vx = -vx;
-			if (is_solid_lava(n_mat_right) && vx > 0) vx = -vx;
+			if (is_solid_lava(n_mat_up) && vy < 0) {
+				vy = -vy;
+			}
+			if (is_solid_lava(n_mat_down) && vy > 0) {
+				vy = -vy;
+			}
+			if (is_solid_lava(n_mat_left) && vx < 0) {
+				vx = -vx;
+			}
+			if (is_solid_lava(n_mat_right) && vx > 0) {
+				vx = -vx;
+			}
 
 			int new_density = std::clamp(density - total_out + total_in, 0, 255);
 
 			int stayed = std::max(0, density - total_out);
 			int weight = std::max(1, stayed + total_in);
 			int vsum_x = static_cast<int>(vx) * stayed +
-			             vin_up_x * in_up + vin_down_x * in_down +
-			             vin_left_x * in_left + vin_right_x * in_right;
+					vin_up_x * in_up + vin_down_x * in_down +
+					vin_left_x * in_left + vin_right_x * in_right;
 			int vsum_y = static_cast<int>(vy) * stayed +
-			             vin_up_y * in_up + vin_down_y * in_down +
-			             vin_left_y * in_left + vin_right_y * in_right;
+					vin_up_y * in_up + vin_down_y * in_down +
+					vin_left_y * in_left + vin_right_y * in_right;
 			int new_vel_x = vsum_x / weight;
 			int new_vel_y = vsum_y / weight;
 			int new_vel_mag = std::max(std::abs(new_vel_x), std::abs(new_vel_y));
@@ -180,10 +210,18 @@ void run_lava(SimContext &ctx) {
 			new_vel_y = std::clamp(new_vel_y, -8, 7);
 
 			int temp_weight = stayed * temperature;
-			if (n_mat_up == lava_id) temp_weight += static_cast<int>(n_up_cell.temperature) * in_up;
-			if (n_mat_down == lava_id) temp_weight += static_cast<int>(n_down_cell.temperature) * in_down;
-			if (n_mat_left == lava_id) temp_weight += static_cast<int>(n_left_cell.temperature) * in_left;
-			if (n_mat_right == lava_id) temp_weight += static_cast<int>(n_right_cell.temperature) * in_right;
+			if (n_mat_up == lava_id) {
+				temp_weight += static_cast<int>(n_up_cell.temperature) * in_up;
+			}
+			if (n_mat_down == lava_id) {
+				temp_weight += static_cast<int>(n_down_cell.temperature) * in_down;
+			}
+			if (n_mat_left == lava_id) {
+				temp_weight += static_cast<int>(n_left_cell.temperature) * in_left;
+			}
+			if (n_mat_right == lava_id) {
+				temp_weight += static_cast<int>(n_right_cell.temperature) * in_right;
+			}
 			int new_temp = temp_weight / std::max(1, stayed + total_in);
 
 			if (material == air_id) {
