@@ -2,6 +2,12 @@
 
 #include "sim/material_table.h"
 
+#include "resources/biome_def.h"
+#include "resources/pool_def.h"
+#include "resources/room_template.h"
+#include "resources/template_pack.h"
+#include "resources/terrain_cell.h"
+
 #include <gdextension_interface.h>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -21,6 +27,14 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 
 	GDREGISTER_CLASS(MaterialDef);
 	GDREGISTER_CLASS(MaterialTable);
+
+	// Resources — register dependencies before dependents:
+	// BiomeDef references PoolDef and RoomTemplate; TemplatePack references RoomTemplate.
+	GDREGISTER_CLASS(TerrainCell);
+	GDREGISTER_CLASS(PoolDef);
+	GDREGISTER_CLASS(RoomTemplate);
+	GDREGISTER_CLASS(BiomeDef);
+	GDREGISTER_CLASS(TemplatePack);
 
 	g_material_table = memnew(MaterialTable);
 	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
