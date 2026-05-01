@@ -7,7 +7,7 @@ env = SConscript("godot-cpp/SConstruct")
 
 # Sources for our extension.
 env.Append(CPPPATH=["src/"])
-sources = Glob("src/*.cpp") + Glob("src/sim/*.cpp") + Glob("src/resources/*.cpp") + Glob("src/terrain/*.cpp")
+sources = Glob("src/*.cpp") + Glob("src/sim/*.cpp") + Glob("src/resources/*.cpp") + Glob("src/terrain/*.cpp") + Glob("src/physics/*.cpp")
 
 # Output filename pattern:
 # libtoprogue.<platform>.<target>.<arch>.<ext>
