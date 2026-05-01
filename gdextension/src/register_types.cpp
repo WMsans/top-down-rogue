@@ -1,23 +1,40 @@
 #include "register_types.h"
 
+#include "sim/material_table.h"
+
 #include <gdextension_interface.h>
+#include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
+#include <godot_cpp/core/memory.hpp>
 #include <godot_cpp/godot.hpp>
 
 using namespace godot;
+using namespace toprogue;
+
+static MaterialTable *g_material_table = nullptr;
 
 void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
-	// Step 1 (bootstrap): no classes registered yet.
-	// Step 2 onward will register MaterialTable, then resources, then terrain classes.
+
+	GDREGISTER_CLASS(MaterialDef);
+	GDREGISTER_CLASS(MaterialTable);
+
+	g_material_table = memnew(MaterialTable);
+	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
 }
 
 void uninitialize_toprogue_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
+	}
+
+	Engine::get_singleton()->unregister_singleton("MaterialTable");
+	if (g_material_table) {
+		memdelete(g_material_table);
+		g_material_table = nullptr;
 	}
 }
 
