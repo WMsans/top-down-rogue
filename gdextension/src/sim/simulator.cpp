@@ -1,6 +1,10 @@
 #include "simulator.h"
 
 #include "../sim/material_table.h"
+#include "rules/injection.h"
+#include "rules/lava.h"
+#include "rules/gas.h"
+#include "rules/burning.h"
 
 #include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -74,8 +78,25 @@ void Simulator::tick_chunk(Chunk *chunk) {
 	if (!chunk) return;
 	if (chunk->get_sleeping()) return;
 
-	// Rules land in tasks 4–7.
-	// For now, no-op — stubs keep the dirty-rect / sleep cycle working.
+	MaterialTable *mt = MaterialTable::get_singleton();
+
+	SimContext ctx;
+	ctx.chunk = chunk;
+	ctx.up = chunk->get_neighbor_up().ptr();
+	ctx.down = chunk->get_neighbor_down().ptr();
+	ctx.left = chunk->get_neighbor_left().ptr();
+	ctx.right = chunk->get_neighbor_right().ptr();
+	ctx.frame_seed = _current_frame_seed;
+	ctx.frame_index = _frame_index;
+	ctx.air_id = mt->get_MAT_AIR();
+	ctx.gas_id = mt->get_MAT_GAS();
+	ctx.lava_id = mt->get_MAT_LAVA();
+	ctx.water_id = mt->get_MAT_WATER();
+
+	run_injection(ctx);
+	run_lava(ctx);
+	run_gas(ctx);
+	run_burning(ctx);
 }
 
 void Simulator::rotate_dirty_rects() {
