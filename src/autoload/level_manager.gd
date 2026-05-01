@@ -15,7 +15,8 @@ var _spawn_dispatcher: Node
 func _ready() -> void:
 	world_seed = randi()
 	current_biome = BiomeRegistry.get_biome(floor_number)
-	_grid = SectorGrid.new(world_seed, current_biome)
+	_grid = SectorGrid.new()
+	_grid.init_args(world_seed, current_biome)
 	var SpawnDispatcher = load("res://src/core/spawn_dispatcher.gd")
 	_spawn_dispatcher = SpawnDispatcher.new()
 	_spawn_dispatcher.name = "SpawnDispatcher"
@@ -34,7 +35,8 @@ func advance_floor() -> void:
 	floor_number += 1
 	world_seed = randi()
 	current_biome = BiomeRegistry.get_biome(floor_number)
-	_grid = SectorGrid.new(world_seed, current_biome)
+	_grid = SectorGrid.new()
+	_grid.init_args(world_seed, current_biome)
 	if _spawn_dispatcher and _spawn_dispatcher.has_method("clear"):
 		_spawn_dispatcher.clear()
 	var wm := get_tree().get_first_node_in_group("world_manager")
