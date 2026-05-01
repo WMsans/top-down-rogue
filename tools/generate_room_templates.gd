@@ -8,7 +8,7 @@ extends SceneTree
 
 const OUT_DIR := "res://assets/rooms"
 
-# Material IDs (must match MaterialRegistry order; cannot import the autoload
+# Material IDs (must match MaterialTable order; cannot import the autoload
 # from a SceneTree script, so values are duplicated here)
 const MAT_LAVA := 4
 const MAT_DIRT := 5

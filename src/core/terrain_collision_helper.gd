@@ -43,7 +43,7 @@ func rebuild_chunk_collision_cpu(chunk: Chunk) -> void:
 		for x in CHUNK_SIZE:
 			var src_idx := (y * CHUNK_SIZE + x) * 4
 			var mat: int = chunk_data[src_idx]
-			material_data[y * CHUNK_SIZE + x] = mat if MaterialRegistry.has_collider(mat) else 0
+			material_data[y * CHUNK_SIZE + x] = mat if MaterialTable.has_collider(mat) else 0
 
 	var world_offset := chunk.coord * CHUNK_SIZE
 	if chunk.static_body.get_child_count() > 0:
