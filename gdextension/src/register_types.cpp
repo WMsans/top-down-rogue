@@ -8,6 +8,10 @@
 #include "resources/template_pack.h"
 #include "resources/terrain_cell.h"
 
+#include "terrain/chunk.h"
+#include "terrain/generation_context.h"
+#include "terrain/sector_grid.h"
+
 #include <gdextension_interface.h>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -35,6 +39,13 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(RoomTemplate);
 	GDREGISTER_CLASS(BiomeDef);
 	GDREGISTER_CLASS(TemplatePack);
+
+	// Leaf types — register dependencies before dependents.
+	// SectorGrid takes a Ref<BiomeDef>; BiomeDef must already be registered (it is, above).
+	GDREGISTER_CLASS(GenerationContext);
+	GDREGISTER_CLASS(Chunk);
+	GDREGISTER_CLASS(RoomSlot);   // Inner type of SectorGrid; register before SectorGrid.
+	GDREGISTER_CLASS(SectorGrid);
 
 	g_material_table = memnew(MaterialTable);
 	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
