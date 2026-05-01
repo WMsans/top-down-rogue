@@ -2,7 +2,6 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/variant/color.hpp>
-#include <godot_cpp/variant/packed_int32_array.hpp>
 #include <godot_cpp/variant/string.hpp>
 #include <godot_cpp/templates/vector.hpp>
 
@@ -64,7 +63,7 @@ public:
     bool has_collider(int p_material_id) const;
     bool has_wall_extension(int p_material_id) const;
     Color get_tint_color(int p_material_id) const;
-    PackedInt32Array get_fluids() const;
+    Array get_fluids() const;
     bool is_fluid(int p_material_id) const;
     int get_damage(int p_material_id) const;
     float get_glow(int p_material_id) const;

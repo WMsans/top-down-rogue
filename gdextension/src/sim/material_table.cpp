@@ -64,11 +64,11 @@ Color MaterialTable::get_tint_color(int p_material_id) const {
     return _valid_id(p_material_id) ? defs[p_material_id].tint_color : Color(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
-PackedInt32Array MaterialTable::get_fluids() const {
-    PackedInt32Array result;
+Array MaterialTable::get_fluids() const {
+    Array result;
     for (const MaterialDef &m : defs) {
         if (m.fluid) {
-            result.append(m.id);
+            result.push_back(m.id);
         }
     }
     return result;
