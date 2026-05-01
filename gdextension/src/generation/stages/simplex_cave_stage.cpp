@@ -1,6 +1,6 @@
 #include "../../terrain/chunk.h"
-#include "../stage_context.h"
 #include "../../util/simplex.h"
+#include "../stage_context.h"
 
 using namespace godot;
 

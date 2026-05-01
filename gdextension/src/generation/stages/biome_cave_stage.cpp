@@ -1,6 +1,6 @@
 #include "../../terrain/chunk.h"
-#include "../stage_context.h"
 #include "../../util/simplex.h"
+#include "../stage_context.h"
 
 using namespace godot;
 
@@ -8,8 +8,9 @@ namespace toprogue {
 
 void stage_biome_cave(Chunk *chunk, const StageContext &ctx) {
 	Ref<BiomeDef> b = ctx.biome;
-	if (b.is_null())
+	if (b.is_null()) {
 		return;
+	}
 
 	const float cave_scale = static_cast<float>(b->cave_noise_scale);
 	const float cave_threshold = static_cast<float>(b->cave_threshold);

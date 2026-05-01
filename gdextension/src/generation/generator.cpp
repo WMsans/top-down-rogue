@@ -1,7 +1,7 @@
 #include "generator.h"
 
-#include "stage_context.h"
 #include "../sim/material_table.h"
+#include "stage_context.h"
 
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/worker_thread_pool.hpp>
@@ -44,8 +44,9 @@ void Generator::generate_chunks(
 		const Ref<BiomeDef> &biome,
 		const PackedByteArray &stamp_bytes) {
 	int n = new_coords.size();
-	if (n == 0)
+	if (n == 0) {
 		return;
+	}
 
 	_current_jobs.resize(n);
 	_current_ctxs.resize(n);
@@ -77,8 +78,9 @@ void Generator::generate_chunks(
 	RenderingDevice *rd = RenderingServer::get_singleton()->get_rendering_device();
 	for (int i = 0; i < n; i++) {
 		Chunk *c = _current_jobs[i];
-		if (!c)
+		if (!c) {
 			continue;
+		}
 
 		PackedByteArray bytes;
 		bytes.resize(Chunk::CELL_COUNT * sizeof(Cell));
@@ -95,8 +97,9 @@ void Generator::generate_chunks(
 
 void Generator::_run_one_indexed(int idx) {
 	Chunk *c = _current_jobs[idx];
-	if (!c)
+	if (!c) {
 		return;
+	}
 	run_pipeline(c, _current_ctxs[idx]);
 }
 
