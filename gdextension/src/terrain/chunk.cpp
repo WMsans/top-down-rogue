@@ -77,6 +77,17 @@ Vector<InjectionAABB> Chunk::take_injections() {
 	return out;
 }
 
+// --- Texture upload stubs (Task 8 implements) ----------------------------
+
+void Chunk::upload_texture() {
+	// TODO: Implement in Task 8
+	upload_texture_full();
+}
+
+void Chunk::upload_texture_full() {
+	// TODO: Implement in Task 8
+}
+
 PackedByteArray Chunk::get_cells_data() const {
 	PackedByteArray out;
 	out.resize(static_cast<int64_t>(sizeof(cells)));
