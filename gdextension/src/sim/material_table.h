@@ -10,6 +10,15 @@
 
 namespace toprogue {
 
+enum class MaterialKind : uint8_t {
+	NONE,
+	SOLID,
+	POWDER,
+	LIQUID,
+	GAS,
+	FIRE
+};
+
 class MaterialDef : public godot::RefCounted {
 	GDCLASS(MaterialDef, godot::RefCounted);
 
@@ -29,6 +38,14 @@ public:
 	bool fluid = false;
 	int damage = 0;
 	double glow = 1.0;
+
+	// --- Simulation parameters (spec §7, Task 2) ---------------------
+	MaterialKind kind = MaterialKind::SOLID;
+	uint8_t density = 0;
+	uint8_t viscosity = 0;
+	uint8_t dispersion = 0;
+	uint8_t diffusion_rate = 0;
+	uint8_t max_temp = 255;
 
 	int get_id() const { return id; }
 	void set_id(int v) { id = v; }
@@ -54,6 +71,19 @@ public:
 	void set_damage(int v) { damage = v; }
 	double get_glow() const { return glow; }
 	void set_glow(double v) { glow = v; }
+
+	int get_kind() const { return static_cast<int>(kind); }
+	void set_kind(int v) { kind = static_cast<MaterialKind>(v); }
+	int get_density() const { return density; }
+	void set_density(int v) { density = static_cast<uint8_t>(v); }
+	int get_viscosity() const { return viscosity; }
+	void set_viscosity(int v) { viscosity = static_cast<uint8_t>(v); }
+	int get_dispersion() const { return dispersion; }
+	void set_dispersion(int v) { dispersion = static_cast<uint8_t>(v); }
+	int get_diffusion_rate() const { return diffusion_rate; }
+	void set_diffusion_rate(int v) { diffusion_rate = static_cast<uint8_t>(v); }
+	int get_max_temp() const { return max_temp; }
+	void set_max_temp(int v) { max_temp = static_cast<uint8_t>(v); }
 };
 
 class MaterialTable : public godot::Object {
@@ -107,6 +137,15 @@ public:
 	bool is_fluid(int p_id) const;
 	int get_damage(int p_id) const;
 	double get_glow(int p_id) const;
+	int get_kind_int(int p_id) const;
+	int get_density(int p_id) const;
+	int get_viscosity(int p_id) const;
+	int get_dispersion(int p_id) const;
+	int get_diffusion_rate(int p_id) const;
+	int get_max_temp(int p_id) const;
+
+	// C++-only: returns the enum directly for internal use
+	MaterialKind kind_of(int p_id) const;
 
 	int get_MAT_AIR() const { return MAT_AIR; }
 	int get_MAT_WOOD() const { return MAT_WOOD; }

@@ -59,6 +59,30 @@ void MaterialDef::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_glow"), &MaterialDef::get_glow);
 	ClassDB::bind_method(D_METHOD("set_glow", "v"), &MaterialDef::set_glow);
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "glow"), "set_glow", "get_glow");
+
+	ClassDB::bind_method(D_METHOD("get_kind"), &MaterialDef::get_kind);
+	ClassDB::bind_method(D_METHOD("set_kind", "v"), &MaterialDef::set_kind);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "kind"), "set_kind", "get_kind");
+
+	ClassDB::bind_method(D_METHOD("get_density"), &MaterialDef::get_density);
+	ClassDB::bind_method(D_METHOD("set_density", "v"), &MaterialDef::set_density);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "density"), "set_density", "get_density");
+
+	ClassDB::bind_method(D_METHOD("get_viscosity"), &MaterialDef::get_viscosity);
+	ClassDB::bind_method(D_METHOD("set_viscosity", "v"), &MaterialDef::set_viscosity);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "viscosity"), "set_viscosity", "get_viscosity");
+
+	ClassDB::bind_method(D_METHOD("get_dispersion"), &MaterialDef::get_dispersion);
+	ClassDB::bind_method(D_METHOD("set_dispersion", "v"), &MaterialDef::set_dispersion);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "dispersion"), "set_dispersion", "get_dispersion");
+
+	ClassDB::bind_method(D_METHOD("get_diffusion_rate"), &MaterialDef::get_diffusion_rate);
+	ClassDB::bind_method(D_METHOD("set_diffusion_rate", "v"), &MaterialDef::set_diffusion_rate);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "diffusion_rate"), "set_diffusion_rate", "get_diffusion_rate");
+
+	ClassDB::bind_method(D_METHOD("get_max_temp"), &MaterialDef::get_max_temp);
+	ClassDB::bind_method(D_METHOD("set_max_temp", "v"), &MaterialDef::set_max_temp);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "max_temp"), "set_max_temp", "get_max_temp");
 }
 
 // ---------------- MaterialTable ----------------
@@ -142,6 +166,33 @@ void MaterialTable::_populate() {
 	MAT_WATER = _add("WATER", "", false, 0, 0, true, true,
 			Color(0.2, 0.45, 0.75, 1.0),
 			/*fluid=*/true);
+
+	// --- Populate simulation parameters (Task 2) ---
+	// GLSL-derived; tune in follow-up gameplay work.
+
+	auto set_sim = [this](int id, MaterialKind kind, uint8_t density, uint8_t viscosity,
+			uint8_t dispersion, uint8_t diffusion_rate, uint8_t max_temp) {
+		if (id < 0 || id >= (int)materials.size()) return;
+		Ref<MaterialDef> d = materials[id];
+		if (d.is_valid()) {
+			d->kind = kind;
+			d->density = density;
+			d->viscosity = viscosity;
+			d->dispersion = dispersion;
+			d->diffusion_rate = diffusion_rate;
+			d->max_temp = max_temp;
+		}
+	};
+
+	set_sim(MAT_AIR, MaterialKind::NONE, 0, 0, 0, 0, 255);
+	set_sim(MAT_WOOD, MaterialKind::SOLID, 0, 0, 0, 4, 255);
+	set_sim(MAT_STONE, MaterialKind::SOLID, 0, 0, 0, 0, 255);
+	set_sim(MAT_GAS, MaterialKind::GAS, 128, 0, 4, 0, 255);
+	set_sim(MAT_LAVA, MaterialKind::LIQUID, 0, 192, 0, 0, 255);
+	set_sim(MAT_DIRT, MaterialKind::SOLID, 0, 0, 0, 0, 255);
+	set_sim(MAT_COAL, MaterialKind::SOLID, 0, 0, 0, 4, 255);
+	set_sim(MAT_ICE, MaterialKind::SOLID, 0, 0, 0, 0, 255);
+	set_sim(MAT_WATER, MaterialKind::LIQUID, 0, 0, 0, 0, 255);
 }
 
 bool MaterialTable::is_flammable(int p_id) const {
@@ -219,6 +270,62 @@ double MaterialTable::get_glow(int p_id) const {
 	return d.is_valid() ? d->glow : 1.0;
 }
 
+int MaterialTable::get_kind_int(int p_id) const {
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 0;
+	}
+	Ref<MaterialDef> d = materials[p_id];
+	return d.is_valid() ? static_cast<int>(d->kind) : 0;
+}
+
+MaterialKind MaterialTable::kind_of(int p_id) const {
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return MaterialKind::SOLID;
+	}
+	Ref<MaterialDef> d = materials[p_id];
+	return d.is_valid() ? d->kind : MaterialKind::SOLID;
+}
+
+int MaterialTable::get_density(int p_id) const {
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 0;
+	}
+	Ref<MaterialDef> d = materials[p_id];
+	return d.is_valid() ? d->density : 0;
+}
+
+int MaterialTable::get_viscosity(int p_id) const {
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 0;
+	}
+	Ref<MaterialDef> d = materials[p_id];
+	return d.is_valid() ? d->viscosity : 0;
+}
+
+int MaterialTable::get_dispersion(int p_id) const {
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 0;
+	}
+	Ref<MaterialDef> d = materials[p_id];
+	return d.is_valid() ? d->dispersion : 0;
+}
+
+int MaterialTable::get_diffusion_rate(int p_id) const {
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 0;
+	}
+	Ref<MaterialDef> d = materials[p_id];
+	return d.is_valid() ? d->diffusion_rate : 0;
+}
+
+int MaterialTable::get_max_temp(int p_id) const {
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 255;
+	}
+	Ref<MaterialDef> d = materials[p_id];
+	return d.is_valid() ? d->max_temp : 255;
+}
+
 void MaterialTable::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_materials"), &MaterialTable::get_materials);
 	ClassDB::bind_method(D_METHOD("is_flammable", "material_id"), &MaterialTable::is_flammable);
@@ -230,6 +337,12 @@ void MaterialTable::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_fluid", "material_id"), &MaterialTable::is_fluid);
 	ClassDB::bind_method(D_METHOD("get_damage", "material_id"), &MaterialTable::get_damage);
 	ClassDB::bind_method(D_METHOD("get_glow", "material_id"), &MaterialTable::get_glow);
+	ClassDB::bind_method(D_METHOD("get_kind", "material_id"), &MaterialTable::get_kind_int);
+	ClassDB::bind_method(D_METHOD("get_density", "material_id"), &MaterialTable::get_density);
+	ClassDB::bind_method(D_METHOD("get_viscosity", "material_id"), &MaterialTable::get_viscosity);
+	ClassDB::bind_method(D_METHOD("get_dispersion", "material_id"), &MaterialTable::get_dispersion);
+	ClassDB::bind_method(D_METHOD("get_diffusion_rate", "material_id"), &MaterialTable::get_diffusion_rate);
+	ClassDB::bind_method(D_METHOD("get_max_temp", "material_id"), &MaterialTable::get_max_temp);
 
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "materials",
 						 PROPERTY_HINT_ARRAY_TYPE, "MaterialDef",
