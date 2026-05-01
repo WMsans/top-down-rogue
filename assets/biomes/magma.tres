@@ -1,47 +1,37 @@
-[gd_resource type="Resource" script_class="BiomeDef" format=3]
+[gd_resource type="BiomeDef" format=3]
 
-[ext_resource type="Script" path="res://src/core/room_template.gd" id="1_8divj"]
-[ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_0amv1"]
-[ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_silhp"]
 
-[sub_resource type="Resource" id="Resource_664ne"]
-script = ExtResource("1_8divj")
+[sub_resource type="RoomTemplate" id="Resource_664ne"]
 png_path = "res://assets/rooms/magma/boss_arena.png"
 size_class = 128
 is_boss = true
 rotatable = false
 
-[sub_resource type="Resource" id="Resource_sajre"]
-script = ExtResource("2_0amv1")
+[sub_resource type="PoolDef" id="Resource_sajre"]
 material_id = 4
 noise_scale = 0.004
 noise_threshold = 0.72
 seed_offset = 31
 
-[sub_resource type="Resource" id="Resource_hi480"]
-script = ExtResource("2_0amv1")
+[sub_resource type="PoolDef" id="Resource_hi480"]
 material_id = 3
 noise_scale = 0.015
 noise_threshold = 0.85
 seed_offset = 32
 
-[sub_resource type="Resource" id="Resource_bp58i"]
-script = ExtResource("1_8divj")
+[sub_resource type="RoomTemplate" id="Resource_bp58i"]
 png_path = "res://assets/rooms/magma/blob_lava_a.png"
 weight = 2.0
 
-[sub_resource type="Resource" id="Resource_t5id5"]
-script = ExtResource("1_8divj")
+[sub_resource type="RoomTemplate" id="Resource_t5id5"]
 png_path = "res://assets/rooms/magma/blob_lava_b.png"
 weight = 2.0
 
-[sub_resource type="Resource" id="Resource_opoei"]
-script = ExtResource("1_8divj")
+[sub_resource type="RoomTemplate" id="Resource_opoei"]
 png_path = "res://assets/rooms/magma/arena_a.png"
 weight = 2.0
 
 [resource]
-script = ExtResource("3_silhp")
 display_name = "Magma Caverns"
 cave_noise_scale = 0.012
 cave_threshold = 0.5
