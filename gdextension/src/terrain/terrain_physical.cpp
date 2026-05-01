@@ -12,9 +12,9 @@ namespace toprogue {
 
 Ref<TerrainCell> TerrainPhysical::query(const Vector2 &world_pos) const {
 	Vector2i cp(static_cast<int>(std::floor(world_pos.x)), static_cast<int>(std::floor(world_pos.y)));
-	HashMap<Vector2i, int>::ConstIterator it = _grid.find(cp);
-	if (it != _grid.end()) {
-		return _cell_from_material(it->value);
+	if (_grid.has(cp)) {
+		int mat_id = _grid[cp];
+		return _cell_from_material(mat_id);
 	}
 	Ref<TerrainCell> empty;
 	empty.instantiate();
@@ -55,6 +55,14 @@ void TerrainPhysical::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world_manager",
 						 PROPERTY_HINT_NODE_TYPE, "Node2D"),
 			"set_world_manager", "get_world_manager");
+
+	ClassDB::bind_method(D_METHOD("get_grid"), &TerrainPhysical::get_grid);
+	ClassDB::bind_method(D_METHOD("set_grid", "v"), &TerrainPhysical::set_grid);
+	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "_grid"), "set_grid", "get_grid");
+
+	ClassDB::bind_method(D_METHOD("get_grid_center"), &TerrainPhysical::get_grid_center);
+	ClassDB::bind_method(D_METHOD("set_grid_center", "v"), &TerrainPhysical::set_grid_center);
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "_grid_center"), "set_grid_center", "get_grid_center");
 }
 
 } // namespace toprogue
