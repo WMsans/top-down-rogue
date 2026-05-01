@@ -9,13 +9,13 @@ func test_query_empty_grid_returns_default_cell() -> void:
 
 func test_query_cached_cell() -> void:
 	var tp := TerrainPhysical.new()
-	tp._grid[Vector2i(10, 20)] = MaterialRegistry.MAT_WOOD
+	tp._grid[Vector2i(10, 20)] = MaterialTable.MAT_WOOD
 	var cell := tp.query(Vector2(10, 20))
-	assert_that(cell.material_id).is_equal(MaterialRegistry.MAT_WOOD)
+	assert_that(cell.material_id).is_equal(MaterialTable.MAT_WOOD)
 
 func test_invalidate_removes_from_cache() -> void:
 	var tp := TerrainPhysical.new()
-	tp._grid[Vector2i(15, 25)] = MaterialRegistry.MAT_STONE
+	tp._grid[Vector2i(15, 25)] = MaterialTable.MAT_STONE
 	tp.invalidate_rect(Rect2i(10, 20, 10, 10))
 	var cell := tp.query(Vector2(15, 25))
 	assert_that(cell.material_id).is_equal(0)

@@ -39,9 +39,9 @@ func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector
 		var modified := false
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
-			if data[idx] != MaterialRegistry.MAT_AIR:
+			if data[idx] != MaterialTable.MAT_AIR:
 				continue
-			data[idx] = MaterialRegistry.MAT_GAS
+			data[idx] = MaterialTable.MAT_GAS
 			data[idx + 1] = clamped_density
 			data[idx + 2] = 0
 			data[idx + 3] = packed_velocity
@@ -78,9 +78,9 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 		var modified := false
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
-			if data[idx] != MaterialRegistry.MAT_AIR:
+			if data[idx] != MaterialTable.MAT_AIR:
 				continue
-			data[idx] = MaterialRegistry.MAT_LAVA
+			data[idx] = MaterialTable.MAT_LAVA
 			data[idx + 1] = 200
 			data[idx + 2] = 255
 			data[idx + 3] = 136
@@ -117,7 +117,7 @@ func place_material(world_pos: Vector2, radius: float, material_id: int) -> void
 		var modified := false
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
-			if data[idx] != MaterialRegistry.MAT_AIR:
+			if data[idx] != MaterialTable.MAT_AIR:
 				continue
 			data[idx] = material_id
 			data[idx + 1] = 255
@@ -159,7 +159,7 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		for pixel_pos: Vector2i in affected[chunk_coord]:
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
 			var material: int = data[idx]
-			if not MaterialRegistry.is_flammable(material):
+			if not MaterialTable.is_flammable(material):
 				continue
 			data[idx + 2] = 255
 			modified = true
@@ -336,7 +336,7 @@ func clear_and_push_materials_in_arc(
 				continue
 
 			if do_clear:
-				data[idx] = MaterialRegistry.MAT_AIR
+				data[idx] = MaterialTable.MAT_AIR
 				data[idx + 1] = 0
 				data[idx + 2] = 0
 				data[idx + 3] = 136
