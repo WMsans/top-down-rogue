@@ -12,12 +12,14 @@ func _make_biome() -> Resource:
 	var rt2: Resource = _RoomTemplate.new()
 	rt2.png_path = "rt1"
 	rt2.weight = 2.0
-	b.room_templates = [rt, rt2]
+	var templates: Array[RoomTemplate] = [rt, rt2]
+	b.room_templates = templates
 	var boss: Resource = _RoomTemplate.new()
 	boss.png_path = "boss"
 	boss.is_boss = true
 	boss.rotatable = false
-	b.boss_templates = [boss]
+	var boss_templates: Array[RoomTemplate] = [boss]
+	b.boss_templates = boss_templates
 	return b
 
 func test_world_to_sector_origin() -> void:

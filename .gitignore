@@ -19,3 +19,4 @@ config.log
 *.o
 *.os
 *.obj
+/reports

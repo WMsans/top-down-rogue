@@ -1,5 +1,7 @@
 extends GdUnitTestSuite
 
+const _TerrainSurface = preload("res://src/core/terrain_surface.gd")
+
 class FakeAdapter:
 	var place_gas_calls := []
 	var place_lava_calls := []
@@ -23,7 +25,7 @@ class FakeAdapter:
 
 func test_place_gas_delegates_to_adapter() -> void:
 	var fake := FakeAdapter.new()
-	var surface := TerrainSurface.new()
+	var surface := _TerrainSurface.new()
 	surface.adapter = fake
 	surface.place_gas(Vector2(10, 20), 5.0, 200)
 	assert_that(fake.place_gas_calls.size()).is_equal(1)
@@ -31,13 +33,13 @@ func test_place_gas_delegates_to_adapter() -> void:
 
 func test_place_lava_delegates_to_adapter() -> void:
 	var fake := FakeAdapter.new()
-	var surface := TerrainSurface.new()
+	var surface := _TerrainSurface.new()
 	surface.adapter = fake
 	surface.place_lava(Vector2(30, 40), 8.0)
 	assert_that(fake.place_lava_calls.size()).is_equal(1)
 
 func test_null_adapter_does_not_crash() -> void:
-	var surface := TerrainSurface.new()
+	var surface := _TerrainSurface.new()
 	surface.place_gas(Vector2.ZERO, 1.0, 100)
 	surface.place_lava(Vector2.ZERO, 1.0)
 	assert_bool(true).is_true()

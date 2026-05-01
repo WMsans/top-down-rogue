@@ -38,6 +38,10 @@ window/stretch/mode="viewport"
 
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/level_preview/plugin.cfg")
 
+[gdunit4]
+
+ui/inspector/tree_sort_mode=1
+
 [input]
 
 pause={
