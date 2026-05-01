@@ -97,7 +97,7 @@ func _use_impl(user: Node) -> void:
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
-	var materials: Array[int] = MaterialRegistry.get_fluids()
+	var materials: Array[int] = MaterialTable.get_fluids()
 	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
 	_hit_attackables_in_arc(user, pos, direction)
 

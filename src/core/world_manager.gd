@@ -250,7 +250,7 @@ func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left:
 		return false
 	for y in range(top_left.y, top_left.y + size.y):
 		for x in range(top_left.x, top_left.x + size.x):
-			if data[y * region_w + x] != MaterialRegistry.MAT_AIR:
+			if data[y * region_w + x] != MaterialTable.MAT_AIR:
 				return false
 	return true
 

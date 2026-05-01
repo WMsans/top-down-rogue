@@ -39,7 +39,7 @@ func set_center(world_center: Vector2i) -> void:
 
 
 func _cell_from_material(mat_id: int) -> TerrainCell:
-	var is_solid := MaterialRegistry.has_collider(mat_id)
-	var is_fluid := MaterialRegistry.is_fluid(mat_id)
-	var dmg := MaterialRegistry.get_damage(mat_id)
+	var is_solid := MaterialTable.has_collider(mat_id)
+	var is_fluid := MaterialTable.is_fluid(mat_id)
+	var dmg := MaterialTable.get_damage(mat_id)
 	return TerrainCell.new(mat_id, is_solid, is_fluid, dmg)
