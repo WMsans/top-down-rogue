@@ -8,6 +8,9 @@
 #include "resources/template_pack.h"
 #include "resources/terrain_cell.h"
 
+#include "generation/generator.h"
+#include "generation/simplex_cave_generator.h"
+
 #include "physics/collider_builder.h"
 #include "physics/gas_injector.h"
 #include "physics/terrain_collider.h"
@@ -59,6 +62,10 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(GasInjector);
 	GDREGISTER_CLASS(TerrainCollisionHelper);
 	GDREGISTER_CLASS(TerrainPhysical);
+
+	// Generation
+	GDREGISTER_CLASS(Generator);
+	GDREGISTER_CLASS(SimplexCaveGenerator);
 
 	g_material_table = memnew(MaterialTable);
 	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
