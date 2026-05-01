@@ -1,17 +1,17 @@
 #include "world_manager.h"
 
-#include "chunk_manager.h"
-#include "terrain_modifier.h"
-#include "terrain_physical.h"
-#include "terrain_collision_helper.h"
-#include "../sim/simulator.h"
-#include "../sim/material_table.h"
 #include "../generation/generator.h"
 #include "../generation/simplex_cave_generator.h"
 #include "../physics/collider_builder.h"
 #include "../physics/gas_injector.h"
 #include "../physics/terrain_collider.h"
 #include "../resources/biome_def.h"
+#include "../sim/material_table.h"
+#include "../sim/simulator.h"
+#include "chunk_manager.h"
+#include "terrain_collision_helper.h"
+#include "terrain_modifier.h"
+#include "terrain_physical.h"
 
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/scene_tree.hpp>
@@ -43,16 +43,17 @@ void WorldManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("place_fire", "world_pos", "radius"),
 			&WorldManager::place_fire);
 	ClassDB::bind_method(D_METHOD("disperse_materials_in_arc", "origin", "direction",
-			"radius", "arc_angle", "push_speed", "materials"),
+								 "radius", "arc_angle", "push_speed", "materials"),
 			&WorldManager::disperse_materials_in_arc);
 	ClassDB::bind_method(D_METHOD("clear_and_push_materials_in_arc", "origin", "direction",
-			"radius", "arc_angle", "push_speed", "edge_fraction", "materials"),
+								 "radius", "arc_angle", "push_speed", "edge_fraction", "materials"),
 			&WorldManager::clear_and_push_materials_in_arc);
 
 	ClassDB::bind_method(D_METHOD("reset"), &WorldManager::reset);
 	ClassDB::bind_method(D_METHOD("read_region", "region"), &WorldManager::read_region);
 	ClassDB::bind_method(D_METHOD("find_spawn_position", "search_origin", "body_size",
-			"max_radius"), &WorldManager::find_spawn_position, DEFVAL(800.0f));
+								 "max_radius"),
+			&WorldManager::find_spawn_position, DEFVAL(800.0f));
 	ClassDB::bind_method(D_METHOD("get_active_chunk_coords"),
 			&WorldManager::get_active_chunk_coords);
 	ClassDB::bind_method(D_METHOD("generate_chunks_at", "coords", "seed_val"),
@@ -287,7 +288,9 @@ Vector2i WorldManager::find_spawn_position(Vector2i search_origin, Vector2i body
 	for (int dy = -radius_chunks; dy <= radius_chunks; dy++) {
 		for (int dx = -radius_chunks; dx <= radius_chunks; dx++) {
 			Vector2i coord = chunk_origin + Vector2i(dx, dy);
-			if (!_chunk_manager->get_chunks().has(coord)) continue;
+			if (!_chunk_manager->get_chunks().has(coord)) {
+				continue;
+			}
 
 			Ref<Chunk> chunk = _chunk_manager->get_chunks()[coord];
 
@@ -304,7 +307,9 @@ Vector2i WorldManager::find_spawn_position(Vector2i search_origin, Vector2i body
 									(search_origin.y - world_center.y) *
 									(search_origin.y - world_center.y)));
 
-					if (dist > max_radius) continue;
+					if (dist > max_radius) {
+						continue;
+					}
 
 					bool fits = true;
 					for (int py = 0; py < body_size.y && fits; py++) {
@@ -356,8 +361,12 @@ bool WorldManager::_pocket_fits(const PackedByteArray &data, int region_w, int r
 		for (int x = 0; x < size.x; x++) {
 			int px = top_left.x + x;
 			int py = top_left.y + y;
-			if (px < 0 || px >= region_w || py < 0 || py >= region_h) return false;
-			if (data[py * region_w + px] != air_id) return false;
+			if (px < 0 || px >= region_w || py < 0 || py >= region_h) {
+				return false;
+			}
+			if (data[py * region_w + px] != air_id) {
+				return false;
+			}
 		}
 	}
 	return true;

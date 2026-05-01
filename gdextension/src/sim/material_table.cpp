@@ -171,8 +171,10 @@ void MaterialTable::_populate() {
 	// GLSL-derived; tune in follow-up gameplay work.
 
 	auto set_sim = [this](int id, MaterialKind kind, uint8_t density, uint8_t viscosity,
-			uint8_t dispersion, uint8_t diffusion_rate, uint8_t max_temp) {
-		if (id < 0 || id >= (int)materials.size()) return;
+						   uint8_t dispersion, uint8_t diffusion_rate, uint8_t max_temp) {
+		if (id < 0 || id >= (int)materials.size()) {
+			return;
+		}
 		Ref<MaterialDef> d = materials[id];
 		if (d.is_valid()) {
 			d->kind = kind;
