@@ -70,7 +70,7 @@ func init_collider_storage_buffer() -> void:
 
 func init_material_textures() -> void:
 	var images: Array[Image] = []
-	for m in MaterialRegistry.materials:
+	for m in MaterialTable.materials:
 		if m.texture_path.is_empty():
 			var ref_size: Vector2i = Vector2i(16, 16)
 			if images.size() > 0:
