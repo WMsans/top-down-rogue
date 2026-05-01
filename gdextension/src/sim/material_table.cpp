@@ -79,16 +79,16 @@ MaterialTable *MaterialTable::get_singleton() {
 }
 
 int MaterialTable::_add(const char *p_name,
-						const char *p_texture_path,
-						bool p_flammable,
-						int p_ignition_temp,
-						int p_burn_health,
-						bool p_has_collider,
-						bool p_has_wall_extension,
-						Color p_tint,
-						bool p_fluid,
-						int p_damage,
-						double p_glow) {
+		const char *p_texture_path,
+		bool p_flammable,
+		int p_ignition_temp,
+		int p_burn_health,
+		bool p_has_collider,
+		bool p_has_wall_extension,
+		Color p_tint,
+		bool p_fluid,
+		int p_damage,
+		double p_glow) {
 	Ref<MaterialDef> def;
 	def.instantiate();
 	def->name = String::utf8(p_name);
@@ -111,65 +111,75 @@ int MaterialTable::_add(const char *p_name,
 }
 
 void MaterialTable::_populate() {
-	MAT_AIR   = _add("AIR",   "", false, 0, 0, false, false);
+	MAT_AIR = _add("AIR", "", false, 0, 0, false, false);
 
-	MAT_WOOD  = _add("WOOD",  "res://textures/Environments/Walls/plank.png",
-					 true,  180, 255, true,  true);
+	MAT_WOOD = _add("WOOD", "res://textures/Environments/Walls/plank.png",
+			true, 180, 255, true, true);
 
 	MAT_STONE = _add("STONE", "res://textures/Environments/Walls/stone.png",
-					 false, 0,   0,   true,  true);
+			false, 0, 0, true, true);
 
-	MAT_GAS   = _add("GAS",   "", false, 0, 0, false, false,
-					 Color(0.4, 0.9, 0.3, 1.0), /*fluid=*/true);
+	MAT_GAS = _add("GAS", "", false, 0, 0, false, false,
+			Color(0.4, 0.9, 0.3, 1.0), /*fluid=*/true);
 
-	MAT_LAVA  = _add("LAVA",  "", false, 0, 0, false, false,
-					 Color(0.9, 0.4, 0.1, 1.0),
-					 /*fluid=*/true, /*damage=*/10, /*glow=*/10.0);
+	MAT_LAVA = _add("LAVA", "", false, 0, 0, false, false,
+			Color(0.9, 0.4, 0.1, 1.0),
+			/*fluid=*/true, /*damage=*/10, /*glow=*/10.0);
 
-	MAT_DIRT  = _add("DIRT",  "res://textures/Environments/Walls/dirt.png",
-					 false, 0, 0, true, true,
-					 Color(0.45, 0.32, 0.18, 1.0));
+	MAT_DIRT = _add("DIRT", "res://textures/Environments/Walls/dirt.png",
+			false, 0, 0, true, true,
+			Color(0.45, 0.32, 0.18, 1.0));
 
-	MAT_COAL  = _add("COAL",  "res://textures/Environments/Walls/coal.png",
-					 true,  220, 200, true, true,
-					 Color(0.12, 0.12, 0.14, 1.0),
-					 /*fluid=*/false, /*damage=*/0, /*glow=*/20.0);
+	MAT_COAL = _add("COAL", "res://textures/Environments/Walls/coal.png",
+			true, 220, 200, true, true,
+			Color(0.12, 0.12, 0.14, 1.0),
+			/*fluid=*/false, /*damage=*/0, /*glow=*/20.0);
 
-	MAT_ICE   = _add("ICE",   "res://textures/Environments/Walls/ice.png",
-					 false, 0, 0, true, true,
-					 Color(0.7, 0.85, 0.95, 1.0));
+	MAT_ICE = _add("ICE", "res://textures/Environments/Walls/ice.png",
+			false, 0, 0, true, true,
+			Color(0.7, 0.85, 0.95, 1.0));
 
 	MAT_WATER = _add("WATER", "", false, 0, 0, true, true,
-					 Color(0.2, 0.45, 0.75, 1.0),
-					 /*fluid=*/true);
+			Color(0.2, 0.45, 0.75, 1.0),
+			/*fluid=*/true);
 }
 
 bool MaterialTable::is_flammable(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return false;
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return false;
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() && d->flammable;
 }
 
 int MaterialTable::get_ignition_temp(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return 0;
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 0;
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() ? d->ignition_temp : 0;
 }
 
 bool MaterialTable::has_collider(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return false;
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return false;
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() && d->has_collider;
 }
 
 bool MaterialTable::has_wall_extension(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return false;
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return false;
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() && d->has_wall_extension;
 }
 
 Color MaterialTable::get_tint_color(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return Color(0, 0, 0, 0);
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return Color(0, 0, 0, 0);
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() ? d->tint_color : Color(0, 0, 0, 0);
 }
@@ -186,25 +196,31 @@ PackedInt32Array MaterialTable::get_fluids() const {
 }
 
 bool MaterialTable::is_fluid(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return false;
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return false;
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() && d->fluid;
 }
 
 int MaterialTable::get_damage(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return 0;
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 0;
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() ? d->damage : 0;
 }
 
 double MaterialTable::get_glow(int p_id) const {
-	if (p_id < 0 || p_id >= (int)materials.size()) return 1.0;
+	if (p_id < 0 || p_id >= (int)materials.size()) {
+		return 1.0;
+	}
 	Ref<MaterialDef> d = materials[p_id];
 	return d.is_valid() ? d->glow : 1.0;
 }
 
 void MaterialTable::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("get_materials"),  &MaterialTable::get_materials);
+	ClassDB::bind_method(D_METHOD("get_materials"), &MaterialTable::get_materials);
 	ClassDB::bind_method(D_METHOD("is_flammable", "material_id"), &MaterialTable::is_flammable);
 	ClassDB::bind_method(D_METHOD("get_ignition_temp", "material_id"), &MaterialTable::get_ignition_temp);
 	ClassDB::bind_method(D_METHOD("has_collider", "material_id"), &MaterialTable::has_collider);
@@ -216,28 +232,28 @@ void MaterialTable::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_glow", "material_id"), &MaterialTable::get_glow);
 
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "materials",
-							  PROPERTY_HINT_ARRAY_TYPE, "MaterialDef",
-							  PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY),
-				 "", "get_materials");
+						 PROPERTY_HINT_ARRAY_TYPE, "MaterialDef",
+						 PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY),
+			"", "get_materials");
 
-	ClassDB::bind_method(D_METHOD("get_MAT_AIR"),   &MaterialTable::get_MAT_AIR);
-	ClassDB::bind_method(D_METHOD("get_MAT_WOOD"),  &MaterialTable::get_MAT_WOOD);
+	ClassDB::bind_method(D_METHOD("get_MAT_AIR"), &MaterialTable::get_MAT_AIR);
+	ClassDB::bind_method(D_METHOD("get_MAT_WOOD"), &MaterialTable::get_MAT_WOOD);
 	ClassDB::bind_method(D_METHOD("get_MAT_STONE"), &MaterialTable::get_MAT_STONE);
-	ClassDB::bind_method(D_METHOD("get_MAT_GAS"),   &MaterialTable::get_MAT_GAS);
-	ClassDB::bind_method(D_METHOD("get_MAT_LAVA"),  &MaterialTable::get_MAT_LAVA);
-	ClassDB::bind_method(D_METHOD("get_MAT_DIRT"),  &MaterialTable::get_MAT_DIRT);
-	ClassDB::bind_method(D_METHOD("get_MAT_COAL"),  &MaterialTable::get_MAT_COAL);
-	ClassDB::bind_method(D_METHOD("get_MAT_ICE"),   &MaterialTable::get_MAT_ICE);
+	ClassDB::bind_method(D_METHOD("get_MAT_GAS"), &MaterialTable::get_MAT_GAS);
+	ClassDB::bind_method(D_METHOD("get_MAT_LAVA"), &MaterialTable::get_MAT_LAVA);
+	ClassDB::bind_method(D_METHOD("get_MAT_DIRT"), &MaterialTable::get_MAT_DIRT);
+	ClassDB::bind_method(D_METHOD("get_MAT_COAL"), &MaterialTable::get_MAT_COAL);
+	ClassDB::bind_method(D_METHOD("get_MAT_ICE"), &MaterialTable::get_MAT_ICE);
 	ClassDB::bind_method(D_METHOD("get_MAT_WATER"), &MaterialTable::get_MAT_WATER);
 
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_AIR",   PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_AIR");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_WOOD",  PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_WOOD");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_AIR", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_AIR");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_WOOD", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_WOOD");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_STONE", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_STONE");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_GAS",   PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_GAS");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_LAVA",  PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_LAVA");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_DIRT",  PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_DIRT");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_COAL",  PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_COAL");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_ICE",   PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_ICE");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_GAS", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_GAS");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_LAVA", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_LAVA");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_DIRT", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_DIRT");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_COAL", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_COAL");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_ICE", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_ICE");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "MAT_WATER", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY), "", "get_MAT_WATER");
 }
 
