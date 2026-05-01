@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/variant/color.hpp>
 
+#include <algorithm>
 #include <cmath>
 
 using namespace godot;
