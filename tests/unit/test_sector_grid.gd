@@ -88,7 +88,7 @@ func test_resolve_sector_seed_changes() -> void:
 	for x in range(-5, 5):
 		for y in range(-5, 5):
 			var c := Vector2i(x, y)
-			if g1.chebyshev_distance(c, Vector2i.ZERO) >= SectorGrid.BOSS_RING_DISTANCE:
+			if g1.chebyshev_distance(c, Vector2i.ZERO) >= SectorGrid.get_boss_ring_distance():
 				continue
 			var s1 := g1.resolve_sector(c)
 			var s2 := g2.resolve_sector(c)
