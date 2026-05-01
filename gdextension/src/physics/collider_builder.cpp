@@ -1,7 +1,7 @@
 #include "collider_builder.h"
 
-#include "terrain_collider.h"
 #include "_marching_squares.inl"
+#include "terrain_collider.h"
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/math.hpp>
@@ -19,7 +19,9 @@ PackedVector2Array ColliderBuilder::build_segments(const PackedByteArray &data, 
 
 	for (int sy = 0; sy < samples_h; sy++) {
 		for (int sx = 0; sx < samples_w; sx++) {
-			if (sx == 0 || sx == samples_w - 1 || sy == 0 || sy == samples_h - 1) continue;
+			if (sx == 0 || sx == samples_w - 1 || sy == 0 || sy == samples_h - 1) {
+				continue;
+			}
 			int gx = MIN(sx * TerrainCollider::CELL_SIZE, size - 1);
 			int gy = MIN(sy * TerrainCollider::CELL_SIZE, size - 1);
 			samples[sy * samples_w + sx] = (data[gy * size + gx] != 0) ? 1 : 0;
@@ -55,8 +57,12 @@ PackedVector2Array ColliderBuilder::build_segments(const PackedByteArray &data, 
 
 	for (const KeyValue<Vector2i, std::vector<Vector2i>> &kv : adj) {
 		Vector2i start = kv.key;
-		if (visited.has(start)) continue;
-		if (kv.value.empty()) continue;
+		if (visited.has(start)) {
+			continue;
+		}
+		if (kv.value.empty()) {
+			continue;
+		}
 
 		PackedVector2Array poly;
 		Vector2i current = start;
@@ -70,12 +76,25 @@ PackedVector2Array ColliderBuilder::build_segments(const PackedByteArray &data, 
 			const std::vector<Vector2i> &nbrs = adj[current];
 			Vector2i next = Vector2i(-999999, -999999);
 			for (const Vector2i &n : nbrs) {
-				if (n == prev) continue;
-				if (n == start && poly.size() >= 3) { next = start; break; }
-				if (!visited.has(n)) { next = n; break; }
+				if (n == prev) {
+					continue;
+				}
+				if (n == start && poly.size() >= 3) {
+					next = start;
+					break;
+				}
+				if (!visited.has(n)) {
+					next = n;
+					break;
+				}
 			}
-			if (next == start) { closed = true; break; }
-			if (next == Vector2i(-999999, -999999)) break;
+			if (next == start) {
+				closed = true;
+				break;
+			}
+			if (next == Vector2i(-999999, -999999)) {
+				break;
+			}
 			prev = current;
 			current = next;
 		}
