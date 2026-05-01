@@ -114,7 +114,7 @@ func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num:
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
 	var enemy := ENEMY_SCENE.instantiate()
 
-	var tier_index: int = clampi(int(floor(float(sector_dist) / float(SectorGrid.BOSS_RING_DISTANCE) * 2.0)), 0, 2)
+	var tier_index: int = clampi(int(floor(float(sector_dist) / float(SectorGrid.get_boss_ring_distance()) * 2.0)), 0, 2)
 	if "enemy_tier" in enemy:
 		enemy.enemy_tier = tier_index
 
