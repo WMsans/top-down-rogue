@@ -8,9 +8,14 @@
 #include "resources/template_pack.h"
 #include "resources/terrain_cell.h"
 
+#include "physics/collider_builder.h"
+#include "physics/gas_injector.h"
+#include "physics/terrain_collider.h"
 #include "terrain/chunk.h"
 #include "terrain/generation_context.h"
 #include "terrain/sector_grid.h"
+#include "terrain/terrain_collision_helper.h"
+#include "terrain/terrain_physical.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/classes/engine.hpp>
@@ -46,6 +51,13 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(Chunk);
 	GDREGISTER_CLASS(RoomSlot); // Inner type of SectorGrid; register before SectorGrid.
 	GDREGISTER_CLASS(SectorGrid);
+
+	// Collider + physics — register before TerrainCollisionHelper, which calls them.
+	GDREGISTER_CLASS(ColliderBuilder);
+	GDREGISTER_CLASS(TerrainCollider);
+	GDREGISTER_CLASS(GasInjector);
+	GDREGISTER_CLASS(TerrainCollisionHelper);
+	GDREGISTER_CLASS(TerrainPhysical);
 
 	g_material_table = memnew(MaterialTable);
 	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
