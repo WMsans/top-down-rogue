@@ -2,6 +2,8 @@
 
 #include "sim/material_table.h"
 
+#include "terrain/chunk.h"
+
 #include "resources/biome_def.h"
 #include "resources/pool_def.h"
 #include "resources/room_template.h"
@@ -27,6 +29,9 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 
 	GDREGISTER_CLASS(MaterialDef);
 	GDREGISTER_CLASS(MaterialTable);
+
+	// Terrain
+	GDREGISTER_CLASS(Chunk);
 
 	// Resources — register dependencies before dependents:
 	// BiomeDef references PoolDef and RoomTemplate; TemplatePack references RoomTemplate.
