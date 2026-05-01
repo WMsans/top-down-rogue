@@ -1,8 +1,8 @@
 #pragma once
 
-#include "stage_context.h"
 #include "../resources/biome_def.h"
 #include "../terrain/chunk.h"
+#include "stage_context.h"
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/dictionary.hpp>

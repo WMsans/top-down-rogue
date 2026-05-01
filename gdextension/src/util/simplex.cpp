@@ -76,17 +76,23 @@ float snoise(float x, float y) {
 	float d2 = x12_z * x12_z + x12_w * x12_w;
 
 	float m0 = 0.5f - d0;
-	if (m0 < 0.0f) m0 = 0.0f;
+	if (m0 < 0.0f) {
+		m0 = 0.0f;
+	}
 	m0 *= m0;
 	m0 *= m0;
 
 	float m1 = 0.5f - d1;
-	if (m1 < 0.0f) m1 = 0.0f;
+	if (m1 < 0.0f) {
+		m1 = 0.0f;
+	}
 	m1 *= m1;
 	m1 *= m1;
 
 	float m2 = 0.5f - d2;
-	if (m2 < 0.0f) m2 = 0.0f;
+	if (m2 < 0.0f) {
+		m2 = 0.0f;
+	}
 	m2 *= m2;
 	m2 *= m2;
 
