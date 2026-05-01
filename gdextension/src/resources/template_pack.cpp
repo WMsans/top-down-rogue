@@ -10,6 +10,18 @@ using namespace godot;
 
 namespace toprogue {
 
+TemplatePack *TemplatePack::singleton = nullptr;
+
+TemplatePack::TemplatePack() {
+	singleton = this;
+}
+
+TemplatePack::~TemplatePack() {
+	if (singleton == this) {
+		singleton = nullptr;
+	}
+}
+
 int TemplatePack::register_template(const Ref<RoomTemplate> &tmpl) {
 	if (tmpl.is_null()) {
 		UtilityFunctions::push_error("TemplatePack.register: null template");

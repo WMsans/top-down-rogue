@@ -28,6 +28,7 @@ using namespace godot;
 using namespace toprogue;
 
 static MaterialTable *g_material_table = nullptr;
+static TemplatePack *g_template_pack = nullptr;
 
 void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -61,11 +62,20 @@ void initialize_toprogue_module(ModuleInitializationLevel p_level) {
 
 	g_material_table = memnew(MaterialTable);
 	Engine::get_singleton()->register_singleton("MaterialTable", g_material_table);
+
+	g_template_pack = memnew(TemplatePack);
+	Engine::get_singleton()->register_singleton("TemplatePack", g_template_pack);
 }
 
 void uninitialize_toprogue_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
+	}
+
+	Engine::get_singleton()->unregister_singleton("TemplatePack");
+	if (g_template_pack) {
+		memdelete(g_template_pack);
+		g_template_pack = nullptr;
 	}
 
 	Engine::get_singleton()->unregister_singleton("MaterialTable");

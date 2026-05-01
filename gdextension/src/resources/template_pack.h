@@ -15,6 +15,8 @@ namespace toprogue {
 class TemplatePack : public godot::RefCounted {
 	GDCLASS(TemplatePack, godot::RefCounted);
 
+	static TemplatePack *singleton;
+
 	struct Entry {
 		godot::Ref<RoomTemplate> tmpl;
 		godot::Ref<godot::Image> image;
@@ -24,7 +26,10 @@ class TemplatePack : public godot::RefCounted {
 	godot::HashMap<int, godot::Ref<godot::Texture2DArray>> _arrays;
 
 public:
-	TemplatePack() = default;
+	TemplatePack();
+	~TemplatePack();
+
+	static TemplatePack *get_singleton() { return singleton; }
 
 	int register_template(const godot::Ref<RoomTemplate> &tmpl);
 	void build_arrays();
