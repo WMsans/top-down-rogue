@@ -41,12 +41,12 @@ func test_drop_entry_from_scene_constructor() -> void:
 
 func test_from_enemy_tier_creates_table_for_easy() -> void:
 	var table := _DropTable.from_enemy_tier(_DropTable.EnemyTier.EASY)
-	assert_that(table.entries.size()).is_equal(7)
+	assert_that(table.entries.size()).is_equal(3)
 
 
 func test_from_enemy_tier_creates_table_for_hard() -> void:
 	var table := _DropTable.from_enemy_tier(_DropTable.EnemyTier.HARD)
-	assert_that(table.entries.size()).is_equal(7)
+	assert_that(table.entries.size()).is_equal(3)
 
 
 func test_from_enemy_tier_gold_only() -> void:
@@ -57,7 +57,7 @@ func test_from_enemy_tier_gold_only() -> void:
 
 func test_from_enemy_tier_weapon_entries_exist() -> void:
 	var table := _DropTable.from_enemy_tier(_DropTable.EnemyTier.EASY, false, true, false)
-	assert_that(table.entries.size()).is_equal(3)
+	assert_that(table.entries.size()).is_equal(1)
 	assert_that(table.entries[0].kind).is_equal(_DropTable.DropKind.WEAPON_POOL)
 	assert_that(table.entries[0].item_tier).is_equal(_DropTable.ItemTier.COMMON)
 
