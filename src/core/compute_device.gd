@@ -10,9 +10,6 @@ var gen_shader: RID
 var gen_pipeline: RID
 var sim_shader: RID
 var sim_pipeline: RID
-var collider_shader: RID
-var collider_pipeline: RID
-var collider_storage_buffer: RID
 var dummy_texture: RID
 var render_shader: Shader
 var material_textures: Texture2DArray
@@ -43,11 +40,6 @@ func init_shaders() -> void:
 	sim_shader = rd.shader_create_from_spirv(sim_spirv)
 	sim_pipeline = rd.compute_pipeline_create(sim_shader)
 
-	var collider_file: RDShaderFile = load("res://shaders/compute/collider.glsl")
-	var collider_spirv := collider_file.get_spirv()
-	collider_shader = rd.shader_create_from_spirv(collider_spirv)
-	collider_pipeline = rd.compute_pipeline_create(collider_shader)
-
 
 func init_dummy_texture() -> void:
 	var tf := RDTextureFormat.new()
@@ -59,13 +51,6 @@ func init_dummy_texture() -> void:
 	data.resize(CHUNK_SIZE * CHUNK_SIZE * 4)
 	data.fill(0)
 	dummy_texture = rd.texture_create(tf, RDTextureView.new(), [data])
-
-
-func init_collider_storage_buffer() -> void:
-	var max_segments := 4096
-	var max_vertices := max_segments * 4
-	var buffer_size := 4 + max_vertices * 4
-	collider_storage_buffer = rd.storage_buffer_create(buffer_size)
 
 
 func init_material_textures() -> void:
@@ -215,8 +200,6 @@ func free_resources() -> void:
 	gen_template_array_rids.clear()
 	if dummy_texture.is_valid():
 		rd.free_rid(dummy_texture)
-	if collider_storage_buffer.is_valid():
-		rd.free_rid(collider_storage_buffer)
 	if gen_pipeline.is_valid():
 		rd.free_rid(gen_pipeline)
 	if gen_shader.is_valid():
@@ -225,10 +208,6 @@ func free_resources() -> void:
 		rd.free_rid(sim_pipeline)
 	if sim_shader.is_valid():
 		rd.free_rid(sim_shader)
-	if collider_pipeline.is_valid():
-		rd.free_rid(collider_pipeline)
-	if collider_shader.is_valid():
-		rd.free_rid(collider_shader)
 
 
 func dispatch_generation(
