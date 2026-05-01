@@ -25,7 +25,6 @@ func _ready() -> void:
 	compute_device = ComputeDevice.new()
 	compute_device.init_shaders()
 	compute_device.init_dummy_texture()
-	compute_device.init_collider_storage_buffer()
 	compute_device.render_shader = preload("res://shaders/visual/render_chunk.gdshader")
 	compute_device.init_material_textures()
 	compute_device.init_gen_stamp_buffer()
