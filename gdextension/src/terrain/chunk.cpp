@@ -77,15 +77,29 @@ Vector<InjectionAABB> Chunk::take_injections() {
 	return out;
 }
 
-// --- Texture upload stubs (Task 8 implements) ----------------------------
-
-void Chunk::upload_texture() {
-	// TODO: Implement in Task 8
-	upload_texture_full();
-}
+// --- Texture upload (spec §8.4) -----------------------------------------
 
 void Chunk::upload_texture_full() {
-	// TODO: Implement in Task 8
+	constexpr int SZ = CHUNK_SIZE;
+	constexpr int BYTES = SZ * SZ * 4;
+
+	PackedByteArray bytes;
+	bytes.resize(BYTES);
+	std::memcpy(bytes.ptrw(), cells, BYTES);
+
+	Ref<Image> img = Image::create_from_data(SZ, SZ, false, Image::FORMAT_RGBA8, bytes);
+	if (texture.is_null()) {
+		texture = ImageTexture::create_from_image(img);
+	} else {
+		texture->update(img);
+	}
+}
+
+void Chunk::upload_texture() {
+	if (dirty_rect.size.x == 0 || dirty_rect.size.y == 0) return;
+	// TODO: Dirty-only upload via partial update.
+	// Per §10.1 risk #4, full re-upload is acceptable for now.
+	upload_texture_full();
 }
 
 PackedByteArray Chunk::get_cells_data() const {
