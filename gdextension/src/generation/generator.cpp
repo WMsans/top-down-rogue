@@ -3,7 +3,6 @@
 #include "../sim/material_table.h"
 #include "stage_context.h"
 
-#include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/callable_method_pointer.hpp>
@@ -75,17 +74,13 @@ void Generator::generate_chunks(
 			"toprogue.Generator.generate_chunks");
 	pool->wait_for_group_task_completion(group);
 
-	RenderingDevice *rd = RenderingServer::get_singleton()->get_rendering_device();
 	for (int i = 0; i < n; i++) {
 		Chunk *c = _current_jobs[i];
 		if (!c) {
 			continue;
 		}
 
-		PackedByteArray bytes;
-		bytes.resize(Chunk::CELL_COUNT * sizeof(Cell));
-		std::memcpy(bytes.ptrw(), c->cells, Chunk::CELL_COUNT * sizeof(Cell));
-		rd->texture_update(c->rd_texture, 0, bytes);
+		c->upload_texture_full();
 
 		c->dirty_rect = Rect2i(0, 0, Chunk::CHUNK_SIZE, Chunk::CHUNK_SIZE);
 		c->sleeping = false;
