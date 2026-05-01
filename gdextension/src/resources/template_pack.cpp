@@ -2,6 +2,7 @@
 
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/typed_array.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/vector2i.hpp>
 
@@ -25,16 +26,10 @@ int TemplatePack::register_template(const Ref<RoomTemplate> &tmpl) {
 }
 
 void TemplatePack::build_arrays() {
-    Object *array_builder = Engine::get_singleton()->get_singleton("TextureArrayBuilder");
-    if (array_builder == nullptr) {
-        UtilityFunctions::push_error("TemplatePack: TextureArrayBuilder autoload missing");
-        return;
-    }
-
     for (KeyValue<int, Vector<Entry>> &kv : _by_size) {
         int sc = kv.key;
         Vector<Entry> &bucket = kv.value;
-        Array images;
+        TypedArray<Image> images;
         for (int i = 0; i < bucket.size(); i++) {
             Entry &e = bucket.write[i];
             String path = e.tmpl.is_valid() ? e.tmpl->png_path : String();
@@ -57,8 +52,16 @@ void TemplatePack::build_arrays() {
             images.push_back(img);
         }
         if (!images.is_empty()) {
-            Variant result = array_builder->call("build_from_images", images);
-            _arrays[sc] = Ref<Texture2DArray>(result);
+            Ref<Texture2DArray> tex;
+            tex.instantiate();
+            Error err = tex->create_from_images(images);
+            if (err != OK) {
+                UtilityFunctions::push_error(
+                        String("TemplatePack: create_from_images failed for size_class ") +
+                        String::num_int64(sc));
+                continue;
+            }
+            _arrays[sc] = tex;
         }
     }
 }
