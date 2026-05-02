@@ -102,14 +102,14 @@ void TerrainModifier::place_gas(Vector2 world_pos, float radius, int density,
 		bool modified = false;
 		for (int j = 0; j < locals.size(); j++) {
 			Vector2i local = locals[j];
-			Cell &cell = chunk->cells[local.y * CHUNK_SIZE + local.x];
-			if (cell.material != air_id) {
+			int _idx = local.y * CHUNK_SIZE + local.x;
+			if (chunk->cell_material(_idx) != air_id) {
 				continue;
 			}
-			cell.material = static_cast<uint8_t>(gas_id);
-			cell.health = static_cast<uint8_t>(clamped_density);
-			cell.temperature = 0;
-			cell.flags = packed_vel;
+			chunk->set_cell_material(_idx, static_cast<uint8_t>(gas_id));
+			chunk->set_cell_health(_idx, static_cast<uint8_t>(clamped_density));
+			chunk->set_cell_temperature(_idx, 0);
+			chunk->set_cell_flags(_idx, packed_vel);
 			modified = true;
 		}
 		if (modified) {
@@ -170,14 +170,14 @@ void TerrainModifier::place_lava(Vector2 world_pos, float radius) {
 		bool modified = false;
 		for (int j = 0; j < locals.size(); j++) {
 			Vector2i local = locals[j];
-			Cell &cell = chunk->cells[local.y * CHUNK_SIZE + local.x];
-			if (cell.material != air_id) {
+			int _idx = local.y * CHUNK_SIZE + local.x;
+			if (chunk->cell_material(_idx) != air_id) {
 				continue;
 			}
-			cell.material = static_cast<uint8_t>(lava_id);
-			cell.health = 200;
-			cell.temperature = 255;
-			cell.flags = 136;
+			chunk->set_cell_material(_idx, static_cast<uint8_t>(lava_id));
+			chunk->set_cell_health(_idx, 200);
+			chunk->set_cell_temperature(_idx, 255);
+			chunk->set_cell_flags(_idx, 136);
 			modified = true;
 		}
 		if (modified) {
@@ -237,14 +237,14 @@ void TerrainModifier::place_material(Vector2 world_pos, float radius, int materi
 		bool modified = false;
 		for (int j = 0; j < locals.size(); j++) {
 			Vector2i local = locals[j];
-			Cell &cell = chunk->cells[local.y * CHUNK_SIZE + local.x];
-			if (cell.material != air_id) {
+			int _idx = local.y * CHUNK_SIZE + local.x;
+			if (chunk->cell_material(_idx) != air_id) {
 				continue;
 			}
-			cell.material = static_cast<uint8_t>(material_id);
-			cell.health = 255;
-			cell.temperature = 0;
-			cell.flags = 136;
+			chunk->set_cell_material(_idx, static_cast<uint8_t>(material_id));
+			chunk->set_cell_health(_idx, 255);
+			chunk->set_cell_temperature(_idx, 0);
+			chunk->set_cell_flags(_idx, 136);
 			modified = true;
 		}
 		if (modified) {
@@ -304,11 +304,11 @@ void TerrainModifier::place_fire(Vector2 world_pos, float radius) {
 		bool modified = false;
 		for (int j = 0; j < locals.size(); j++) {
 			Vector2i local = locals[j];
-			Cell &cell = chunk->cells[local.y * CHUNK_SIZE + local.x];
-			if (!mt->is_flammable(cell.material)) {
+			int _idx = local.y * CHUNK_SIZE + local.x;
+			if (!mt->is_flammable(chunk->cell_material(_idx))) {
 				continue;
 			}
-			cell.temperature = 255;
+			chunk->set_cell_temperature(_idx, 255);
 			modified = true;
 		}
 		if (modified) {
@@ -405,11 +405,11 @@ void TerrainModifier::disperse_materials_in_arc(Vector2 origin, Vector2 directio
 			Vector2i pixel_pos = entry[0];
 			Vector2 push_dir = entry[1];
 
-			Cell &cell = chunk->cells[pixel_pos.y * CHUNK_SIZE + pixel_pos.x];
+			int _idx = pixel_pos.y * CHUNK_SIZE + pixel_pos.x;
 
 			bool is_target = false;
 			for (int k = 0; k < materials.size(); k++) {
-				if (static_cast<int>(cell.material) == static_cast<int>(materials[k])) {
+				if (static_cast<int>(chunk->cell_material(_idx)) == static_cast<int>(materials[k])) {
 					is_target = true;
 					break;
 				}
@@ -422,7 +422,7 @@ void TerrainModifier::disperse_materials_in_arc(Vector2 origin, Vector2 directio
 			int push_vy = static_cast<int>(std::round(push_dir.y * push_speed / 60.0f));
 			int vx_enc = std::min(std::max(push_vx + 8, 0), 15);
 			int vy_enc = std::min(std::max(push_vy + 8, 0), 15);
-			cell.flags = static_cast<uint8_t>((vx_enc << 4) | vy_enc);
+			chunk->set_cell_flags(_idx, static_cast<uint8_t>((vx_enc << 4) | vy_enc));
 			modified = true;
 		}
 		if (modified) {
@@ -533,11 +533,11 @@ void TerrainModifier::clear_and_push_materials_in_arc(Vector2 origin, Vector2 di
 			Vector2 push_dir = entry[1];
 			bool do_clear = entry[2];
 
-			Cell &cell = chunk->cells[pixel_pos.y * CHUNK_SIZE + pixel_pos.x];
+			int _idx = pixel_pos.y * CHUNK_SIZE + pixel_pos.x;
 
 			bool is_target = false;
 			for (int k = 0; k < materials.size(); k++) {
-				if (static_cast<int>(cell.material) == static_cast<int>(materials[k])) {
+				if (static_cast<int>(chunk->cell_material(_idx)) == static_cast<int>(materials[k])) {
 					is_target = true;
 					break;
 				}
@@ -547,16 +547,16 @@ void TerrainModifier::clear_and_push_materials_in_arc(Vector2 origin, Vector2 di
 			}
 
 			if (do_clear) {
-				cell.material = static_cast<uint8_t>(air_id);
-				cell.health = 0;
-				cell.temperature = 0;
-				cell.flags = 136;
+				chunk->set_cell_material(_idx, static_cast<uint8_t>(air_id));
+				chunk->set_cell_health(_idx, 0);
+				chunk->set_cell_temperature(_idx, 0);
+				chunk->set_cell_flags(_idx, 136);
 			} else {
 				int push_vx = static_cast<int>(std::round(push_dir.x * push_speed / 60.0f));
 				int push_vy = static_cast<int>(std::round(push_dir.y * push_speed / 60.0f));
 				int vx_enc = std::min(std::max(push_vx + 8, 0), 15);
 				int vy_enc = std::min(std::max(push_vy + 8, 0), 15);
-				cell.flags = static_cast<uint8_t>((vx_enc << 4) | vy_enc);
+				chunk->set_cell_flags(_idx, static_cast<uint8_t>((vx_enc << 4) | vy_enc));
 			}
 			modified = true;
 		}

@@ -49,7 +49,39 @@ public:
 	godot::TypedArray<godot::LightOccluder2D> occluder_instances;
 
 	// --- New spec §6.1 sim fields ---------------------------------------
-	Cell cells[CELL_COUNT] = {};
+private:
+	struct ChunkCells {
+		alignas(64) uint8_t material[CELL_COUNT] = {};
+		alignas(64) uint8_t health[CELL_COUNT] = {};
+		alignas(64) uint8_t temperature[CELL_COUNT] = {};
+		alignas(64) uint8_t flags[CELL_COUNT] = {};
+	};
+	ChunkCells _cells;
+
+public:
+	uint8_t *material_ptr()    { return _cells.material; }
+	uint8_t *health_ptr()      { return _cells.health; }
+	uint8_t *temperature_ptr() { return _cells.temperature; }
+	uint8_t *flags_ptr()       { return _cells.flags; }
+	const uint8_t *material_ptr()    const { return _cells.material; }
+	const uint8_t *health_ptr()      const { return _cells.health; }
+	const uint8_t *temperature_ptr() const { return _cells.temperature; }
+	const uint8_t *flags_ptr()       const { return _cells.flags; }
+
+	inline uint8_t cell_material(int idx) const { return _cells.material[idx]; }
+	inline uint8_t cell_health(int idx) const { return _cells.health[idx]; }
+	inline uint8_t cell_temperature(int idx) const { return _cells.temperature[idx]; }
+	inline uint8_t cell_flags(int idx) const { return _cells.flags[idx]; }
+
+	inline void set_cell_material(int idx, uint8_t v) { _cells.material[idx] = v; }
+	inline void set_cell_health(int idx, uint8_t v)   { _cells.health[idx] = v; }
+	inline void set_cell_temperature(int idx, uint8_t v) { _cells.temperature[idx] = v; }
+	inline void set_cell_flags(int idx, uint8_t v)    { _cells.flags[idx] = v; }
+
+	inline uint8_t *cell_material_ptr(int idx) { return &_cells.material[idx]; }
+	inline uint8_t *cell_health_ptr(int idx)   { return &_cells.health[idx]; }
+	inline uint8_t *cell_flags_ptr(int idx)    { return &_cells.flags[idx]; }
+
 	godot::Rect2i dirty_rect;
 	bool sleeping = true;
 	bool collider_dirty = false;
@@ -124,9 +156,6 @@ public:
 	void set_neighbor_left(const godot::Ref<Chunk> &v) { neighbor_left = v; }
 	godot::Ref<Chunk> get_neighbor_right() const { return neighbor_right; }
 	void set_neighbor_right(const godot::Ref<Chunk> &v) { neighbor_right = v; }
-
-	Cell *cells_ptr() { return cells; }
-	const Cell *cells_ptr() const { return cells; }
 
 	godot::Ref<godot::ImageTexture> get_texture() const { return texture; }
 	void set_texture(const godot::Ref<godot::ImageTexture> &v) { texture = v; }

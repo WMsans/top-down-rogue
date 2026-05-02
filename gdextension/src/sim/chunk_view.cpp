@@ -2,17 +2,50 @@
 
 namespace toprogue {
 
-Cell *ChunkView::at(int x, int y) {
-	if (x >= 0 && x < SZ && y >= 0 && y < SZ)
-		return &cells[y * SZ + x];
-	return at_border(x, y);
+Cell ChunkView::read(int x, int y) {
+	if (x >= 0 && x < SZ && y >= 0 && y < SZ) {
+		int i = y * SZ + x;
+		return Cell{ mat[i], health[i], temperature[i], flags[i] };
+	}
+	if (y < 0 && up) {
+		int i = (SZ + y) * SZ + x;
+		return Cell{ mat_up[i], health_up[i], temperature_up[i], flags_up[i] };
+	}
+	if (y >= SZ && down) {
+		int i = (y - SZ) * SZ + x;
+		return Cell{ mat_down[i], health_down[i], temperature_down[i], flags_down[i] };
+	}
+	if (x < 0 && left) {
+		int i = y * SZ + (SZ + x);
+		return Cell{ mat_left[i], health_left[i], temperature_left[i], flags_left[i] };
+	}
+	if (x >= SZ && right) {
+		int i = y * SZ + (x - SZ);
+		return Cell{ mat_right[i], health_right[i], temperature_right[i], flags_right[i] };
+	}
+	return Cell{ 0, 0, 0, 0 };
 }
 
-Cell *ChunkView::at_border(int x, int y) {
-	if (y < 0) { return up ? &cells_up[(SZ + y) * SZ + x] : nullptr; }
-	if (y >= SZ) { return down ? &cells_down[(y - SZ) * SZ + x] : nullptr; }
-	if (x < 0) { return left ? &cells_left[y * SZ + (SZ + x)] : nullptr; }
-	return right ? &cells_right[y * SZ + (x - SZ)] : nullptr;
+bool ChunkView::write_changed(int x, int y, const Cell &nv) {
+	auto try_write = [&](Chunk *target, uint8_t *m, uint8_t *hh,
+			uint8_t *tt, uint8_t *ff, int lx, int ly) -> bool {
+		if (!target) return false;
+		int i = ly * SZ + lx;
+		if (m[i] == nv.material && hh[i] == nv.health &&
+				tt[i] == nv.temperature && ff[i] == nv.flags) return false;
+		m[i] = nv.material; hh[i] = nv.health;
+		tt[i] = nv.temperature; ff[i] = nv.flags;
+		target->extend_next_dirty_rect(lx, ly, lx + 1, ly + 1);
+		if (target != center)
+			target->wake_pending.store(true, std::memory_order_relaxed);
+		return true;
+	};
+	if (x >= 0 && x < SZ && y >= 0 && y < SZ)
+		return try_write(center, mat, health, temperature, flags, x, y);
+	if (y < 0)    return try_write(up,    mat_up,    health_up,    temperature_up,    flags_up,    x, SZ + y);
+	if (y >= SZ)  return try_write(down,  mat_down,  health_down,  temperature_down,  flags_down,  x, y - SZ);
+	if (x < 0)    return try_write(left,  mat_left,  health_left,  temperature_left,  flags_left,  SZ + x, y);
+	return         try_write(right, mat_right, health_right, temperature_right, flags_right, x - SZ, y);
 }
 
 uint32_t ChunkView::hash_u32(uint32_t n) {
@@ -40,27 +73,6 @@ void ChunkView::pack_velocity(uint8_t &flags, int8_t vx, int8_t vy) {
 void ChunkView::unpack_velocity(uint8_t flags, int8_t &vx, int8_t &vy) {
 	vx = static_cast<int8_t>((flags >> 4) & 0x0F) - 8;
 	vy = static_cast<int8_t>(flags & 0x0F) - 8;
-}
-
-bool ChunkView::write_changed(int x, int y, const Cell &nv) {
-	auto try_write = [&](Chunk *target, Cell *cells_arr, int lx, int ly) -> bool {
-		if (!target) return false;
-		int i = ly * SZ + lx;
-		Cell &slot = cells_arr[i];
-		if (slot.material == nv.material && slot.health == nv.health &&
-				slot.temperature == nv.temperature && slot.flags == nv.flags) return false;
-		slot = nv;
-		target->extend_next_dirty_rect(lx, ly, lx + 1, ly + 1);
-		if (target != center)
-			target->wake_pending.store(true, std::memory_order_relaxed);
-		return true;
-	};
-	if (x >= 0 && x < SZ && y >= 0 && y < SZ)
-		return try_write(center, cells, x, y);
-	if (y < 0)    return try_write(up,    cells_up,    x, SZ + y);
-	if (y >= SZ)  return try_write(down,  cells_down,  x, y - SZ);
-	if (x < 0)    return try_write(left,  cells_left,  SZ + x, y);
-	return         try_write(right, cells_right, x - SZ, y);
 }
 
 } // namespace toprogue

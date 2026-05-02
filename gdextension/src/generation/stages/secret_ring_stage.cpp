@@ -77,7 +77,7 @@ void stage_secret_ring(Chunk *chunk, const StageContext &ctx) {
 				float dy = wy - st.cy;
 				float d = std::sqrt(dx * dx + dy * dy);
 				if (d >= inner && d < outer) {
-					chunk->cells[y * Chunk::CHUNK_SIZE + x].material = static_cast<uint8_t>(bg_mat);
+					chunk->set_cell_material(y * Chunk::CHUNK_SIZE + x, static_cast<uint8_t>(bg_mat));
 				}
 			}
 		}

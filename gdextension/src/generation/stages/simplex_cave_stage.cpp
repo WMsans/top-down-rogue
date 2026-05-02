@@ -24,7 +24,7 @@ void stage_simplex_cave(Chunk *chunk, const StageContext &ctx) {
 					simplex::hash_combine(ctx.world_seed, 1000u), 4);
 			float c = n * (1.0f - RIDGE_WEIGHT) + r * RIDGE_WEIGHT;
 			if (c > THRESHOLD) {
-				chunk->cells[y * Chunk::CHUNK_SIZE + x] = Cell{ static_cast<uint8_t>(air_id), 0, 0, 0 };
+				chunk->set_cell_material(y * Chunk::CHUNK_SIZE + x, static_cast<uint8_t>(air_id)); chunk->set_cell_health(y * Chunk::CHUNK_SIZE + x, 0); chunk->set_cell_temperature(y * Chunk::CHUNK_SIZE + x, 0); chunk->set_cell_flags(y * Chunk::CHUNK_SIZE + x, 0);
 			}
 		}
 	}

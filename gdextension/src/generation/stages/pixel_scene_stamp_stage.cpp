@@ -122,7 +122,7 @@ void stage_pixel_scene_stamp(Chunk *chunk, const StageContext &ctx) {
 
 				int r = static_cast<int>(std::round(px.r * 255.0f));
 				int mat = (r == 255) ? bg_mat : r;
-				chunk->cells[y * Chunk::CHUNK_SIZE + x].material = static_cast<uint8_t>(mat);
+				chunk->set_cell_material(y * Chunk::CHUNK_SIZE + x, static_cast<uint8_t>(mat));
 			}
 		}
 	}

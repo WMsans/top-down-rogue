@@ -50,10 +50,10 @@ void TerrainCollisionHelper::rebuild_chunk_collision_cpu(const Variant &chunk_v)
 	PackedByteArray material_data;
 	material_data.resize(CHUNK_SIZE * CHUNK_SIZE);
 	MaterialTable *mt = MaterialTable::get_singleton();
-	const Cell *cells = chunk->cells_ptr();
+	const uint8_t *materials = chunk->material_ptr();
 	for (int y = 0; y < CHUNK_SIZE; y++) {
 		for (int x = 0; x < CHUNK_SIZE; x++) {
-			int mat = cells[y * CHUNK_SIZE + x].material;
+			int mat = materials[y * CHUNK_SIZE + x];
 			material_data[y * CHUNK_SIZE + x] = mt->has_collider(mat) ? static_cast<uint8_t>(mat) : 0;
 		}
 	}
