@@ -148,9 +148,7 @@ void run_injection(ChunkView &v) {
 			}
 
 			if (wrote) {
-				*v.at(x, y) = c;
-				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-				chunk->set_sleeping(false);
+			v.write_changed(x, y, c);
 			}
 		}
 	}

@@ -42,4 +42,23 @@ void ChunkView::unpack_velocity(uint8_t flags, int8_t &vx, int8_t &vy) {
 	vy = static_cast<int8_t>(flags & 0x0F) - 8;
 }
 
+bool ChunkView::write_changed(int x, int y, const Cell &nv) {
+	auto try_write = [&](Chunk *target, Cell *cells_arr, int lx, int ly) -> bool {
+		if (!target) return false;
+		int i = ly * SZ + lx;
+		Cell &slot = cells_arr[i];
+		if (slot.material == nv.material && slot.health == nv.health &&
+				slot.temperature == nv.temperature && slot.flags == nv.flags) return false;
+		slot = nv;
+		target->extend_next_dirty_rect(lx, ly, lx + 1, ly + 1);
+		return true;
+	};
+	if (x >= 0 && x < SZ && y >= 0 && y < SZ)
+		return try_write(center, cells, x, y);
+	if (y < 0)    return try_write(up,    cells_up,    x, SZ + y);
+	if (y >= SZ)  return try_write(down,  cells_down,  x, y - SZ);
+	if (x < 0)    return try_write(left,  cells_left,  SZ + x, y);
+	return         try_write(right, cells_right, x - SZ, y);
+}
+
 } // namespace toprogue

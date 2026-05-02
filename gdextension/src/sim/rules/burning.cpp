@@ -153,9 +153,7 @@ void run_burning(ChunkView &v) {
 				c.material = static_cast<uint8_t>(material);
 				c.health = static_cast<uint8_t>(health);
 				c.temperature = static_cast<uint8_t>(temperature);
-				*v.at(x, y) = c;
-				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-				chunk->set_sleeping(false);
+			v.write_changed(x, y, c);
 			}
 		}
 	}
