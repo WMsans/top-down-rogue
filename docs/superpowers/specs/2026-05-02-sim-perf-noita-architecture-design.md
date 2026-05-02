@@ -323,3 +323,7 @@ Before/after each step, capture into the appendix below:
 ## Appendix — profiling log
 
 (to be filled in as migration steps land)
+
+### Task 0 baseline (HEAD before Task 1)
+- median_ms=0.003  p99_ms=0.004
+- Snapshot SHA256: 7e1871445941fc54e51f1d04118ed93084777b3ad406c6ca0dda5755cc205d19
