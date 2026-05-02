@@ -19,13 +19,15 @@ class Simulator : public godot::RefCounted {
 	int _frame_index = 0;
 	godot::Dictionary _chunks;
 
-	// Phase dispatch temporary storage
 	godot::Vector<Chunk *> _phase_chunks;
 	godot::Vector<ChunkView> _phase_views;
 	uint32_t _current_frame_seed = 0;
+	bool _serial_mode = false;
 
 public:
+	Simulator();
 	void set_world_seed(int64_t seed);
+	void set_serial_mode(bool v);
 	void set_chunks(const godot::Dictionary &chunks);
 	void tick();
 	void add_active(Chunk *chunk);
@@ -36,7 +38,6 @@ protected:
 
 private:
 	std::vector<Chunk *> _active;
-	void run_phase(int phase_x, int phase_y);
 	void _group_task_body(int32_t index);
 	void tick_chunk(ChunkView &view);
 	void rotate_dirty_rects();
