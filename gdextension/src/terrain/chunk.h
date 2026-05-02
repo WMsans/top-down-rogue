@@ -66,14 +66,16 @@ public:
 	godot::Ref<godot::Texture2DArray> tiled_texture;
 	godot::Ref<godot::Image> tile_images[TILE_COUNT];
 
-	// --- Atomic next_dirty_rect (spec §6.4) ----------------------------
+	// --- Plain next_dirty_rect (spec §6.4) ----------------------------
 private:
-	std::atomic<int32_t> next_min_x{ INT32_MAX };
-	std::atomic<int32_t> next_min_y{ INT32_MAX };
-	std::atomic<int32_t> next_max_x{ INT32_MIN };
-	std::atomic<int32_t> next_max_y{ INT32_MIN };
+	int32_t next_min_x = INT32_MAX;
+	int32_t next_min_y = INT32_MAX;
+	int32_t next_max_x = INT32_MIN;
+	int32_t next_max_y = INT32_MIN;
 
 public:
+	std::atomic<bool> wake_pending{ false };
+
 	bool extend_next_dirty_rect(int x0, int y0, int x1, int y1);
 	godot::Rect2i take_next_dirty_rect();
 	void reset_next_dirty_rect();

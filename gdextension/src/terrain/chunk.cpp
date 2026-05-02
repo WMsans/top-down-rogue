@@ -14,59 +14,29 @@ using namespace godot;
 
 namespace toprogue {
 
-// --- Atomic dirty rect helpers (spec §6.4) -------------------------------
+// --- Plain dirty rect helpers (spec §6.4) -------------------------------
 
 bool Chunk::extend_next_dirty_rect(int x0, int y0, int x1, int y1) {
 	bool changed = false;
-
-	int32_t old_v = next_min_x.load(std::memory_order_relaxed);
-	while (x0 < old_v && !next_min_x.compare_exchange_weak(old_v, x0, std::memory_order_relaxed)) {
-	}
-	if (x0 < old_v) {
-		changed = true;
-	}
-
-	old_v = next_min_y.load(std::memory_order_relaxed);
-	while (y0 < old_v && !next_min_y.compare_exchange_weak(old_v, y0, std::memory_order_relaxed)) {
-	}
-	if (y0 < old_v) {
-		changed = true;
-	}
-
-	old_v = next_max_x.load(std::memory_order_relaxed);
-	while (x1 > old_v && !next_max_x.compare_exchange_weak(old_v, x1, std::memory_order_relaxed)) {
-	}
-	if (x1 > old_v) {
-		changed = true;
-	}
-
-	old_v = next_max_y.load(std::memory_order_relaxed);
-	while (y1 > old_v && !next_max_y.compare_exchange_weak(old_v, y1, std::memory_order_relaxed)) {
-	}
-	if (y1 > old_v) {
-		changed = true;
-	}
-
+	if (x0 < next_min_x) { next_min_x = x0; changed = true; }
+	if (y0 < next_min_y) { next_min_y = y0; changed = true; }
+	if (x1 > next_max_x) { next_max_x = x1; changed = true; }
+	if (y1 > next_max_y) { next_max_y = y1; changed = true; }
 	return changed;
 }
 
 Rect2i Chunk::take_next_dirty_rect() {
-	int32_t mx = next_min_x.exchange(INT32_MAX, std::memory_order_relaxed);
-	int32_t my = next_min_y.exchange(INT32_MAX, std::memory_order_relaxed);
-	int32_t Mx = next_max_x.exchange(INT32_MIN, std::memory_order_relaxed);
-	int32_t My = next_max_y.exchange(INT32_MIN, std::memory_order_relaxed);
-
-	if (Mx < mx || My < my) {
-		return Rect2i();
-	}
+	int32_t mx = next_min_x, my = next_min_y;
+	int32_t Mx = next_max_x, My = next_max_y;
+	next_min_x = INT32_MAX; next_min_y = INT32_MAX;
+	next_max_x = INT32_MIN; next_max_y = INT32_MIN;
+	if (Mx < mx || My < my) return Rect2i();
 	return Rect2i(mx, my, Mx - mx, My - my);
 }
 
 void Chunk::reset_next_dirty_rect() {
-	next_min_x.store(INT32_MAX, std::memory_order_relaxed);
-	next_min_y.store(INT32_MAX, std::memory_order_relaxed);
-	next_max_x.store(INT32_MIN, std::memory_order_relaxed);
-	next_max_y.store(INT32_MIN, std::memory_order_relaxed);
+	next_min_x = INT32_MAX; next_min_y = INT32_MAX;
+	next_max_x = INT32_MIN; next_max_y = INT32_MIN;
 }
 
 // --- Injection queue (spec §8.6) -----------------------------------------

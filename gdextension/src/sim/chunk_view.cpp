@@ -51,6 +51,8 @@ bool ChunkView::write_changed(int x, int y, const Cell &nv) {
 				slot.temperature == nv.temperature && slot.flags == nv.flags) return false;
 		slot = nv;
 		target->extend_next_dirty_rect(lx, ly, lx + 1, ly + 1);
+		if (target != center)
+			target->wake_pending.store(true, std::memory_order_relaxed);
 		return true;
 	};
 	if (x >= 0 && x < SZ && y >= 0 && y < SZ)
