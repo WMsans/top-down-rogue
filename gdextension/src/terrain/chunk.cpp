@@ -2,9 +2,11 @@
 
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/texture2d_array.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include <algorithm>
 #include <cstring>
 #include <mutex>
 
@@ -83,29 +85,53 @@ Vector<InjectionAABB> Chunk::take_injections() {
 
 // --- Texture upload (spec §8.4) -----------------------------------------
 
-void Chunk::upload_texture_full() {
-	constexpr int SZ = CHUNK_SIZE;
-	constexpr int BYTES = SZ * SZ * 4;
-
-	PackedByteArray bytes;
-	bytes.resize(BYTES);
-	std::memcpy(bytes.ptrw(), cells, BYTES);
-
-	Ref<Image> img = Image::create_from_data(SZ, SZ, false, Image::FORMAT_RGBA8, bytes);
-	if (texture.is_null()) {
-		texture = ImageTexture::create_from_image(img);
-	} else {
-		texture->update(img);
+static inline void pack_tile_aos(const Cell *cells, int tile_x, int tile_y,
+		uint8_t *out_4bpp) {
+	constexpr int SZ = Chunk::CHUNK_SIZE;
+	constexpr int TS = Chunk::TILE_SIZE;
+	int x0 = tile_x * TS;
+	int y0 = tile_y * TS;
+	for (int ly = 0; ly < TS; ly++) {
+		const Cell *src = &cells[(y0 + ly) * SZ + x0];
+		std::memcpy(out_4bpp + ly * TS * 4, src, TS * 4);
 	}
 }
 
 void Chunk::upload_texture() {
-	if (dirty_rect.size.x == 0 || dirty_rect.size.y == 0) {
-		return;
+	if (dirty_rect.size.x == 0 || dirty_rect.size.y == 0) return;
+	if (tiled_texture.is_null()) return;
+
+	int tx0 = std::max(0, dirty_rect.position.x / TILE_SIZE);
+	int ty0 = std::max(0, dirty_rect.position.y / TILE_SIZE);
+	int tx1 = std::min(TILES_PER_SIDE - 1,
+			(dirty_rect.position.x + dirty_rect.size.x - 1) / TILE_SIZE);
+	int ty1 = std::min(TILES_PER_SIDE - 1,
+			(dirty_rect.position.y + dirty_rect.size.y - 1) / TILE_SIZE);
+
+	PackedByteArray buf;
+	buf.resize(TILE_SIZE * TILE_SIZE * 4);
+	for (int ty = ty0; ty <= ty1; ty++) {
+		for (int tx = tx0; tx <= tx1; tx++) {
+			pack_tile_aos(cells, tx, ty, buf.ptrw());
+			int layer = ty * TILES_PER_SIDE + tx;
+			tile_images[layer] = Image::create_from_data(
+					TILE_SIZE, TILE_SIZE, false, Image::FORMAT_RGBA8, buf);
+			tiled_texture->update_layer(tile_images[layer], layer);
+		}
 	}
-	// TODO: Dirty-only upload via partial update.
-	// Per §10.1 risk #4, full re-upload is acceptable for now.
-	upload_texture_full();
+}
+
+void Chunk::upload_texture_full() {
+	for (int t = 0; t < TILE_COUNT; t++) {
+		int tx = t % TILES_PER_SIDE;
+		int ty = t / TILES_PER_SIDE;
+		PackedByteArray buf;
+		buf.resize(TILE_SIZE * TILE_SIZE * 4);
+		pack_tile_aos(cells, tx, ty, buf.ptrw());
+		tile_images[t] = Image::create_from_data(
+				TILE_SIZE, TILE_SIZE, false, Image::FORMAT_RGBA8, buf);
+		tiled_texture->update_layer(tile_images[t], t);
+	}
 }
 
 PackedByteArray Chunk::get_cells_data() const {
@@ -190,6 +216,12 @@ void Chunk::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture",
 						 PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture"),
 			"set_texture", "get_texture");
+
+	ClassDB::bind_method(D_METHOD("get_tiled_texture"), &Chunk::get_tiled_texture);
+	ClassDB::bind_method(D_METHOD("set_tiled_texture", "v"), &Chunk::set_tiled_texture);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "tiled_texture",
+						 PROPERTY_HINT_RESOURCE_TYPE, "Texture2DArray"),
+			"set_tiled_texture", "get_tiled_texture");
 }
 
 } // namespace toprogue

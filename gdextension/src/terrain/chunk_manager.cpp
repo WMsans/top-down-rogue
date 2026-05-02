@@ -162,15 +162,19 @@ Ref<Chunk> ChunkManager::create_chunk(Vector2i coord) {
 	chunk.instantiate();
 	chunk->coord = coord;
 
-	// Pre-create the chunk's data texture so the shader sees a valid
-	// sampler when its parameter is bound below; later upload_texture_full
-	// calls go through ImageTexture::update on this same instance.
+	// Build 16 zeroed RGBA8 64x64 layers and create the Texture2DArray once.
 	{
-		PackedByteArray zeros;
-		zeros.resize(CHUNK_SIZE * CHUNK_SIZE * 4);
-		Ref<Image> blank = Image::create_from_data(
-				CHUNK_SIZE, CHUNK_SIZE, false, Image::FORMAT_RGBA8, zeros);
-		chunk->texture = ImageTexture::create_from_image(blank);
+		TypedArray<Ref<Image>> layers;
+		for (int t = 0; t < Chunk::TILE_COUNT; t++) {
+			PackedByteArray zeros;
+			zeros.resize(Chunk::TILE_SIZE * Chunk::TILE_SIZE * 4);
+			Ref<Image> tile_img = Image::create_from_data(
+					Chunk::TILE_SIZE, Chunk::TILE_SIZE, false, Image::FORMAT_RGBA8, zeros);
+			chunk->tile_images[t] = tile_img;
+			layers.append(tile_img);
+		}
+		chunk->tiled_texture.instantiate();
+		chunk->tiled_texture->create_from_images(layers);
 	}
 
 	// --- Mesh instance --------------------------------------------------
@@ -185,7 +189,7 @@ Ref<Chunk> ChunkManager::create_chunk(Vector2i coord) {
 	Ref<ShaderMaterial> mat;
 	mat.instantiate();
 	mat->set_shader(_render_shader);
-	mat->set_shader_parameter("chunk_data", chunk->get_texture());
+	mat->set_shader_parameter("chunk_data", chunk->tiled_texture);
 	mat->set_shader_parameter("material_textures", _material_textures);
 	mat->set_shader_parameter("wall_height", 16);
 	mat->set_shader_parameter("layer_mode", 1);
@@ -207,7 +211,7 @@ Ref<Chunk> ChunkManager::create_chunk(Vector2i coord) {
 	Ref<ShaderMaterial> wall_mat;
 	wall_mat.instantiate();
 	wall_mat->set_shader(_render_shader);
-	wall_mat->set_shader_parameter("chunk_data", chunk->get_texture());
+	wall_mat->set_shader_parameter("chunk_data", chunk->tiled_texture);
 	wall_mat->set_shader_parameter("material_textures", _material_textures);
 	wall_mat->set_shader_parameter("wall_height", 16);
 	wall_mat->set_shader_parameter("layer_mode", 0);
@@ -354,7 +358,7 @@ void ChunkManager::update_render_neighbors(const TypedArray<Vector2i> &loaded,
 		if (mat) {
 			if (_chunks.has(north_coord)) {
 				Ref<Chunk> north_chunk = _chunks[north_coord];
-				mat->set_shader_parameter("neighbor_data", north_chunk->get_texture());
+				mat->set_shader_parameter("neighbor_data", north_chunk->tiled_texture);
 				mat->set_shader_parameter("has_neighbor", true);
 			} else {
 				mat->set_shader_parameter("has_neighbor", false);

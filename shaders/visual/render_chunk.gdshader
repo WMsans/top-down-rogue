@@ -33,14 +33,16 @@ const float MATERIAL_GLOW[9] = float[9](
 	0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 20.0, 0.0, 0.0
 );
 
-uniform sampler2D chunk_data : filter_nearest;
-uniform sampler2D neighbor_data : filter_nearest;
+uniform sampler2DArray chunk_data : filter_nearest;
+uniform sampler2DArray neighbor_data : filter_nearest;
 uniform bool has_neighbor = false;
 uniform int wall_height = 16;
 uniform sampler2DArray material_textures : filter_nearest;
 uniform int layer_mode = 0;
 
 const int CHUNK_SIZE = 256;
+const int TILE_SIZE = 64;
+const int TILES_PER_SIDE = 4;
 
 vec3 srgb_to_linear(vec3 srgb) {
 	return mix(
@@ -54,9 +56,13 @@ vec3 srgb_to_linear(vec3 srgb) {
 // Returns vec4(material, health, temperature, reserved) in 0-255 range conceptually,
 // but as normalized floats from the RGBA8 texture.
 vec4 read_pixel(ivec2 pos) {
-	vec2 uv = (vec2(pos) + 0.5) / float(CHUNK_SIZE);
-	uv.y = 1.0 - uv.y; // Y-flip: texture y=0 is top, screen y=0 is top
-	return texture(chunk_data, uv);
+	int tile_x = pos.x / TILE_SIZE;
+	int tile_y = pos.y / TILE_SIZE;
+	int layer = tile_y * TILES_PER_SIDE + tile_x;
+	ivec2 local = pos - ivec2(tile_x * TILE_SIZE, tile_y * TILE_SIZE);
+	vec2 uv = (vec2(local) + 0.5) / float(TILE_SIZE);
+	uv.y = 1.0 - uv.y;
+	return texture(chunk_data, vec3(uv, float(layer)));
 }
 
 int get_material(vec4 data) {
@@ -75,9 +81,13 @@ bool is_solid(ivec2 pos) {
 // Read from neighboring chunk texture (for wall face scan overflow).
 // neighbor_pos is in the neighbor's local px coordinate space.
 vec4 read_neighbor(ivec2 neighbor_pos) {
-	vec2 uv = (vec2(neighbor_pos) + 0.5) / float(CHUNK_SIZE);
+	int tile_x = neighbor_pos.x / TILE_SIZE;
+	int tile_y = neighbor_pos.y / TILE_SIZE;
+	int layer = tile_y * TILES_PER_SIDE + tile_x;
+	ivec2 local = neighbor_pos - ivec2(tile_x * TILE_SIZE, tile_y * TILE_SIZE);
+	vec2 uv = (vec2(local) + 0.5) / float(TILE_SIZE);
 	uv.y = 1.0 - uv.y;
-	return texture(neighbor_data, uv);
+	return texture(neighbor_data, vec3(uv, float(layer)));
 }
 
 // Read pixel data, crossing into neighbor chunk when pos.y >= CHUNK_SIZE.
