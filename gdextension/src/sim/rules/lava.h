@@ -1,5 +1,5 @@
 #pragma once
-#include "../sim_context.h"
+#include "../chunk_view.h"
 namespace toprogue {
-void run_lava(SimContext &ctx);
+void run_lava(ChunkView &v);
 }

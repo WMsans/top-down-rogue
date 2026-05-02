@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../terrain/chunk.h"
-#include "sim_context.h"
+#include "chunk_view.h"
 
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/templates/vector.hpp>
@@ -21,6 +21,7 @@ class Simulator : public godot::RefCounted {
 
 	// Phase dispatch temporary storage
 	godot::Vector<Chunk *> _phase_chunks;
+	godot::Vector<ChunkView> _phase_views;
 	uint32_t _current_frame_seed = 0;
 
 public:
@@ -37,7 +38,7 @@ private:
 	std::vector<Chunk *> _active;
 	void run_phase(int phase_x, int phase_y);
 	void _group_task_body(int32_t index);
-	void tick_chunk(Chunk *chunk);
+	void tick_chunk(ChunkView &view);
 	void rotate_dirty_rects();
 	void upload_dirty_textures();
 };
