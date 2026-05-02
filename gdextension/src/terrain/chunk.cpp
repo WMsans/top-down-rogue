@@ -3,10 +3,10 @@
 #include <godot_cpp/classes/image.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/core/class_db.hpp>
-#include <godot_cpp/core/mutex_lock.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 #include <cstring>
+#include <mutex>
 
 using namespace godot;
 
@@ -70,12 +70,12 @@ void Chunk::reset_next_dirty_rect() {
 // --- Injection queue (spec §8.6) -----------------------------------------
 
 void Chunk::push_injection(const InjectionAABB &aabb) {
-	MutexLock lock(injection_queue_mutex);
+	std::lock_guard<std::mutex> lock(injection_queue_mutex);
 	injection_queue.push_back(aabb);
 }
 
 Vector<InjectionAABB> Chunk::take_injections() {
-	MutexLock lock(injection_queue_mutex);
+	std::lock_guard<std::mutex> lock(injection_queue_mutex);
 	Vector<InjectionAABB> out = injection_queue;
 	injection_queue.clear();
 	return out;
