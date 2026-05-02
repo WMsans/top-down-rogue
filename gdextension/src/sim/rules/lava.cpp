@@ -11,23 +11,8 @@ static constexpr int V_MAX_OUTFLOW = 8;
 static constexpr int THRESHOLD_BECOME_LAVA = 1;
 static constexpr int THRESHOLD_DISSIPATE = 1;
 
-static int stochastic_div_amount(int numerator, int divisor, int x, int y, uint32_t salt, SimContext &ctx) {
-	if (divisor <= 0) {
-		return 0;
-	}
-	int base = numerator / divisor;
-	int rem = numerator - base * divisor;
-	if (rem <= 0) {
-		return base;
-	}
-	uint32_t rng = ctx.hash3(x, y, salt);
-	return base + ((rng % static_cast<uint32_t>(divisor)) < static_cast<uint32_t>(rem) ? 1 : 0);
-}
-
 static bool is_solid_for_lava(int mat, int air_id) {
-	return mat != air_id && mat != -1; // lava itself is not solid for lava
-	// Actually: mat != MAT_AIR && mat != MAT_LAVA
-	// But we don't have lava_id here directly, so we need it from the caller
+	return mat != air_id && mat != -1;
 }
 
 static bool is_hot_lava(Cell c, int target_material, int lava_id) {
@@ -38,8 +23,21 @@ static bool is_hot_lava(Cell c, int target_material, int lava_id) {
 	return temp > MaterialTable::get_singleton()->get_ignition_temp(target_material);
 }
 
-void run_lava(SimContext &ctx) {
-	Chunk *chunk = ctx.chunk;
+static int stochastic_div_amount(int numerator, int divisor, int x, int y, uint32_t salt, ChunkView &v) {
+	if (divisor <= 0) {
+		return 0;
+	}
+	int base = numerator / divisor;
+	int rem = numerator - base * divisor;
+	if (rem <= 0) {
+		return base;
+	}
+	uint32_t rng = v.hash3(x, y, salt);
+	return base + ((rng % static_cast<uint32_t>(divisor)) < static_cast<uint32_t>(rem) ? 1 : 0);
+}
+
+void run_lava(ChunkView &v) {
+	Chunk *chunk = v.center;
 	if (!chunk) {
 		return;
 	}
@@ -49,8 +47,8 @@ void run_lava(SimContext &ctx) {
 		return;
 	}
 
-	int air_id = static_cast<int>(ctx.air_id);
-	int lava_id = static_cast<int>(ctx.lava_id);
+	int air_id = static_cast<int>(v.air_id);
+	int lava_id = static_cast<int>(v.lava_id);
 
 	int x0 = dr.position.x;
 	int y0 = dr.position.y;
@@ -59,7 +57,7 @@ void run_lava(SimContext &ctx) {
 
 	for (int y = y0; y < y1; y++) {
 		for (int x = x0; x < x1; x++) {
-			const Cell *self = ctx.cell_at(x, y);
+			Cell *self = v.at(x, y);
 			if (!self) {
 				continue;
 			}
@@ -69,10 +67,10 @@ void run_lava(SimContext &ctx) {
 			}
 
 			Cell n_up_cell, n_down_cell, n_left_cell, n_right_cell;
-			const Cell *n_up_ptr = ctx.cell_at(x, y - 1);
-			const Cell *n_down_ptr = ctx.cell_at(x, y + 1);
-			const Cell *n_left_ptr = ctx.cell_at(x - 1, y);
-			const Cell *n_right_ptr = ctx.cell_at(x + 1, y);
+			Cell *n_up_ptr = v.at(x, y - 1);
+			Cell *n_down_ptr = v.at(x, y + 1);
+			Cell *n_left_ptr = v.at(x - 1, y);
+			Cell *n_right_ptr = v.at(x + 1, y);
 			n_up_cell = n_up_ptr ? *n_up_ptr : Cell{ 0, 0, 0, 0 };
 			n_down_cell = n_down_ptr ? *n_down_ptr : Cell{ 0, 0, 0, 0 };
 			n_left_cell = n_left_ptr ? *n_left_ptr : Cell{ 0, 0, 0, 0 };
@@ -95,7 +93,7 @@ void run_lava(SimContext &ctx) {
 			int temperature = (material == lava_id) ? static_cast<int>(self->temperature) : 0;
 			int8_t vx = 0, vy = 0;
 			if (material == lava_id) {
-				ctx.unpack_velocity(self->flags, vx, vy);
+				ChunkView::unpack_velocity(self->flags, vx, vy);
 			}
 
 			int comp_up = std::max(0, -static_cast<int>(vy));
@@ -120,10 +118,10 @@ void run_lava(SimContext &ctx) {
 				comp_right = 0;
 			}
 
-			int out_up = stochastic_div_amount(density * comp_up, V_MAX_OUTFLOW, x, y, 1u, ctx);
-			int out_down = stochastic_div_amount(density * comp_down, V_MAX_OUTFLOW, x, y, 2u, ctx);
-			int out_left = stochastic_div_amount(density * comp_left, V_MAX_OUTFLOW, x, y, 3u, ctx);
-			int out_right = stochastic_div_amount(density * comp_right, V_MAX_OUTFLOW, x, y, 4u, ctx);
+			int out_up = stochastic_div_amount(density * comp_up, V_MAX_OUTFLOW, x, y, 1u, v);
+			int out_down = stochastic_div_amount(density * comp_down, V_MAX_OUTFLOW, x, y, 2u, v);
+			int out_left = stochastic_div_amount(density * comp_left, V_MAX_OUTFLOW, x, y, 3u, v);
+			int out_right = stochastic_div_amount(density * comp_right, V_MAX_OUTFLOW, x, y, 4u, v);
 
 			int total_out = out_up + out_down + out_left + out_right;
 			int max_outflow = std::min(density, std::max(1, density / 2));
@@ -144,32 +142,32 @@ void run_lava(SimContext &ctx) {
 			if (n_mat_up == lava_id) {
 				int dN = static_cast<int>(n_up_cell.health);
 				int8_t vnx, vny;
-				ctx.unpack_velocity(n_up_cell.flags, vnx, vny);
-				in_up = stochastic_div_amount(dN * std::max(0, static_cast<int>(vny)), V_MAX_OUTFLOW, x, y, 5u, ctx);
+				ChunkView::unpack_velocity(n_up_cell.flags, vnx, vny);
+				in_up = stochastic_div_amount(dN * std::max(0, static_cast<int>(vny)), V_MAX_OUTFLOW, x, y, 5u, v);
 				vin_up_x = static_cast<int>(vnx);
 				vin_up_y = static_cast<int>(vny);
 			}
 			if (n_mat_down == lava_id) {
 				int dN = static_cast<int>(n_down_cell.health);
 				int8_t vnx, vny;
-				ctx.unpack_velocity(n_down_cell.flags, vnx, vny);
-				in_down = stochastic_div_amount(dN * std::max(0, -static_cast<int>(vny)), V_MAX_OUTFLOW, x, y, 6u, ctx);
+				ChunkView::unpack_velocity(n_down_cell.flags, vnx, vny);
+				in_down = stochastic_div_amount(dN * std::max(0, -static_cast<int>(vny)), V_MAX_OUTFLOW, x, y, 6u, v);
 				vin_down_x = static_cast<int>(vnx);
 				vin_down_y = static_cast<int>(vny);
 			}
 			if (n_mat_left == lava_id) {
 				int dN = static_cast<int>(n_left_cell.health);
 				int8_t vnx, vny;
-				ctx.unpack_velocity(n_left_cell.flags, vnx, vny);
-				in_left = stochastic_div_amount(dN * std::max(0, static_cast<int>(vnx)), V_MAX_OUTFLOW, x, y, 7u, ctx);
+				ChunkView::unpack_velocity(n_left_cell.flags, vnx, vny);
+				in_left = stochastic_div_amount(dN * std::max(0, static_cast<int>(vnx)), V_MAX_OUTFLOW, x, y, 7u, v);
 				vin_left_x = static_cast<int>(vnx);
 				vin_left_y = static_cast<int>(vny);
 			}
 			if (n_mat_right == lava_id) {
 				int dN = static_cast<int>(n_right_cell.health);
 				int8_t vnx, vny;
-				ctx.unpack_velocity(n_right_cell.flags, vnx, vny);
-				in_right = stochastic_div_amount(dN * std::max(0, -static_cast<int>(vnx)), V_MAX_OUTFLOW, x, y, 8u, ctx);
+				ChunkView::unpack_velocity(n_right_cell.flags, vnx, vny);
+				in_right = stochastic_div_amount(dN * std::max(0, -static_cast<int>(vnx)), V_MAX_OUTFLOW, x, y, 8u, v);
 				vin_right_x = static_cast<int>(vnx);
 				vin_right_y = static_cast<int>(vny);
 			}
@@ -239,8 +237,10 @@ void run_lava(SimContext &ctx) {
 					c.material = static_cast<uint8_t>(lava_id);
 					c.health = static_cast<uint8_t>(std::clamp(total_in, 0, 255));
 					c.temperature = static_cast<uint8_t>(std::clamp(new_temp, 0, 255));
-					ctx.pack_velocity(c.flags, static_cast<int8_t>(inflow_vel_x), static_cast<int8_t>(inflow_vel_y));
-					ctx.write_cell(x, y, c);
+					ChunkView::pack_velocity(c.flags, static_cast<int8_t>(inflow_vel_x), static_cast<int8_t>(inflow_vel_y));
+					*v.at(x, y) = c;
+					chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
+					chunk->set_sleeping(false);
 				}
 				continue;
 			}
@@ -251,7 +251,9 @@ void run_lava(SimContext &ctx) {
 				c.health = 0;
 				c.temperature = 0;
 				c.flags = 0;
-				ctx.write_cell(x, y, c);
+				*v.at(x, y) = c;
+				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
+				chunk->set_sleeping(false);
 				continue;
 			}
 
@@ -259,8 +261,10 @@ void run_lava(SimContext &ctx) {
 			c.material = static_cast<uint8_t>(lava_id);
 			c.health = static_cast<uint8_t>(std::clamp(new_density, 0, 255));
 			c.temperature = static_cast<uint8_t>(std::clamp(new_temp, 0, 255));
-			ctx.pack_velocity(c.flags, static_cast<int8_t>(new_vel_x), static_cast<int8_t>(new_vel_y));
-			ctx.write_cell(x, y, c);
+			ChunkView::pack_velocity(c.flags, static_cast<int8_t>(new_vel_x), static_cast<int8_t>(new_vel_y));
+			*v.at(x, y) = c;
+			chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
+			chunk->set_sleeping(false);
 		}
 	}
 }

@@ -10,8 +10,8 @@ namespace toprogue {
 
 static constexpr int MAX_INJECTIONS_PER_CHUNK = 32;
 
-void run_injection(SimContext &ctx) {
-	Chunk *chunk = ctx.chunk;
+void run_injection(ChunkView &v) {
+	Chunk *chunk = v.center;
 	if (!chunk) {
 		return;
 	}
@@ -30,9 +30,9 @@ void run_injection(SimContext &ctx) {
 		n = MAX_INJECTIONS_PER_CHUNK;
 	}
 
-	int air_id = static_cast<int>(ctx.air_id);
-	int gas_id = static_cast<int>(ctx.gas_id);
-	int lava_id = static_cast<int>(ctx.lava_id);
+	int air_id = static_cast<int>(v.air_id);
+	int gas_id = static_cast<int>(v.gas_id);
+	int lava_id = static_cast<int>(v.lava_id);
 
 	int x0 = dr.position.x;
 	int y0 = dr.position.y;
@@ -41,7 +41,7 @@ void run_injection(SimContext &ctx) {
 
 	for (int y = y0; y < y1; y++) {
 		for (int x = x0; x < x1; x++) {
-			Cell *cptr = ctx.cell_at(x, y);
+			Cell *cptr = v.at(x, y);
 			if (!cptr) {
 				continue;
 			}
@@ -73,7 +73,7 @@ void run_injection(SimContext &ctx) {
 
 				if (material == gas_id) {
 					int8_t vx, vy;
-					ctx.unpack_velocity(c.flags, vx, vy);
+					ChunkView::unpack_velocity(c.flags, vx, vy);
 
 					int center_x = (b.min_x + b.max_x) / 2;
 					int center_y = (b.min_y + b.max_y) / 2;
@@ -108,10 +108,10 @@ void run_injection(SimContext &ctx) {
 					c.material = static_cast<uint8_t>(gas_id);
 					c.health = static_cast<uint8_t>(std::clamp(dens, 0, 255));
 					c.temperature = 0;
-					ctx.pack_velocity(c.flags, static_cast<int8_t>(new_vx), static_cast<int8_t>(new_vy));
+					ChunkView::pack_velocity(c.flags, static_cast<int8_t>(new_vx), static_cast<int8_t>(new_vy));
 				} else {
 					int8_t vx, vy;
-					ctx.unpack_velocity(c.flags, vx, vy);
+					ChunkView::unpack_velocity(c.flags, vx, vy);
 
 					int center_x = (b.min_x + b.max_x) / 2;
 					int center_y = (b.min_y + b.max_y) / 2;
@@ -142,13 +142,15 @@ void run_injection(SimContext &ctx) {
 					c.material = static_cast<uint8_t>(lava_id);
 					c.health = static_cast<uint8_t>(std::clamp(dens, 0, 255));
 					c.temperature = static_cast<uint8_t>(std::clamp(temp, 0, 255));
-					ctx.pack_velocity(c.flags, static_cast<int8_t>(new_vx), static_cast<int8_t>(new_vy));
+					ChunkView::pack_velocity(c.flags, static_cast<int8_t>(new_vx), static_cast<int8_t>(new_vy));
 				}
 				wrote = true;
 			}
 
 			if (wrote) {
-				ctx.write_cell(x, y, c);
+				*v.at(x, y) = c;
+				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
+				chunk->set_sleeping(false);
 			}
 		}
 	}

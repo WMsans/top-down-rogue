@@ -28,8 +28,8 @@ static bool is_hot_lava_for_mat(Cell c, int target_material, int lava_id, Materi
 	return temp > mt->get_ignition_temp(target_material);
 }
 
-void run_burning(SimContext &ctx) {
-	Chunk *chunk = ctx.chunk;
+void run_burning(ChunkView &v) {
+	Chunk *chunk = v.center;
 	if (!chunk) {
 		return;
 	}
@@ -44,8 +44,8 @@ void run_burning(SimContext &ctx) {
 		return;
 	}
 
-	int air_id = static_cast<int>(ctx.air_id);
-	int lava_id = static_cast<int>(ctx.lava_id);
+	int air_id = static_cast<int>(v.air_id);
+	int lava_id = static_cast<int>(v.lava_id);
 
 	int x0 = dr.position.x;
 	int y0 = dr.position.y;
@@ -54,7 +54,7 @@ void run_burning(SimContext &ctx) {
 
 	for (int y = y0; y < y1; y++) {
 		for (int x = x0; x < x1; x++) {
-			const Cell *self = ctx.cell_at(x, y);
+			Cell *self = v.at(x, y);
 			if (!self) {
 				continue;
 			}
@@ -64,15 +64,15 @@ void run_burning(SimContext &ctx) {
 			int health = static_cast<int>(c.health);
 			int temperature = static_cast<int>(c.temperature);
 
-			uint32_t base_rng = SimContext::hash_u32(
-					static_cast<uint32_t>(x) ^ SimContext::hash_u32(static_cast<uint32_t>(y) ^ ctx.frame_seed));
+			uint32_t base_rng = ChunkView::hash_u32(
+					static_cast<uint32_t>(x) ^ ChunkView::hash_u32(static_cast<uint32_t>(y) ^ v.frame_seed));
 
 			int heat_gain = 0;
 
-			const Cell *n_up_ptr = ctx.cell_at(x, y - 1);
-			const Cell *n_down_ptr = ctx.cell_at(x, y + 1);
-			const Cell *n_left_ptr = ctx.cell_at(x - 1, y);
-			const Cell *n_right_ptr = ctx.cell_at(x + 1, y);
+			Cell *n_up_ptr = v.at(x, y - 1);
+			Cell *n_down_ptr = v.at(x, y + 1);
+			Cell *n_left_ptr = v.at(x - 1, y);
+			Cell *n_right_ptr = v.at(x + 1, y);
 
 			Cell n_up = n_up_ptr ? *n_up_ptr : Cell{ 0, 0, 0, 0 };
 			Cell n_down = n_down_ptr ? *n_down_ptr : Cell{ 0, 0, 0, 0 };
@@ -84,7 +84,7 @@ void run_burning(SimContext &ctx) {
 				int n_temp = static_cast<int>(n_up.temperature);
 				float prob = static_cast<float>(n_temp - mt->get_ignition_temp(n_mat)) /
 						static_cast<float>(FIRE_TEMP - mt->get_ignition_temp(n_mat)) * SPREAD_PROB_MAX;
-				uint32_t rng = SimContext::hash_u32(base_rng ^ 1u);
+				uint32_t rng = ChunkView::hash_u32(base_rng ^ 1u);
 				if ((rng % 100u) < static_cast<uint32_t>(prob * 100.0f)) {
 					heat_gain += static_cast<int>(HEAT_SPREAD) / 2 + static_cast<int>(rng % static_cast<uint32_t>(HEAT_SPREAD));
 				}
@@ -94,7 +94,7 @@ void run_burning(SimContext &ctx) {
 				int n_temp = static_cast<int>(n_down.temperature);
 				float prob = static_cast<float>(n_temp - mt->get_ignition_temp(n_mat)) /
 						static_cast<float>(FIRE_TEMP - mt->get_ignition_temp(n_mat)) * SPREAD_PROB_MAX;
-				uint32_t rng = SimContext::hash_u32(base_rng ^ 2u);
+				uint32_t rng = ChunkView::hash_u32(base_rng ^ 2u);
 				if ((rng % 100u) < static_cast<uint32_t>(prob * 100.0f)) {
 					heat_gain += static_cast<int>(HEAT_SPREAD) / 4 + static_cast<int>(rng % static_cast<uint32_t>(HEAT_SPREAD));
 				}
@@ -104,7 +104,7 @@ void run_burning(SimContext &ctx) {
 				int n_temp = static_cast<int>(n_left.temperature);
 				float prob = static_cast<float>(n_temp - mt->get_ignition_temp(n_mat)) /
 						static_cast<float>(FIRE_TEMP - mt->get_ignition_temp(n_mat)) * SPREAD_PROB_MAX;
-				uint32_t rng = SimContext::hash_u32(base_rng ^ 3u);
+				uint32_t rng = ChunkView::hash_u32(base_rng ^ 3u);
 				if ((rng % 100u) < static_cast<uint32_t>(prob * 100.0f)) {
 					heat_gain += static_cast<int>(HEAT_SPREAD) / 4 + static_cast<int>(rng % static_cast<uint32_t>(HEAT_SPREAD));
 				}
@@ -114,7 +114,7 @@ void run_burning(SimContext &ctx) {
 				int n_temp = static_cast<int>(n_right.temperature);
 				float prob = static_cast<float>(n_temp - mt->get_ignition_temp(n_mat)) /
 						static_cast<float>(FIRE_TEMP - mt->get_ignition_temp(n_mat)) * SPREAD_PROB_MAX;
-				uint32_t rng = SimContext::hash_u32(base_rng ^ 4u);
+				uint32_t rng = ChunkView::hash_u32(base_rng ^ 4u);
 				if ((rng % 100u) < static_cast<uint32_t>(prob * 100.0f)) {
 					heat_gain += static_cast<int>(HEAT_SPREAD) / 2 + static_cast<int>(rng % static_cast<uint32_t>(HEAT_SPREAD));
 				}
@@ -153,7 +153,9 @@ void run_burning(SimContext &ctx) {
 				c.material = static_cast<uint8_t>(material);
 				c.health = static_cast<uint8_t>(health);
 				c.temperature = static_cast<uint8_t>(temperature);
-				ctx.write_cell(x, y, c);
+				*v.at(x, y) = c;
+				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
+				chunk->set_sleeping(false);
 			}
 		}
 	}

@@ -335,3 +335,6 @@ Before/after each step, capture into the appendix below:
 ### Task 2 result
 - median_ms=0.002  p99_ms=0.003
 - Snapshot hash unchanged
+### Task 3 result
+- median_ms=0.002  p99_ms=0.002
+- Snapshot hash unchanged

@@ -71,6 +71,30 @@ void Simulator::tick() {
 			continue;
 		}
 
+		// Build ChunkView for each chunk in this phase
+		_phase_views.clear();
+		for (Chunk *c : _phase_chunks) {
+			ChunkView v;
+			v.center = c;
+			v.up = c->get_neighbor_up().ptr();
+			v.down = c->get_neighbor_down().ptr();
+			v.left = c->get_neighbor_left().ptr();
+			v.right = c->get_neighbor_right().ptr();
+			v.cells = c->cells_ptr();
+			v.cells_up = v.up ? v.up->cells_ptr() : nullptr;
+			v.cells_down = v.down ? v.down->cells_ptr() : nullptr;
+			v.cells_left = v.left ? v.left->cells_ptr() : nullptr;
+			v.cells_right = v.right ? v.right->cells_ptr() : nullptr;
+			MaterialTable *mt = MaterialTable::get_singleton();
+			v.frame_seed = _current_frame_seed;
+			v.frame_index = _frame_index;
+			v.air_id = mt->get_MAT_AIR();
+			v.gas_id = mt->get_MAT_GAS();
+			v.lava_id = mt->get_MAT_LAVA();
+			v.water_id = mt->get_MAT_WATER();
+			_phase_views.push_back(v);
+		}
+
 		WorkerThreadPool *pool = WorkerThreadPool::get_singleton();
 		Callable task = callable_mp(this, &Simulator::_group_task_body);
 		pool->add_group_task(task, _phase_chunks.size(), -1, true,
@@ -82,13 +106,14 @@ void Simulator::tick() {
 }
 
 void Simulator::_group_task_body(int32_t index) {
-	if (index < 0 || index >= _phase_chunks.size()) {
+	if (index < 0 || index >= _phase_views.size()) {
 		return;
 	}
-	tick_chunk(_phase_chunks[index]);
+	tick_chunk(_phase_views.ptrw()[index]);
 }
 
-void Simulator::tick_chunk(Chunk *chunk) {
+void Simulator::tick_chunk(ChunkView &view) {
+	Chunk *chunk = view.center;
 	if (!chunk) {
 		return;
 	}
@@ -96,25 +121,10 @@ void Simulator::tick_chunk(Chunk *chunk) {
 		return;
 	}
 
-	MaterialTable *mt = MaterialTable::get_singleton();
-
-	SimContext ctx;
-	ctx.chunk = chunk;
-	ctx.up = chunk->get_neighbor_up().ptr();
-	ctx.down = chunk->get_neighbor_down().ptr();
-	ctx.left = chunk->get_neighbor_left().ptr();
-	ctx.right = chunk->get_neighbor_right().ptr();
-	ctx.frame_seed = _current_frame_seed;
-	ctx.frame_index = _frame_index;
-	ctx.air_id = mt->get_MAT_AIR();
-	ctx.gas_id = mt->get_MAT_GAS();
-	ctx.lava_id = mt->get_MAT_LAVA();
-	ctx.water_id = mt->get_MAT_WATER();
-
-	run_injection(ctx);
-	run_lava(ctx);
-	run_gas(ctx);
-	run_burning(ctx);
+	run_injection(view);
+	run_lava(view);
+	run_gas(view);
+	run_burning(view);
 }
 
 void Simulator::rotate_dirty_rects() {
