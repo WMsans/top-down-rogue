@@ -3,7 +3,6 @@
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/light_occluder2d.hpp>
 #include <godot_cpp/classes/mesh_instance2d.hpp>
-#include <godot_cpp/classes/mutex.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/classes/static_body2d.hpp>
 #include <godot_cpp/templates/vector.hpp>
@@ -14,6 +13,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 
 namespace toprogue {
 
@@ -73,7 +73,7 @@ public:
 	// --- Per-chunk injection queue (spec §8.6) -------------------------
 private:
 	godot::Vector<InjectionAABB> injection_queue;
-	godot::Mutex injection_queue_mutex;
+	std::mutex injection_queue_mutex;
 
 public:
 	void push_injection(const InjectionAABB &aabb);
