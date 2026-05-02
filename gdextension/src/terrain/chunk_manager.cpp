@@ -60,24 +60,52 @@ void ChunkManager::_init_material_textures() {
 	MaterialTable *mt = MaterialTable::get_singleton();
 	TypedArray<MaterialDef> mats = mt->get_materials();
 
+	// First pass: load real textures and discover their dimensions. The
+	// Texture2DArray requires every layer to be the same size, so any
+	// material without an authored texture must fall back to that size.
 	TypedArray<Ref<Image>> images;
+	int tex_w = 0;
+	int tex_h = 0;
 	for (int i = 0; i < mats.size(); i++) {
 		Ref<MaterialDef> def = mats[i];
+		Ref<Image> img;
 		String path = def->get_texture_path();
 		if (!path.is_empty()) {
 			Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
 			if (tex.is_valid()) {
-				Ref<Image> img = tex->get_image();
-				if (img.is_valid()) {
-					images.append(img);
-					continue;
-				}
+				img = tex->get_image();
 			}
 		}
-		// Fallback: 1x1 white image
-		Ref<Image> fallback = Image::create(1, 1, false, Image::FORMAT_RGBA8);
-		fallback->fill(Color(1, 1, 1, 1));
-		images.append(fallback);
+		if (img.is_valid() && tex_w == 0) {
+			tex_w = img->get_width();
+			tex_h = img->get_height();
+		}
+		images.append(img);
+	}
+
+	if (tex_w == 0 || tex_h == 0) {
+		tex_w = 16;
+		tex_h = 16;
+	}
+
+	// Second pass: replace missing entries with a uniformly-sized fallback,
+	// and force every layer to RGBA8 so create_from_images sees identical
+	// dimensions and format across the whole array.
+	for (int i = 0; i < images.size(); i++) {
+		Ref<Image> img = images[i];
+		if (!img.is_valid()) {
+			Ref<Image> fallback = Image::create(tex_w, tex_h, false, Image::FORMAT_RGBA8);
+			fallback->fill(Color(1, 1, 1, 1));
+			images[i] = fallback;
+			continue;
+		}
+		if (img->get_format() != Image::FORMAT_RGBA8) {
+			img->convert(Image::FORMAT_RGBA8);
+		}
+		if (img->get_width() != tex_w || img->get_height() != tex_h) {
+			img->resize(tex_w, tex_h);
+		}
+		images[i] = img;
 	}
 
 	_material_textures.instantiate();
@@ -131,6 +159,17 @@ Ref<Chunk> ChunkManager::create_chunk(Vector2i coord) {
 	Ref<Chunk> chunk;
 	chunk.instantiate();
 	chunk->coord = coord;
+
+	// Pre-create the chunk's data texture so the shader sees a valid
+	// sampler when its parameter is bound below; later upload_texture_full
+	// calls go through ImageTexture::update on this same instance.
+	{
+		PackedByteArray zeros;
+		zeros.resize(CHUNK_SIZE * CHUNK_SIZE * 4);
+		Ref<Image> blank = Image::create_from_data(
+				CHUNK_SIZE, CHUNK_SIZE, false, Image::FORMAT_RGBA8, zeros);
+		chunk->texture = ImageTexture::create_from_image(blank);
+	}
 
 	// --- Mesh instance --------------------------------------------------
 	chunk->mesh_instance = memnew(MeshInstance2D);
@@ -348,10 +387,12 @@ TypedArray<Vector2i> ChunkManager::generate_chunks_at(
 		return new_chunks;
 	}
 
-	Object *lm = Engine::get_singleton()->get_singleton("LevelManager");
 	Ref<BiomeDef> biome;
-	if (lm) {
-		biome = lm->get("current_biome");
+	if (_node) {
+		Node *lm = _node->get_node_or_null(NodePath("/root/LevelManager"));
+		if (lm) {
+			biome = lm->get("current_biome");
+		}
 	}
 
 	Object *gen_obj = nullptr;

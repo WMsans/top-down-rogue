@@ -48,6 +48,7 @@ public:
 	void generate_chunks_at(const godot::TypedArray<godot::Vector2i> &coords, int64_t seed_val);
 	void clear_all_chunks();
 	godot::Node2D *get_chunk_container() { return _chunk_container; }
+	godot::Dictionary get_chunks() const;
 
 	void set_tracking_position(godot::Vector2 pos) { _tracking_position = pos; }
 	godot::Vector2 get_tracking_position() const { return _tracking_position; }

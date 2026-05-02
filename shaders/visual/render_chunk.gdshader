@@ -1,5 +1,37 @@
 shader_type canvas_item;
-#include "res://shaders/generated/materials.gdshaderinc"
+
+// Material constants. Mirrors MaterialTable::_populate() in
+// gdextension/src/sim/material_table.cpp — keep IDs and per-material values
+// in sync when adding or reordering materials there.
+const int MAT_AIR = 0;
+const int MAT_WOOD = 1;
+const int MAT_STONE = 2;
+const int MAT_GAS = 3;
+const int MAT_LAVA = 4;
+const int MAT_DIRT = 5;
+const int MAT_COAL = 6;
+const int MAT_ICE = 7;
+const int MAT_WATER = 8;
+
+const bool HAS_COLLIDER[9] = bool[9](
+	false, true, true, false, false, true, true, true, true
+);
+
+const vec4 MATERIAL_TINT[9] = vec4[9](
+	vec4(0.0, 0.0, 0.0, 0.0),
+	vec4(0.0, 0.0, 0.0, 0.0),
+	vec4(0.0, 0.0, 0.0, 0.0),
+	vec4(0.4, 0.9, 0.3, 1.0),
+	vec4(0.9, 0.4, 0.1, 1.0),
+	vec4(0.45, 0.32, 0.18, 1.0),
+	vec4(0.12, 0.12, 0.14, 1.0),
+	vec4(0.7, 0.85, 0.95, 1.0),
+	vec4(0.2, 0.45, 0.75, 1.0)
+);
+
+const float MATERIAL_GLOW[9] = float[9](
+	0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 20.0, 0.0, 0.0
+);
 
 uniform sampler2D chunk_data : filter_nearest;
 uniform sampler2D neighbor_data : filter_nearest;
@@ -122,7 +154,9 @@ vec3 material_color(vec4 data, ivec2 pixel_pos) {
 		return vec3(1.0, 0.0, 1.0);
 	}
 	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
-	return apply_temperature_tint(base_color, data.b) * MATERIAL_GLOW[mat];
+	// Glow is additive emissive on top of the base color: 0 for ordinary
+	// materials, >0 for emitters (lava, coal) so they bloom under HDR.
+	return apply_temperature_tint(base_color, data.b) * (1.0 + MATERIAL_GLOW[mat]);
 }
 
 vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, ivec2 pixel_pos) {
@@ -132,7 +166,7 @@ vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, 
 	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
 	vec3 tex_color = srgb_to_linear(srgb);
 	vec3 tint = get_temperature_tint(src_data.b);
-	return tex_color * tint * MATERIAL_GLOW[material];
+	return tex_color * tint * (1.0 + MATERIAL_GLOW[material]);
 }
 
 // Check if any air pixel exists within euclidean distance 3 of pos.

@@ -60,6 +60,10 @@ void WorldManager::_bind_methods() {
 			&WorldManager::generate_chunks_at);
 	ClassDB::bind_method(D_METHOD("clear_all_chunks"), &WorldManager::clear_all_chunks);
 	ClassDB::bind_method(D_METHOD("get_chunk_container"), &WorldManager::get_chunk_container);
+	ClassDB::bind_method(D_METHOD("get_chunks"), &WorldManager::get_chunks);
+	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "chunks", PROPERTY_HINT_NONE, "",
+						 PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_READ_ONLY),
+			"", "get_chunks");
 
 	ClassDB::bind_method(D_METHOD("set_tracking_position", "pos"),
 			&WorldManager::set_tracking_position);
@@ -118,7 +122,7 @@ void WorldManager::_ready() {
 	_collision_helper->world_manager = this;
 
 	// Register with TerrainSurface autoload
-	Object *tso = Engine::get_singleton()->get_singleton("TerrainSurface");
+	Node *tso = get_node_or_null(NodePath("/root/TerrainSurface"));
 	if (tso) {
 		tso->call("register_adapter", this);
 	}
@@ -131,7 +135,7 @@ void WorldManager::_exit_tree() {
 		_chunk_manager->clear_all_chunks();
 	}
 
-	Object *tso = Engine::get_singleton()->get_singleton("TerrainSurface");
+	Node *tso = get_node_or_null(NodePath("/root/TerrainSurface"));
 	if (tso) {
 		tso->call("unregister_adapter", this);
 	}
@@ -199,7 +203,7 @@ void WorldManager::_update_chunks() {
 
 	// Create new chunks
 	if (to_create.size() > 0) {
-		Object *lm = Engine::get_singleton()->get_singleton("LevelManager");
+		Node *lm = get_node_or_null(NodePath("/root/LevelManager"));
 		int64_t world_seed = 0;
 		Ref<BiomeDef> biome;
 		if (lm) {
@@ -350,6 +354,13 @@ void WorldManager::generate_chunks_at(const TypedArray<Vector2i> &coords, int64_
 
 void WorldManager::clear_all_chunks() {
 	_chunk_manager->clear_all_chunks();
+}
+
+Dictionary WorldManager::get_chunks() const {
+	if (_chunk_manager.is_valid()) {
+		return _chunk_manager->get_chunks();
+	}
+	return Dictionary();
 }
 
 // --- _pocket_fits (static helper) -------------------------------------------
