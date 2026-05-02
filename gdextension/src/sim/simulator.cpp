@@ -18,6 +18,8 @@ void Simulator::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_world_seed", "seed"), &Simulator::set_world_seed);
 	ClassDB::bind_method(D_METHOD("set_chunks", "chunks"), &Simulator::set_chunks);
 	ClassDB::bind_method(D_METHOD("tick"), &Simulator::tick);
+	ClassDB::bind_method(D_METHOD("add_active", "chunk"), &Simulator::add_active);
+	ClassDB::bind_method(D_METHOD("remove_active", "chunk"), &Simulator::remove_active);
 }
 
 void Simulator::set_world_seed(int64_t seed) {
@@ -28,19 +30,27 @@ void Simulator::set_chunks(const Dictionary &chunks) {
 	_chunks = chunks;
 }
 
+void Simulator::add_active(Chunk *chunk) {
+	if (!chunk) return;
+	for (Chunk *c : _active) if (c == chunk) return;
+	_active.push_back(chunk);
+}
+
+void Simulator::remove_active(Chunk *chunk) {
+	for (auto it = _active.begin(); it != _active.end(); ++it) {
+		if (*it == chunk) { _active.erase(it); return; }
+	}
+}
+
 void Simulator::tick() {
 	_frame_index++;
 	_current_frame_seed = static_cast<uint32_t>(_world_seed) ^
 			static_cast<uint32_t>(_frame_index * 0x9E3779B1u);
 
-	// Build the active set: all non-sleeping chunks.
-	Array keys = _chunks.keys();
 	Vector<Chunk *> active;
-	for (int i = 0; i < keys.size(); i++) {
-		Ref<Chunk> c = _chunks[keys[i]];
-		if (c.is_valid() && !c->get_sleeping()) {
-			active.push_back(c.ptr());
-		}
+	active.resize(0);
+	for (Chunk *c : _active) {
+		if (c && !c->get_sleeping()) active.push_back(c);
 	}
 
 	// 4-phase chunk-checkerboard.

@@ -19,6 +19,8 @@
 
 namespace toprogue {
 
+class Simulator;
+
 class ChunkManager : public godot::RefCounted {
 	GDCLASS(ChunkManager, godot::RefCounted);
 
@@ -34,6 +36,7 @@ public:
 	void set_collision_container(godot::Node2D *c) { _collision_container = c; }
 	void set_generator(const godot::Ref<Generator> &g) { _generator = g; }
 	void set_simplex_cave_generator(const godot::Ref<SimplexCaveGenerator> &g) { _simplex_cave_generator = g; }
+	void set_simulator(Simulator *s) { _simulator = s; }
 
 	godot::TypedArray<godot::Vector2i> get_desired_chunks(godot::Vector2 tracking_position) const;
 	godot::Ref<Chunk> create_chunk(godot::Vector2i coord);
@@ -58,6 +61,7 @@ private:
 	godot::Ref<godot::Texture2DArray> _material_textures;
 	godot::Ref<Generator> _generator;
 	godot::Ref<SimplexCaveGenerator> _simplex_cave_generator;
+	Simulator *_simulator = nullptr;
 
 	void free_chunk_resources(Chunk *chunk);
 	void wire_neighbors(Chunk *chunk);

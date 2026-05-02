@@ -4,6 +4,7 @@
 #include "../generation/simplex_cave_generator.h"
 #include "../resources/biome_def.h"
 #include "../sim/material_table.h"
+#include "../sim/simulator.h"
 #include "chunk.h"
 #include "sector_grid.h"
 
@@ -38,6 +39,7 @@ void ChunkManager::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_generator", "generator"), &ChunkManager::set_generator);
 	ClassDB::bind_method(D_METHOD("set_simplex_cave_generator", "generator"),
 			&ChunkManager::set_simplex_cave_generator);
+	ClassDB::bind_method(D_METHOD("set_simulator", "s"), &ChunkManager::set_simulator);
 
 	ClassDB::bind_method(D_METHOD("get_desired_chunks", "tracking_position"),
 			&ChunkManager::get_desired_chunks);
@@ -230,6 +232,8 @@ Ref<Chunk> ChunkManager::create_chunk(Vector2i coord) {
 
 	wire_neighbors(chunk.ptr());
 
+	if (_simulator) _simulator->add_active(chunk.ptr());
+
 	return chunk;
 }
 
@@ -241,6 +245,7 @@ void ChunkManager::unload_chunk(Vector2i coord) {
 	}
 	Ref<Chunk> chunk = _chunks[coord];
 	free_chunk_resources(chunk.ptr());
+	if (_simulator) _simulator->remove_active(chunk.ptr());
 	_chunks.erase(coord);
 }
 
@@ -365,6 +370,10 @@ void ChunkManager::clear_all_chunks() {
 	for (int i = 0; i < keys.size(); i++) {
 		Ref<Chunk> chunk = _chunks[keys[i]];
 		free_chunk_resources(chunk.ptr());
+	}
+	for (int i = 0; i < keys.size(); i++) {
+		Ref<Chunk> chunk = _chunks[keys[i]];
+		if (_simulator) _simulator->remove_active(chunk.ptr());
 	}
 	_chunks.clear();
 }
