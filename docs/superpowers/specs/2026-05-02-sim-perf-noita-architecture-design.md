@@ -331,3 +331,7 @@ Before/after each step, capture into the appendix below:
 ### Task 1 result
 - median_ms=0.002  p99_ms=0.004
 - Snapshot SHA256: 7e1871445941fc54e51f1d04118ed93084777b3ad406c6ca0dda5755cc205d19 (unchanged)
+
+### Task 2 result
+- median_ms=0.002  p99_ms=0.003
+- Snapshot hash unchanged

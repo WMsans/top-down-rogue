@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/mesh_instance2d.hpp>
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/classes/static_body2d.hpp>
+#include <godot_cpp/classes/texture2d_array.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/variant/packed_byte_array.hpp>
 #include <godot_cpp/variant/rect2i.hpp>
@@ -57,6 +58,13 @@ public:
 	godot::Ref<Chunk> neighbor_left;
 	godot::Ref<Chunk> neighbor_right;
 	godot::Ref<godot::ImageTexture> texture;
+
+	static constexpr int TILE_SIZE = 64;
+	static constexpr int TILES_PER_SIDE = CHUNK_SIZE / TILE_SIZE;
+	static constexpr int TILE_COUNT = TILES_PER_SIDE * TILES_PER_SIDE;
+
+	godot::Ref<godot::Texture2DArray> tiled_texture;
+	godot::Ref<godot::Image> tile_images[TILE_COUNT];
 
 	// --- Atomic next_dirty_rect (spec §6.4) ----------------------------
 private:
@@ -120,6 +128,9 @@ public:
 
 	godot::Ref<godot::ImageTexture> get_texture() const { return texture; }
 	void set_texture(const godot::Ref<godot::ImageTexture> &v) { texture = v; }
+
+	godot::Ref<godot::Texture2DArray> get_tiled_texture() const { return tiled_texture; }
+	void set_tiled_texture(const godot::Ref<godot::Texture2DArray> &v) { tiled_texture = v; }
 
 	// upload_texture will be implemented in Task 8
 	void upload_texture();
