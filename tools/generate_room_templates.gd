@@ -8,8 +8,8 @@ extends SceneTree
 
 const OUT_DIR := "res://assets/rooms"
 
-# Material IDs (must match MaterialRegistry order; cannot import the autoload
-# from a SceneTree script, so values are duplicated here)
+# Material IDs (must match MaterialTable order; MaterialTable is a global C++ singleton
+# accessible everywhere, but values are duplicated here for headless script compatibility)
 const MAT_LAVA := 4
 const MAT_DIRT := 5
 const MAT_COAL := 6
