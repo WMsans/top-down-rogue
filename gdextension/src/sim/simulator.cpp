@@ -103,6 +103,19 @@ void Simulator::tick() {
 
 	rotate_dirty_rects();
 	upload_dirty_textures();
+
+	// Promote any chunk whose neighbor pushed border writes into it.
+	{
+		Array keys = _chunks.keys();
+		for (int i = 0; i < keys.size(); i++) {
+			Ref<Chunk> c = _chunks[keys[i]];
+			if (c.is_valid() && c->wake_pending.load(std::memory_order_relaxed)) {
+				c->wake_pending.store(false, std::memory_order_relaxed);
+				c->set_sleeping(false);
+				add_active(c.ptr());
+			}
+		}
+	}
 }
 
 void Simulator::_group_task_body(int32_t index) {
