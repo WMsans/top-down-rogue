@@ -24,6 +24,7 @@ struct ChunkView {
 
 	Cell *at(int x, int y);
 	Cell *at_border(int x, int y);
+	bool write_changed(int x, int y, const Cell &nv);
 
 	static uint32_t hash_u32(uint32_t n);
 	uint32_t hash3(int x, int y, uint32_t salt) const;

@@ -238,9 +238,7 @@ void run_lava(ChunkView &v) {
 					c.health = static_cast<uint8_t>(std::clamp(total_in, 0, 255));
 					c.temperature = static_cast<uint8_t>(std::clamp(new_temp, 0, 255));
 					ChunkView::pack_velocity(c.flags, static_cast<int8_t>(inflow_vel_x), static_cast<int8_t>(inflow_vel_y));
-					*v.at(x, y) = c;
-					chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-					chunk->set_sleeping(false);
+					v.write_changed(x, y, c);
 				}
 				continue;
 			}

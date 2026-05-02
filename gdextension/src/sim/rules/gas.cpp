@@ -81,9 +81,7 @@ void run_gas(ChunkView &v) {
 				c.health = self->health;
 				c.temperature = static_cast<uint8_t>(temperature);
 				c.flags = 0;
-				*v.at(x, y) = c;
-				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-				chunk->set_sleeping(false);
+				v.write_changed(x, y, c);
 				continue;
 			}
 
@@ -271,9 +269,7 @@ void run_gas(ChunkView &v) {
 				c.health = self->health;
 				c.temperature = static_cast<uint8_t>(temperature);
 				c.flags = 0;
-				*v.at(x, y) = c;
-				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-				chunk->set_sleeping(false);
+				v.write_changed(x, y, c);
 				continue;
 			}
 
@@ -283,9 +279,7 @@ void run_gas(ChunkView &v) {
 				c.health = 0;
 				c.temperature = 0;
 				c.flags = 0;
-				*v.at(x, y) = c;
-				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-				chunk->set_sleeping(false);
+				v.write_changed(x, y, c);
 				continue;
 			}
 
