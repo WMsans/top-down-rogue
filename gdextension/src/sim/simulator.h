@@ -8,6 +8,7 @@
 #include <godot_cpp/variant/dictionary.hpp>
 
 #include <cstdint>
+#include <vector>
 
 namespace toprogue {
 
@@ -26,11 +27,14 @@ public:
 	void set_world_seed(int64_t seed);
 	void set_chunks(const godot::Dictionary &chunks);
 	void tick();
+	void add_active(Chunk *chunk);
+	void remove_active(Chunk *chunk);
 
 protected:
 	static void _bind_methods();
 
 private:
+	std::vector<Chunk *> _active;
 	void run_phase(int phase_x, int phase_y);
 	void _group_task_body(int32_t index);
 	void tick_chunk(Chunk *chunk);
