@@ -319,7 +319,7 @@ Vector2i WorldManager::find_spawn_position(Vector2i search_origin, Vector2i body
 					for (int py = 0; py < body_size.y && fits; py++) {
 						for (int px = 0; px < body_size.x && fits; px++) {
 							int idx = (cy + py) * CHUNK_SIZE + (cx + px);
-							if (chunk->cells[idx].material != 0) {
+							if (chunk->cell_material(idx) != 0) {
 								fits = false;
 							}
 						}

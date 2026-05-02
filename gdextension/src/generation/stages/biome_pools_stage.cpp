@@ -26,7 +26,7 @@ void stage_biome_pools(Chunk *chunk, const StageContext &ctx) {
 	for (int y = 0; y < Chunk::CHUNK_SIZE; y++) {
 		for (int x = 0; x < Chunk::CHUNK_SIZE; x++) {
 			int idx = y * Chunk::CHUNK_SIZE + x;
-			if (chunk->cells[idx].material == air_id) {
+			if (chunk->cell_material(idx) == air_id) {
 				continue;
 			}
 
@@ -42,7 +42,7 @@ void stage_biome_pools(Chunk *chunk, const StageContext &ctx) {
 				float n = simplex::simplex_fbm(wx * static_cast<float>(p->noise_scale),
 						wy * static_cast<float>(p->noise_scale), pseed, 2);
 				if (n > static_cast<float>(p->noise_threshold)) {
-					chunk->cells[idx].material = static_cast<uint8_t>(p->material_id);
+					chunk->set_cell_material(idx, static_cast<uint8_t>(p->material_id));
 					break;
 				}
 			}

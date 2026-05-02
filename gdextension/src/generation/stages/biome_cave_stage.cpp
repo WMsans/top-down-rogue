@@ -32,9 +32,15 @@ void stage_biome_cave(Chunk *chunk, const StageContext &ctx) {
 
 			int idx = y * Chunk::CHUNK_SIZE + x;
 			if (c > cave_threshold) {
-				chunk->cells[idx] = Cell{ static_cast<uint8_t>(air_id), 0, 0, 0 };
+					chunk->set_cell_material(idx, static_cast<uint8_t>(air_id));
+				chunk->set_cell_health(idx, 0);
+				chunk->set_cell_temperature(idx, 0);
+				chunk->set_cell_flags(idx, 0);
 			} else {
-				chunk->cells[idx] = Cell{ static_cast<uint8_t>(bg_mat), 0, 0, 0 };
+					chunk->set_cell_material(idx, static_cast<uint8_t>(bg_mat));
+				chunk->set_cell_health(idx, 0);
+				chunk->set_cell_temperature(idx, 0);
+				chunk->set_cell_flags(idx, 0);
 			}
 		}
 	}

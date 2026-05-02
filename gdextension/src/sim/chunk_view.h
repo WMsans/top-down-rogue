@@ -7,14 +7,12 @@
 namespace toprogue {
 
 struct ChunkView {
-	Chunk *center;
-	Chunk *up, *down, *left, *right;
+	Chunk *center, *up, *down, *left, *right;
 
-	Cell *cells;
-	Cell *cells_up;
-	Cell *cells_down;
-	Cell *cells_left;
-	Cell *cells_right;
+	uint8_t *mat, *mat_up, *mat_down, *mat_left, *mat_right;
+	uint8_t *health, *health_up, *health_down, *health_left, *health_right;
+	uint8_t *temperature, *temperature_up, *temperature_down, *temperature_left, *temperature_right;
+	uint8_t *flags, *flags_up, *flags_down, *flags_left, *flags_right;
 
 	uint32_t frame_seed;
 	int frame_index;
@@ -22,8 +20,7 @@ struct ChunkView {
 
 	static constexpr int SZ = Chunk::CHUNK_SIZE;
 
-	Cell *at(int x, int y);
-	Cell *at_border(int x, int y);
+	Cell read(int x, int y);
 	bool write_changed(int x, int y, const Cell &nv);
 
 	static uint32_t hash_u32(uint32_t n);

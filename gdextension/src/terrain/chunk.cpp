@@ -55,15 +55,24 @@ Vector<InjectionAABB> Chunk::take_injections() {
 
 // --- Texture upload (spec §8.4) -----------------------------------------
 
-static inline void pack_tile_aos(const Cell *cells, int tile_x, int tile_y,
-		uint8_t *out_4bpp) {
+static inline void pack_tile_aos(const Chunk &chunk, int tile_x, int tile_y,
+		uint8_t *out) {
 	constexpr int SZ = Chunk::CHUNK_SIZE;
 	constexpr int TS = Chunk::TILE_SIZE;
-	int x0 = tile_x * TS;
-	int y0 = tile_y * TS;
+	const uint8_t *m = chunk.material_ptr();
+	const uint8_t *h = chunk.health_ptr();
+	const uint8_t *t = chunk.temperature_ptr();
+	const uint8_t *f = chunk.flags_ptr();
+	int x0 = tile_x * TS, y0 = tile_y * TS;
 	for (int ly = 0; ly < TS; ly++) {
-		const Cell *src = &cells[(y0 + ly) * SZ + x0];
-		std::memcpy(out_4bpp + ly * TS * 4, src, TS * 4);
+		for (int lx = 0; lx < TS; lx++) {
+			int src = (y0 + ly) * SZ + (x0 + lx);
+			int dst = (ly * TS + lx) * 4;
+			out[dst + 0] = m[src];
+			out[dst + 1] = h[src];
+			out[dst + 2] = t[src];
+			out[dst + 3] = f[src];
+		}
 	}
 }
 
@@ -82,7 +91,7 @@ void Chunk::upload_texture() {
 	buf.resize(TILE_SIZE * TILE_SIZE * 4);
 	for (int ty = ty0; ty <= ty1; ty++) {
 		for (int tx = tx0; tx <= tx1; tx++) {
-			pack_tile_aos(cells, tx, ty, buf.ptrw());
+			pack_tile_aos(*this, tx, ty, buf.ptrw());
 			int layer = ty * TILES_PER_SIDE + tx;
 			tile_images[layer] = Image::create_from_data(
 					TILE_SIZE, TILE_SIZE, false, Image::FORMAT_RGBA8, buf);
@@ -97,7 +106,7 @@ void Chunk::upload_texture_full() {
 		int ty = t / TILES_PER_SIDE;
 		PackedByteArray buf;
 		buf.resize(TILE_SIZE * TILE_SIZE * 4);
-		pack_tile_aos(cells, tx, ty, buf.ptrw());
+		pack_tile_aos(*this, tx, ty, buf.ptrw());
 		tile_images[t] = Image::create_from_data(
 				TILE_SIZE, TILE_SIZE, false, Image::FORMAT_RGBA8, buf);
 		tiled_texture->update_layer(tile_images[t], t);
@@ -106,19 +115,31 @@ void Chunk::upload_texture_full() {
 
 PackedByteArray Chunk::get_cells_data() const {
 	PackedByteArray out;
-	out.resize(static_cast<int64_t>(sizeof(cells)));
-	std::memcpy(out.ptrw(), cells, sizeof(cells));
+	out.resize(CELL_COUNT * 4);
+	uint8_t *p = out.ptrw();
+	for (int i = 0; i < CELL_COUNT; i++) {
+		p[i * 4 + 0] = _cells.material[i];
+		p[i * 4 + 1] = _cells.health[i];
+		p[i * 4 + 2] = _cells.temperature[i];
+		p[i * 4 + 3] = _cells.flags[i];
+	}
 	return out;
 }
 
 void Chunk::set_cells_data(const PackedByteArray &v) {
-	if (v.size() != static_cast<int64_t>(sizeof(cells))) {
+	if (v.size() != static_cast<int64_t>(CELL_COUNT * 4)) {
 		UtilityFunctions::push_error(
-				String("Chunk.set_cells_data: expected ") + String::num_int64(sizeof(cells)) +
+				String("Chunk.set_cells_data: expected ") + String::num_int64(CELL_COUNT * 4) +
 				String(" bytes, got ") + String::num_int64(v.size()));
 		return;
 	}
-	std::memcpy(cells, v.ptr(), sizeof(cells));
+	const uint8_t *p = v.ptr();
+	for (int i = 0; i < CELL_COUNT; i++) {
+		_cells.material[i] = p[i * 4 + 0];
+		_cells.health[i] = p[i * 4 + 1];
+		_cells.temperature[i] = p[i * 4 + 2];
+		_cells.flags[i] = p[i * 4 + 3];
+	}
 }
 
 void Chunk::_bind_methods() {

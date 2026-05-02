@@ -12,23 +12,15 @@ static constexpr int MAX_INJECTIONS_PER_CHUNK = 32;
 
 void run_injection(ChunkView &v) {
 	Chunk *chunk = v.center;
-	if (!chunk) {
-		return;
-	}
+	if (!chunk) return;
 
 	godot::Rect2i dr = chunk->dirty_rect;
-	if (dr.size.x <= 0 || dr.size.y <= 0) {
-		return;
-	}
+	if (dr.size.x <= 0 || dr.size.y <= 0) return;
 
 	godot::Vector<InjectionAABB> injections = chunk->take_injections();
 	int n = injections.size();
-	if (n <= 0) {
-		return;
-	}
-	if (n > MAX_INJECTIONS_PER_CHUNK) {
-		n = MAX_INJECTIONS_PER_CHUNK;
-	}
+	if (n <= 0) return;
+	if (n > MAX_INJECTIONS_PER_CHUNK) n = MAX_INJECTIONS_PER_CHUNK;
 
 	int air_id = static_cast<int>(v.air_id);
 	int gas_id = static_cast<int>(v.gas_id);
@@ -41,35 +33,21 @@ void run_injection(ChunkView &v) {
 
 	for (int y = y0; y < y1; y++) {
 		for (int x = x0; x < x1; x++) {
-			Cell *cptr = v.at(x, y);
-			if (!cptr) {
-				continue;
-			}
+			int idx = y * v.SZ + x;
+			int material = static_cast<int>(v.mat[idx]);
+			if (material != gas_id && material != lava_id) continue;
 
-			int material = static_cast<int>(cptr->material);
-			if (material != gas_id && material != lava_id) {
-				continue;
-			}
-
+			Cell c = v.read(x, y);
 			bool wrote = false;
-			Cell c = *cptr;
 
 			for (int i = 0; i < n; i++) {
 				const InjectionAABB &b = injections[i];
 
-				if (material == gas_id && !(b.target_kind & 1)) {
-					continue;
-				}
-				if (material == lava_id && !(b.target_kind & 2)) {
-					continue;
-				}
+				if (material == gas_id && !(b.target_kind & 1)) continue;
+				if (material == lava_id && !(b.target_kind & 2)) continue;
 
-				if (x < b.min_x || x >= b.max_x) {
-					continue;
-				}
-				if (y < b.min_y || y >= b.max_y) {
-					continue;
-				}
+				if (x < b.min_x || x >= b.max_x) continue;
+				if (y < b.min_y || y >= b.max_y) continue;
 
 				if (material == gas_id) {
 					int8_t vx, vy;
@@ -87,23 +65,17 @@ void run_injection(ChunkView &v) {
 					} else {
 						int dist_x = std::abs(diff_x);
 						int dist_y = std::abs(diff_y);
-						if (dist_x >= dist_y) {
-							push_x = (diff_x >= 0) ? 7 : -7;
-						} else {
-							push_y = (diff_y >= 0) ? 7 : -7;
-						}
+						if (dist_x >= dist_y) push_x = (diff_x >= 0) ? 7 : -7;
+						else push_y = (diff_y >= 0) ? 7 : -7;
 					}
 
 					int new_vx = std::clamp(static_cast<int>(vx) + push_x, -8, 7);
 					int new_vy = std::clamp(static_cast<int>(vy) + push_y, -8, 7);
-
 					int dens = static_cast<int>(c.health);
 
 					bool in_front = (b.vel_x > 0 && diff_x > 0) || (b.vel_x < 0 && diff_x < 0) ||
 							(b.vel_y > 0 && diff_y > 0) || (b.vel_y < 0 && diff_y < 0);
-					if (in_front && (b.vel_x != 0 || b.vel_y != 0)) {
-						dens = dens * 3 / 4;
-					}
+					if (in_front && (b.vel_x != 0 || b.vel_y != 0)) dens = dens * 3 / 4;
 
 					c.material = static_cast<uint8_t>(gas_id);
 					c.health = static_cast<uint8_t>(std::clamp(dens, 0, 255));
@@ -121,23 +93,17 @@ void run_injection(ChunkView &v) {
 					int dist_x = std::abs(diff_x);
 					int dist_y = std::abs(diff_y);
 					int push_x = 0, push_y = 0;
-					if (dist_x >= dist_y) {
-						push_x = (diff_x >= 0) ? 7 : -7;
-					} else {
-						push_y = (diff_y >= 0) ? 7 : -7;
-					}
+					if (dist_x >= dist_y) push_x = (diff_x >= 0) ? 7 : -7;
+					else push_y = (diff_y >= 0) ? 7 : -7;
 
 					int new_vx = std::clamp(static_cast<int>(vx) + push_x, -8, 7);
 					int new_vy = std::clamp(static_cast<int>(vy) + push_y, -8, 7);
-
 					int dens = static_cast<int>(c.health);
 					int temp = static_cast<int>(c.temperature);
 
 					bool in_front = (b.vel_x > 0 && diff_x > 0) || (b.vel_x < 0 && diff_x < 0) ||
 							(b.vel_y > 0 && diff_y > 0) || (b.vel_y < 0 && diff_y < 0);
-					if (in_front && (b.vel_x != 0 || b.vel_y != 0)) {
-						dens = dens * 3 / 4;
-					}
+					if (in_front && (b.vel_x != 0 || b.vel_y != 0)) dens = dens * 3 / 4;
 
 					c.material = static_cast<uint8_t>(lava_id);
 					c.health = static_cast<uint8_t>(std::clamp(dens, 0, 255));
@@ -147,9 +113,7 @@ void run_injection(ChunkView &v) {
 				wrote = true;
 			}
 
-			if (wrote) {
-			v.write_changed(x, y, c);
-			}
+			if (wrote) v.write_changed(x, y, c);
 		}
 	}
 }

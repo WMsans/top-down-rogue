@@ -11,41 +11,21 @@ static constexpr int V_MAX_OUTFLOW = 8;
 static constexpr int THRESHOLD_BECOME_LAVA = 1;
 static constexpr int THRESHOLD_DISSIPATE = 1;
 
-static bool is_solid_for_lava(int mat, int air_id) {
-	return mat != air_id && mat != -1;
-}
-
-static bool is_hot_lava(Cell c, int target_material, int lava_id) {
-	if (static_cast<int>(c.material) != lava_id) {
-		return false;
-	}
-	int temp = static_cast<int>(c.temperature);
-	return temp > MaterialTable::get_singleton()->get_ignition_temp(target_material);
-}
-
 static int stochastic_div_amount(int numerator, int divisor, int x, int y, uint32_t salt, ChunkView &v) {
-	if (divisor <= 0) {
-		return 0;
-	}
+	if (divisor <= 0) return 0;
 	int base = numerator / divisor;
 	int rem = numerator - base * divisor;
-	if (rem <= 0) {
-		return base;
-	}
+	if (rem <= 0) return base;
 	uint32_t rng = v.hash3(x, y, salt);
 	return base + ((rng % static_cast<uint32_t>(divisor)) < static_cast<uint32_t>(rem) ? 1 : 0);
 }
 
 void run_lava(ChunkView &v) {
 	Chunk *chunk = v.center;
-	if (!chunk) {
-		return;
-	}
+	if (!chunk) return;
 
 	godot::Rect2i dr = chunk->dirty_rect;
-	if (dr.size.x <= 0 || dr.size.y <= 0) {
-		return;
-	}
+	if (dr.size.x <= 0 || dr.size.y <= 0) return;
 
 	int air_id = static_cast<int>(v.air_id);
 	int lava_id = static_cast<int>(v.lava_id);
@@ -57,24 +37,14 @@ void run_lava(ChunkView &v) {
 
 	for (int y = y0; y < y1; y++) {
 		for (int x = x0; x < x1; x++) {
-			Cell *self = v.at(x, y);
-			if (!self) {
-				continue;
-			}
-			int material = static_cast<int>(self->material);
-			if (material != lava_id && material != air_id) {
-				continue;
-			}
+			int idx = y * v.SZ + x;
+			int material = static_cast<int>(v.mat[idx]);
+			if (material != lava_id && material != air_id) continue;
 
-			Cell n_up_cell, n_down_cell, n_left_cell, n_right_cell;
-			Cell *n_up_ptr = v.at(x, y - 1);
-			Cell *n_down_ptr = v.at(x, y + 1);
-			Cell *n_left_ptr = v.at(x - 1, y);
-			Cell *n_right_ptr = v.at(x + 1, y);
-			n_up_cell = n_up_ptr ? *n_up_ptr : Cell{ 0, 0, 0, 0 };
-			n_down_cell = n_down_ptr ? *n_down_ptr : Cell{ 0, 0, 0, 0 };
-			n_left_cell = n_left_ptr ? *n_left_ptr : Cell{ 0, 0, 0, 0 };
-			n_right_cell = n_right_ptr ? *n_right_ptr : Cell{ 0, 0, 0, 0 };
+			Cell n_up_cell = v.read(x, y - 1);
+			Cell n_down_cell = v.read(x, y + 1);
+			Cell n_left_cell = v.read(x - 1, y);
+			Cell n_right_cell = v.read(x + 1, y);
 
 			int n_mat_up = static_cast<int>(n_up_cell.material);
 			int n_mat_down = static_cast<int>(n_down_cell.material);
@@ -85,15 +55,13 @@ void run_lava(ChunkView &v) {
 					n_mat_up == lava_id || n_mat_down == lava_id ||
 					n_mat_left == lava_id || n_mat_right == lava_id;
 
-			if (material == air_id && !any_lava_neighbor) {
-				continue;
-			}
+			if (material == air_id && !any_lava_neighbor) continue;
 
-			int density = (material == lava_id) ? static_cast<int>(self->health) : 0;
-			int temperature = (material == lava_id) ? static_cast<int>(self->temperature) : 0;
+			int density = (material == lava_id) ? static_cast<int>(v.health[idx]) : 0;
+			int temperature = (material == lava_id) ? static_cast<int>(v.temperature[idx]) : 0;
 			int8_t vx = 0, vy = 0;
 			if (material == lava_id) {
-				ChunkView::unpack_velocity(self->flags, vx, vy);
+				ChunkView::unpack_velocity(v.flags[idx], vx, vy);
 			}
 
 			int comp_up = std::max(0, -static_cast<int>(vy));
@@ -105,18 +73,10 @@ void run_lava(ChunkView &v) {
 				return mat != air_id && mat != lava_id;
 			};
 
-			if (is_solid_lava(n_mat_up)) {
-				comp_up = 0;
-			}
-			if (is_solid_lava(n_mat_down)) {
-				comp_down = 0;
-			}
-			if (is_solid_lava(n_mat_left)) {
-				comp_left = 0;
-			}
-			if (is_solid_lava(n_mat_right)) {
-				comp_right = 0;
-			}
+			if (is_solid_lava(n_mat_up)) comp_up = 0;
+			if (is_solid_lava(n_mat_down)) comp_down = 0;
+			if (is_solid_lava(n_mat_left)) comp_left = 0;
+			if (is_solid_lava(n_mat_right)) comp_right = 0;
 
 			int out_up = stochastic_div_amount(density * comp_up, V_MAX_OUTFLOW, x, y, 1u, v);
 			int out_down = stochastic_div_amount(density * comp_down, V_MAX_OUTFLOW, x, y, 2u, v);
@@ -174,18 +134,10 @@ void run_lava(ChunkView &v) {
 
 			int total_in = in_up + in_down + in_left + in_right;
 
-			if (is_solid_lava(n_mat_up) && vy < 0) {
-				vy = -vy;
-			}
-			if (is_solid_lava(n_mat_down) && vy > 0) {
-				vy = -vy;
-			}
-			if (is_solid_lava(n_mat_left) && vx < 0) {
-				vx = -vx;
-			}
-			if (is_solid_lava(n_mat_right) && vx > 0) {
-				vx = -vx;
-			}
+			if (is_solid_lava(n_mat_up) && vy < 0) vy = -vy;
+			if (is_solid_lava(n_mat_down) && vy > 0) vy = -vy;
+			if (is_solid_lava(n_mat_left) && vx < 0) vx = -vx;
+			if (is_solid_lava(n_mat_right) && vx > 0) vx = -vx;
 
 			int new_density = std::clamp(density - total_out + total_in, 0, 255);
 
@@ -208,18 +160,10 @@ void run_lava(ChunkView &v) {
 			new_vel_y = std::clamp(new_vel_y, -8, 7);
 
 			int temp_weight = stayed * temperature;
-			if (n_mat_up == lava_id) {
-				temp_weight += static_cast<int>(n_up_cell.temperature) * in_up;
-			}
-			if (n_mat_down == lava_id) {
-				temp_weight += static_cast<int>(n_down_cell.temperature) * in_down;
-			}
-			if (n_mat_left == lava_id) {
-				temp_weight += static_cast<int>(n_left_cell.temperature) * in_left;
-			}
-			if (n_mat_right == lava_id) {
-				temp_weight += static_cast<int>(n_right_cell.temperature) * in_right;
-			}
+			if (n_mat_up == lava_id) temp_weight += static_cast<int>(n_up_cell.temperature) * in_up;
+			if (n_mat_down == lava_id) temp_weight += static_cast<int>(n_down_cell.temperature) * in_down;
+			if (n_mat_left == lava_id) temp_weight += static_cast<int>(n_left_cell.temperature) * in_left;
+			if (n_mat_right == lava_id) temp_weight += static_cast<int>(n_right_cell.temperature) * in_right;
 			int new_temp = temp_weight / std::max(1, stayed + total_in);
 
 			if (material == air_id) {
@@ -249,9 +193,7 @@ void run_lava(ChunkView &v) {
 				c.health = 0;
 				c.temperature = 0;
 				c.flags = 0;
-				*v.at(x, y) = c;
-				chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-				chunk->set_sleeping(false);
+				v.write_changed(x, y, c);
 				continue;
 			}
 
@@ -260,9 +202,7 @@ void run_lava(ChunkView &v) {
 			c.health = static_cast<uint8_t>(std::clamp(new_density, 0, 255));
 			c.temperature = static_cast<uint8_t>(std::clamp(new_temp, 0, 255));
 			ChunkView::pack_velocity(c.flags, static_cast<int8_t>(new_vel_x), static_cast<int8_t>(new_vel_y));
-			*v.at(x, y) = c;
-			chunk->extend_next_dirty_rect(x, y, x + 1, y + 1);
-			chunk->set_sleeping(false);
+			v.write_changed(x, y, c);
 		}
 	}
 }

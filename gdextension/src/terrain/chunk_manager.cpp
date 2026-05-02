@@ -444,7 +444,7 @@ PackedByteArray ChunkManager::read_region(Rect2i region) const {
 				Ref<Chunk> chunk = _chunks[chunk_coord];
 				int local_x = ((x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
 				int local_y = ((y % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
-				out[out_idx] = chunk->cells[local_y * CHUNK_SIZE + local_x].material;
+				out[out_idx] = chunk->material_ptr()[local_y * CHUNK_SIZE + local_x];
 			}
 		}
 	}
