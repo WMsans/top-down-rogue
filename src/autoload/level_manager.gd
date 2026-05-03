@@ -10,6 +10,7 @@ var world_seed: int = 0
 var current_biome: BiomeDef
 var _grid: SectorGrid
 var _spawn_dispatcher: Node
+var _cave_spawner: Node
 
 
 func _ready() -> void:
@@ -20,6 +21,10 @@ func _ready() -> void:
 	_spawn_dispatcher = SpawnDispatcher.new()
 	_spawn_dispatcher.name = "SpawnDispatcher"
 	add_child(_spawn_dispatcher)
+	var CaveSpawner = load("res://src/core/cave_spawner.gd")
+	_cave_spawner = CaveSpawner.new()
+	_cave_spawner.name = "CaveSpawner"
+	add_child(_cave_spawner)
 
 
 func get_grid() -> SectorGrid:
@@ -37,6 +42,8 @@ func advance_floor() -> void:
 	_grid = SectorGrid.new(world_seed, current_biome)
 	if _spawn_dispatcher and _spawn_dispatcher.has_method("clear"):
 		_spawn_dispatcher.clear()
+	if _cave_spawner and _cave_spawner.has_method("set_biome_params"):
+		_cave_spawner.set_biome_params(current_biome.cave_spawn_rate)
 	var wm := get_tree().get_first_node_in_group("world_manager")
 	if wm and wm.has_method("reset"):
 		wm.reset()
