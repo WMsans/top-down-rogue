@@ -35,6 +35,15 @@ const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 128
 const LIGHT_CELLS_X := 4
 const LIGHT_CELLS_Y := 4
 
+const PROBE_BUDGET := 64
+const PROBE_INPUT_BUFFER_SIZE := PROBE_BUDGET * 8
+const PROBE_OUTPUT_BUFFER_SIZE := PROBE_BUDGET * 4
+
+var terrain_probe_shader: RID
+var terrain_probe_pipeline: RID
+var terrain_probe_input_buffer: RID
+var terrain_probe_output_buffer: RID
+
 
 func _init() -> void:
 	rd = RenderingServer.get_rendering_device()
@@ -123,6 +132,22 @@ func init_gen_biome_buffer() -> void:
 	u.binding = 0
 	u.add_id(gen_biome_buffer)
 	gen_biome_uniform_set = rd.uniform_set_create([u], gen_shader, 2)
+
+
+func init_terrain_probe() -> void:
+	var f: RDShaderFile = load("res://shaders/compute/terrain_probe.glsl")
+	terrain_probe_shader = rd.shader_create_from_spirv(f.get_spirv())
+	terrain_probe_pipeline = rd.compute_pipeline_create(terrain_probe_shader)
+
+	var zero_in := PackedByteArray()
+	zero_in.resize(PROBE_INPUT_BUFFER_SIZE)
+	zero_in.fill(0)
+	terrain_probe_input_buffer = rd.storage_buffer_create(PROBE_INPUT_BUFFER_SIZE, zero_in)
+
+	var zero_out := PackedByteArray()
+	zero_out.resize(PROBE_OUTPUT_BUFFER_SIZE)
+	zero_out.fill(0)
+	terrain_probe_output_buffer = rd.storage_buffer_create(PROBE_OUTPUT_BUFFER_SIZE, zero_out)
 
 
 # template_arrays: Dictionary[int size_class → Texture2DArray]
@@ -246,6 +271,14 @@ func free_resources() -> void:
 		rd.free_rid(light_pack_pipeline)
 	if light_pack_shader.is_valid():
 		rd.free_rid(light_pack_shader)
+	if terrain_probe_input_buffer.is_valid():
+		rd.free_rid(terrain_probe_input_buffer)
+	if terrain_probe_output_buffer.is_valid():
+		rd.free_rid(terrain_probe_output_buffer)
+	if terrain_probe_pipeline.is_valid():
+		rd.free_rid(terrain_probe_pipeline)
+	if terrain_probe_shader.is_valid():
+		rd.free_rid(terrain_probe_shader)
 
 
 func dispatch_generation(
