@@ -29,6 +29,12 @@ var gen_template_array_rids: Dictionary = {}  # int size_class → RID
 const STAMP_BUFFER_SIZE := 16 + 128 * 16   # 16-byte header + 128 vec4s
 const BIOME_BUFFER_SIZE := 32 + 4 * 16     # 32-byte header + 4 pool vec4s
 
+const LIGHT_CELL_COUNT := 16
+const LIGHT_CELL_BYTES := 8
+const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 128
+const LIGHT_CELLS_X := 4
+const LIGHT_CELLS_Y := 4
+
 
 func _init() -> void:
 	rd = RenderingServer.get_rendering_device()
@@ -359,7 +365,7 @@ func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array[Vector2i]) -> 
 		push_data.encode_s32(4, coord.y)
 		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
 
-		rd.compute_list_dispatch(compute_list, 4, 4, 1)  # 4x4 grid of workgroups
+		rd.compute_list_dispatch(compute_list, LIGHT_CELLS_X, LIGHT_CELLS_Y, 1)
 
 	rd.compute_list_end()
 
@@ -367,17 +373,19 @@ func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array[Vector2i]) -> 
 func read_light_buffer(chunk: Chunk) -> PackedByteArray:
 	if not chunk.light_output_buffer.is_valid():
 		return PackedByteArray()
-	return rd.buffer_get_data(chunk.light_output_buffer, 0, 128)
+	return rd.buffer_get_data(chunk.light_output_buffer, 0, LIGHT_OUTPUT_SIZE)
 
 
 ## Decodes a 128-byte SSBO into an array of 16 dictionaries with position, energy, and color.
 ## Always returns 16 entries — cells with no glowing pixels get energy=0 and will fade out.
 func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	result.resize(16)
+	if data.size() < LIGHT_OUTPUT_SIZE:
+		return result
+	result.resize(LIGHT_CELL_COUNT)
 
-	for cell_idx in range(16):
-		var off := cell_idx * 8
+	for cell_idx in range(LIGHT_CELL_COUNT):
+		var off := cell_idx * LIGHT_CELL_BYTES
 		var packed_count_glow := data.decode_u32(off)
 		var packed_pos := data.decode_u32(off + 4)
 
