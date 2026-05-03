@@ -68,6 +68,9 @@ func create_chunk(coord: Vector2i) -> void:
 	zero_data.fill(0)
 	world_manager.rd.buffer_update(chunk.injection_buffer, 0, zero_data.size(), zero_data)
 
+	var light_output_size := 128  # 16 cells × 8 bytes (2 uints)
+	chunk.light_output_buffer = world_manager.rd.storage_buffer_create(light_output_size)
+
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
 
@@ -113,6 +116,8 @@ func create_chunk(coord: Vector2i) -> void:
 
 	chunks[coord] = chunk
 
+	build_light_pack_uniform_set(chunk)
+
 
 func unload_chunk(coord: Vector2i) -> void:
 	var chunk: Chunk = world_manager.chunks[coord]
@@ -137,6 +142,10 @@ func free_chunk_resources(chunk: Chunk) -> void:
 		world_manager.rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
 		world_manager.rd.free_rid(chunk.rd_texture)
+	if chunk.light_output_buffer.is_valid():
+		world_manager.rd.free_rid(chunk.light_output_buffer)
+	if chunk.light_pack_uniform_set.is_valid():
+		world_manager.rd.free_rid(chunk.light_pack_uniform_set)
 
 
 func rebuild_sim_uniform_sets(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
@@ -191,6 +200,29 @@ func build_sim_uniform_set(chunk: Chunk) -> void:
 	uniforms.append(u5)
 
 	chunk.sim_uniform_set = world_manager.rd.uniform_set_create(uniforms, compute.sim_shader, 0)
+
+
+func build_light_pack_uniform_set(chunk: Chunk) -> void:
+	var compute: ComputeDevice = world_manager.compute_device
+
+	if chunk.light_pack_uniform_set.is_valid():
+		world_manager.rd.free_rid(chunk.light_pack_uniform_set)
+
+	var uniforms: Array[RDUniform] = []
+
+	var u0 := RDUniform.new()
+	u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+	u0.binding = 0
+	u0.add_id(chunk.rd_texture)
+	uniforms.append(u0)
+
+	var u1 := RDUniform.new()
+	u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u1.binding = 1
+	u1.add_id(chunk.light_output_buffer)
+	uniforms.append(u1)
+
+	chunk.light_pack_uniform_set = world_manager.rd.uniform_set_create(uniforms, compute.light_pack_shader, 0)
 
 
 func update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
