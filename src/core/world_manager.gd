@@ -284,7 +284,7 @@ func _update_lights() -> void:
 	var bucket_idx := _light_frame_counter
 	_light_dispatch_buckets[bucket_idx].clear()
 
-	var bucket_size := maxi(1, active_coords.size() / 5)
+	var bucket_size := maxi(1, ceili(float(active_coords.size()) / 5.0))
 	var start := bucket_idx * bucket_size
 	if start < active_coords.size():
 		var end := mini(start + bucket_size, active_coords.size())
@@ -302,7 +302,7 @@ func _update_lights() -> void:
 		if pending.is_empty():
 			continue
 
-		var slice_size := maxi(1, pending.size() / 4)
+		var slice_size := maxi(1, ceili(float(pending.size()) / 4.0))
 		var slice_start := _light_readback_counter * slice_size
 		if slice_start < pending.size():
 			var slice_end := mini(slice_start + slice_size, pending.size())
