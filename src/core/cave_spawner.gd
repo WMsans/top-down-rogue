@@ -61,12 +61,12 @@ func _count_live_enemies() -> int:
 
 
 func _on_spawn_tick() -> void:
+	if _count_live_enemies() >= mob_cap:
+		return
+
 	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
 		_resolve_dependencies()
 	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
-		return
-
-	if _count_live_enemies() >= mob_cap:
 		return
 
 	var surface := get_node_or_null("/root/TerrainSurface")

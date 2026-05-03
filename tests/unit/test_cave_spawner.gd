@@ -47,6 +47,7 @@ func test_distance_validation_accepts_in_range() -> void:
 
 	spawner.spawn_min_dist = 600.0
 	spawner.spawn_max_dist = 2000.0
+	spawner.spawn_rate = 2.0
 
 	assert_bool(spawner._validate_position(Vector2(1000, 0))).is_true()
 
