@@ -41,6 +41,8 @@ void main() {
 	uint cell_y = gl_WorkGroupID.y;
 	uint cell_idx = cell_y * CELLS_X + cell_x;
 
+	if (cell_x >= CELLS_X || cell_y >= CELLS_Y) return;
+
 	uint local_count = 0u;
 	uint local_sum_x = 0u;
 	uint local_sum_y = 0u;
@@ -84,6 +86,7 @@ void main() {
 	}
 
 	if (thread_idx == 0u) {
+		if (cell_idx >= CELLS_X * CELLS_Y) return;
 		uint count = s_counts[0];
 		if (count < 4u) {
 			output_data.cells[cell_idx].packed_count_glow = 0u;
