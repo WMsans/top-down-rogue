@@ -343,7 +343,7 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 				break
 
 
-func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array[Vector2i]) -> void:
+func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array) -> void:
 	if bucket_coords.is_empty():
 		return
 
