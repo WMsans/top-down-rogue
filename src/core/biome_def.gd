@@ -13,3 +13,4 @@ extends Resource
 @export var boss_templates: Array[RoomTemplate] = []
 @export var secret_ring_thickness: int = 3
 @export var tint: Color = Color.WHITE
+@export var cave_spawn_rate: float = 1.0
