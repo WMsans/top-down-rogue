@@ -81,5 +81,19 @@ func test_despawn_removes_far_enemy() -> void:
 
 	spawner._on_despawn_tick()
 
-	# queue_free is deferred so node is still valid but queued for deletion
 	assert_bool(enemy.is_queued_for_deletion()).is_true()
+
+
+func test_despawn_keeps_nearby_enemy() -> void:
+	var spawner := _CaveSpawner.new()
+	add_child(spawner)
+
+	spawner.despawn_dist = 2500.0
+
+	var enemy := _DummyEnemy.instantiate()
+	add_child(enemy)
+	enemy.global_position = Vector2(100, 0)
+
+	spawner._on_despawn_tick()
+
+	assert_bool(enemy.is_queued_for_deletion()).is_false()
