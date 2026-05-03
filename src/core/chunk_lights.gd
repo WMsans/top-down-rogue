@@ -9,7 +9,9 @@ const DEFAULT_LIGHT_RANGE := 64.0
 const MAX_GLOW := 20.0
 const SMOOTH_SPEED := 30.0
 const MIN_PIXELS := 4
-const DEFAULT_TEXTURE_SIZE := 512.0  # PointLight2D default texture radius
+const TEXTURE_RADIUS := 32.0  # Half of the 64px baked falloff texture
+
+static var _cached_radius_texture: Texture2D
 
 var target_positions: Array[Vector2]
 var target_energies: Array[float]
@@ -42,13 +44,16 @@ func _init(coord: Vector2i) -> void:
 		light.shadow_enabled = false
 		light.blend_mode = Light2D.BLEND_MODE_ADD
 		light.texture = light_texture
-		light.texture_scale = DEFAULT_LIGHT_RANGE / DEFAULT_TEXTURE_SIZE
+		light.texture_scale = DEFAULT_LIGHT_RANGE / TEXTURE_RADIUS
 		light.color = Color(1.0, 0.5, 0.15, 1.0)  # warm lava-orange default
 		add_child(light)
 		lights[i] = light
 
 
 func _create_unit_radius_texture() -> Texture2D:
+	if _cached_radius_texture:
+		return _cached_radius_texture
+
 	var size := 64
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	var center := Vector2(float(size - 1) * 0.5, float(size - 1) * 0.5)
@@ -58,10 +63,13 @@ func _create_unit_radius_texture() -> Texture2D:
 			var dist := Vector2(float(x), float(y)).distance_to(center) / radius
 			var a := clampf(1.0 - dist, 0.0, 1.0)
 			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a))
-	return ImageTexture.create_from_image(img)
+	_cached_radius_texture = ImageTexture.create_from_image(img)
+	return _cached_radius_texture
 
 
 func apply_light_data(cell_data: Array) -> void:
+	if cell_data.size() < MAX_LIGHTS:
+		return
 	for i in range(MAX_LIGHTS):
 		var entry := cell_data[i] as Dictionary
 		target_positions[i] = entry.get("position", Vector2.ZERO)
