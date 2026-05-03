@@ -445,9 +445,9 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 	return result
 
 
-func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: PackedByteArray) -> void:
+func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: PackedByteArray) -> Array[RID]:
 	if batch.is_empty():
-		return
+		return []
 
 	rd.buffer_update(terrain_probe_input_buffer, 0, PROBE_INPUT_BUFFER_SIZE, packed_input)
 
@@ -496,8 +496,7 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 
 	rd.compute_list_end()
 
-	for us in created_uniform_sets:
-		rd.free_rid(us)
+	return created_uniform_sets
 
 
 func read_terrain_probe(byte_count: int) -> PackedByteArray:
