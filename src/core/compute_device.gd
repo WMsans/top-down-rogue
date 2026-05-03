@@ -335,3 +335,70 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 			if grid_rect.intersects(chunk_rect):
 				shadow_grid.mark_dirty()
 				break
+
+
+func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array[Vector2i]) -> void:
+	if bucket_coords.is_empty():
+		return
+
+	var push_data := PackedByteArray()
+	push_data.resize(16)
+	push_data.fill(0)
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, light_pack_pipeline)
+
+	for coord in bucket_coords:
+		var chunk: Chunk = chunks.get(coord, null)
+		if not chunk or not chunk.light_pack_uniform_set.is_valid():
+			continue
+
+		rd.compute_list_bind_uniform_set(compute_list, chunk.light_pack_uniform_set, 0)
+
+		push_data.encode_s32(0, coord.x)
+		push_data.encode_s32(4, coord.y)
+		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
+
+		rd.compute_list_dispatch(compute_list, 4, 4, 1)  # 4x4 grid of workgroups
+
+	rd.compute_list_end()
+
+
+func read_light_buffer(chunk: Chunk) -> PackedByteArray:
+	if not chunk.light_output_buffer.is_valid():
+		return PackedByteArray()
+	return rd.buffer_get_data(chunk.light_output_buffer, 0, 128)
+
+
+## Decodes a 128-byte SSBO into an array of 16 dictionaries with position, energy, and color.
+## Always returns 16 entries — cells with no glowing pixels get energy=0 and will fade out.
+func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	result.resize(16)
+
+	for cell_idx in range(16):
+		var off := cell_idx * 8
+		var packed_count_glow := data.decode_u32(off)
+		var packed_pos := data.decode_u32(off + 4)
+
+		var pixel_count := packed_count_glow & 0xFFFF
+		var avg_glow_raw := (packed_count_glow >> 16) & 0xFFFF
+		var avg_x := packed_pos & 0xFFFF
+		var avg_y := (packed_pos >> 16) & 0xFFFF
+
+		var energy := 0.0
+		var pos := Vector2.ZERO
+
+		if pixel_count >= 4:
+			var avg_glow := float(avg_glow_raw) / 1000.0
+			var coverage := clampf(float(pixel_count) / 32.0, 0.0, 1.0)
+			energy = coverage * (avg_glow / 20.0)  # MAX_GLOW = 20.0
+			pos = Vector2(float(avg_x), float(avg_y))
+
+		result[cell_idx] = {
+			"position": pos,
+			"energy": energy,
+			"color": Color(1.0, 0.5, 0.15, 1.0)
+		}
+
+	return result
