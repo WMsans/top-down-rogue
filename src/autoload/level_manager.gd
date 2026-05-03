@@ -25,6 +25,7 @@ func _ready() -> void:
 	_cave_spawner = CaveSpawner.new()
 	_cave_spawner.name = "CaveSpawner"
 	add_child(_cave_spawner)
+	_cave_spawner.set_biome_params(current_biome.cave_spawn_rate)
 
 
 func get_grid() -> SectorGrid:
