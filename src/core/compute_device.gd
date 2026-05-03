@@ -13,6 +13,8 @@ var sim_pipeline: RID
 var collider_shader: RID
 var collider_pipeline: RID
 var collider_storage_buffer: RID
+var light_pack_shader: RID
+var light_pack_pipeline: RID
 var dummy_texture: RID
 var render_shader: Shader
 var material_textures: Texture2DArray
@@ -47,6 +49,11 @@ func init_shaders() -> void:
 	var collider_spirv := collider_file.get_spirv()
 	collider_shader = rd.shader_create_from_spirv(collider_spirv)
 	collider_pipeline = rd.compute_pipeline_create(collider_shader)
+
+	var light_pack_file: RDShaderFile = load("res://shaders/compute/light_pack.glsl")
+	var light_pack_spirv := light_pack_file.get_spirv()
+	light_pack_shader = rd.shader_create_from_spirv(light_pack_spirv)
+	light_pack_pipeline = rd.compute_pipeline_create(light_pack_shader)
 
 
 func init_dummy_texture() -> void:
@@ -229,6 +236,10 @@ func free_resources() -> void:
 		rd.free_rid(collider_pipeline)
 	if collider_shader.is_valid():
 		rd.free_rid(collider_shader)
+	if light_pack_pipeline.is_valid():
+		rd.free_rid(light_pack_pipeline)
+	if light_pack_shader.is_valid():
+		rd.free_rid(light_pack_shader)
 
 
 func dispatch_generation(
