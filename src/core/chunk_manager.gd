@@ -70,6 +70,10 @@ func create_chunk(coord: Vector2i) -> void:
 
 	var light_output_size := 128  # 16 cells × 8 bytes (2 uints)
 	chunk.light_output_buffer = world_manager.rd.storage_buffer_create(light_output_size)
+	var light_zero := PackedByteArray()
+	light_zero.resize(light_output_size)
+	light_zero.fill(0)
+	world_manager.rd.buffer_update(chunk.light_output_buffer, 0, light_output_size, light_zero)
 
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
@@ -142,10 +146,10 @@ func free_chunk_resources(chunk: Chunk) -> void:
 		world_manager.rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
 		world_manager.rd.free_rid(chunk.rd_texture)
-	if chunk.light_output_buffer.is_valid():
-		world_manager.rd.free_rid(chunk.light_output_buffer)
 	if chunk.light_pack_uniform_set.is_valid():
 		world_manager.rd.free_rid(chunk.light_pack_uniform_set)
+	if chunk.light_output_buffer.is_valid():
+		world_manager.rd.free_rid(chunk.light_output_buffer)
 
 
 func rebuild_sim_uniform_sets(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
