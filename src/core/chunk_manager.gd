@@ -118,6 +118,11 @@ func create_chunk(coord: Vector2i) -> void:
 
 	chunk.occluder_instances = []
 
+	var lights_node := ChunkLights.new(coord)
+	lights_node.position = Vector2(coord) * CHUNK_SIZE
+	world_manager.lights_container.add_child(lights_node)
+	chunk.chunk_lights = lights_node
+
 	chunks[coord] = chunk
 
 	build_light_pack_uniform_set(chunk)
@@ -136,6 +141,8 @@ func free_chunk_resources(chunk: Chunk) -> void:
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
+	if chunk.chunk_lights and is_instance_valid(chunk.chunk_lights):
+		chunk.chunk_lights.queue_free()
 	for occluder in chunk.occluder_instances:
 		if is_instance_valid(occluder):
 			occluder.queue_free()
