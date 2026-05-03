@@ -18,6 +18,10 @@ var shadow_grid: Node = null
 
 var _gen_uniform_sets_to_free: Array[RID] = []
 
+var _light_frame_counter := 0
+var _light_dispatch_buckets: Array[Array] = []   # 5 slots, each = Array[Vector2i]
+var _light_readback_counter := 0
+
 signal chunks_generated(new_coords: Array[Vector2i])
 
 func _ready() -> void:
@@ -56,6 +60,10 @@ func _ready() -> void:
 	lights_container.name = "LightsContainer"
 	add_child(lights_container)
 
+	_light_dispatch_buckets.resize(5)
+	for i in range(5):
+		_light_dispatch_buckets[i] = []
+
 	TerrainSurface.register_adapter(self)
 
 
@@ -70,6 +78,7 @@ func _process(delta: float) -> void:
 	_update_chunks()
 	_run_simulation()
 	_collision_helper.rebuild_dirty(chunks, delta)
+	_update_lights()
 	terrain_physical.set_center(Vector2i(tracking_position))
 
 
@@ -260,6 +269,56 @@ func _pocket_fits(data: PackedByteArray, region_w: int, region_h: int, top_left:
 	return true
 
 
+func _update_lights() -> void:
+	if chunks.is_empty():
+		return
+
+	_light_frame_counter = (_light_frame_counter + 1) % 5
+
+	# Convert chunk coord keys to array for bucketing
+	var active_coords: Array[Vector2i] = []
+	for coord in chunks:
+		active_coords.append(coord)
+
+	# --- Dispatch: 1/5 of visible chunks each frame ---
+	var bucket_idx := _light_frame_counter
+	_light_dispatch_buckets[bucket_idx].clear()
+
+	var bucket_size := maxi(1, active_coords.size() / 5)
+	var start := bucket_idx * bucket_size
+	if start < active_coords.size():
+		var end := mini(start + bucket_size, active_coords.size())
+		for i in range(start, end):
+			_light_dispatch_buckets[bucket_idx].append(active_coords[i])
+
+	compute_device.dispatch_light_pack(chunks, _light_dispatch_buckets[bucket_idx])
+
+	# --- Readback: drain from 4 older buckets (1/4 of each) ---
+	_light_readback_counter = (_light_readback_counter + 1) % 4
+
+	for age in range(1, 5):
+		var read_bucket := (_light_frame_counter + 5 - age) % 5
+		var pending: Array = _light_dispatch_buckets[read_bucket]
+		if pending.is_empty():
+			continue
+
+		var slice_size := maxi(1, pending.size() / 4)
+		var slice_start := _light_readback_counter * slice_size
+		if slice_start < pending.size():
+			var slice_end := mini(slice_start + slice_size, pending.size())
+			for i in range(slice_start, slice_end):
+				var coord: Vector2i = pending[i]
+				var chunk: Chunk = chunks.get(coord, null)
+				if not chunk or not chunk.chunk_lights:
+					continue
+
+				var data := compute_device.read_light_buffer(chunk)
+				if data.size() == 0:
+					continue
+
+				var decoded := compute_device.decode_light_ssbo(data)
+				chunk.chunk_lights.apply_light_data(decoded)
+
 func reset() -> void:
 	chunk_manager.clear_all_chunks()
 	for us in _gen_uniform_sets_to_free:
@@ -267,6 +326,14 @@ func reset() -> void:
 	_gen_uniform_sets_to_free.clear()
 	for child in chunk_container.get_children():
 		child.queue_free()
+	for child in lights_container.get_children():
+		child.queue_free()
+	_light_dispatch_buckets.clear()
+	_light_dispatch_buckets.resize(5)
+	for i in range(5):
+		_light_dispatch_buckets[i] = []
+	_light_frame_counter = 0
+	_light_readback_counter = 0
 	tracking_position = Vector2.ZERO
 	compute_device.upload_biome_buffer(LevelManager.current_biome)
 	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
