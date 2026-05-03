@@ -1,5 +1,6 @@
 extends Node
 
+const CHUNK_SIZE := 256
 const ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
 
 @export var spawn_interval: float = 1.0
@@ -60,8 +61,9 @@ func _count_live_enemies() -> int:
 
 
 func _on_spawn_tick() -> void:
-	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical):
+	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
 		_resolve_dependencies()
+	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
 		return
 
 	if _count_live_enemies() >= mob_cap:
@@ -82,10 +84,10 @@ func _on_spawn_tick() -> void:
 		if attempts >= attempts_per_cycle:
 			break
 
-		var world_base := Vector2(chunk_coord * 256)
+		var world_base := Vector2(chunk_coord * CHUNK_SIZE)
 		for _retry in range(MAX_VALIDATION_RETRIES):
-			var local_x := randi() % 256
-			var local_y := randi() % 256
+			var local_x := randi() % CHUNK_SIZE
+			var local_y := randi() % CHUNK_SIZE
 			var world_pos := world_base + Vector2(local_x, local_y)
 
 			if _validate_position(world_pos):
@@ -143,6 +145,8 @@ func _has_headroom(world_pos: Vector2) -> bool:
 
 
 func _spawn_enemy(world_pos: Vector2) -> void:
+	if _spawn_parent == null:
+		return
 	var enemy := ENEMY_SCENE.instantiate()
 	enemy.global_position = world_pos
 	_spawn_parent.add_child(enemy)
