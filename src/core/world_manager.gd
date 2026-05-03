@@ -36,6 +36,7 @@ func _ready() -> void:
 	compute_device.init_material_textures()
 	compute_device.init_gen_stamp_buffer()
 	compute_device.init_gen_biome_buffer()
+	compute_device.init_terrain_probe()
 	# Bind biome buffer + template arrays from current biome
 	compute_device.upload_biome_buffer(LevelManager.current_biome)
 	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
@@ -78,6 +79,7 @@ func _process(delta: float) -> void:
 	_update_chunks()
 	_run_simulation()
 	_collision_helper.rebuild_dirty(chunks, delta)
+	_run_terrain_probes()
 	_update_lights()
 	terrain_physical.set_center(Vector2i(tracking_position))
 
@@ -130,6 +132,29 @@ func _run_simulation() -> void:
 		rd.buffer_update(chunk.injection_buffer, 0, payload.size(), payload)
 
 	compute_device.dispatch_simulation(chunks, shadow_grid)
+
+
+func _run_terrain_probes() -> void:
+	if chunks.is_empty():
+		return
+	var batch := terrain_physical.prepare_probe_batch(ComputeDevice.PROBE_BUDGET)
+	if batch.is_empty():
+		return
+
+	var total_count: int = 0
+	for entry in batch:
+		total_count += int(entry["count"])
+	if total_count <= 0:
+		return
+
+	var packed_input := terrain_physical.pack_probe_input(batch, ComputeDevice.PROBE_BUDGET)
+	var probe_uniform_sets := compute_device.dispatch_terrain_probe(chunks, batch, packed_input)
+	var raw := compute_device.read_terrain_probe(total_count * 4)
+	terrain_physical.apply_probe_results(batch, raw)
+
+	for us in probe_uniform_sets:
+		if us.is_valid():
+			compute_device.rd.free_rid(us)
 
 
 func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector2i = Vector2i.ZERO) -> void:
