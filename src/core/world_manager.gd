@@ -11,6 +11,7 @@ var terrain_modifier: TerrainModifier
 
 @onready var chunk_container: Node2D = $ChunkContainer
 var collision_container: Node2D
+var lights_container: Node2D
 
 var tracking_position: Vector2 = Vector2.ZERO
 var shadow_grid: Node = null
@@ -50,6 +51,10 @@ func _ready() -> void:
 	collision_container = Node2D.new()
 	collision_container.name = "CollisionContainer"
 	add_child(collision_container)
+
+	lights_container = Node2D.new()
+	lights_container.name = "LightsContainer"
+	add_child(lights_container)
 
 	TerrainSurface.register_adapter(self)
 
