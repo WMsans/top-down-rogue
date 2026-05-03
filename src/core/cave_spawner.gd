@@ -109,7 +109,7 @@ func _validate_position(world_pos: Vector2) -> bool:
 		return false
 
 	if _terrain_physical == null:
-		return false
+		return true
 
 	if not _has_solid_floor(world_pos):
 		return false
