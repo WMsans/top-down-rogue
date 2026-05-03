@@ -443,3 +443,64 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 		}
 
 	return result
+
+
+func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: PackedByteArray) -> void:
+	if batch.is_empty():
+		return
+
+	rd.buffer_update(terrain_probe_input_buffer, 0, PROBE_INPUT_BUFFER_SIZE, packed_input)
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, terrain_probe_pipeline)
+
+	var created_uniform_sets: Array[RID] = []
+	for entry in batch:
+		var chunk_coord: Vector2i = entry["chunk_coord"]
+		var chunk: Chunk = chunks.get(chunk_coord, null)
+		if chunk == null or not chunk.rd_texture.is_valid():
+			continue
+		var start: int = entry["start"]
+		var count: int = entry["count"]
+		if count <= 0:
+			continue
+
+		var u_tex := RDUniform.new()
+		u_tex.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_tex.binding = 0
+		u_tex.add_id(chunk.rd_texture)
+
+		var u_in := RDUniform.new()
+		u_in.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u_in.binding = 1
+		u_in.add_id(terrain_probe_input_buffer)
+
+		var u_out := RDUniform.new()
+		u_out.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u_out.binding = 2
+		u_out.add_id(terrain_probe_output_buffer)
+
+		var us := rd.uniform_set_create([u_tex, u_in, u_out], terrain_probe_shader, 0)
+		created_uniform_sets.append(us)
+
+		rd.compute_list_bind_uniform_set(compute_list, us, 0)
+
+		var push := PackedByteArray()
+		push.resize(8)
+		push.encode_u32(0, start)
+		push.encode_u32(4, count)
+		rd.compute_list_set_push_constant(compute_list, push, push.size())
+
+		var groups: int = int(ceil(float(count) / 8.0))
+		rd.compute_list_dispatch(compute_list, groups, 1, 1)
+
+	rd.compute_list_end()
+
+	for us in created_uniform_sets:
+		rd.free_rid(us)
+
+
+func read_terrain_probe(byte_count: int) -> PackedByteArray:
+	if byte_count <= 0:
+		return PackedByteArray()
+	return rd.buffer_get_data(terrain_probe_output_buffer, 0, byte_count)
