@@ -152,7 +152,9 @@ func init_terrain_probe() -> void:
 
 # template_arrays: Dictionary[int size_class → Texture2DArray]
 func bind_template_arrays(template_arrays: Dictionary) -> void:
-	# Free previous RIDs if any
+	if gen_template_uniform_set.is_valid():
+		rd.free_rid(gen_template_uniform_set)
+		gen_template_uniform_set = RID()
 	for rid in gen_template_array_rids.values():
 		if rid.is_valid():
 			rd.free_rid(rid)
@@ -167,7 +169,6 @@ func bind_template_arrays(template_arrays: Dictionary) -> void:
 		u.binding = binding_for_size[size_class]
 		var tex_rid := _texture_array_to_rid(template_arrays.get(size_class, null), size_class)
 		gen_template_array_rids[size_class] = tex_rid
-		# Need a sampler RID — use linear/nearest with no filter
 		var sampler_state := RDSamplerState.new()
 		sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
 		sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
@@ -178,8 +179,6 @@ func bind_template_arrays(template_arrays: Dictionary) -> void:
 		u.add_id(tex_rid)
 		uniforms.append(u)
 
-	if gen_template_uniform_set.is_valid():
-		rd.free_rid(gen_template_uniform_set)
 	gen_template_uniform_set = rd.uniform_set_create(uniforms, gen_shader, 3)
 
 
@@ -237,48 +236,67 @@ func upload_biome_buffer(biome: BiomeDef) -> void:
 
 
 func free_resources() -> void:
-	if gen_stamp_buffer.is_valid():
-		rd.free_rid(gen_stamp_buffer)
-	if gen_biome_buffer.is_valid():
-		rd.free_rid(gen_biome_buffer)
 	if gen_stamp_uniform_set.is_valid():
 		rd.free_rid(gen_stamp_uniform_set)
+		gen_stamp_uniform_set = RID()
 	if gen_biome_uniform_set.is_valid():
 		rd.free_rid(gen_biome_uniform_set)
+		gen_biome_uniform_set = RID()
 	if gen_template_uniform_set.is_valid():
 		rd.free_rid(gen_template_uniform_set)
+		gen_template_uniform_set = RID()
 	for rid in gen_template_array_rids.values():
 		if rid.is_valid():
 			rd.free_rid(rid)
 	gen_template_array_rids.clear()
+	if gen_stamp_buffer.is_valid():
+		rd.free_rid(gen_stamp_buffer)
+		gen_stamp_buffer = RID()
+	if gen_biome_buffer.is_valid():
+		rd.free_rid(gen_biome_buffer)
+		gen_biome_buffer = RID()
 	if dummy_texture.is_valid():
 		rd.free_rid(dummy_texture)
+		dummy_texture = RID()
 	if collider_storage_buffer.is_valid():
 		rd.free_rid(collider_storage_buffer)
+		collider_storage_buffer = RID()
 	if gen_pipeline.is_valid():
 		rd.free_rid(gen_pipeline)
+		gen_pipeline = RID()
 	if gen_shader.is_valid():
 		rd.free_rid(gen_shader)
+		gen_shader = RID()
 	if sim_pipeline.is_valid():
 		rd.free_rid(sim_pipeline)
+		sim_pipeline = RID()
 	if sim_shader.is_valid():
 		rd.free_rid(sim_shader)
+		sim_shader = RID()
 	if collider_pipeline.is_valid():
 		rd.free_rid(collider_pipeline)
+		collider_pipeline = RID()
 	if collider_shader.is_valid():
 		rd.free_rid(collider_shader)
+		collider_shader = RID()
 	if light_pack_pipeline.is_valid():
 		rd.free_rid(light_pack_pipeline)
+		light_pack_pipeline = RID()
 	if light_pack_shader.is_valid():
 		rd.free_rid(light_pack_shader)
+		light_pack_shader = RID()
 	if terrain_probe_input_buffer.is_valid():
 		rd.free_rid(terrain_probe_input_buffer)
+		terrain_probe_input_buffer = RID()
 	if terrain_probe_output_buffer.is_valid():
 		rd.free_rid(terrain_probe_output_buffer)
+		terrain_probe_output_buffer = RID()
 	if terrain_probe_pipeline.is_valid():
 		rd.free_rid(terrain_probe_pipeline)
+		terrain_probe_pipeline = RID()
 	if terrain_probe_shader.is_valid():
 		rd.free_rid(terrain_probe_shader)
+		terrain_probe_shader = RID()
 
 
 func dispatch_generation(
