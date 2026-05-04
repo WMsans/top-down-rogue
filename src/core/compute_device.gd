@@ -486,7 +486,8 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 		rd.compute_list_bind_uniform_set(compute_list, us, 0)
 
 		var push := PackedByteArray()
-		push.resize(8)
+		push.resize(16)
+		push.fill(0)
 		push.encode_u32(0, start)
 		push.encode_u32(4, count)
 		rd.compute_list_set_push_constant(compute_list, push, push.size())
