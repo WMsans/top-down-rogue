@@ -134,10 +134,23 @@ func unload_chunk(coord: Vector2i) -> void:
 	world_manager.chunks.erase(coord)
 
 
-func free_chunk_resources(chunk: Chunk) -> void:
+func free_chunk_uniform_sets(chunk: Chunk) -> void:
+	if chunk.sim_uniform_set.is_valid():
+		world_manager.rd.free_rid(chunk.sim_uniform_set)
+		chunk.sim_uniform_set = RID()
+	if chunk.light_pack_uniform_set.is_valid():
+		world_manager.rd.free_rid(chunk.light_pack_uniform_set)
+		chunk.light_pack_uniform_set = RID()
+
+
+func free_chunk_body(chunk: Chunk) -> void:
 	if chunk.mesh_instance and is_instance_valid(chunk.mesh_instance):
+		chunk.mesh_instance.material = null
+		chunk.mesh_instance.visible = false
 		chunk.mesh_instance.queue_free()
 	if chunk.wall_mesh_instance and is_instance_valid(chunk.wall_mesh_instance):
+		chunk.wall_mesh_instance.material = null
+		chunk.wall_mesh_instance.visible = false
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
@@ -147,16 +160,20 @@ func free_chunk_resources(chunk: Chunk) -> void:
 		if is_instance_valid(occluder):
 			occluder.queue_free()
 	chunk.occluder_instances.clear()
-	if chunk.injection_buffer.is_valid():
-		world_manager.rd.free_rid(chunk.injection_buffer)
-	if chunk.sim_uniform_set.is_valid():
-		world_manager.rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
 		world_manager.rd.free_rid(chunk.rd_texture)
-	if chunk.light_pack_uniform_set.is_valid():
-		world_manager.rd.free_rid(chunk.light_pack_uniform_set)
+		chunk.rd_texture = RID()
+	if chunk.injection_buffer.is_valid():
+		world_manager.rd.free_rid(chunk.injection_buffer)
+		chunk.injection_buffer = RID()
 	if chunk.light_output_buffer.is_valid():
 		world_manager.rd.free_rid(chunk.light_output_buffer)
+		chunk.light_output_buffer = RID()
+
+
+func free_chunk_resources(chunk: Chunk) -> void:
+	free_chunk_uniform_sets(chunk)
+	free_chunk_body(chunk)
 
 
 func rebuild_sim_uniform_sets(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
@@ -259,14 +276,16 @@ func update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i])
 			mat.set_shader_parameter("neighbor_data", chunks[north_coord].texture_2d_rd)
 			mat.set_shader_parameter("has_neighbor", true)
 		else:
+			mat.set_shader_parameter("neighbor_data", chunk.texture_2d_rd)
 			mat.set_shader_parameter("has_neighbor", false)
 
 
 func clear_all_chunks() -> void:
 	var chunks: Dictionary = world_manager.chunks
 	for coord in chunks:
-		var chunk: Chunk = chunks[coord]
-		free_chunk_resources(chunk)
+		free_chunk_uniform_sets(chunks[coord])
+	for coord in chunks:
+		free_chunk_body(chunks[coord])
 	chunks.clear()
 
 
