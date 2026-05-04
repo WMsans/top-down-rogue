@@ -94,10 +94,10 @@ Based on gameplay.md design document.
 ### Procedural Generation
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | High | Cave generation algorithm | Procedural cave layouts |
-| | P1 | Medium | Room placement | Shops, secrets, boss arenas |
+| x | P1 | High | Cave generation algorithm | Procedural cave layouts |
+| x | P1 | Medium | Room placement | Shops, secrets, boss arenas |
 | | P1 | Medium | Enemy population | Distribute enemies appropriately |
-| | P2 | Medium | Secret areas | Hidden rooms requiring terrain carving |
+| x | P2 | Medium | Secret areas | Hidden rooms requiring terrain carving |
 
 ### Progression
 | Done | Priority | Difficulty | Task | Description |
@@ -114,7 +114,7 @@ Based on gameplay.md design document.
 |------|----------|------------|------|-------------|
 | | P2 | Medium | Visual feedback | Swing effects, material particles |
 | | P2 | Medium | Sound design | Swing sounds, material interactions |
-| | P2 | Medium | UI/UX | HUD, inventory, modifier display |
+| x | P2 | Medium | UI/UX | HUD, inventory, modifier display |
 | | P2 | Low | Save/Run persistence | Track run state for meta-progression |
 | | P3 | Medium | Meta-progression | Persistent unlocks (if applicable) |
 
