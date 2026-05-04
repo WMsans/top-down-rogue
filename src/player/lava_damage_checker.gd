@@ -34,7 +34,7 @@ func _physics_process(_delta: float) -> void:
 			var sample_x := int(round(pos.x - half_w + float(ix) * BODY_WIDTH / float(SAMPLE_POINTS_X - 1)))
 			var sample_y := int(round(pos.y - half_h + float(iy) * BODY_HEIGHT / float(SAMPLE_POINTS_Y - 1)))
 			var cell: TerrainCell = _terrain_physical.query(Vector2(sample_x, sample_y))
-			total_damage += int(cell.damage)
+			total_damage = max(total_damage, int(cell.damage))
 
 	if total_damage > 0 and inventory:
 		inventory.take_damage(total_damage)
