@@ -5,10 +5,10 @@ const ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
 
 @export var spawn_interval: float = 1.0
 @export var attempts_per_cycle: int = 2
-@export var spawn_min_dist: float = 600.0
+@export var spawn_min_dist: float = 0.0
 @export var spawn_max_dist: float = 2000.0
 @export var despawn_dist: float = 2500.0
-@export var mob_cap: int = 15
+@export var mob_cap: int = 70
 @export var spawn_rate: float = 1.0
 
 const BASE_SPAWN_CHANCE: float = 0.5
