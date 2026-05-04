@@ -5,11 +5,14 @@ const ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
 
 @export var spawn_interval: float = 1.0
 @export var attempts_per_cycle: int = 2
-@export var spawn_min_dist: float = 600.0
+@export var spawn_min_dist: float = 0.0
 @export var spawn_max_dist: float = 2000.0
 @export var despawn_dist: float = 2500.0
-@export var mob_cap: int = 15
+@export var mob_cap: int = 70
 @export var spawn_rate: float = 1.0
+@export var group_size_min: int = 3
+@export var group_size_max: int = 5
+@export var group_spread: float = 32.0
 
 const BASE_SPAWN_CHANCE: float = 0.5
 const MAX_VALIDATION_RETRIES: int = 3
@@ -57,7 +60,7 @@ func clear() -> void:
 
 
 func _count_live_enemies() -> int:
-	return get_tree().get_nodes_in_group("attackable").filter(func(n): return is_instance_valid(n)).size()
+	return get_tree().get_nodes_in_group("cave_spawned").filter(func(n): return is_instance_valid(n)).size()
 
 
 func _on_spawn_tick() -> void:
@@ -91,7 +94,12 @@ func _on_spawn_tick() -> void:
 			var world_pos := world_base + Vector2(local_x, local_y)
 
 			if _validate_position(world_pos):
-				_spawn_enemy(world_pos)
+				var size := randi_range(group_size_min, group_size_max)
+				if _count_live_enemies() + size > mob_cap:
+					size = mob_cap - _count_live_enemies()
+					if size <= 0:
+						return
+				_spawn_group(world_pos, size)
 				attempts += 1
 				break
 
@@ -125,10 +133,18 @@ func _has_solid_floor(world_pos: Vector2) -> bool:
 		return false
 
 	var down_offsets := [Vector2.ZERO, Vector2(0, 16), Vector2(0, 32)]
+	var any_probed := false
 	for offset in down_offsets:
-		var cell := _terrain_physical.query(world_pos + offset)
-		if cell.is_solid:
+		var pos : Vector2  = world_pos + offset
+		if not _terrain_physical.has_cache(pos):
+			continue
+		any_probed = true
+		if _terrain_physical.query(pos).is_solid:
 			return true
+
+	if not any_probed:
+		return true
+
 	return false
 
 
@@ -137,10 +153,18 @@ func _has_headroom(world_pos: Vector2) -> bool:
 		return false
 
 	var up_offsets := [Vector2(0, -8), Vector2(0, -24)]
+	var any_probed := false
 	for offset in up_offsets:
-		var cell := _terrain_physical.query(world_pos + offset)
-		if cell.is_solid:
+		var pos : Vector2 = world_pos + offset
+		if not _terrain_physical.has_cache(pos):
+			continue
+		any_probed = true
+		if _terrain_physical.query(pos).is_solid:
 			return false
+
+	if not any_probed:
+		return true
+
 	return true
 
 
@@ -149,7 +173,25 @@ func _spawn_enemy(world_pos: Vector2) -> void:
 		return
 	var enemy := ENEMY_SCENE.instantiate()
 	enemy.global_position = world_pos
+	enemy.add_to_group("cave_spawned")
 	_spawn_parent.add_child(enemy)
+
+
+func _spawn_group(center: Vector2, count: int) -> void:
+	var placed := 0
+	var max_retries := count * 3
+	var retries := 0
+	while placed < count and retries < max_retries:
+		var offset := Vector2(
+			randf_range(-group_spread, group_spread),
+			randf_range(-group_spread, group_spread),
+		)
+		var pos := center + offset
+		retries += 1
+		if _terrain_physical != null and not _has_headroom(pos):
+			continue
+		_spawn_enemy(pos)
+		placed += 1
 
 
 func _on_despawn_tick() -> void:
@@ -157,7 +199,7 @@ func _on_despawn_tick() -> void:
 	if is_instance_valid(_world_manager):
 		player_pos = _world_manager.tracking_position
 
-	for enemy in get_tree().get_nodes_in_group("attackable"):
+	for enemy in get_tree().get_nodes_in_group("cave_spawned"):
 		if not is_instance_valid(enemy):
 			continue
 		if enemy.global_position.distance_to(player_pos) > despawn_dist:

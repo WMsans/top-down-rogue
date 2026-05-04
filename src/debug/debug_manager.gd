@@ -13,7 +13,16 @@ func _process(_delta: float) -> void:
 	var player := get_node("../Player") as Node2D
 	var pos := player.global_position if player else Vector2.ZERO
 	var fps := Performance.get_monitor(Performance.TIME_FPS)
-	_debug_label.text = "FPS: %d\nX: %.0f\nY: %.0f" % [fps, pos.x, pos.y]
+
+	var cave_count := get_tree().get_nodes_in_group("cave_spawned").filter(func(n): return is_instance_valid(n)).size()
+	var cave_cap := 0
+	var spawner := get_node_or_null("/root/LevelManager/CaveSpawner")
+	if spawner:
+		cave_cap = spawner.mob_cap
+
+	var total_mobs := get_tree().get_nodes_in_group("attackable").filter(func(n): return is_instance_valid(n)).size()
+
+	_debug_label.text = "FPS: %d\nX: %.0f\nY: %.0f\nMobs: %d / %d (total %d)" % [fps, pos.x, pos.y, cave_count, cave_cap, total_mobs]
 
 func _build_hud() -> void:
 	canvas = CanvasLayer.new()
