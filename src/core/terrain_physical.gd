@@ -32,6 +32,14 @@ func query(world_pos: Vector2) -> TerrainCell:
 	return TerrainCell.new()
 
 
+func has_cache(world_pos: Vector2) -> bool:
+	var cell_pos := Vector2i(int(floor(world_pos.x)), int(floor(world_pos.y)))
+	if _result_cache.has(cell_pos):
+		var entry: Dictionary = _result_cache[cell_pos]
+		return _current_frame - int(entry["frame"]) <= TTL_FRAMES
+	return false
+
+
 func invalidate_rect(rect: Rect2i) -> void:
 	for x in range(rect.position.x, rect.position.x + rect.size.x):
 		for y in range(rect.position.y, rect.position.y + rect.size.y):

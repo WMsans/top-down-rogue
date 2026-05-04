@@ -96,7 +96,7 @@ Based on gameplay.md design document.
 |------|----------|------------|------|-------------|
 | x | P1 | High | Cave generation algorithm | Procedural cave layouts |
 | x | P1 | Medium | Room placement | Shops, secrets, boss arenas |
-| | P1 | Medium | Enemy population | Distribute enemies appropriately |
+| x | P1 | Medium | Enemy population | Distribute enemies appropriately |
 | x | P2 | Medium | Secret areas | Hidden rooms requiring terrain carving |
 
 ### Progression
