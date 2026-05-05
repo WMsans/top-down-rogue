@@ -37,4 +37,4 @@ func _physics_process(_delta: float) -> void:
 			total_damage = max(total_damage, int(cell.damage))
 
 	if total_damage > 0 and inventory:
-		inventory.take_damage(total_damage)
+		inventory.take_damage(total_damage, Vector2.ZERO)
