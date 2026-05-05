@@ -149,7 +149,7 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 	enemy.speed = enemy.speed * speed_mult * (1.5 if is_boss else 1.0)
 
 	if is_boss:
-		if hasattr(enemy, "weapon_resource") and enemy.weapon_resource:
+		if "weapon_resource" in enemy and enemy.weapon_resource:
 			enemy.weapon_resource.damage *= damage_mult
 
 	if is_boss:

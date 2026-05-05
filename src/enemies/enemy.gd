@@ -230,8 +230,8 @@ func _apply_separation(move_dir: Vector2) -> Vector2:
 	for enemy in get_tree().get_nodes_in_group("attackable"):
 		if enemy == self or not is_instance_valid(enemy):
 			continue
-		var to_other := global_position - enemy.global_position
-		var dist := to_other.length()
+		var to_other: Vector2 = global_position - enemy.global_position
+		var dist: float = to_other.length()
 		if dist < separation_radius and dist > 0.001:
 			sep += to_other.normalized() * ((separation_radius - dist) / separation_radius)
 	return (move_dir + sep * 0.5).normalized()

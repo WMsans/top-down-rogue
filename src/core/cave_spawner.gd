@@ -15,10 +15,10 @@ const SPREAD_SHOT := preload("res://resources/weapons/spread_shot.tres")
 
 @export var spawn_interval: float = 1.0
 @export var attempts_per_cycle: int = 2
-@export var spawn_min_dist: float = 600.0
+@export var spawn_min_dist: float = 0.0
 @export var spawn_max_dist: float = 2000.0
 @export var despawn_dist: float = 2500.0
-@export var mob_cap: int = 25
+@export var mob_cap: int = 999
 @export var spawn_rate: float = 1.0
 @export var group_size_min: int = 3
 @export var group_size_max: int = 5
@@ -168,7 +168,7 @@ func _has_solid_floor(world_pos: Vector2) -> bool:
 	var down_offsets := [Vector2.ZERO, Vector2(0, 16), Vector2(0, 32)]
 	var any_probed := false
 	for offset in down_offsets:
-		var pos := world_pos + offset
+		var pos: Vector2 = world_pos + offset
 		if not _terrain_physical.has_cache(pos):
 			continue
 		any_probed = true
@@ -185,7 +185,7 @@ func _has_headroom(world_pos: Vector2) -> bool:
 	var up_offsets := [Vector2(0, -8), Vector2(0, -24)]
 	var any_probed := false
 	for offset in up_offsets:
-		var pos := world_pos + offset
+		var pos: Vector2 = world_pos + offset
 		if not _terrain_physical.has_cache(pos):
 			continue
 		any_probed = true
