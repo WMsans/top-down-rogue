@@ -5,7 +5,7 @@ extends RigidBody2D
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
-enum PickupType { GOLD, WEAPON, MODIFIER, CHEST }
+enum PickupType { GOLD, WEAPON, MODIFIER, CHEST, PORTAL }
 
 func get_pickup_type() -> int:
 	return PickupType.WEAPON
