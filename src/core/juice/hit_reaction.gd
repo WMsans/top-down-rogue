@@ -52,11 +52,15 @@ var _chromatic_layer: CanvasLayer = null
 var _chromatic_rect: ColorRect = null
 var _chromatic_material: ShaderMaterial = null
 var _chromatic_tween: Tween = null
+var vignette: DamageVignette
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_chromatic_flash()
+	vignette = DamageVignette.new()
+	vignette.name = "DamageVignette"
+	add_child(vignette)
 
 
 func play(spec: HitSpec) -> void:
