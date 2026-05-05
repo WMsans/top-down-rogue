@@ -8,3 +8,4 @@ name = "Rusty Sword"
 cooldown = 0.5
 damage = 3.0
 weapon_reach = 28.0
+arc_angle = 1.5707963268
