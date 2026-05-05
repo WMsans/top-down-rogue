@@ -1,18 +1,29 @@
 extends Node
 
 const CHUNK_SIZE := 256
-const ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
+
+const MELEE_ENEMY_SCENE := preload("res://scenes/melee_enemy.tscn")
+const RANGED_ENEMY_SCENE := preload("res://scenes/ranged_enemy.tscn")
+
+const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
+const BONE_DAGGER := preload("res://resources/weapons/bone_dagger.tres")
+const THROWING_KNIFE := preload("res://resources/weapons/throwing_knife.tres")
+const FIRE_ORB := preload("res://resources/weapons/fire_orb.tres")
+const BROAD_AXE := preload("res://resources/weapons/broad_axe.tres")
+const FLAME_BLADE := preload("res://resources/weapons/flame_blade.tres")
+const SPREAD_SHOT := preload("res://resources/weapons/spread_shot.tres")
 
 @export var spawn_interval: float = 1.0
 @export var attempts_per_cycle: int = 2
-@export var spawn_min_dist: float = 0.0
+@export var spawn_min_dist: float = 600.0
 @export var spawn_max_dist: float = 2000.0
 @export var despawn_dist: float = 2500.0
-@export var mob_cap: int = 70
+@export var mob_cap: int = 25
 @export var spawn_rate: float = 1.0
 @export var group_size_min: int = 3
 @export var group_size_max: int = 5
 @export var group_spread: float = 32.0
+@export var elite_chance: float = 0.15
 
 const BASE_SPAWN_CHANCE: float = 0.5
 const MAX_VALIDATION_RETRIES: int = 3
@@ -45,7 +56,6 @@ func _resolve_dependencies() -> void:
 	var wm := get_tree().get_first_node_in_group("world_manager")
 	if wm == null:
 		return
-
 	_world_manager = wm
 	_spawn_parent = _world_manager.get_chunk_container()
 	_terrain_physical = _world_manager.terrain_physical
@@ -61,6 +71,30 @@ func clear() -> void:
 
 func _count_live_enemies() -> int:
 	return get_tree().get_nodes_in_group("cave_spawned").filter(func(n): return is_instance_valid(n)).size()
+
+
+func _pick_enemy_scene() -> PackedScene:
+	if randf() < 0.8:
+		return MELEE_ENEMY_SCENE
+	return RANGED_ENEMY_SCENE
+
+
+func _pick_melee_weapon() -> MeleeWeapon:
+	if randf() < 0.5:
+		return RUSTY_SWORD
+	return BONE_DAGGER
+
+
+func _pick_ranged_weapon() -> RangedWeapon:
+	if randf() < 0.7:
+		return THROWING_KNIFE
+	return FIRE_ORB
+
+
+func _pick_elite_melee_weapon() -> MeleeWeapon:
+	if randf() < 0.5:
+		return BROAD_AXE
+	return FLAME_BLADE
 
 
 func _on_spawn_tick() -> void:
@@ -131,47 +165,56 @@ func _validate_position(world_pos: Vector2) -> bool:
 func _has_solid_floor(world_pos: Vector2) -> bool:
 	if _terrain_physical == null:
 		return false
-
 	var down_offsets := [Vector2.ZERO, Vector2(0, 16), Vector2(0, 32)]
 	var any_probed := false
 	for offset in down_offsets:
-		var pos : Vector2  = world_pos + offset
+		var pos := world_pos + offset
 		if not _terrain_physical.has_cache(pos):
 			continue
 		any_probed = true
 		if _terrain_physical.query(pos).is_solid:
 			return true
-
 	if not any_probed:
 		return true
-
 	return false
 
 
 func _has_headroom(world_pos: Vector2) -> bool:
 	if _terrain_physical == null:
 		return false
-
 	var up_offsets := [Vector2(0, -8), Vector2(0, -24)]
 	var any_probed := false
 	for offset in up_offsets:
-		var pos : Vector2 = world_pos + offset
+		var pos := world_pos + offset
 		if not _terrain_physical.has_cache(pos):
 			continue
 		any_probed = true
 		if _terrain_physical.query(pos).is_solid:
 			return false
-
 	if not any_probed:
 		return true
-
 	return true
 
 
 func _spawn_enemy(world_pos: Vector2) -> void:
 	if _spawn_parent == null:
 		return
-	var enemy := ENEMY_SCENE.instantiate()
+	var scene := _pick_enemy_scene()
+	var enemy := scene.instantiate()
+
+	var is_elite_roll := randf() < elite_chance
+	if is_elite_roll:
+		enemy.is_elite = true
+		enemy.elite_ability = randi() % 4 + 1
+
+	if scene == MELEE_ENEMY_SCENE:
+		if is_elite_roll:
+			enemy.weapon_resource = _pick_elite_melee_weapon()
+		else:
+			enemy.weapon_resource = _pick_melee_weapon()
+	else:
+		enemy.weapon_resource = _pick_ranged_weapon()
+
 	enemy.global_position = world_pos
 	enemy.add_to_group("cave_spawned")
 	_spawn_parent.add_child(enemy)
