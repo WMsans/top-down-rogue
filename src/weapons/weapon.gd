@@ -1,5 +1,5 @@
 class_name Weapon
-extends RefCounted
+extends Resource
 
 var name: String = "Weapon"
 var cooldown: float = 0.5
