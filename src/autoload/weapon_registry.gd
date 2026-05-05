@@ -37,7 +37,9 @@ func _populate_tiers() -> void:
 		WeaponDropEntry.new(preload("res://src/weapons/melee_weapon.gd"), 1.0),
 		WeaponDropEntry.new(preload("res://src/weapons/test_weapon.gd"), 0.5),
 	]
-	weapon_tiers[DropTable.ItemTier.UNCOMMON] = []
+	weapon_tiers[DropTable.ItemTier.UNCOMMON] = [
+		WeaponDropEntry.new(preload("res://src/weapons/ranged_weapon.gd"), 0.5),
+	]
 	weapon_tiers[DropTable.ItemTier.RARE] = []
 
 	modifier_tiers[DropTable.ItemTier.COMMON] = [
