@@ -3,33 +3,35 @@ extends Area2D
 
 const PROMPT_TEXT := "Press [E] to enter portal"
 
-var _player_inside: bool = false
 @onready var _prompt_label: Label = $PromptLabel
+@onready var _color_rect: ColorRect = $ColorRect
 
 
 func _ready() -> void:
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
 	if _prompt_label:
 		_prompt_label.text = PROMPT_TEXT
 		_prompt_label.visible = false
 
 
-func _process(_delta: float) -> void:
-	if _player_inside and Input.is_action_just_pressed("interact"):
-		LevelManager.advance_floor()
-		queue_free()
+func get_pickup_type() -> int:
+	return Drop.PickupType.PORTAL
 
 
-func _on_body_entered(body: Node2D) -> void:
-	if body.is_in_group("player"):
-		_player_inside = true
-		if _prompt_label:
-			_prompt_label.visible = true
+func get_pickup_payload():
+	return null
 
 
-func _on_body_exited(body: Node2D) -> void:
-	if body.is_in_group("player"):
-		_player_inside = false
-		if _prompt_label:
-			_prompt_label.visible = false
+func should_auto_pickup() -> bool:
+	return false
+
+
+func interact(_player: Node) -> void:
+	LevelManager.advance_floor()
+	queue_free()
+
+
+func set_highlighted(enabled: bool) -> void:
+	if _color_rect and _color_rect.material is ShaderMaterial:
+		(_color_rect.material as ShaderMaterial).set_shader_parameter("outline_width", 1.0 if enabled else 0.0)
+	if _prompt_label:
+		_prompt_label.visible = enabled
