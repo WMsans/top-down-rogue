@@ -15,6 +15,17 @@ var _original_collision_mask: int
 
 @onready var _color_rect: ColorRect = $ColorRect
 
+const KNOCKBACK_SPEED := 200.0
+const KNOCKBACK_DECAY := 12.0
+const ZOOM_PUNCH_THRESHOLD := 10.0
+const ZOOM_PUNCH_AMOUNT := 0.92
+const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
+
+var _knockback_velocity: Vector2 = Vector2.ZERO
+var _flash_tween: Tween
+var _squash_tween: Tween
+var _zoom_tween: Tween
+
 
 func _enter_tree() -> void:
 	var inventory := PlayerInventory.new()
@@ -56,6 +67,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var input_dir := _get_input_direction()
+	if _knockback_velocity.length_squared() > 0.01:
+		_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
 	if input_dir != Vector2.ZERO:
 		_last_facing = input_dir
 		if input_dir.x < -0.01:
@@ -65,6 +78,7 @@ func _physics_process(delta: float) -> void:
 		if _color_rect != null:
 			_color_rect.scale.x = -1.0 if _facing_left else 1.0
 	_apply_movement(input_dir, delta)
+	velocity += _knockback_velocity
 	move_and_slide()
 
 	var wm := get_parent().get_node_or_null("WorldManager")
@@ -109,6 +123,47 @@ func is_facing_left() -> bool:
 
 
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
+	if hit_dir.length_squared() > 0.0001:
+		_knockback_velocity = -hit_dir.normalized() * KNOCKBACK_SPEED
+
+	_play_hit_flash()
+	_play_squash()
+	_play_zoom_punch(damage)
+
 	var inventory := get_node_or_null("PlayerInventory")
 	if inventory:
-		inventory.take_damage(damage)
+		inventory.take_damage(damage, hit_dir)
+
+
+func _play_hit_flash() -> void:
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+	_color_rect.modulate = HIT_FLASH_COLOR
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(_color_rect, "modulate", Color.WHITE, 0.12)
+
+
+func _play_squash() -> void:
+	if _squash_tween and _squash_tween.is_valid():
+		_squash_tween.kill()
+	var sgn := -1.0 if _facing_left else 1.0
+	var target_scale := Vector2(sgn * 1.3, 0.7)
+	var rest_scale := Vector2(sgn, 1.0)
+	_squash_tween = create_tween()
+	_squash_tween.tween_property(_color_rect, "scale", target_scale, 0.06)
+	_squash_tween.tween_property(_color_rect, "scale", rest_scale, 0.12).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+func _play_zoom_punch(damage: int) -> void:
+	if damage < ZOOM_PUNCH_THRESHOLD:
+		return
+	var cam := get_node_or_null("Camera2D")
+	if cam == null:
+		return
+	if _zoom_tween and _zoom_tween.is_valid():
+		_zoom_tween.kill()
+	var default_zoom := cam.zoom
+	var punched_zoom := default_zoom * ZOOM_PUNCH_AMOUNT
+	_zoom_tween = create_tween()
+	_zoom_tween.tween_property(cam, "zoom", punched_zoom, 0.07).set_trans(Tween.TRANS_CUBIC)
+	_zoom_tween.tween_property(cam, "zoom", default_zoom, 0.08)
