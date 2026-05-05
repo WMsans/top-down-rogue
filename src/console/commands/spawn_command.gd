@@ -3,7 +3,7 @@ extends RefCounted
 const WEAPON_DROP_SCENE := preload("res://scenes/weapon_drop.tscn")
 const MODIFIER_DROP_SCENE := preload("res://scenes/modifier_drop.tscn")
 const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
-const DUMMY_ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
+const DUMMY_ENEMY_SCENE := preload("res://scenes/enemies/dummy_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 
 

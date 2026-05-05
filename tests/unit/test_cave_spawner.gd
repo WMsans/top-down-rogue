@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 
 const _CaveSpawner = preload("res://src/core/cave_spawner.gd")
-const _DummyEnemy = preload("res://scenes/dummy_enemy.tscn")
+const _DummyEnemy = preload("res://scenes/enemies/dummy_enemy.tscn")
 
 
 func test_mob_cap_enforcement() -> void:

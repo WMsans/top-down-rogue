@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://new_enemy"]
+[gd_scene format=3 uid="uid://enemybase01"]
 
 [ext_resource type="Script" path="res://src/enemies/enemy.gd" id="1"]
 

@@ -2,8 +2,8 @@ extends Node
 
 const CHUNK_SIZE := 256
 
-const MELEE_ENEMY_SCENE := preload("res://scenes/melee_enemy.tscn")
-const RANGED_ENEMY_SCENE := preload("res://scenes/ranged_enemy.tscn")
+const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
+const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 
 const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
 const BONE_DAGGER := preload("res://resources/weapons/bone_dagger.tres")
