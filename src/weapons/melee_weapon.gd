@@ -1,47 +1,46 @@
 class_name MeleeWeapon
 extends Weapon
 
-const WEAPON_TEXTURE := preload("res://textures/Weapons/sword_01c.png")
-const RANGE: float = 36.0
-@export var weapon_reach: float = RANGE
-const ARC_ANGLE: float = PI / 2.0
-const PUSH_SPEED: float = 60.0
+@export var weapon_texture: Texture2D = preload("res://textures/Weapons/sword_01c.png")
+@export var weapon_reach: float = 36.0
+@export var arc_angle: float = PI / 2.0
+@export var push_speed: float = 60.0
 
 # Sprite is 18x18 with pommel at (15, 15) and blade pointing top-left.
 # Shift the texture so the pommel sits at the sprite origin (the rotation pivot),
 # and remember the blade's local direction at rotation=0 for converting blade
 # angles into sprite rotations.
-const POMMEL_PIXEL: Vector2 = Vector2(15.0, 15.0)
-const LOCAL_BLADE_ANGLE: float = -3.0 * PI / 4.0
-const HALF_ARC: float = PI / 3.5
-const IDLE_ROTATION_SPEED: float = 10.0
+@export var pommel_pixel: Vector2 = Vector2(15.0, 15.0)
+@export var local_blade_angle: float = -3.0 * PI / 4.0
+@export var half_arc: float = PI / 3.5
+@export var idle_rotation_speed: float = 10.0
 
-const PREP_DURATION: float = 0.06
-const ACTION_DURATION: float = 0.09
-const HOLD_DURATION: float = 0.025
-const RETURN_DURATION: float = 0.32
+@export var prep_duration: float = 0.06
+@export var action_duration: float = 0.09
+@export var hold_duration: float = 0.025
+@export var return_duration: float = 0.32
 
-const ANTICIPATION_PULLBACK: float = PI / 5.0
-const OVERSHOOT_ANGLE: float = PI / 9.0
+@export var anticipation_pullback: float = PI / 5.0
+@export var overshoot_angle: float = PI / 9.0
 
-const PREP_SCALE: Vector2 = Vector2(1.25, 0.75)
-const ACTION_SCALE: Vector2 = Vector2(0.7, 1.35)
-const HOLD_SCALE: Vector2 = Vector2(1.05, 0.95)
+@export var prep_scale: Vector2 = Vector2(1.25, 0.75)
+@export var action_scale: Vector2 = Vector2(0.7, 1.35)
+@export var hold_scale: Vector2 = Vector2(1.05, 0.95)
 
 # Pommel rests above the player body; small forward shifts drive the swing's
 # weight transfer while the blade rotation does the visible work.
-const REST_ABOVE: float = 0.0
-const REST_FORWARD: float = 3.0
-const PIVOT_BACK: float = 2.0
-const PIVOT_PUNCH: float = 4.0
-const PIVOT_HOLD: float = 3.0
+@export var rest_above: float = 0.0
+@export var rest_forward: float = 3.0
+@export var pivot_back: float = 2.0
+@export var pivot_punch: float = 4.0
+@export var pivot_hold: float = 3.0
 
-const TRAIL_ANGLE_STEP: float = PI / 32.0
-const TRAIL_LIFETIME: float = 0.25
-const TRAIL_COLOR: Color = Color(2.0, 6.0, 8.0, 0.6)
-const TRAIL_SHADER := preload("res://shaders/weapons/melee_trail.gdshader")
-const TRAIL_DRIFT: float = 6.0
-const TRAIL_SCALE_FADE: float = 0.55
+@export var trail_angle_step: float = PI / 32.0
+@export var trail_lifetime: float = 0.25
+@export var trail_color: Color = Color(2.0, 6.0, 8.0, 0.6)
+@export var trail_shader: Shader = preload("res://shaders/weapons/melee_trail.gdshader")
+@export var trail_drift: float = 6.0
+@export var trail_scale_fade: float = 0.55
 
 enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
 
@@ -71,7 +70,7 @@ func _init() -> void:
 	name = "Melee Weapon"
 	cooldown = 0.35
 	damage = 5.0
-	icon_texture = WEAPON_TEXTURE
+	icon_texture = weapon_texture
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
 
@@ -82,16 +81,16 @@ func has_visual() -> bool:
 
 func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 	super.setup_visual(container, sprite)
-	_sprite.texture = WEAPON_TEXTURE
-	_pommel_offset = _compute_pommel_offset(WEAPON_TEXTURE)
+	_sprite.texture = weapon_texture
+	_pommel_offset = _compute_pommel_offset(weapon_texture)
 	_sprite.offset = _pommel_offset
 
 
-static func _compute_pommel_offset(tex: Texture2D) -> Vector2:
+func _compute_pommel_offset(tex: Texture2D) -> Vector2:
 	var tex_size := tex.get_size()
 	# Sprite2D is centered by default: texture pixel p draws at (p - tex_size/2) + offset.
-	# Solve for offset so POMMEL_PIXEL lands at the sprite origin.
-	return tex_size * 0.5 - POMMEL_PIXEL
+	# Solve for offset so pommel_pixel lands at the sprite origin.
+	return tex_size * 0.5 - pommel_pixel
 
 
 func _use_impl(user: Node) -> void:
@@ -99,7 +98,7 @@ func _use_impl(user: Node) -> void:
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
 	var materials: Array[int] = MaterialRegistry.get_fluids()
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, push_speed, 0.25, materials)
 	_hit_attackables_in_arc(user, pos, direction)
 
 
@@ -108,7 +107,7 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 	if dmg <= 0:
 		return
 	var dir_angle: float = direction.angle()
-	var half_arc: float = ARC_ANGLE / 2.0
+	var half_arc_angle: float = arc_angle / 2.0
 	for node in user.get_tree().get_nodes_in_group("attackable"):
 		if not (node is Node2D):
 			continue
@@ -118,7 +117,7 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		var dist: float = to_target.length()
 		if dist > weapon_reach or dist <= 0.001:
 			continue
-		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc:
+		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc_angle:
 			continue
 		var hit_dir: Vector2 = to_target / dist
 		node.on_hit_impact(node.global_position, hit_dir, dmg)
@@ -135,7 +134,7 @@ func update_visual(delta: float, user: Node) -> void:
 	_facing_angle = dir.angle()
 	if _visual_angle != _visual_angle:
 		_visual_angle = _facing_angle
-	_visual_angle = lerp_angle(_visual_angle, _facing_angle, minf(1.0, IDLE_ROTATION_SPEED * delta))
+	_visual_angle = lerp_angle(_visual_angle, _facing_angle, minf(1.0, idle_rotation_speed * delta))
 	_update_facing_sign(user, dir)
 	if _is_swinging:
 		_process_swing(delta)
@@ -160,7 +159,7 @@ func _facing_unit() -> Vector2:
 
 
 func _rest_pos() -> Vector2:
-	return Vector2(_facing_sign * REST_FORWARD, REST_ABOVE)
+	return Vector2(_facing_sign * rest_forward, rest_above)
 
 
 func _rest_blade_angle() -> float:
@@ -168,7 +167,7 @@ func _rest_blade_angle() -> float:
 
 
 func _blade_to_sprite_rot(blade_angle: float) -> float:
-	return blade_angle - LOCAL_BLADE_ANGLE
+	return blade_angle - local_blade_angle
 
 
 func _rest_rot() -> float:
@@ -181,12 +180,12 @@ func _start_swing(direction: Vector2) -> void:
 		_facing_sign = signf(direction.x)
 	_swing_toggle = -_swing_toggle
 	_swing_dir = _swing_toggle
-	_start_angle = _facing_angle - HALF_ARC * _swing_dir
-	_end_angle = _facing_angle + HALF_ARC * _swing_dir
+	_start_angle = _facing_angle - half_arc * _swing_dir
+	_end_angle = _facing_angle + half_arc * _swing_dir
 	_capture_from()
 	_phase = Phase.PREP
 	_phase_time = 0.0
-	_last_trail_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
+	_last_trail_angle = _start_angle - anticipation_pullback * _swing_dir
 	_is_swinging = true
 
 
@@ -245,12 +244,12 @@ func _process_swing(_delta: float) -> void:
 
 	match _phase:
 		Phase.PREP:
-			t = _phase_time / PREP_DURATION
+			t = _phase_time / prep_duration
 			eased = _ease_out_quad(t)
-			blade_angle = _start_angle - ANTICIPATION_PULLBACK * _swing_dir
-			target_pos = rest - facing * PIVOT_BACK
+			blade_angle = _start_angle - anticipation_pullback * _swing_dir
+			target_pos = rest - facing * pivot_back
 			target_rot = _blade_to_sprite_rot(blade_angle)
-			target_scale = PREP_SCALE
+			target_scale = prep_scale
 			if t >= 1.0:
 				_pose_pos = target_pos
 				_pose_rot = target_rot
@@ -263,12 +262,12 @@ func _process_swing(_delta: float) -> void:
 				return
 
 		Phase.ACTION:
-			t = _phase_time / ACTION_DURATION
+			t = _phase_time / action_duration
 			eased = _ease_out_cubic(t)
-			blade_angle = _end_angle + OVERSHOOT_ANGLE * _swing_dir
-			target_pos = rest + facing * PIVOT_PUNCH
+			blade_angle = _end_angle + overshoot_angle * _swing_dir
+			target_pos = rest + facing * pivot_punch
 			target_rot = _blade_to_sprite_rot(blade_angle)
-			target_scale = ACTION_SCALE
+			target_scale = action_scale
 			if t >= 1.0:
 				_pose_pos = target_pos
 				_pose_rot = target_rot
@@ -280,12 +279,12 @@ func _process_swing(_delta: float) -> void:
 				return
 
 		Phase.HOLD:
-			t = _phase_time / HOLD_DURATION
+			t = _phase_time / hold_duration
 			eased = _ease_in_out_cubic(t)
 			blade_angle = _end_angle
-			target_pos = rest + facing * PIVOT_HOLD
+			target_pos = rest + facing * pivot_hold
 			target_rot = _blade_to_sprite_rot(blade_angle)
-			target_scale = HOLD_SCALE
+			target_scale = hold_scale
 			if t >= 1.0:
 				_pose_pos = target_pos
 				_pose_rot = target_rot
@@ -297,7 +296,7 @@ func _process_swing(_delta: float) -> void:
 				return
 
 		Phase.RETURN:
-			t = _phase_time / RETURN_DURATION
+			t = _phase_time / return_duration
 			eased = _ease_out_elastic(t)
 			target_pos = rest
 			target_rot = _rest_rot()
@@ -318,12 +317,12 @@ func _process_swing(_delta: float) -> void:
 	_apply_pose()
 
 	if _phase == Phase.ACTION:
-		var current_blade := _pose_rot + LOCAL_BLADE_ANGLE
+		var current_blade := _pose_rot + local_blade_angle
 		var progress := angle_difference(_last_trail_angle, current_blade) * _swing_dir
 		var max_spawns := 32
-		while progress >= TRAIL_ANGLE_STEP and max_spawns > 0:
-			_last_trail_angle += TRAIL_ANGLE_STEP * _swing_dir
-			progress -= TRAIL_ANGLE_STEP
+		while progress >= trail_angle_step and max_spawns > 0:
+			_last_trail_angle += trail_angle_step * _swing_dir
+			progress -= trail_angle_step
 			max_spawns -= 1
 			_spawn_trail(_pose_pos, _last_trail_angle, _pose_scale)
 
@@ -338,11 +337,11 @@ func _apply_pose() -> void:
 
 func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> void:
 	var mat := ShaderMaterial.new()
-	mat.shader = TRAIL_SHADER
+	mat.shader = trail_shader
 	var trail := Sprite2D.new()
-	trail.texture = WEAPON_TEXTURE
+	trail.texture = weapon_texture
 	trail.offset = _pommel_offset
-	trail.modulate = TRAIL_COLOR
+	trail.modulate = trail_color
 	trail.material = mat
 	trail.z_index = -1
 	trail.z_as_relative = false
@@ -351,7 +350,7 @@ func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> voi
 	trail.rotation = _blade_to_sprite_rot(blade_angle)
 	trail.scale = scale
 	var tween := trail.create_tween()
-	tween.tween_property(trail, "modulate:a", 0.0, TRAIL_LIFETIME)
+	tween.tween_property(trail, "modulate:a", 0.0, trail_lifetime)
 	tween.tween_callback(trail.queue_free)
 
 

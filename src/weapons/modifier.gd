@@ -1,5 +1,5 @@
 class_name Modifier
-extends RefCounted
+extends Resource
 
 var name: String = "Modifier"
 var description: String = ""

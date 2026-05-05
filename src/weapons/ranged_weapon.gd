@@ -7,6 +7,11 @@ const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 @export var projectile_lifetime: float = 3.0
 @export var spread_angle: float = 0.0
 @export var projectile_count: int = 1
+@export var weapon_texture: Texture2D:
+	set(value):
+		weapon_texture = value
+		icon_texture = value
+@export var projectile_texture: Texture2D
 
 
 func _init() -> void:
@@ -15,6 +20,17 @@ func _init() -> void:
 	damage = 3.0
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
+
+
+func has_visual() -> bool:
+	return weapon_texture != null
+
+
+func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
+	super.setup_visual(container, sprite)
+	if weapon_texture:
+		_sprite.texture = weapon_texture
+		_sprite.offset = Vector2(0, -8)
 
 
 func _use_impl(user: Node) -> void:
@@ -38,6 +54,10 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	proj.lifetime = projectile_lifetime
 	proj.direction = direction.normalized()
 	proj.source_node = user
+	if projectile_texture:
+		var proj_sprite := proj.get_node_or_null("Sprite2D")
+		if proj_sprite:
+			proj_sprite.texture = projectile_texture
 	proj.is_enemy_projectile = user.is_in_group("attackable") or user.is_in_group("cave_spawned")
 	var world := user.get_tree().get_first_node_in_group("world_manager")
 	if world:
