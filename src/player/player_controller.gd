@@ -15,7 +15,7 @@ var _original_collision_mask: int
 
 @onready var _color_rect: ColorRect = $ColorRect
 
-const KNOCKBACK_SPEED := 200.0
+const KNOCKBACK_SPEED := 20.0
 const KNOCKBACK_DECAY := 12.0
 const ZOOM_PUNCH_THRESHOLD := 10.0
 const ZOOM_PUNCH_AMOUNT := 0.92
@@ -124,7 +124,7 @@ func is_facing_left() -> bool:
 
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
 	if hit_dir.length_squared() > 0.0001:
-		_knockback_velocity = -hit_dir.normalized() * KNOCKBACK_SPEED
+		_knockback_velocity = hit_dir.normalized() * KNOCKBACK_SPEED
 
 	_play_hit_flash()
 	_play_squash()
