@@ -106,3 +106,9 @@ func get_facing_direction() -> Vector2:
 
 func is_facing_left() -> bool:
 	return _facing_left
+
+
+func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
+	var inventory := get_node_or_null("PlayerInventory")
+	if inventory:
+		inventory.take_damage(damage)
