@@ -1,34 +1,29 @@
 class_name DummyEnemy
 extends Enemy
 
-var _player: Node = null
-
 
 func _ready() -> void:
 	super._ready()
-	_sprite_modulate_green()
+	_assign_default_weapon()
 	_setup_drop_table()
-	_player = get_tree().get_first_node_in_group("player")
-
-
-func _sprite_modulate_green() -> void:
 	_set_base_modulate(Color(0.2, 0.8, 0.2))
+
+
+func _assign_default_weapon() -> void:
+	weapon = MeleeWeapon.new()
+	weapon.cooldown = 0.5
+	weapon.damage = 3.0
+	_attack_range = 28.0
+	speed = 60.0
+	max_health = 15
+	health = max_health
+	_speed_base = speed
 
 
 func _setup_drop_table() -> void:
 	drop_table = DropTable.from_enemy_tier(enemy_tier)
 
 
-func _process(delta: float) -> void:
-	global_position += _knockback_velocity * delta
-	_tick_knockback(delta)
-	if _player == null or not is_instance_valid(_player):
-		return
-	var dir: Vector2 = _player.global_position - global_position
-	if dir.length() < 4.0:
-		return
-	global_position += dir.normalized() * speed * delta
-
-
-func _on_hit() -> void:
-	super._on_hit()
+func _execute_attack() -> void:
+	if weapon and _player_ref and is_instance_valid(_player_ref):
+		weapon.use(self)

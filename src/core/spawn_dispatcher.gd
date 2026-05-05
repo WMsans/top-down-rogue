@@ -1,13 +1,21 @@
 extends Node
 
-const ENEMY_SCENE := preload("res://scenes/dummy_enemy.tscn")
+const MELEE_ENEMY_SCENE := preload("res://scenes/melee_enemy.tscn")
+const RANGED_ENEMY_SCENE := preload("res://scenes/ranged_enemy.tscn")
+const BOSS_ENEMY_SCENE := preload("res://scenes/boss_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
-const SHOP_SCENE  := preload("res://scenes/economy/shop_ui.tscn")
+const SHOP_SCENE := preload("res://scenes/economy/shop_ui.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
+
+const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
+const BONE_DAGGER := preload("res://resources/weapons/bone_dagger.tres")
+const THROWING_KNIFE := preload("res://resources/weapons/throwing_knife.tres")
+const FIRE_ORB := preload("res://resources/weapons/fire_orb.tres")
+const BOSS_STAFF := preload("res://resources/weapons/boss_staff.tres")
 
 const CHUNK_SIZE := 256
 
-var _spawned_sectors: Dictionary = {}  # Vector2i → true
+var _spawned_sectors: Dictionary = {}
 var _world_manager: Node = null
 var _spawn_parent: Node = null
 
@@ -50,7 +58,6 @@ func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
 			sectors_seen[sector] = true
 
 			var sector_center := grid.sector_to_world_center(sector)
-			# Only spawn if sector center is inside this chunk (avoids cross-chunk dupes)
 			if sector_center.x < chunk_world_min.x or sector_center.x > chunk_world_max.x:
 				continue
 			if sector_center.y < chunk_world_min.y or sector_center.y > chunk_world_max.y:
@@ -103,16 +110,32 @@ static func _apply_rotation(local: Vector2i, rotation_deg: int, size: int) -> Ve
 func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num: int, is_boss_room: bool) -> void:
 	match marker:
 		1: _spawn_enemy(world_pos, sector_dist, floor_num, false, false)
-		2: _spawn_enemy(world_pos, sector_dist, floor_num, false, true)  # elite
+		2: _spawn_enemy(world_pos, sector_dist, floor_num, false, true)
 		3: _spawn_chest(world_pos, false)
 		4: _spawn_shop(world_pos)
-		5: _spawn_chest(world_pos, true)  # secret loot
-		6: _spawn_enemy(world_pos, sector_dist, floor_num, true, false)  # boss
-		7: pass  # PORTAL_ANCHOR — handled at boss death
+		5: _spawn_chest(world_pos, true)
+		6: _spawn_enemy(world_pos, sector_dist, floor_num, true, false)
+		7: pass
 
 
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
-	var enemy := ENEMY_SCENE.instantiate()
+	var enemy: Enemy
+	if is_boss:
+		enemy = BOSS_ENEMY_SCENE.instantiate()
+		enemy.weapon_resource = BOSS_STAFF
+	else:
+		if is_elite:
+			enemy = MELEE_ENEMY_SCENE.instantiate()
+			enemy.is_elite = true
+			enemy.elite_ability = randi() % 4 + 1
+			enemy.weapon_resource = _pick_melee_weapon()
+		else:
+			if randf() < 0.8:
+				enemy = MELEE_ENEMY_SCENE.instantiate()
+				enemy.weapon_resource = _pick_melee_weapon()
+			else:
+				enemy = RANGED_ENEMY_SCENE.instantiate()
+				enemy.weapon_resource = _pick_ranged_weapon()
 
 	var tier_index: int = clampi(int(floor(float(sector_dist) / float(SectorGrid.BOSS_RING_DISTANCE) * 2.0)), 0, 2)
 	if "enemy_tier" in enemy:
@@ -122,12 +145,12 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 	var damage_mult := 1.0 + (floor_num - 1) * 0.15
 	var speed_mult  := 1.0 + (floor_num - 1) * 0.10
 
-	if "max_health" in enemy:
-		enemy.max_health = int(float(enemy.max_health) * health_mult * (2.0 if is_elite else 1.0) * (5.0 if is_boss else 1.0))
-	if "speed" in enemy:
-		enemy.speed = enemy.speed * speed_mult * (1.5 if is_boss else 1.0)
-	if "damage" in enemy:
-		enemy.damage = int(float(enemy.damage) * damage_mult)
+	enemy.max_health = int(float(enemy.max_health) * health_mult * (2.0 if is_elite else 1.0) * (5.0 if is_boss else 1.0))
+	enemy.speed = enemy.speed * speed_mult * (1.5 if is_boss else 1.0)
+
+	if is_boss:
+		if hasattr(enemy, "weapon_resource") and enemy.weapon_resource:
+			enemy.weapon_resource.damage *= damage_mult
 
 	if is_boss:
 		enemy.modulate = LevelManager.current_biome.tint
@@ -136,6 +159,18 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 
 	enemy.global_position = world_pos
 	_spawn_parent.add_child(enemy)
+
+
+func _pick_melee_weapon() -> MeleeWeapon:
+	if randf() < 0.5:
+		return RUSTY_SWORD
+	return BONE_DAGGER
+
+
+func _pick_ranged_weapon() -> RangedWeapon:
+	if randf() < 0.7:
+		return THROWING_KNIFE
+	return FIRE_ORB
 
 
 func _spawn_chest(world_pos: Vector2, is_secret_loot: bool) -> void:

@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://branged001"]
+
+[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="1"]
+[ext_resource type="Script" path="res://src/enemies/ranged_enemy.gd" id="2"]
+
+[node name="RangedEnemy" instance=ExtResource("1")]
+script = ExtResource("2")

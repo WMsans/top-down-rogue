@@ -3,6 +3,7 @@ extends Weapon
 
 const WEAPON_TEXTURE := preload("res://textures/Weapons/sword_01c.png")
 const RANGE: float = 36.0
+@export var weapon_reach: float = RANGE
 const ARC_ANGLE: float = PI / 2.0
 const PUSH_SPEED: float = 60.0
 
@@ -98,7 +99,7 @@ func _use_impl(user: Node) -> void:
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
 	var materials: Array[int] = MaterialRegistry.get_fluids()
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, RANGE, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, ARC_ANGLE, PUSH_SPEED, 0.25, materials)
 	_hit_attackables_in_arc(user, pos, direction)
 
 
@@ -115,7 +116,7 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 			continue
 		var to_target: Vector2 = node.global_position - origin
 		var dist: float = to_target.length()
-		if dist > RANGE or dist <= 0.001:
+		if dist > weapon_reach or dist <= 0.001:
 			continue
 		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc:
 			continue
