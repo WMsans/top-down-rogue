@@ -1,8 +1,8 @@
 extends Node
 
-const MELEE_ENEMY_SCENE := preload("res://scenes/melee_enemy.tscn")
-const RANGED_ENEMY_SCENE := preload("res://scenes/ranged_enemy.tscn")
-const BOSS_ENEMY_SCENE := preload("res://scenes/boss_enemy.tscn")
+const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
+const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
+const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const SHOP_SCENE := preload("res://scenes/economy/shop_ui.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
