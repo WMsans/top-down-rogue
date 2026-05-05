@@ -14,3 +14,6 @@ extends Resource
 @export var secret_ring_thickness: int = 3
 @export var tint: Color = Color.WHITE
 @export var cave_spawn_rate: float = 1.0
+@export var enemy_pool: Array[PackedScene] = []
+@export var elite_chance: float = 0.15
+@export var boss_scene: PackedScene = null
