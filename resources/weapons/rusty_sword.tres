@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MeleeWeapon" load_steps=2 format=3 uid="uid://brustysword"]
+
+[ext_resource type="Script" path="res://src/weapons/melee_weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = "Rusty Sword"
+cooldown = 0.5
+damage = 3.0
+weapon_reach = 28.0

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RangedWeapon" load_steps=2 format=3 uid="uid://bfireorb"]
+
+[ext_resource type="Script" path="res://src/weapons/ranged_weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = "Fire Orb"
+cooldown = 0.9
+damage = 4.0
+projectile_speed = 150.0
+projectile_lifetime = 1.5
+spread_angle = 0.0
+projectile_count = 1
