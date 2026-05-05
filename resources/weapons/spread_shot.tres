@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RangedWeapon" load_steps=2 format=3 uid="uid://bspreadshot"]
+
+[ext_resource type="Script" path="res://src/weapons/ranged_weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = "Spread Shot"
+cooldown = 0.7
+damage = 2.0
+projectile_speed = 250.0
+projectile_lifetime = 2.0
+spread_angle = 30.0
+projectile_count = 3

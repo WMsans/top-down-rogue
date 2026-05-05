@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RangedWeapon" load_steps=2 format=3 uid="uid://bbossstaff"]
+
+[ext_resource type="Script" path="res://src/weapons/ranged_weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = "Boss Staff"
+cooldown = 0.5
+damage = 6.0
+projectile_speed = 200.0
+projectile_lifetime = 3.0
+spread_angle = 10.0
+projectile_count = 1
