@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MeleeWeapon" load_steps=2 format=3 uid="uid://bbonedagger"]
+
+[ext_resource type="Script" path="res://src/weapons/melee_weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = "Bone Dagger"
+cooldown = 0.25
+damage = 2.0
+weapon_reach = 20.0
