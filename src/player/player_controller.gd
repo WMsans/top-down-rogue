@@ -162,7 +162,7 @@ func _play_zoom_punch(damage: int) -> void:
 		return
 	if _zoom_tween and _zoom_tween.is_valid():
 		_zoom_tween.kill()
-	var default_zoom := cam.zoom
+	var default_zoom : Vector2 = cam.zoom
 	var punched_zoom := default_zoom * ZOOM_PUNCH_AMOUNT
 	_zoom_tween = create_tween()
 	_zoom_tween.tween_property(cam, "zoom", punched_zoom, 0.07).set_trans(Tween.TRANS_CUBIC)
