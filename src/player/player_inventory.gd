@@ -12,6 +12,7 @@ signal player_died()
 @export var invincibility_duration: float = 1.0
 
 const BLINK_INTERVAL := 0.08
+const DAMAGE_COLOR := Color(1.0, 0.25, 0.08)
 const MAX_WEAPON_SLOTS := 3
 
 var gold: int = 0
@@ -73,12 +74,23 @@ func spend_gold(amount: int) -> bool:
 
 # ---- Health ----
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, hit_direction: Vector2 = Vector2.ZERO) -> void:
 	if _is_dead or _is_invincible:
 		return
 	_current_health = maxi(_current_health - amount, 0)
 	_is_invincible = true
 	_invincible_timer = invincibility_duration
+
+	var spec := HitSpec.new()
+	spec.position = get_parent().global_position
+	spec.direction = hit_direction
+	spec.damage = float(amount)
+	spec.is_kill = _current_health <= 0
+	spec.source_color = DAMAGE_COLOR
+	HitReaction.play(spec)
+	if HitReaction.vignette:
+		HitReaction.vignette.pulse(float(amount))
+
 	health_changed.emit(_current_health, max_health)
 	if _current_health <= 0:
 		if GameModeManager.is_creative():
