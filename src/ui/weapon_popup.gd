@@ -408,10 +408,8 @@ func _register_modifier_zone(controller: CardEffectController, card: PanelContai
 				return
 			icon_index += 1
 
-func _get_rect_in_card(child: Control, card: Control) -> Rect2:
-	var global_pos := child.global_position
-	var card_global_pos := card.global_position
-	return Rect2(global_pos - card_global_pos, child.size)
+func _get_rect_in_card(child: Control, _card: Control) -> Rect2:
+	return Rect2(child.global_position, child.size)
 
 func _stash_modifier_for_zone(zone_id: String, modifier: Modifier, controller: CardEffectController) -> void:
 	var zone_map: Dictionary = controller.get_meta("zone_modifiers", {})
@@ -487,21 +485,6 @@ func _position_tooltip_at_rect(zone_rect: Rect2, card: Control) -> void:
 func _on_modifier_icon_input(_event: InputEvent, _modifier: Modifier, _icon: Control) -> void:
 	pass
 
-
-func _position_tooltip_near(icon: Control) -> void:
-	if _modifier_tooltip == null:
-		return
-	await get_tree().process_frame
-	var icon_rect := icon.get_global_rect()
-	var tooltip_size := _modifier_tooltip.get_combined_minimum_size()
-	var pos_x := icon_rect.position.x + icon_rect.size.x / 2.0 - tooltip_size.x / 2.0
-	var viewport_width := get_viewport().get_visible_rect().size.x
-	pos_x = clampf(pos_x, 4.0, viewport_width - tooltip_size.x - 4.0)
-	_modifier_tooltip.global_position = Vector2(
-		pos_x,
-		icon_rect.position.y - tooltip_size.y - 4.0
-	)
-	_modifier_tooltip.size = tooltip_size
 
 
 func _cancel_modifier_tooltip() -> void:
@@ -730,7 +713,7 @@ func _enter_transfer_mode(slot_index: int, replaced_weapon: Weapon, transferable
 		if slot_container != null:
 			for child in slot_container.get_children():
 				if child is TextureRect:
-					modifier_positions.append(child.global_position)
+					modifier_positions.append(card.global_position + child.global_position)
 					modifier_sizes.append(child.size)
 	var alt_positions := _estimate_modifier_positions(transferable_modifiers.size(), modifier_positions, modifier_sizes)
 	_transfer_mode = true
