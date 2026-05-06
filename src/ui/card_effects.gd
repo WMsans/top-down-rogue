@@ -33,7 +33,7 @@ static func setup_card(card: Control, tilt_strength := DEFAULT_TILT_STRENGTH, ho
 	inner_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	subviewport.add_child(inner_container)
 
-	for child in card.get_children():
+	for child in card.get_children().duplicate():
 		if child != subviewport and child != controller:
 			card.remove_child(child)
 			inner_container.add_child(child)
