@@ -119,9 +119,11 @@ func _collect_active_lights() -> Array[Dictionary]:
 	var lights: Array[Dictionary] = []
 
 	# player lights
-	for entry in _player_lights:
+	for i in range(_player_lights.size() - 1, -1, -1):
+		var entry := _player_lights[i]
 		var light: Node2D = entry.node.get_ref()
 		if light == null or not is_instance_valid(light):
+			_player_lights.remove_at(i)
 			continue
 		lights.append({
 			position = light.global_position,
@@ -129,9 +131,10 @@ func _collect_active_lights() -> Array[Dictionary]:
 		})
 
 	# chunk lights
-	for ref in _chunk_lights_nodes:
-		var cl: ChunkLights = ref.get_ref()
+	for i in range(_chunk_lights_nodes.size() - 1, -1, -1):
+		var cl: ChunkLights = _chunk_lights_nodes[i].get_ref()
 		if cl == null or not is_instance_valid(cl):
+			_chunk_lights_nodes.remove_at(i)
 			continue
 		var active := cl.get_active_lights()
 		for d in active:
