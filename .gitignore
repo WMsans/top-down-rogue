@@ -4,5 +4,6 @@
 .superpowers/
 /.claude
 .worktrees/
+.worktree/
 build/
 /reports
