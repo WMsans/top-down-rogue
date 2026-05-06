@@ -65,27 +65,34 @@ func _ready() -> void:
 	lights_container.name = "LightsContainer"
 	add_child(lights_container)
 
-	entity_container = Node2D.new()
-	entity_container.name = "EntityContainer"
 	var subviewport := get_parent()
-	subviewport.add_child(entity_container)
 
+	# BackBufferCopy: captures terrain (WorldManager children) before entities render
 	var backbuffer := BackBufferCopy.new()
 	backbuffer.name = "BackBufferCopy"
 	backbuffer.copy_mode = BackBufferCopy.COPY_MODE_RECT
 	backbuffer.rect = Rect2(0, 0, 320, 180)
 	subviewport.add_child(backbuffer)
+	subviewport.move_child(backbuffer, 1)  # Right after WorldManager (index 0)
 
+	# EntityContainer: entities render here, after BackBufferCopy
+	entity_container = Node2D.new()
+	entity_container.name = "EntityContainer"
+	subviewport.add_child(entity_container)
+	subviewport.move_child(entity_container, 2)  # Right after BackBufferCopy
+
+	# FogSprite: renders above entities with fog shader
 	fog_sprite = Sprite2D.new()
 	fog_sprite.name = "FogSprite"
 	fog_sprite.centered = false
 	fog_sprite.position = Vector2.ZERO
+	fog_sprite.z_index = 100
 	var fog_material := ShaderMaterial.new()
 	fog_material.shader = preload("res://shaders/fog_of_war.gdshader")
 	fog_sprite.material = fog_material
-	fog_sprite.z_index = 100
 	subviewport.add_child(fog_sprite)
 
+	# FogManager: drives fog texture each frame
 	fog_manager_ref = FogManager.new()
 	fog_manager_ref.name = "FogManager"
 	fog_manager_ref.fog_sprite = fog_sprite
