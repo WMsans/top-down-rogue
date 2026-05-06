@@ -46,6 +46,8 @@ var _player_in_range: bool = false
 var _speed_base: float = 0.0
 var _teleport_cooldown: float = 0.0
 var _elite_enraged: bool = false
+var _weapon_visual: Node2D = null
+var _weapon_sprite: Sprite2D = null
 
 
 func _ready() -> void:
@@ -57,6 +59,13 @@ func _ready() -> void:
 		_apply_elite_scaling()
 
 	_player_ref = get_tree().get_first_node_in_group("player")
+
+	_weapon_visual = Node2D.new()
+	_weapon_visual.name = "WeaponVisual"
+	_weapon_sprite = Sprite2D.new()
+	_weapon_sprite.name = "Sprite2D"
+	_weapon_visual.add_child(_weapon_sprite)
+	add_child(_weapon_visual)
 
 	var detection_area := Area2D.new()
 	detection_area.name = "DetectionArea"
@@ -70,6 +79,8 @@ func _ready() -> void:
 	detection_area.body_entered.connect(_on_detection_body_entered)
 	detection_area.body_exited.connect(_on_detection_body_exited)
 	add_child(detection_area)
+
+	_setup_weapon_visual.call_deferred()
 
 
 func _apply_elite_scaling() -> void:
@@ -103,27 +114,31 @@ func _process(delta: float) -> void:
 	if _state == State.HURT:
 		_process_hurt(delta)
 		_apply_enrage_if_needed()
-		return
-
-	_tick_knockback(delta)
-	_apply_enrage_if_needed()
-
-	if _player_in_range:
-		_settle_timer += delta
 	else:
-		_settle_timer = 0.0
+		_tick_knockback(delta)
+		_apply_enrage_if_needed()
 
-	match _state:
-		State.IDLE:
-			_process_idle(delta)
-		State.CHASE:
-			_process_chase(delta)
-		State.WINDUP:
-			_process_windup(delta)
-		State.ATTACK:
-			_process_attack(delta)
-		State.COOLDOWN:
-			_process_cooldown(delta)
+		if _player_in_range:
+			_settle_timer += delta
+		else:
+			_settle_timer = 0.0
+
+		match _state:
+			State.IDLE:
+				_process_idle(delta)
+			State.CHASE:
+				_process_chase(delta)
+			State.WINDUP:
+				_process_windup(delta)
+			State.ATTACK:
+				_process_attack(delta)
+			State.COOLDOWN:
+				_process_cooldown(delta)
+
+	if weapon:
+		weapon.tick(delta)
+		if weapon.has_visual():
+			weapon.update_visual(delta, self)
 
 
 func _apply_enrage_if_needed() -> void:
@@ -172,10 +187,6 @@ func _process_chase(delta: float) -> void:
 
 func _process_windup(delta: float) -> void:
 	_state_timer -= delta
-	if int(_state_timer * 10.0) % 2 == 0:
-		var sprite := get_node_or_null("Sprite2D")
-		if sprite:
-			sprite.modulate = Color.RED
 	if _state_timer <= 0.0:
 		_change_state(State.ATTACK)
 
@@ -362,6 +373,11 @@ func _play_squash() -> void:
 func _on_hit() -> void:
 	_play_hit_flash()
 	_play_squash()
+
+
+func _setup_weapon_visual() -> void:
+	if weapon and weapon.has_visual():
+		weapon.setup_visual(_weapon_visual, _weapon_sprite)
 
 
 func _on_death() -> void:
