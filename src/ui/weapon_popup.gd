@@ -272,54 +272,6 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 	return card
 
 
-func _add_icon(parent: VBoxContainer, weapon: Weapon) -> void:
-	if weapon.icon_texture != null:
-		var icon := TextureRect.new()
-		icon.texture = weapon.icon_texture
-		icon.custom_minimum_size = ICON_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		parent.add_child(icon)
-	else:
-		var fallback := ColorRect.new()
-		fallback.custom_minimum_size = ICON_SIZE
-		fallback.color = Color(0.212, 0.110, 0.133, 1)
-		parent.add_child(fallback)
-		var q_label := Label.new()
-		q_label.text = "?"
-		q_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		q_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		q_label.anchors_preset = Control.PRESET_FULL_RECT
-		q_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
-		fallback.add_child(q_label)
-
-
-func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon, card: PanelContainer) -> void:
-	var slot_container := HBoxContainer.new()
-	slot_container.add_theme_constant_override("separation", 4)
-	slot_container.alignment = BoxContainer.ALIGNMENT_CENTER
-	parent.add_child(slot_container)
-
-	for i in range(weapon.modifier_slot_count):
-		var modifier: Modifier = weapon.get_modifier_at(i)
-		if modifier != null:
-			var icon := TextureRect.new()
-			icon.custom_minimum_size = MODIFIER_ICON_SIZE
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			if modifier.icon_texture != null:
-				icon.texture = modifier.icon_texture
-			else:
-				icon.texture = null
-			icon.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-			icon.gui_input.connect(_on_modifier_icon_input.bind(modifier, icon))
-			icon.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, icon, card))
-			icon.mouse_exited.connect(_on_modifier_icon_mouse_exited.bind(card))
-			slot_container.add_child(icon)
-		else:
-			var empty_slot := ColorRect.new()
-			empty_slot.custom_minimum_size = MODIFIER_ICON_SIZE
-			empty_slot.color = Color(0.165, 0.082, 0.098, 1)
-			slot_container.add_child(empty_slot)
 
 
 func _add_modifier_slots_to_card(card: Card, weapon: Weapon) -> void:
@@ -381,9 +333,6 @@ func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control, card: Co
 func _on_modifier_icon_mouse_exited(card: Control) -> void:
 	_cancel_modifier_tooltip()
 
-
-func _on_modifier_icon_input(_event: InputEvent, _modifier: Modifier, _icon: Control) -> void:
-	pass
 
 
 func _position_tooltip_near(icon: Control) -> void:
@@ -603,6 +552,17 @@ func _enter_transfer_mode(slot_index: int, replaced_weapon: Weapon, transferable
 
 
 func _find_modifier_slot_container(card: Control) -> HBoxContainer:
+	# For Card objects, the modifier overlay is a direct child HBoxContainer
+	for child in card.get_children():
+		if child is HBoxContainer:
+			var has_mod_icons := false
+			for item in child.get_children():
+				if item is TextureButton:
+					has_mod_icons = true
+					break
+			if has_mod_icons:
+				return child
+	# Fallback for old PanelContainer cards
 	for child in card.get_children():
 		if child is VBoxContainer:
 			for vbox_child in child.get_children():
