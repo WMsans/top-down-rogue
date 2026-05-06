@@ -88,6 +88,8 @@ func populate(icon_texture: Texture2D, card_name: String, stats: Array[String] =
 	_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 func set_selected(selected: bool) -> void:
+	if not is_selectable:
+		return
 	_is_selected = selected
 	_update_border_color()
 
@@ -125,15 +127,15 @@ func _on_hover_exit() -> void:
 	_is_hovered = false
 	_animate_hover_exit()
 	_update_border_color()
-	var start_tilt := _current_tilt.x
+	var start_tilt := _current_tilt
 	var tilt_tween := create_tween()
 	tilt_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tilt_tween.tween_method(func(val: float): _set_tilt_angles(Vector2(val, val)), start_tilt, 0.0, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tilt_tween.tween_method(func(val: Vector2): _set_tilt_angles(val), start_tilt, Vector2.ZERO, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tilt_tween.tween_callback(func(): set_process(false))
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _is_hovered:
+		if _is_hovered and is_selectable:
 			_play_click_feedback()
 			card_clicked.emit()
 
