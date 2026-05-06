@@ -9,6 +9,10 @@ var terrain_physical: TerrainPhysical
 var _collision_helper: RefCounted
 var terrain_modifier: TerrainModifier
 
+var entity_container: Node2D
+var fog_sprite: Sprite2D
+var fog_manager_ref: FogManager
+
 @onready var chunk_container: Node2D = $ChunkContainer
 var collision_container: Node2D
 var lights_container: Node2D
@@ -60,6 +64,33 @@ func _ready() -> void:
 	lights_container = Node2D.new()
 	lights_container.name = "LightsContainer"
 	add_child(lights_container)
+
+	entity_container = Node2D.new()
+	entity_container.name = "EntityContainer"
+	var subviewport := get_parent()
+	subviewport.add_child(entity_container)
+
+	var backbuffer := BackBufferCopy.new()
+	backbuffer.name = "BackBufferCopy"
+	backbuffer.copy_mode = BackBufferCopy.COPY_MODE_RECT
+	backbuffer.rect = Rect2(0, 0, 320, 180)
+	subviewport.add_child(backbuffer)
+
+	var fog_sprite := Sprite2D.new()
+	fog_sprite.name = "FogSprite"
+	fog_sprite.centered = false
+	fog_sprite.position = Vector2.ZERO
+	var fog_material := ShaderMaterial.new()
+	fog_material.shader = preload("res://shaders/fog_of_war.gdshader")
+	fog_sprite.material = fog_material
+	fog_sprite.z_index = 100
+	subviewport.add_child(fog_sprite)
+
+	var fog_manager := FogManager.new()
+	fog_manager.name = "FogManager"
+	fog_manager.fog_sprite = fog_sprite
+	fog_manager.fog_material = fog_material
+	subviewport.add_child(fog_manager)
 
 	_light_dispatch_buckets.resize(5)
 	for i in range(5):
@@ -197,7 +228,7 @@ func clear_all_chunks() -> void:
 
 
 func get_chunk_container() -> Node2D:
-	return chunk_container
+	return entity_container
 
 
 const CHUNK_SIZE := 256
@@ -350,6 +381,8 @@ func reset() -> void:
 		rd.free_rid(us)
 	_gen_uniform_sets_to_free.clear()
 	for child in chunk_container.get_children():
+		child.queue_free()
+	for child in entity_container.get_children():
 		child.queue_free()
 	for child in lights_container.get_children():
 		child.queue_free()
