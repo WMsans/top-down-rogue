@@ -4,8 +4,6 @@ extends CanvasLayer
 
 const CARD_MIN_SIZE := Vector2(140, 210)
 const MODIFIER_ICON_SIZE := Vector2(48, 48)
-const CARD_GLOW_SHADER := preload("res://shaders/ui/card_hover_glow.gdshader")
-
 signal reroll_requested
 
 var _remove_cost: int = 50
@@ -265,13 +263,6 @@ func _create_offer_card(offer: ShopOffer, slot: Control) -> PanelContainer:
 	card.custom_minimum_size = CARD_MIN_SIZE
 	card.theme = UiTheme.get_theme()
 
-	var glow_mat := ShaderMaterial.new()
-	glow_mat.shader = CARD_GLOW_SHADER
-	glow_mat.set_shader_parameter("glow_enabled", false)
-	card.material = glow_mat
-
-	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
-	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
 	card.gui_input.connect(_on_card_gui_input.bind(offer, card, slot))
 
 	var vbox := VBoxContainer.new()
@@ -310,6 +301,8 @@ func _create_offer_card(offer: ShopOffer, slot: Control) -> PanelContainer:
 		desc_label.add_theme_font_size_override("font_size", 11)
 		vbox.add_child(desc_label)
 
+	CardEffects.setup_card(card)
+
 	return card
 
 
@@ -318,13 +311,6 @@ func _create_remove_card() -> PanelContainer:
 	card.custom_minimum_size = CARD_MIN_SIZE
 	card.theme = UiTheme.get_theme()
 
-	var glow_mat := ShaderMaterial.new()
-	glow_mat.shader = CARD_GLOW_SHADER
-	glow_mat.set_shader_parameter("glow_enabled", false)
-	card.material = glow_mat
-
-	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
-	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
 	card.gui_input.connect(_on_remove_card_input.bind(card))
 
 	var vbox := VBoxContainer.new()
@@ -361,6 +347,8 @@ func _create_remove_card() -> PanelContainer:
 	desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
 	desc_label.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(desc_label)
+
+	CardEffects.setup_card(card)
 
 	return card
 
@@ -412,8 +400,6 @@ func _on_buy_pressed(offer: ShopOffer, card: Control, slot: Control) -> void:
 			card_ref.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			for child in card_ref.get_children():
 				child.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			if card_ref.material is ShaderMaterial:
-				card_ref.material.set_shader_parameter("glow_enabled", false)
 			var dim_tween := card_ref.create_tween()
 			dim_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 			dim_tween.tween_property(card_ref, "modulate:a", 0.4, 0.2)
@@ -544,32 +530,6 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_overlay_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		close()
-
-
-func _on_card_mouse_entered(card: PanelContainer) -> void:
-	if card.material is ShaderMaterial:
-		card.material.set_shader_parameter("glow_enabled", true)
-	var tween := card.create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(card, "scale", Vector2(1.03, 1.03), 0.15).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-	if style:
-		var new_style := style.duplicate() as StyleBoxFlat
-		new_style.border_color = UiTheme.ACCENT
-		card.add_theme_stylebox_override("panel", new_style)
-
-
-func _on_card_mouse_exited(card: PanelContainer) -> void:
-	if card.material is ShaderMaterial:
-		card.material.set_shader_parameter("glow_enabled", false)
-	var tween := card.create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(card, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-	if style:
-		var new_style := style.duplicate() as StyleBoxFlat
-		new_style.border_color = UiTheme.PANEL_BORDER
-		card.add_theme_stylebox_override("panel", new_style)
 
 
 func _on_card_gui_input(event: InputEvent, offer: ShopOffer, card: PanelContainer, slot: Control) -> void:
