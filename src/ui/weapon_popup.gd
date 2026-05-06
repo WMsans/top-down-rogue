@@ -5,7 +5,6 @@ const ICON_SIZE := Vector2(96, 96)
 const MODIFIER_ICON_SIZE := Vector2(32, 32)
 const TOOLTIP_MAX_WIDTH := 180
 
-const CARD_GLOW_SHADER := preload("res://shaders/ui/card_hover_glow.gdshader")
 
 @onready var _overlay: ColorRect = %Overlay
 @onready var _cards_container: HBoxContainer = %CardsContainer
@@ -292,13 +291,6 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = CARD_MIN_SIZE
 	card.gui_input.connect(_on_card_input.bind(slot_index))
-	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
-	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
-
-	var glow_mat := ShaderMaterial.new()
-	glow_mat.shader = CARD_GLOW_SHADER
-	glow_mat.set_shader_parameter("glow_enabled", false)
-	card.material = glow_mat
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
@@ -335,6 +327,13 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 		vbox.add_child(damage_label)
 
 		_add_modifier_slots(vbox, weapon, card)
+
+	var controller := CardEffects.setup_card(card)
+	if controller and weapon != null:
+		for i in range(weapon.modifier_slot_count):
+			var modifier: Modifier = weapon.get_modifier_at(i)
+			if modifier != null:
+				_register_modifier_zone(controller, card, i, modifier)
 
 	return card
 
@@ -377,10 +376,7 @@ func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon, card: PanelConta
 				icon.texture = modifier.icon_texture
 			else:
 				icon.texture = null
-			icon.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 			icon.gui_input.connect(_on_modifier_icon_input.bind(modifier, icon))
-			icon.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, icon, card))
-			icon.mouse_exited.connect(_on_modifier_icon_mouse_exited.bind(card))
 			slot_container.add_child(icon)
 		else:
 			var empty_slot := ColorRect.new()
@@ -389,35 +385,45 @@ func _add_modifier_slots(parent: VBoxContainer, weapon: Weapon, card: PanelConta
 			slot_container.add_child(empty_slot)
 
 
-func _on_card_mouse_entered(card: PanelContainer) -> void:
-	if card.material is ShaderMaterial:
-		card.material.set_shader_parameter("glow_enabled", true)
-	var tween := card.create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(card, "scale", Vector2(1.03, 1.03), 0.15).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-	if style:
-		var new_style := style.duplicate() as StyleBoxFlat
-		new_style.border_color = UiTheme.ACCENT
-		card.add_theme_stylebox_override("panel", new_style)
+func _register_modifier_zone(controller: CardEffectController, card: PanelContainer, slot_idx: int, modifier: Modifier) -> void:
+	await get_tree().process_frame
+	if not is_instance_valid(controller) or not is_instance_valid(card):
+		return
+
+	var slot_container: HBoxContainer = _find_modifier_slot_container(card)
+	if slot_container == null:
+		return
+
+	var icon_index := 0
+	for child in slot_container.get_children():
+		if child is TextureRect:
+			if icon_index == slot_idx:
+				var zone_id := "mod_%d" % slot_idx
+				var local_pos := _get_rect_in_card(child, card)
+				controller.register_zone(zone_id, local_pos)
+				_stash_modifier_for_zone(zone_id, modifier, controller)
+				if not controller.zone_entered.is_connected(_on_modifier_zone_entered):
+					controller.zone_entered.connect(_on_modifier_zone_entered.bind(controller))
+					controller.zone_exited.connect(_on_modifier_zone_exited.bind(controller))
+				return
+			icon_index += 1
+
+func _get_rect_in_card(child: Control, card: Control) -> Rect2:
+	var global_pos := child.global_position
+	var card_global_pos := card.global_position
+	return Rect2(global_pos - card_global_pos, child.size)
+
+func _stash_modifier_for_zone(zone_id: String, modifier: Modifier, controller: CardEffectController) -> void:
+	var zone_map: Dictionary = controller.get_meta("zone_modifiers", {})
+	zone_map[zone_id] = modifier
+	controller.set_meta("zone_modifiers", zone_map)
 
 
-func _on_card_mouse_exited(card: PanelContainer) -> void:
-	if card.material is ShaderMaterial:
-		card.material.set_shader_parameter("glow_enabled", false)
-	var tween := card.create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(card, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	if _selected_slot == -1:
-		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-		if style:
-			var new_style := style.duplicate() as StyleBoxFlat
-			new_style.border_color = UiTheme.PANEL_BORDER
-			card.add_theme_stylebox_override("panel", new_style)
-
-
-func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control, card: PanelContainer) -> void:
-	_on_card_mouse_entered(card)
+func _on_modifier_zone_entered(zone_id: String, controller: CardEffectController) -> void:
+	var zone_map: Dictionary = controller.get_meta("zone_modifiers", {})
+	var modifier: Modifier = zone_map.get(zone_id) as Modifier
+	if modifier == null:
+		return
 	_cancel_modifier_tooltip()
 	_modifier_tooltip = PanelContainer.new()
 	_modifier_tooltip.theme = UiTheme.get_theme()
@@ -448,13 +454,34 @@ func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control, card: Pa
 		vbox.add_child(desc_label)
 
 	add_child(_modifier_tooltip)
-	_position_tooltip_near(icon)
 
+	var zone_rect: Rect2
+	var zones: Array[Dictionary] = controller.get("_icon_zones")
+	for z in zones:
+		if z["id"] == zone_id:
+			zone_rect = z["rect"]
+			break
 
-func _on_modifier_icon_mouse_exited(card: PanelContainer) -> void:
+	if zone_rect.size != Vector2.ZERO:
+		_position_tooltip_at_rect(zone_rect, controller.card)
+
+func _on_modifier_zone_exited(_controller: CardEffectController) -> void:
 	_cancel_modifier_tooltip()
-	if not card.get_global_rect().has_point(card.get_global_mouse_position()):
-		_on_card_mouse_exited(card)
+
+func _position_tooltip_at_rect(zone_rect: Rect2, card: Control) -> void:
+	if _modifier_tooltip == null:
+		return
+	await get_tree().process_frame
+	var tooltip_size := _modifier_tooltip.get_combined_minimum_size()
+	var icon_global := card.global_position + zone_rect.position
+	var pos_x := icon_global.x + zone_rect.size.x / 2.0 - tooltip_size.x / 2.0
+	var viewport_width := get_viewport().get_visible_rect().size.x
+	pos_x = clampf(pos_x, 4.0, viewport_width - tooltip_size.x - 4.0)
+	_modifier_tooltip.global_position = Vector2(
+		pos_x,
+		icon_global.y - tooltip_size.y - 4.0
+	)
+	_modifier_tooltip.size = tooltip_size
 
 
 func _on_modifier_icon_input(_event: InputEvent, _modifier: Modifier, _icon: Control) -> void:
@@ -552,12 +579,6 @@ func _create_remove_modifier_card(modifier: Modifier, slot_index: int) -> PanelC
 	var card := PanelContainer.new()
 	card.theme = UiTheme.get_theme()
 	card.custom_minimum_size = CARD_MIN_SIZE
-	var glow_mat := ShaderMaterial.new()
-	glow_mat.shader = CARD_GLOW_SHADER
-	glow_mat.set_shader_parameter("glow_enabled", false)
-	card.material = glow_mat
-	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
-	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
 	card.gui_input.connect(_on_remove_modifier_card_input.bind(slot_index))
 
 	var vbox := VBoxContainer.new()
@@ -596,6 +617,8 @@ func _create_remove_modifier_card(modifier: Modifier, slot_index: int) -> PanelC
 	slot_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
 	slot_label.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(slot_label)
+
+	CardEffects.setup_card(card)
 
 	return card
 
@@ -722,6 +745,15 @@ func _enter_transfer_mode(slot_index: int, replaced_weapon: Weapon, transferable
 
 func _find_modifier_slot_container(card: Control) -> HBoxContainer:
 	for child in card.get_children():
+		if child is SubViewport and child.name == "CardEffectViewport":
+			for sv_child in child.get_children():
+				if sv_child is VBoxContainer and sv_child.name == "InnerContainer":
+					for inner_child in sv_child.get_children():
+						if inner_child is VBoxContainer:
+							for vbox_child in inner_child.get_children():
+								if vbox_child is HBoxContainer:
+									return vbox_child
+	for child in card.get_children():
 		if child is VBoxContainer:
 			for vbox_child in child.get_children():
 				if vbox_child is HBoxContainer:
@@ -811,13 +843,6 @@ func _create_transfer_card(modifier: Modifier, index: int) -> Control:
 	card.custom_minimum_size = CARD_MIN_SIZE
 	card.theme = UiTheme.get_theme()
 	card.gui_input.connect(_on_transfer_card_input.bind(index))
-	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
-	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
-
-	var glow_mat := ShaderMaterial.new()
-	glow_mat.shader = CARD_GLOW_SHADER
-	glow_mat.set_shader_parameter("glow_enabled", false)
-	card.material = glow_mat
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
@@ -860,6 +885,8 @@ func _create_transfer_card(modifier: Modifier, index: int) -> Control:
 		text_labels.append(desc_label)
 
 	card.set_meta("transfer_labels", text_labels)
+
+	CardEffects.setup_card(card)
 
 	return card
 
