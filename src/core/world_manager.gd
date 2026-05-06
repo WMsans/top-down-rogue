@@ -76,7 +76,7 @@ func _ready() -> void:
 	backbuffer.rect = Rect2(0, 0, 320, 180)
 	subviewport.add_child(backbuffer)
 
-	var fog_sprite := Sprite2D.new()
+	fog_sprite = Sprite2D.new()
 	fog_sprite.name = "FogSprite"
 	fog_sprite.centered = false
 	fog_sprite.position = Vector2.ZERO
@@ -86,11 +86,11 @@ func _ready() -> void:
 	fog_sprite.z_index = 100
 	subviewport.add_child(fog_sprite)
 
-	var fog_manager := FogManager.new()
-	fog_manager.name = "FogManager"
-	fog_manager.fog_sprite = fog_sprite
-	fog_manager.fog_material = fog_material
-	subviewport.add_child(fog_manager)
+	fog_manager_ref = FogManager.new()
+	fog_manager_ref.name = "FogManager"
+	fog_manager_ref.fog_sprite = fog_sprite
+	fog_manager_ref.fog_material = fog_material
+	subviewport.add_child(fog_manager_ref)
 
 	_light_dispatch_buckets.resize(5)
 	for i in range(5):
