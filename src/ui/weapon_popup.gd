@@ -286,10 +286,8 @@ func _add_modifier_slots_to_card(card: Card, weapon: Weapon) -> void:
 		btn.custom_minimum_size = MODIFIER_ICON_SIZE
 		if modifier != null and modifier.icon_texture != null:
 			btn.texture_normal = modifier.icon_texture
-		else:
-			btn.texture_normal = null
-		btn.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, btn, card))
-		btn.mouse_exited.connect(_on_modifier_icon_mouse_exited.bind(card))
+			btn.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, btn, card))
+			btn.mouse_exited.connect(_on_modifier_icon_mouse_exited.bind(card))
 		overlay.add_child(btn)
 	card.add_child(overlay)
 	overlay.position = Vector2(12, card.card_size.y - MODIFIER_ICON_SIZE.y - 8)
@@ -364,32 +362,31 @@ func _clear_modifier_header() -> void:
 	_modifier_header_elements.clear()
 
 
-func _on_card_input(event: InputEvent, slot_index: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _pickup_mode:
-			if _transfer_mode:
-				pass
-			else:
-				var replaced_weapon: Weapon = _inventory.get_weapon(slot_index)
-				var transferable_modifiers := _get_transferable_modifiers(replaced_weapon)
-				if transferable_modifiers.size() > 0:
-					_enter_transfer_mode(slot_index, replaced_weapon, transferable_modifiers)
-				else:
-					_pickup_callback.call(slot_index, null)
-					close()
-		elif _modifier_mode:
-			_handle_modifier_slot_click(slot_index)
-		elif _remove_mode:
-			_handle_remove_weapon_click(slot_index)
+func _on_card_input(slot_index: int) -> void:
+	if _pickup_mode:
+		if _transfer_mode:
+			pass
 		else:
-			if _selected_slot == -1:
-				_selected_slot = slot_index
-				_highlight_slot(slot_index)
+			var replaced_weapon: Weapon = _inventory.get_weapon(slot_index)
+			var transferable_modifiers := _get_transferable_modifiers(replaced_weapon)
+			if transferable_modifiers.size() > 0:
+				_enter_transfer_mode(slot_index, replaced_weapon, transferable_modifiers)
 			else:
-				if _selected_slot != slot_index:
-					_swap_weapons(_selected_slot, slot_index)
-				_selected_slot = -1
-				_build_cards()
+				_pickup_callback.call(slot_index, null)
+				close()
+	elif _modifier_mode:
+		_handle_modifier_slot_click(slot_index)
+	elif _remove_mode:
+		_handle_remove_weapon_click(slot_index)
+	else:
+		if _selected_slot == -1:
+			_selected_slot = slot_index
+			_highlight_slot(slot_index)
+		else:
+			if _selected_slot != slot_index:
+				_swap_weapons(_selected_slot, slot_index)
+			_selected_slot = -1
+			_build_cards()
 
 
 func _handle_remove_weapon_click(slot_index: int) -> void:
@@ -434,14 +431,13 @@ func _create_remove_modifier_card(modifier: Modifier, slot_index: int) -> Contro
 	return card
 
 
-func _on_remove_modifier_card_input(event: InputEvent, slot_index: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _remove_weapon == null:
-			return
-		var weapon := _remove_weapon
-		var cb := _remove_callback
-		cb.call(weapon, slot_index)
-		close()
+func _on_remove_modifier_card_input(slot_index: int) -> void:
+	if _remove_weapon == null:
+		return
+	var weapon := _remove_weapon
+	var cb := _remove_callback
+	cb.call(weapon, slot_index)
+	close()
 
 
 func _handle_modifier_slot_click(slot_index: int) -> void:
@@ -537,7 +533,7 @@ func _enter_transfer_mode(slot_index: int, replaced_weapon: Weapon, transferable
 		var slot_container: HBoxContainer = _find_modifier_slot_container(card)
 		if slot_container != null:
 			for child in slot_container.get_children():
-				if child is TextureRect:
+				if child is TextureButton:
 					modifier_positions.append(child.global_position)
 					modifier_sizes.append(child.size)
 	var alt_positions := _estimate_modifier_positions(transferable_modifiers.size(), modifier_positions, modifier_sizes)
@@ -655,11 +651,10 @@ func _create_transfer_card(modifier: Modifier, index: int) -> Control:
 	return card
 
 
-func _on_transfer_card_input(event: InputEvent, index: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var chosen_modifier: Modifier = _transfer_modifiers[index]
-		_pickup_callback.call(_transfer_slot, chosen_modifier)
-		close()
+func _on_transfer_card_input(index: int) -> void:
+	var chosen_modifier: Modifier = _transfer_modifiers[index]
+	_pickup_callback.call(_transfer_slot, chosen_modifier)
+	close()
 
 
 func _add_skip_button() -> void:
