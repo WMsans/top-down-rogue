@@ -48,6 +48,11 @@ func _ready() -> void:
 	var delivery := WeaponDelivery.new()
 	delivery.name = "WeaponDelivery"
 	add_child(delivery)
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		var light := get_node_or_null("PointLight2D")
+		if light:
+			fow.register_player_light(light, 128.0)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))

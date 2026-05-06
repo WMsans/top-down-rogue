@@ -29,8 +29,18 @@ func should_auto_pickup() -> bool:
 
 
 func _ready() -> void:
+	modulate.a = 0.0
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.register(self)
 	_sprite.modulate = Color(1.0, 0.84, 0.0)
 	_sprite.scale = Vector2(0.6, 0.6)
+
+
+func _exit_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.unregister(self)
 
 
 func _physics_process(delta: float) -> void:

@@ -12,8 +12,18 @@ var _age: float = 0.0
 
 
 func _ready() -> void:
+	modulate.a = 0.0
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.register(self)
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
+
+
+func _exit_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.unregister(self)
 
 
 func _process(delta: float) -> void:

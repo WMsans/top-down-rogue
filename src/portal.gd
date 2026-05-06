@@ -8,9 +8,19 @@ const PROMPT_TEXT := "Press [E] to enter portal"
 
 
 func _ready() -> void:
+	modulate.a = 0.0
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.register(self)
 	if _prompt_label:
 		_prompt_label.text = PROMPT_TEXT
 		_prompt_label.visible = false
+
+
+func _exit_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.unregister(self)
 
 
 func get_pickup_type() -> int:

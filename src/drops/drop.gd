@@ -17,11 +17,21 @@ func should_auto_pickup() -> bool:
 	return false
 
 func _ready() -> void:
+	modulate.a = 0.0
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.register(self)
 	gravity_scale = 0.0
 	linear_damp = linear_damp_value
 	mass = 1.0
 	if _sprite and _sprite.material is ShaderMaterial:
 		_sprite.material = _sprite.material.duplicate()
+
+
+func _exit_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.unregister(self)
 
 
 func interact(player: Node) -> void:

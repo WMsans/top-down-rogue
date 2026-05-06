@@ -28,9 +28,19 @@ func should_auto_pickup() -> bool:
 
 
 func _ready() -> void:
+	modulate.a = 0.0
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.register(self)
 	collision_layer = 3
 	collision_mask = 1
 	_sprite.texture = CHEST_CLOSED_TEXTURE
+
+
+func _exit_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.unregister(self)
 
 
 func interact(_player: Node) -> void:
