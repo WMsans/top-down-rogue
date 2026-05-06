@@ -15,7 +15,6 @@ const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 
 
 func _init() -> void:
-	name = "Ranged Weapon"
 	cooldown = 0.6
 	damage = 3.0
 	modifier_slot_count = 3
