@@ -7,6 +7,7 @@ const BODY_HEIGHT := 12
 @export var acceleration: float = 800.0
 @export var friction: float = 600.0
 @export var max_speed: float = 120.0
+@export var auto_face_range: float = 250.0
 
 var _last_facing: Vector2 = Vector2.DOWN
 var _facing_left: bool = false
@@ -69,14 +70,17 @@ func _physics_process(delta: float) -> void:
 	var input_dir := _get_input_direction()
 	if _knockback_velocity.length_squared() > 0.01:
 		_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
-	if input_dir != Vector2.ZERO:
+	var enemy_dir := _find_closest_enemy_direction()
+	if enemy_dir != Vector2.ZERO:
+		_last_facing = enemy_dir
+	elif input_dir != Vector2.ZERO:
 		_last_facing = input_dir
-		if input_dir.x < -0.01:
-			_facing_left = true
-		elif input_dir.x > 0.01:
-			_facing_left = false
-		if _color_rect != null:
-			_color_rect.scale.x = -1.0 if _facing_left else 1.0
+	if _last_facing.x < -0.01:
+		_facing_left = true
+	elif _last_facing.x > 0.01:
+		_facing_left = false
+	if _color_rect != null:
+		_color_rect.scale.x = -1.0 if _facing_left else 1.0
 	_apply_movement(input_dir, delta)
 	velocity += _knockback_velocity
 	move_and_slide()
@@ -112,6 +116,20 @@ func _apply_movement(input_dir: Vector2, delta: float) -> void:
 			velocity -= velocity.normalized() * friction_amount
 	if velocity.length() > max_speed:
 		velocity = velocity.normalized() * max_speed
+
+
+func _find_closest_enemy_direction() -> Vector2:
+	var closest_dist := auto_face_range
+	var closest_dir := Vector2.ZERO
+	for enemy in get_tree().get_nodes_in_group("attackable"):
+		if not is_instance_valid(enemy) or not (enemy is Node2D):
+			continue
+		var to_enemy := enemy.global_position - global_position
+		var dist := to_enemy.length()
+		if dist < closest_dist:
+			closest_dist = dist
+			closest_dir = to_enemy.normalized()
+	return closest_dir
 
 
 func get_facing_direction() -> Vector2:

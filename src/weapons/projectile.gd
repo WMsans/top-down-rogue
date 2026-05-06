@@ -22,6 +22,9 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 	global_position += direction * speed * delta
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.rotation = direction.angle() + PI * 3.0 / 4.0
 
 
 func _on_body_entered(body: Node) -> void:

@@ -32,6 +32,17 @@ func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 		_sprite.offset = Vector2(0, -8)
 
 
+func update_visual(_delta: float, user: Node) -> void:
+	if visual == null:
+		return
+	var dir := _get_facing_direction(user)
+	visual.position = Vector2.ZERO
+	visual.rotation = dir.angle() + PI * 3.0 / 4.0
+	_sprite.position = Vector2.ZERO
+	_sprite.rotation = 0.0
+	_sprite.scale = Vector2.ONE
+
+
 func _use_impl(user: Node) -> void:
 	var direction := _get_facing_direction(user)
 	var base_angle := direction.angle()
