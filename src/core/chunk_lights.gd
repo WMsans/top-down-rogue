@@ -89,3 +89,27 @@ func _process(delta: float) -> void:
 			lights[i].visible = true
 			lights[i].position = current_positions[i]
 			lights[i].energy = current_energies[i]
+
+
+func _enter_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.register_chunk_lights(self)
+
+
+func _exit_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.unregister_chunk_lights(self)
+
+
+func get_active_lights() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for i in range(MAX_LIGHTS):
+		if current_energies[i] < 0.005:
+			continue
+		result.append({
+			position = global_position + current_positions[i],
+			range = DEFAULT_LIGHT_RANGE,
+		})
+	return result

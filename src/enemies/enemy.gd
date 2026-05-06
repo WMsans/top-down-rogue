@@ -51,6 +51,10 @@ var _weapon_sprite: Sprite2D = null
 
 
 func _ready() -> void:
+	modulate.a = 0.0
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.register(self)
 	add_to_group("attackable")
 	health = max_health
 	_speed_base = speed
@@ -81,6 +85,12 @@ func _ready() -> void:
 	add_child(detection_area)
 
 	_setup_weapon_visual.call_deferred()
+
+
+func _exit_tree() -> void:
+	var fow := get_tree().get_first_node_in_group("fog_of_war")
+	if fow and fow is FogOfWar:
+		fow.unregister(self)
 
 
 func _apply_elite_scaling() -> void:
