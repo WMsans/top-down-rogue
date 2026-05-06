@@ -27,6 +27,7 @@ var _transfer_mode: bool = false
 var _transfer_slot: int = -1
 var _transfer_weapon: Weapon = null
 var _transfer_modifiers: Array[Modifier] = []
+var _pickup_header_elements: Array[Control] = []
 var _skip_button: Button = null
 var _remove_mode: bool = false
 var _remove_callback: Callable
@@ -124,6 +125,7 @@ func close() -> void:
 	_cancel_modifier_tooltip()
 	_cancel_feedback()
 	_cancel_skip_button()
+	_clear_pickup_header()
 	_clear_modifier_header()
 	_skip_button = null
 	visible = false
@@ -157,6 +159,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _build_cards() -> void:
 	_clear_cards()
+	if _pickup_mode and _pickup_weapon != null:
+		_add_pickup_header()
 	if _modifier_mode and _modifier_ref != null:
 		_add_modifier_header()
 	var cards: Array[Control] = []
@@ -193,8 +197,84 @@ func _add_modifier_header() -> void:
 	_modifier_header_elements.append(name_label)
 
 
+func _add_pickup_header() -> void:
+	_clear_pickup_header()
+	if _pickup_weapon == null:
+		return
+	var vbox := %CardsContainer.get_parent() as VBoxContainer
+	if vbox == null:
+		return
+	var title_index := (%TitleLabel as Node).get_index()
+
+	var header_label := Label.new()
+	header_label.text = "New weapon:"
+	header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header_label.add_theme_color_override("font_color", UiTheme.ACCENT)
+	header_label.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(header_label)
+	vbox.move_child(header_label, title_index + 1)
+	_pickup_header_elements.append(header_label)
+
+	var card := PanelContainer.new()
+	card.theme = UiTheme.get_theme()
+	card.custom_minimum_size = CARD_MIN_SIZE
+	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+	var card_style := card.get_theme_stylebox("panel") as StyleBoxFlat
+	if card_style:
+		var new_style := card_style.duplicate() as StyleBoxFlat
+		new_style.border_color = UiTheme.ACCENT_GOLD
+		card.add_theme_stylebox_override("panel", new_style)
+
+	var card_vbox := VBoxContainer.new()
+	card_vbox.add_theme_constant_override("separation", 8)
+	card_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_child(card_vbox)
+
+	if _pickup_weapon.icon_texture != null:
+		var icon := TextureRect.new()
+		icon.texture = _pickup_weapon.icon_texture
+		icon.custom_minimum_size = ICON_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		card_vbox.add_child(icon)
+
+	var name_label := Label.new()
+	name_label.text = _pickup_weapon.name
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
+	card_vbox.add_child(name_label)
+
+	var stats := _pickup_weapon.get_base_stats()
+	var cooldown_label := Label.new()
+	cooldown_label.text = "Cooldown: %.1fs" % stats["cooldown"]
+	cooldown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cooldown_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+	cooldown_label.add_theme_font_size_override("font_size", 14)
+	card_vbox.add_child(cooldown_label)
+
+	var damage_label := Label.new()
+	damage_label.text = "Damage: %.0f" % stats["damage"]
+	damage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	damage_label.add_theme_color_override("font_color", UiTheme.ACCENT)
+	damage_label.add_theme_font_size_override("font_size", 14)
+	card_vbox.add_child(damage_label)
+
+	vbox.add_child(card)
+	vbox.move_child(card, title_index + 2)
+	_pickup_header_elements.append(card)
+
+
+func _clear_pickup_header() -> void:
+	for element in _pickup_header_elements:
+		if is_instance_valid(element):
+			element.queue_free()
+	_pickup_header_elements.clear()
+
+
 func _clear_cards() -> void:
 	_cancel_skip_button()
+	_clear_pickup_header()
 	_clear_modifier_header()
 	for card in _transfer_card_nodes:
 		if is_instance_valid(card):
