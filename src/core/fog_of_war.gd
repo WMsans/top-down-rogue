@@ -13,15 +13,13 @@ var _visibility_cache: Dictionary = {}
 var _chunk_lights_nodes: Array[WeakRef] = []
 var _player_lights: Array[Dictionary] = []   # [{node: WeakRef, range: float}]
 var _entities: Array[WeakRef] = []
+var _entity_ids: Array[int] = []             # parallel array for cache cleanup
 var _frame_counter: int = 0
 var _terrain_container: Node2D
 
 
 func _ready() -> void:
 	add_to_group("fog_of_war")
-	var wm := get_tree().get_first_node_in_group("world_manager")
-	if wm:
-		_terrain_container = wm.get_node_or_null("CollisionContainer")
 
 
 func register(entity: Node2D) -> void:
@@ -30,6 +28,7 @@ func register(entity: Node2D) -> void:
 		if e == entity:
 			return
 	_entities.append(weakref(entity))
+	_entity_ids.append(entity.get_instance_id())
 
 
 func unregister(entity: Node2D) -> void:
@@ -37,8 +36,9 @@ func unregister(entity: Node2D) -> void:
 		var e := _entities[i].get_ref()
 		if e == null or e == entity:
 			_entities.remove_at(i)
+			_visibility_cache.erase(_entity_ids[i])
+			_entity_ids.remove_at(i)
 			if e == entity:
-				_visibility_cache.erase(entity.get_instance_id())
 				return
 
 
@@ -76,6 +76,8 @@ func _process(delta: float) -> void:
 
 
 func _evaluate_visibility(delta: float) -> void:
+	_ensure_terrain_container()
+
 	var active_lights := _collect_active_lights()
 	var buckets := _bucket_lights(active_lights)
 
@@ -94,7 +96,10 @@ func _evaluate_visibility(delta: float) -> void:
 		}
 
 	for i in range(to_remove.size() - 1, -1, -1):
-		_entities.remove_at(to_remove[i])
+		var idx := to_remove[i]
+		_visibility_cache.erase(_entity_ids[idx])
+		_entities.remove_at(idx)
+		_entity_ids.remove_at(idx)
 
 	_apply_smoothing(delta)
 
@@ -201,6 +206,14 @@ func _raycast_clear(from: Vector2, to: Vector2, entity: Node2D) -> bool:
 
 	var collider: Node = result.collider
 	return not _is_terrain_body(collider)
+
+
+func _ensure_terrain_container() -> void:
+	if _terrain_container != null and is_instance_valid(_terrain_container):
+		return
+	var wm := get_tree().get_first_node_in_group("world_manager")
+	if wm:
+		_terrain_container = wm.get_node_or_null("CollisionContainer")
 
 
 func _is_terrain_body(collider: Node) -> bool:
