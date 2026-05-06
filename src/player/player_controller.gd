@@ -124,7 +124,7 @@ func _find_closest_enemy_direction() -> Vector2:
 	for enemy in get_tree().get_nodes_in_group("attackable"):
 		if not is_instance_valid(enemy) or not (enemy is Node2D):
 			continue
-		var to_enemy := enemy.global_position - global_position
+		var to_enemy : Vector2 = enemy.global_position - global_position
 		var dist := to_enemy.length()
 		if dist < closest_dist:
 			closest_dist = dist
