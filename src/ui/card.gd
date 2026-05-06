@@ -193,6 +193,7 @@ func _process(_delta: float) -> void:
 func _update_subviewport() -> void:
 	if is_node_ready():
 		_subviewport.size = Vector2i(int(card_size.x), int(card_size.y))
-		_subviewport_container.material.set_shader_parameter("rect_size", card_size)
+		if _subviewport_container.material is ShaderMaterial:
+			_subviewport_container.material.set_shader_parameter("rect_size", card_size)
 		_shadow_rect.custom_minimum_size = card_size
 		_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
