@@ -67,7 +67,6 @@ var _pommel_offset: Vector2 = Vector2.ZERO
 
 
 func _init() -> void:
-	name = "Melee Weapon"
 	cooldown = 0.35
 	damage = 5.0
 	icon_texture = weapon_texture
