@@ -123,6 +123,13 @@ func _build_cards() -> void:
 		slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		var card := _create_weapon_card(weapon, i)
 		slot.add_child(card)
+		card.ready.connect(func():
+			var stats: Array[String] = []
+			var base_stats := weapon.get_base_stats()
+			stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
+			stats.append("Damage: %.0f" % base_stats["damage"])
+			card.populate(weapon.icon_texture, weapon.name, stats)
+		, CONNECT_ONE_SHOT)
 		_card_container.add_child(slot)
 		_card_slots.append(slot)
 
@@ -137,11 +144,6 @@ func _create_weapon_card(weapon: Weapon, index: int) -> Control:
 	var card: Card = CARD_SCENE.instantiate()
 	card.card_size = CARD_MIN_SIZE
 	card.icon_size = ICON_SIZE
-	var stats: Array[String] = []
-	var base_stats := weapon.get_base_stats()
-	stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
-	stats.append("Damage: %.0f" % base_stats["damage"])
-	card.populate(weapon.icon_texture, weapon.name, stats)
 	card.card_clicked.connect(func(): _select_weapon(index))
 	return card
 
