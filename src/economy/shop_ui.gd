@@ -264,12 +264,14 @@ func _create_offer_card(offer: ShopOffer, slot: Control) -> Control:
 	var card: Card = CARD_SCENE.instantiate()
 	card.card_size = CARD_MIN_SIZE
 	card.icon_size = MODIFIER_ICON_SIZE
-	var stats: Array[String] = []
-	var desc := offer.modifier.get_description()
-	if desc != "":
-		stats.append(desc)
-	card.populate(offer.modifier.icon_texture, offer.modifier.name, stats)
 	card.card_clicked.connect(_on_buy_pressed.bind(offer, card, slot))
+	card.ready.connect(func():
+		var stats: Array[String] = []
+		var desc := offer.modifier.get_description()
+		if desc != "":
+			stats.append(desc)
+		card.populate(offer.modifier.icon_texture, offer.modifier.name, stats)
+	, CONNECT_ONE_SHOT)
 	return card
 
 
@@ -277,11 +279,13 @@ func _create_remove_card() -> Control:
 	var card: Card = CARD_SCENE.instantiate()
 	card.card_size = CARD_MIN_SIZE
 	card.icon_size = MODIFIER_ICON_SIZE
-	var stats: Array[String] = []
-	stats.append("Removes the last modifier from your inventory")
-	card.populate(null, "Remove Modifier", stats)
-	card.set_name_color(UiTheme.DANGER)
 	card.card_clicked.connect(_on_remove_card_input.bind(card))
+	card.ready.connect(func():
+		var stats: Array[String] = []
+		stats.append("Removes the last modifier from your inventory")
+		card.populate(null, "Remove Modifier", stats)
+		card.set_name_color(UiTheme.DANGER)
+	, CONNECT_ONE_SHOT)
 	return card
 
 

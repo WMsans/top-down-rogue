@@ -216,13 +216,15 @@ func _add_pickup_header() -> void:
 	_pickup_header_elements.append(header_label)
 
 	var card: Card = CARD_SCENE.instantiate()
-	var stats: Array[String] = []
-	var base_stats := _pickup_weapon.get_base_stats()
-	stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
-	stats.append("Damage: %.0f" % base_stats["damage"])
-	card.populate(_pickup_weapon.icon_texture, _pickup_weapon.name, stats)
 	card.set_selected(true)
 	card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card.ready.connect(func():
+		var stats: Array[String] = []
+		var base_stats := _pickup_weapon.get_base_stats()
+		stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
+		stats.append("Damage: %.0f" % base_stats["damage"])
+		card.populate(_pickup_weapon.icon_texture, _pickup_weapon.name, stats)
+	, CONNECT_ONE_SHOT)
 
 	vbox.add_child(card)
 	vbox.move_child(card, title_index + 2)
@@ -254,21 +256,23 @@ func _clear_cards() -> void:
 
 func _create_card(weapon: Weapon, slot_index: int) -> Control:
 	var card: Card = CARD_SCENE.instantiate()
-	if weapon == null:
-		card.populate(null, "EMPTY")
-	else:
-		var stats: Array[String] = []
-		var base_stats := weapon.get_base_stats()
-		stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
-		stats.append("Damage: %.0f" % base_stats["damage"])
-		var mod_icons: Array[Texture2D] = []
-		for i in range(weapon.modifier_slot_count):
-			var mod: Modifier = weapon.get_modifier_at(i)
-			mod_icons.append(mod.icon_texture if mod else null)
-		card.populate(weapon.icon_texture, weapon.name, stats, mod_icons)
-		_add_modifier_slots_to_card(card, weapon)
 	card.card_clicked.connect(_on_card_input.bind(slot_index))
 	card.is_selectable = true
+	card.ready.connect(func():
+		if weapon == null:
+			card.populate(null, "EMPTY")
+		else:
+			var stats: Array[String] = []
+			var base_stats := weapon.get_base_stats()
+			stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
+			stats.append("Damage: %.0f" % base_stats["damage"])
+			var mod_icons: Array[Texture2D] = []
+			for i in range(weapon.modifier_slot_count):
+				var mod: Modifier = weapon.get_modifier_at(i)
+				mod_icons.append(mod.icon_texture if mod else null)
+			card.populate(weapon.icon_texture, weapon.name, stats, mod_icons)
+			_add_modifier_slots_to_card(card, weapon)
+	, CONNECT_ONE_SHOT)
 	return card
 
 
@@ -421,13 +425,15 @@ func _build_remove_modifier_cards(weapon: Weapon) -> void:
 
 func _create_remove_modifier_card(modifier: Modifier, slot_index: int) -> Control:
 	var card: Card = CARD_SCENE.instantiate()
-	var stats: Array[String] = []
-	var desc := modifier.get_description()
-	if desc != "":
-		stats.append(desc)
-	stats.append("slot %d" % (slot_index + 1))
-	card.populate(modifier.icon_texture, modifier.name, stats)
 	card.card_clicked.connect(_on_remove_modifier_card_input.bind(slot_index))
+	card.ready.connect(func():
+		var stats: Array[String] = []
+		var desc := modifier.get_description()
+		if desc != "":
+			stats.append(desc)
+		stats.append("slot %d" % (slot_index + 1))
+		card.populate(modifier.icon_texture, modifier.name, stats)
+	, CONNECT_ONE_SHOT)
 	return card
 
 
@@ -641,13 +647,15 @@ func _build_transfer_cards(start_positions: Array[Dictionary]) -> void:
 
 func _create_transfer_card(modifier: Modifier, index: int) -> Control:
 	var card: Card = CARD_SCENE.instantiate()
-	var stats: Array[String] = []
-	var desc_text := modifier.get_description()
-	if desc_text != "":
-		stats.append(desc_text)
-	card.populate(modifier.icon_texture, modifier.name, stats)
 	card.modulate.a = 0.0
 	card.card_clicked.connect(_on_transfer_card_input.bind(index))
+	card.ready.connect(func():
+		var stats: Array[String] = []
+		var desc_text := modifier.get_description()
+		if desc_text != "":
+			stats.append(desc_text)
+		card.populate(modifier.icon_texture, modifier.name, stats)
+	, CONNECT_ONE_SHOT)
 	return card
 
 
