@@ -33,14 +33,17 @@ var _hover_tween: Tween
 var _exit_tween: Tween
 var _click_tween: Tween
 var _current_tilt: Vector2 = Vector2.ZERO
+var _orig_z_index: int = 0
+var _tilt_was_active: bool = false
 
 func _ready() -> void:
 	custom_minimum_size = card_size
+	pivot_offset = card_size / 2.0
+	_orig_z_index = z_index
 	mouse_filter = MOUSE_FILTER_STOP
-	mouse_entered.connect(_on_hover_enter)
-	mouse_exited.connect(_on_hover_exit)
 	gui_input.connect(_on_gui_input)
 	_setup_shadow()
+	set_process(true)
 
 func _setup_shadow() -> void:
 	_shadow.position = Vector2(6, 6)
@@ -79,6 +82,7 @@ func populate(icon_texture: Texture2D, card_name: String, stats: Array[String] =
 			var slot := TextureRect.new()
 			slot.custom_minimum_size = mod_icon_size
 			slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			slot.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			if mod_tex:
 				slot.texture = mod_tex
 			_modifier_slots.add_child(slot)
@@ -117,21 +121,34 @@ func set_name_font_size(size: int) -> void:
 	_name_label.add_theme_font_size_override("font_size", size)
 	_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
-func _on_hover_enter() -> void:
-	_is_hovered = true
-	_animate_hover_enter()
-	_update_border_color()
-	set_process(true)
+func _process(_delta: float) -> void:
+	var mouse_pos := get_local_mouse_position()
+	var mouse_in_card := mouse_pos.x >= 0.0 and mouse_pos.x <= card_size.x and mouse_pos.y >= 0.0 and mouse_pos.y <= card_size.y
+	if mouse_in_card != _is_hovered:
+		if mouse_in_card:
+			_is_hovered = true
+			z_index = 10
+			_animate_hover_enter()
+			_update_border_color()
+			_tilt_was_active = true
+		else:
+			_is_hovered = false
+			z_index = _orig_z_index
+			_animate_hover_exit()
+			_update_border_color()
+			if _tilt_was_active:
+				var start_tilt := _current_tilt
+				var tilt_tween := create_tween()
+				tilt_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+				tilt_tween.tween_method(func(val: Vector2): _set_tilt_angles(val), start_tilt, Vector2.ZERO, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+			_tilt_was_active = false
 
-func _on_hover_exit() -> void:
-	_is_hovered = false
-	_animate_hover_exit()
-	_update_border_color()
-	var start_tilt := _current_tilt
-	var tilt_tween := create_tween()
-	tilt_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tilt_tween.tween_method(func(val: Vector2): _set_tilt_angles(val), start_tilt, Vector2.ZERO, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	tilt_tween.tween_callback(func(): set_process(false))
+	if _is_hovered:
+		var ratio_x := clampf(mouse_pos.x / card_size.x, 0.0, 1.0)
+		var ratio_y := clampf(mouse_pos.y / card_size.y, 0.0, 1.0)
+		var x_rot := lerpf(-tilt_max, tilt_max, ratio_y)
+		var y_rot := lerpf(-tilt_max, tilt_max, ratio_x)
+		_set_tilt_angles(Vector2(x_rot, y_rot))
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -146,8 +163,7 @@ func _animate_hover_enter() -> void:
 		return
 	_hover_tween = create_tween()
 	_hover_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	_hover_tween.tween_property(self, "scale", Vector2(hover_scale_target + 0.03, hover_scale_target + 0.03), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_hover_tween.tween_property(self, "scale", Vector2(hover_scale_target, hover_scale_target), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_hover_tween.tween_property(self, "scale", Vector2(hover_scale_target, hover_scale_target), 0.5).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 	var shadow_tween := create_tween()
 	shadow_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -158,7 +174,7 @@ func _animate_hover_exit() -> void:
 		_hover_tween.kill()
 	_exit_tween = create_tween()
 	_exit_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	_exit_tween.tween_property(self, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_exit_tween.tween_property(self, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 	var shadow_tween := create_tween()
 	shadow_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -177,18 +193,8 @@ func _set_tilt_angles(angles: Vector2) -> void:
 	_current_tilt = angles
 	var mat := _subviewport_container.material as ShaderMaterial
 	if mat:
-		mat.set_shader_parameter("x_rot", deg_to_rad(angles.x))
-		mat.set_shader_parameter("y_rot", deg_to_rad(angles.y))
-
-func _process(_delta: float) -> void:
-	if not _is_hovered:
-		return
-	var mouse_pos := get_local_mouse_position()
-	var ratio_x := clampf(mouse_pos.x / card_size.x, 0.0, 1.0)
-	var ratio_y := clampf(mouse_pos.y / card_size.y, 0.0, 1.0)
-	var x_rot := lerpf(-tilt_max, tilt_max, ratio_y)
-	var y_rot := lerpf(-tilt_max, tilt_max, ratio_x)
-	_set_tilt_angles(Vector2(x_rot, y_rot))
+		mat.set_shader_parameter("x_rot", angles.x)
+		mat.set_shader_parameter("y_rot", angles.y)
 
 func _update_subviewport() -> void:
 	if is_node_ready():
