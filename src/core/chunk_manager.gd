@@ -311,3 +311,21 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2
 	update_render_neighbors(new_chunks, [])
 
 	return new_chunks
+
+
+func get_visible_light_data() -> Dictionary:
+	var chunks: Dictionary = world_manager.chunks
+	var all_positions := PackedVector2Array()
+	var all_energies := PackedFloat32Array()
+
+	for coord in chunks:
+		var chunk: Chunk = chunks[coord]
+		if not chunk.chunk_lights:
+			continue
+		all_positions.append_array(chunk.chunk_lights.fog_positions)
+		all_energies.append_array(chunk.chunk_lights.fog_energies)
+
+	return {
+		"positions": all_positions,
+		"energies": all_energies
+	}

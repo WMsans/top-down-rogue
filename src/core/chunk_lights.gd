@@ -18,6 +18,8 @@ var target_energies: Array[float]
 var current_positions: Array[Vector2]
 var current_energies: Array[float]
 var lights: Array[PointLight2D]
+var fog_positions: PackedVector2Array
+var fog_energies: PackedFloat32Array
 var chunk_coord: Vector2i
 
 func _init(coord: Vector2i) -> void:
@@ -49,6 +51,12 @@ func _init(coord: Vector2i) -> void:
 		add_child(light)
 		lights[i] = light
 
+	fog_positions.resize(MAX_LIGHTS)
+	fog_energies.resize(MAX_LIGHTS)
+	for i in range(MAX_LIGHTS):
+		fog_positions[i] = Vector2.ZERO
+		fog_energies[i] = 0.0
+
 
 func _create_unit_radius_texture() -> Texture2D:
 	if _cached_radius_texture:
@@ -77,6 +85,24 @@ func apply_light_data(cell_data: Array) -> void:
 		lights[i].color = entry.get("color", Color(1.0, 0.5, 0.15, 1.0))
 
 
+func update_fog_data(camera: Camera2D, viewport_size: Vector2) -> void:
+	var screen_center := viewport_size / 2.0
+	if camera:
+		var zoom := camera.zoom
+		for i in range(MAX_LIGHTS):
+			if current_energies[i] < 0.005:
+				fog_energies[i] = 0.0
+				continue
+			var world_pos := global_position + current_positions[i]
+			var offset := world_pos - camera.global_position
+			fog_positions[i] = offset * zoom + screen_center
+			fog_energies[i] = current_energies[i]
+	else:
+		for i in range(MAX_LIGHTS):
+			fog_positions[i] = Vector2.ZERO
+			fog_energies[i] = 0.0
+
+
 func _process(delta: float) -> void:
 	var t := 1.0 - exp(-SMOOTH_SPEED * delta)
 	for i in range(MAX_LIGHTS):
@@ -89,3 +115,12 @@ func _process(delta: float) -> void:
 			lights[i].visible = true
 			lights[i].position = current_positions[i]
 			lights[i].energy = current_energies[i]
+
+	var tree := get_tree()
+	if tree:
+		var player := tree.get_first_node_in_group("player")
+		if player:
+			var cam := player.get_node("Camera2D") as Camera2D
+			var vp_size := Vector2(320, 180)
+			update_fog_data(cam, vp_size)
+

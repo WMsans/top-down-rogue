@@ -9,6 +9,10 @@ var terrain_physical: TerrainPhysical
 var _collision_helper: RefCounted
 var terrain_modifier: TerrainModifier
 
+var entity_container: Node2D
+var fog_sprite: Sprite2D
+var fog_manager_ref: FogManager
+
 @onready var chunk_container: Node2D = $ChunkContainer
 var collision_container: Node2D
 var lights_container: Node2D
@@ -60,6 +64,40 @@ func _ready() -> void:
 	lights_container = Node2D.new()
 	lights_container.name = "LightsContainer"
 	add_child(lights_container)
+
+	var subviewport := get_parent()
+
+	# BackBufferCopy: captures terrain (WorldManager children) before entities render
+	var backbuffer := BackBufferCopy.new()
+	backbuffer.name = "BackBufferCopy"
+	backbuffer.copy_mode = BackBufferCopy.COPY_MODE_RECT
+	backbuffer.rect = Rect2(0, 0, 320, 180)
+	subviewport.add_child(backbuffer)
+	subviewport.move_child(backbuffer, 1)  # Right after WorldManager (index 0)
+
+	# EntityContainer: entities render here, after BackBufferCopy
+	entity_container = Node2D.new()
+	entity_container.name = "EntityContainer"
+	subviewport.add_child(entity_container)
+	subviewport.move_child(entity_container, 2)  # Right after BackBufferCopy
+
+	# FogSprite: renders above entities with fog shader
+	fog_sprite = Sprite2D.new()
+	fog_sprite.name = "FogSprite"
+	fog_sprite.centered = false
+	fog_sprite.position = Vector2.ZERO
+	fog_sprite.z_index = 100
+	var fog_material := ShaderMaterial.new()
+	fog_material.shader = preload("res://shaders/fog_of_war.gdshader")
+	fog_sprite.material = fog_material
+	subviewport.add_child(fog_sprite)
+
+	# FogManager: drives fog texture each frame
+	fog_manager_ref = FogManager.new()
+	fog_manager_ref.name = "FogManager"
+	fog_manager_ref.fog_sprite = fog_sprite
+	fog_manager_ref.fog_material = fog_material
+	subviewport.add_child(fog_manager_ref)
 
 	_light_dispatch_buckets.resize(5)
 	for i in range(5):
@@ -197,7 +235,7 @@ func clear_all_chunks() -> void:
 
 
 func get_chunk_container() -> Node2D:
-	return chunk_container
+	return entity_container
 
 
 const CHUNK_SIZE := 256
@@ -350,6 +388,8 @@ func reset() -> void:
 		rd.free_rid(us)
 	_gen_uniform_sets_to_free.clear()
 	for child in chunk_container.get_children():
+		child.queue_free()
+	for child in entity_container.get_children():
 		child.queue_free()
 	for child in lights_container.get_children():
 		child.queue_free()
