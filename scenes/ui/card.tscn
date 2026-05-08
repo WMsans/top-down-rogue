@@ -12,6 +12,12 @@ shader_parameter/cull_back = true
 shader_parameter/y_rot = 0.0
 shader_parameter/x_rot = 0.0
 shader_parameter/inset = 0.0
+shader_parameter/shine_intensity = 1.0
+shader_parameter/shine_color = Color(1, 0.95, 0.75, 1)
+shader_parameter/rim_strength = 1.0
+shader_parameter/rim_color = Color(1, 0.55, 0.25, 1)
+shader_parameter/selected = 0.0
+shader_parameter/selected_color = Color(1, 0.85, 0.15, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_card_panel"]
 bg_color = Color(0.212, 0.110, 0.133, 1)
@@ -30,10 +36,6 @@ content_margin_top = 8.0
 content_margin_bottom = 8.0
 shadow_color = Color(0, 0, 0, 0.502)
 shadow_size = 8
-expand_margin_left = 2.0
-expand_margin_right = 2.0
-expand_margin_top = 2.0
-expand_margin_bottom = 2.0
 
 [node name="Card" type="Control"]
 layout_mode = 3

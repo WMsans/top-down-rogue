@@ -43,6 +43,7 @@ func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
 	gui_input.connect(_on_gui_input)
 	_setup_shadow()
+	_update_border_color()
 	set_process(true)
 
 func _setup_shadow() -> void:
@@ -101,17 +102,19 @@ func _update_border_color() -> void:
 	if not is_instance_valid(_card_panel):
 		return
 	var style := _card_panel.get_theme_stylebox("panel") as StyleBoxFlat
-	if not style:
-		return
-	var new_style := style.duplicate() as StyleBoxFlat
-	if _is_selected:
-		new_style.border_color = UiTheme.ACCENT_GOLD
-	elif _is_hovered:
-		new_style.border_color = UiTheme.ACCENT
-	else:
-		new_style.border_color = UiTheme.PANEL_BORDER
-	_card_panel.add_theme_stylebox_override("panel", new_style)
-	_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	if style:
+		var new_style := style.duplicate() as StyleBoxFlat
+		if _is_selected:
+			new_style.border_color = UiTheme.ACCENT_GOLD
+		elif _is_hovered:
+			new_style.border_color = UiTheme.ACCENT
+		else:
+			new_style.border_color = UiTheme.PANEL_BORDER
+		_card_panel.add_theme_stylebox_override("panel", new_style)
+		_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	var mat := _subviewport_container.material as ShaderMaterial
+	if mat:
+		mat.set_shader_parameter("selected", 1.0 if _is_selected else 0.0)
 
 func set_name_color(color: Color) -> void:
 	_name_label.add_theme_color_override("font_color", color)
