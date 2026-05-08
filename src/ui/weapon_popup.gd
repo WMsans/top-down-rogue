@@ -303,6 +303,8 @@ func _on_modifier_icon_mouse_entered(modifier: Modifier, icon: Control, card: Co
 	_modifier_tooltip = PanelContainer.new()
 	_modifier_tooltip.theme = UiTheme.get_theme()
 	_modifier_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_modifier_tooltip.top_level = true
+	_modifier_tooltip.z_index = 100
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
