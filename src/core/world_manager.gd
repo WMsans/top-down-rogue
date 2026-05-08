@@ -29,7 +29,6 @@ var _light_readback_counter := 0
 signal chunks_generated(new_coords: Array[Vector2i])
 
 func _ready() -> void:
-	add_to_group("world_manager")
 	rd = RenderingServer.get_rendering_device()
 
 	compute_device = ComputeDevice.new()
@@ -72,14 +71,10 @@ func _ready() -> void:
 	backbuffer.name = "BackBufferCopy"
 	backbuffer.copy_mode = BackBufferCopy.COPY_MODE_RECT
 	backbuffer.rect = Rect2(0, 0, 320, 180)
-	subviewport.add_child(backbuffer)
-	subviewport.move_child(backbuffer, 1)  # Right after WorldManager (index 0)
 
 	# EntityContainer: entities render here, after BackBufferCopy
 	entity_container = Node2D.new()
 	entity_container.name = "EntityContainer"
-	subviewport.add_child(entity_container)
-	subviewport.move_child(entity_container, 2)  # Right after BackBufferCopy
 
 	# FogSprite: renders above entities with fog shader
 	fog_sprite = Sprite2D.new()
@@ -90,20 +85,29 @@ func _ready() -> void:
 	var fog_material := ShaderMaterial.new()
 	fog_material.shader = preload("res://shaders/fog_of_war.gdshader")
 	fog_sprite.material = fog_material
-	subviewport.add_child(fog_sprite)
 
 	# FogManager: drives fog texture each frame
 	fog_manager_ref = FogManager.new()
 	fog_manager_ref.name = "FogManager"
 	fog_manager_ref.fog_sprite = fog_sprite
 	fog_manager_ref.fog_material = fog_material
-	subviewport.add_child(fog_manager_ref)
+
+	# SubViewport is mid-setup-children while our _ready runs; defer add_child
+	# so the parent isn't busy when these nodes attach.
+	subviewport.add_child.call_deferred(backbuffer)
+	subviewport.move_child.call_deferred(backbuffer, 1)
+	subviewport.add_child.call_deferred(entity_container)
+	subviewport.move_child.call_deferred(entity_container, 2)
+	subviewport.add_child.call_deferred(fog_sprite)
+	subviewport.add_child.call_deferred(fog_manager_ref)
 
 	_light_dispatch_buckets.resize(5)
 	for i in range(5):
 		_light_dispatch_buckets[i] = []
 
 	TerrainSurface.register_adapter(self)
+
+	add_to_group("world_manager")
 
 
 func _exit_tree() -> void:
@@ -235,7 +239,9 @@ func clear_all_chunks() -> void:
 
 
 func get_chunk_container() -> Node2D:
-	return entity_container
+	if entity_container != null:
+		return entity_container
+	return chunk_container
 
 
 const CHUNK_SIZE := 256
