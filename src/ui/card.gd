@@ -13,6 +13,9 @@ signal card_clicked
 @export var icon_size: Vector2 = Vector2(96, 96)
 @export var mod_icon_size: Vector2 = Vector2(32, 32)
 @export var tilt_max: float = 12.0
+@export var idle_tilt_max: float = 4.0
+@export var idle_tilt_radius: float = 260.0
+@export var tilt_smoothing: float = 12.0
 @export var hover_scale_target: float = 1.12
 @export var is_selectable: bool = true
 
@@ -124,7 +127,7 @@ func set_name_font_size(size: int) -> void:
 	_name_label.add_theme_font_size_override("font_size", size)
 	_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var mouse_pos := get_local_mouse_position()
 	var mouse_in_card := mouse_pos.x >= 0.0 and mouse_pos.x <= card_size.x and mouse_pos.y >= 0.0 and mouse_pos.y <= card_size.y
 	if mouse_in_card != _is_hovered:
@@ -133,25 +136,29 @@ func _process(_delta: float) -> void:
 			z_index = 10
 			_animate_hover_enter()
 			_update_border_color()
-			_tilt_was_active = true
 		else:
 			_is_hovered = false
 			z_index = _orig_z_index
 			_animate_hover_exit()
 			_update_border_color()
-			if _tilt_was_active:
-				var start_tilt := _current_tilt
-				var tilt_tween := create_tween()
-				tilt_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-				tilt_tween.tween_method(func(val: Vector2): _set_tilt_angles(val), start_tilt, Vector2.ZERO, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-			_tilt_was_active = false
+		_tilt_was_active = true
 
+	var target_tilt: Vector2
 	if _is_hovered:
 		var ratio_x := clampf(mouse_pos.x / card_size.x, 0.0, 1.0)
 		var ratio_y := clampf(mouse_pos.y / card_size.y, 0.0, 1.0)
-		var x_rot := lerpf(-tilt_max, tilt_max, ratio_y)
-		var y_rot := lerpf(-tilt_max, tilt_max, ratio_x)
-		_set_tilt_angles(Vector2(x_rot, y_rot))
+		target_tilt = Vector2(lerpf(-tilt_max, tilt_max, ratio_y), lerpf(-tilt_max, tilt_max, ratio_x))
+	else:
+		var center := card_size * 0.5
+		var offset := mouse_pos - center
+		var radius := maxf(idle_tilt_radius, 0.001)
+		var ratio_x := clampf(offset.x / radius, -1.0, 1.0)
+		var ratio_y := clampf(offset.y / radius, -1.0, 1.0)
+		target_tilt = Vector2(ratio_y * idle_tilt_max, ratio_x * idle_tilt_max)
+
+	var lerp_t := clampf(delta * tilt_smoothing, 0.0, 1.0)
+	var new_tilt := _current_tilt.lerp(target_tilt, lerp_t)
+	_set_tilt_angles(new_tilt)
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
