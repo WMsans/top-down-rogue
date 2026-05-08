@@ -200,6 +200,9 @@ func _process_chase(_delta: float) -> void:
 
 func _process_windup(delta: float) -> void:
 	_state_timer -= delta
+	if not _can_see_player():
+		_change_state(State.IDLE)
+		return
 	if _state_timer <= 0.0:
 		_change_state(State.ATTACK)
 

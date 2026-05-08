@@ -41,6 +41,9 @@ func _process_chase(delta: float) -> void:
 	if not _player_in_range:
 		_change_state(State.IDLE)
 		return
+	if not _can_see_player():
+		_change_state(State.IDLE)
+		return
 
 	var to_player := _player_ref.global_position - global_position
 	var dist := to_player.length()
