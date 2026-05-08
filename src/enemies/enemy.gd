@@ -54,6 +54,7 @@ func _ready() -> void:
 	add_to_group("attackable")
 	health = max_health
 	_speed_base = speed
+	motion_mode = MOTION_MODE_FLOATING
 
 	if is_elite:
 		_apply_elite_scaling()
@@ -141,6 +142,13 @@ func _process(delta: float) -> void:
 			weapon.update_visual(delta, self)
 
 
+func _physics_process(_delta: float) -> void:
+	if _state == State.DEATH:
+		return
+	if _state == State.CHASE or _state == State.HURT:
+		move_and_slide()
+
+
 func _apply_enrage_if_needed() -> void:
 	if not is_elite or elite_ability != EliteAbility.ENRAGE:
 		return
@@ -165,23 +173,28 @@ func _process_idle(_delta: float) -> void:
 		_change_state(State.CHASE)
 
 
-func _process_chase(delta: float) -> void:
+func _process_chase(_delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		_change_state(State.IDLE)
 		return
 	if not _player_in_range:
 		_change_state(State.IDLE)
 		return
+	if not _can_see_player():
+		_change_state(State.IDLE)
+		return
 
 	var to_player := _player_ref.global_position - global_position
 	if to_player.length() < 1.0:
+		velocity = Vector2.ZERO
 		return
 
 	var move_dir := to_player.normalized()
 	move_dir = _apply_separation(move_dir)
-	global_position += move_dir * speed * delta
+	velocity = move_dir * speed
 
 	if to_player.length() <= _attack_range and _settle_timer >= min_attack_settle_time:
+		velocity = Vector2.ZERO
 		_change_state(State.WINDUP)
 
 
@@ -209,8 +222,9 @@ func _process_cooldown(delta: float) -> void:
 func _process_hurt(delta: float) -> void:
 	_state_timer -= delta
 	_knockback_velocity = _knockback_velocity.lerp(Vector2.ZERO, 3.0 * delta)
-	global_position += _knockback_velocity * delta
+	velocity = _knockback_velocity
 	if _state_timer <= 0.0:
+		velocity = Vector2.ZERO
 		_change_state(_prev_state)
 
 
@@ -274,7 +288,12 @@ func _execute_attack() -> void:
 func _can_see_player() -> bool:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
-	return true
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(global_position, _player_ref.global_position)
+	query.collision_mask = 1
+	query.exclude = [self, _player_ref]
+	var result := space_state.intersect_ray(query)
+	return result.is_empty()
 
 
 func hit(damage: int) -> void:
