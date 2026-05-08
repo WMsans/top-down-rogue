@@ -4,7 +4,7 @@ extends CanvasLayer
 
 const CARD_MIN_SIZE := Vector2(140, 210)
 const MODIFIER_ICON_SIZE := Vector2(48, 48)
-const CARD_GLOW_SHADER := preload("res://shaders/ui/card_hover_glow.gdshader")
+const CARD_SCENE := preload("res://scenes/ui/card.tscn")
 
 signal reroll_requested
 
@@ -16,7 +16,7 @@ var _displayed_gold: int = 0
 var _offerings: Array[ShopOffer] = []
 var _price_labels: Array[Label] = []
 var _card_slots: Array[Control] = []
-var _remove_card: PanelContainer = null
+var _remove_card: Control = null
 var _remove_price_label: Label = null
 
 @onready var _shop_panel: PanelContainer = %ShopPanel
@@ -260,108 +260,32 @@ func _clear_buy_grid() -> void:
 	_remove_price_label = null
 
 
-func _create_offer_card(offer: ShopOffer, slot: Control) -> PanelContainer:
-	var card := PanelContainer.new()
-	card.custom_minimum_size = CARD_MIN_SIZE
-	card.theme = UiTheme.get_theme()
-
-	var glow_mat := ShaderMaterial.new()
-	glow_mat.shader = CARD_GLOW_SHADER
-	glow_mat.set_shader_parameter("glow_enabled", false)
-	card.material = glow_mat
-
-	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
-	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
-	card.gui_input.connect(_on_card_gui_input.bind(offer, card, slot))
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	card.add_child(vbox)
-
-	var icon_container := CenterContainer.new()
-	icon_container.custom_minimum_size = MODIFIER_ICON_SIZE * 1.6
-	vbox.add_child(icon_container)
-
-	if offer.modifier.icon_texture:
-		var icon := TextureRect.new()
-		icon.texture = offer.modifier.icon_texture
-		icon.custom_minimum_size = MODIFIER_ICON_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon_container.add_child(icon)
-
-	var name_label := Label.new()
-	name_label.text = offer.modifier.name
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
-	name_label.add_theme_font_size_override("font_size", 15)
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.custom_minimum_size.x = CARD_MIN_SIZE.x - 16
-	vbox.add_child(name_label)
-
-	var desc := offer.modifier.get_description()
-	if desc != "":
-		var desc_label := Label.new()
-		desc_label.text = desc
-		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc_label.custom_minimum_size.x = CARD_MIN_SIZE.x - 16
-		desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
-		desc_label.add_theme_font_size_override("font_size", 11)
-		vbox.add_child(desc_label)
-
+func _create_offer_card(offer: ShopOffer, slot: Control) -> Control:
+	var card: Card = CARD_SCENE.instantiate()
+	card.card_size = CARD_MIN_SIZE
+	card.icon_size = MODIFIER_ICON_SIZE
+	card.card_clicked.connect(_on_buy_pressed.bind(offer, card, slot))
+	card.ready.connect(func():
+		var stats: Array[String] = []
+		var desc := offer.modifier.get_description()
+		if desc != "":
+			stats.append(desc)
+		card.populate(offer.modifier.icon_texture, offer.modifier.name, stats)
+	, CONNECT_ONE_SHOT)
 	return card
 
 
-func _create_remove_card() -> PanelContainer:
-	var card := PanelContainer.new()
-	card.custom_minimum_size = CARD_MIN_SIZE
-	card.theme = UiTheme.get_theme()
-
-	var glow_mat := ShaderMaterial.new()
-	glow_mat.shader = CARD_GLOW_SHADER
-	glow_mat.set_shader_parameter("glow_enabled", false)
-	card.material = glow_mat
-
-	card.mouse_entered.connect(_on_card_mouse_entered.bind(card))
-	card.mouse_exited.connect(_on_card_mouse_exited.bind(card))
-	card.gui_input.connect(_on_remove_card_input.bind(card))
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	card.add_child(vbox)
-
-	var icon_container := CenterContainer.new()
-	icon_container.custom_minimum_size = MODIFIER_ICON_SIZE * 1.6
-	vbox.add_child(icon_container)
-
-	var x_label := Label.new()
-	x_label.text = "x"
-	x_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	x_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	x_label.add_theme_color_override("font_color", UiTheme.DANGER)
-	x_label.add_theme_font_size_override("font_size", 48)
-	icon_container.add_child(x_label)
-
-	var name_label := Label.new()
-	name_label.text = "Remove Modifier"
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color", UiTheme.DANGER)
-	name_label.add_theme_font_size_override("font_size", 15)
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.custom_minimum_size.x = CARD_MIN_SIZE.x - 16
-	vbox.add_child(name_label)
-
-	var desc_label := Label.new()
-	desc_label.text = "Removes the last modifier from your inventory"
-	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_label.custom_minimum_size.x = CARD_MIN_SIZE.x - 16
-	desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
-	desc_label.add_theme_font_size_override("font_size", 11)
-	vbox.add_child(desc_label)
-
+func _create_remove_card() -> Control:
+	var card: Card = CARD_SCENE.instantiate()
+	card.card_size = CARD_MIN_SIZE
+	card.icon_size = MODIFIER_ICON_SIZE
+	card.card_clicked.connect(_on_remove_card_input.bind(card))
+	card.ready.connect(func():
+		var stats: Array[String] = []
+		stats.append("Removes the last modifier from your inventory")
+		card.populate(null, "Remove Modifier", stats)
+		card.set_name_color(UiTheme.DANGER)
+	, CONNECT_ONE_SHOT)
 	return card
 
 
@@ -442,7 +366,7 @@ func _has_any_equipped_modifier(inventory: PlayerInventory) -> bool:
 
 
 
-func _on_remove_pressed(card: PanelContainer) -> void:
+func _on_remove_pressed(card: Control) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return
@@ -546,37 +470,5 @@ func _on_overlay_input(event: InputEvent) -> void:
 		close()
 
 
-func _on_card_mouse_entered(card: PanelContainer) -> void:
-	if card.material is ShaderMaterial:
-		card.material.set_shader_parameter("glow_enabled", true)
-	var tween := card.create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(card, "scale", Vector2(1.03, 1.03), 0.15).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-	if style:
-		var new_style := style.duplicate() as StyleBoxFlat
-		new_style.border_color = UiTheme.ACCENT
-		card.add_theme_stylebox_override("panel", new_style)
-
-
-func _on_card_mouse_exited(card: PanelContainer) -> void:
-	if card.material is ShaderMaterial:
-		card.material.set_shader_parameter("glow_enabled", false)
-	var tween := card.create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(card, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	var style := card.get_theme_stylebox("panel") as StyleBoxFlat
-	if style:
-		var new_style := style.duplicate() as StyleBoxFlat
-		new_style.border_color = UiTheme.PANEL_BORDER
-		card.add_theme_stylebox_override("panel", new_style)
-
-
-func _on_card_gui_input(event: InputEvent, offer: ShopOffer, card: PanelContainer, slot: Control) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_on_buy_pressed(offer, card, slot)
-
-
-func _on_remove_card_input(event: InputEvent, card: PanelContainer) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_on_remove_pressed(card)
+func _on_remove_card_input(card: Control) -> void:
+	_on_remove_pressed(card)
