@@ -122,3 +122,9 @@ static func _set_separator_styles(t: Theme) -> void:
 static func _set_container_constants(t: Theme) -> void:
 	t.set_constant("separation", "VBoxContainer", 12)
 	t.set_constant("separation", "HBoxContainer", 8)
+
+static func get_card_shadow_stylebox() -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = Color(0, 0, 0, 0.12)
+	s.set_corner_radius_all(8)
+	return s
