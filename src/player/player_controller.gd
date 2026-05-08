@@ -27,11 +27,6 @@ var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
 
-const STUCK_FRAME_THRESHOLD := 4
-const RECOVERY_SEARCH_RADIUS := 8.0
-const RECOVERY_STEP := 2.0
-var _stuck_frames: int = 0
-
 
 func _enter_tree() -> void:
 	var inventory := PlayerInventory.new()
@@ -46,7 +41,6 @@ func _ready() -> void:
 	_original_collision_layer = collision_layer
 	_original_collision_mask = collision_mask
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
-	safe_margin = 0.5
 	add_to_group("gas_interactors")
 	var pickup_context := PickupContext.new()
 	pickup_context.name = "PickupContext"
@@ -90,7 +84,6 @@ func _physics_process(delta: float) -> void:
 	_apply_movement(input_dir, delta)
 	velocity += _knockback_velocity
 	move_and_slide()
-	_stuck_recover(input_dir)
 
 	var wm := get_parent().get_node_or_null("WorldManager")
 	if wm:
@@ -137,26 +130,6 @@ func _find_closest_enemy_direction() -> Vector2:
 			closest_dist = dist
 			closest_dir = to_enemy.normalized()
 	return closest_dir
-
-
-func _stuck_recover(input_dir: Vector2) -> void:
-	if input_dir == Vector2.ZERO:
-		_stuck_frames = 0
-		return
-	if get_slide_collision_count() == 0 or velocity.length() > max_speed * 0.15:
-		_stuck_frames = 0
-		return
-	_stuck_frames += 1
-	if _stuck_frames < STUCK_FRAME_THRESHOLD:
-		return
-	_stuck_frames = 0
-	for step in range(1, int(RECOVERY_SEARCH_RADIUS / RECOVERY_STEP) + 1):
-		var dist := step * RECOVERY_STEP
-		for angle in [0.0, PI / 4.0, -PI / 4.0, PI / 2.0, -PI / 2.0, 3.0 * PI / 4.0, -3.0 * PI / 4.0, PI]:
-			var offset := input_dir.rotated(angle) * dist
-			if test_move(transform, offset):
-				position += offset
-				return
 
 
 func get_facing_direction() -> Vector2:
