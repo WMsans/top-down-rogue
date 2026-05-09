@@ -22,6 +22,8 @@ func _ready() -> void:
 	_detection_area.monitoring = true
 	_detection_area.body_entered.connect(_on_body_entered)
 	_detection_area.body_exited.connect(_on_body_exited)
+	_detection_area.area_entered.connect(_on_area_entered)
+	_detection_area.area_exited.connect(_on_area_exited)
 	_player.add_child.call_deferred(_detection_area)
 
 
@@ -57,6 +59,22 @@ func _on_body_entered(body: Node2D) -> void:
 func _on_body_exited(body: Node2D) -> void:
 	_nearby_pickups.erase(body)
 	if _highlighted == body:
+		if _highlighted and is_instance_valid(_highlighted) and _highlighted.has_method("set_highlighted"):
+			_highlighted.set_highlighted(false)
+		_highlighted = null
+
+
+func _on_area_entered(area: Area2D) -> void:
+	if area.has_method("get_pickup_type") and area.has_method("should_auto_pickup"):
+		if area.should_auto_pickup():
+			return
+		if not _nearby_pickups.has(area):
+			_nearby_pickups.append(area)
+
+
+func _on_area_exited(area: Area2D) -> void:
+	_nearby_pickups.erase(area)
+	if _highlighted == area:
 		if _highlighted and is_instance_valid(_highlighted) and _highlighted.has_method("set_highlighted"):
 			_highlighted.set_highlighted(false)
 		_highlighted = null
