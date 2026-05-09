@@ -75,17 +75,17 @@ Based on gameplay.md design document.
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
 | x | P1 | Medium | Enemy base class | Shared behavior for all enemies |
-| | P1 | Medium | Basic melee enemies | Simple AI for melee attackers |
-| | P1 | Medium | Enemy spawning | Place enemies in procedural levels |
-| | P2 | Medium | Ranged enemies | Projectile-based enemies |
-| | P2 | High | Elite enemies | Stronger variants with special abilities |
+| x | P1 | Medium | Basic melee enemies | Simple AI for melee attackers |
+| x | P1 | Medium | Enemy spawning | Place enemies in procedural levels |
+| x | P2 | Medium | Ranged enemies | Projectile-based enemies |
+| x | P2 | High | Elite enemies | Stronger variants with special abilities |
 
 ### Bosses
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P2 | High | Boss generation | Spawn boss in each level |
-| | P2 | High | Boss defeat logic | Trigger portal on boss death |
-| | P2 | Medium | Boss abilities | Unique attack patterns per boss type |
+| x | P2 | High | Boss generation | Spawn boss in each level |
+| x | P2 | High | Boss defeat logic | Trigger portal on boss death |
+| x | P2 | Medium | Boss abilities | Unique attack patterns per boss type |
 
 ---
 
@@ -102,9 +102,9 @@ Based on gameplay.md design document.
 ### Progression
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Low | Portal system | Transition to next level after boss |
-| | P2 | Low | Level tracking | Current depth/floor counter |
-| | P2 | Medium | Difficulty scaling | Enemies scale with depth |
+| x | P1 | Low | Portal system | Transition to next level after boss |
+| x | P2 | Low | Level tracking | Current depth/floor counter |
+| x | P2 | Medium | Difficulty scaling | Enemies scale with depth |
 
 ---
 
