@@ -29,7 +29,7 @@ func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 	super.setup_visual(container, sprite)
 	if weapon_texture:
 		_sprite.texture = weapon_texture
-		_sprite.offset = Vector2(0, -8)
+		_sprite.offset = Vector2.ZERO
 
 
 func update_visual(_delta: float, user: Node) -> void:
@@ -37,7 +37,7 @@ func update_visual(_delta: float, user: Node) -> void:
 		return
 	var dir := _get_facing_direction(user)
 	visual.position = Vector2.ZERO
-	visual.rotation = dir.angle() + PI * 3.0 / 4.0
+	visual.rotation = dir.angle() + PI * 5.0 / 4.0
 	_sprite.position = Vector2.ZERO
 	_sprite.rotation = 0.0
 	_sprite.scale = Vector2.ONE
