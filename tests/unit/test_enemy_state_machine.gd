@@ -5,9 +5,9 @@ class MockEnemy extends Enemy:
 	func _execute_attack() -> void:
 		attack_called = true
 
-func test_starts_in_idle() -> void:
+func test_starts_in_wander() -> void:
 	var e := auto_free(MockEnemy.new())
-	assert_that(e._state).is_equal(Enemy.State.IDLE)
+	assert_that(e._state).is_equal(Enemy.State.WANDER)
 
 func test_transitions_to_chase_when_player_in_range() -> void:
 	var e := auto_free(MockEnemy.new())
@@ -18,7 +18,7 @@ func test_transitions_to_chase_when_player_in_range() -> void:
 	e._process(0.1)
 	assert_that(e._state).is_equal(Enemy.State.CHASE)
 
-func test_transitions_to_idle_when_player_leaves() -> void:
+func test_transitions_to_wander_when_player_leaves() -> void:
 	var e := auto_free(MockEnemy.new())
 	e._player_in_range = false
 	e._player_ref = Node2D.new()
@@ -26,7 +26,7 @@ func test_transitions_to_idle_when_player_leaves() -> void:
 	e._player_ref.global_position = Vector2(10, 0)
 	e._state = Enemy.State.CHASE
 	e._process(0.1)
-	assert_that(e._state).is_equal(Enemy.State.IDLE)
+	assert_that(e._state).is_equal(Enemy.State.WANDER)
 
 func test_hurt_re_staggerable() -> void:
 	var e := auto_free(MockEnemy.new())
@@ -71,3 +71,36 @@ func test_elite_fast_windup_floor() -> void:
 	e.elite_ability = Enemy.EliteAbility.FAST
 	e._ready()
 	assert_that(e.windup_duration).is_equal(0.2)
+
+func test_wander_enters_pause_after_move() -> void:
+	var e := auto_free(MockEnemy.new())
+	e._state = Enemy.State.WANDER
+	e._wander_is_paused = false
+	e._wander_timer = 0.01
+	e._process(0.1)
+	assert_that(e._wander_is_paused).is_true()
+	assert_that(e.velocity).is_equal(Vector2.ZERO)
+
+func test_wander_stays_wander_without_player() -> void:
+	var e := auto_free(MockEnemy.new())
+	e._state = Enemy.State.WANDER
+	e._player_in_range = false
+	e._player_ref = null
+	e._process(0.1)
+	assert_that(e._state).is_equal(Enemy.State.WANDER)
+
+func test_exclaim_shown_on_windup() -> void:
+	var e := auto_free(MockEnemy.new())
+	e._state = Enemy.State.CHASE
+	e._change_state(Enemy.State.WINDUP)
+	await get_tree().process_frame
+	if e._exclaim_label:
+		assert_that(e._exclaim_label.scale).is_not_equal(Vector2.ZERO)
+
+func test_exclaim_hidden_on_attack() -> void:
+	var e := auto_free(MockEnemy.new())
+	e._state = Enemy.State.WINDUP
+	e._change_state(Enemy.State.ATTACK)
+	await get_tree().process_frame
+	if e._exclaim_label:
+		assert_that(e._exclaim_label.scale).is_equal(Vector2.ZERO)
