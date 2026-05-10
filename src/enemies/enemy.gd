@@ -53,6 +53,9 @@ var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
 var _wander_is_paused: bool = true
 
+var _exclaim_label: Label = null
+var _exclaim_tween: Tween = null
+
 
 func _ready() -> void:
 	add_to_group("attackable")
@@ -84,6 +87,16 @@ func _ready() -> void:
 	detection_area.body_entered.connect(_on_detection_body_entered)
 	detection_area.body_exited.connect(_on_detection_body_exited)
 	add_child(detection_area)
+
+	_exclaim_label = Label.new()
+	_exclaim_label.name = "ExclaimLabel"
+	_exclaim_label.text = "!"
+	_exclaim_label.position = Vector2(0, -16)
+	_exclaim_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_exclaim_label.add_theme_font_size_override("font_size", 22)
+	_exclaim_label.add_theme_color_override("font_color", Color.RED)
+	_exclaim_label.scale = Vector2.ZERO
+	add_child(_exclaim_label)
 
 	_setup_weapon_visual.call_deferred()
 
@@ -219,9 +232,11 @@ func _process_chase(_delta: float) -> void:
 func _process_windup(delta: float) -> void:
 	_state_timer -= delta
 	if not _can_see_player():
+		_hide_exclaim()
 		_change_state(State.WANDER)
 		return
 	if _state_timer <= 0.0:
+		_hide_exclaim()
 		_change_state(State.ATTACK)
 
 
@@ -295,11 +310,34 @@ func _change_state(new_state: int) -> void:
 		State.WINDUP:
 			_state_timer = windup_duration
 			_settle_timer = 0.0
+			_show_exclaim()
 		State.COOLDOWN:
 			_state_timer = cooldown_duration
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
+
+
+func _show_exclaim() -> void:
+	if _exclaim_label == null:
+		return
+	if _exclaim_tween and _exclaim_tween.is_valid():
+		_exclaim_tween.kill()
+	_exclaim_label.scale = Vector2.ZERO
+	_exclaim_tween = create_tween()
+	_exclaim_tween.set_trans(Tween.TRANS_BACK)
+	_exclaim_tween.set_ease(Tween.EASE_OUT)
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2(1.2, 1.2), 0.05)
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ONE, 0.05)
+
+
+func _hide_exclaim() -> void:
+	if _exclaim_label == null:
+		return
+	if _exclaim_tween and _exclaim_tween.is_valid():
+		_exclaim_tween.kill()
+	_exclaim_tween = create_tween()
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ZERO, 0.05)
 
 
 func _execute_attack() -> void:
