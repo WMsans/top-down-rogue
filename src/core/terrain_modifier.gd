@@ -347,8 +347,8 @@ func clear_and_push_materials_in_arc(
 					var effective_radius: float = radius * scale
 					if dist_sq > int(effective_radius) * int(effective_radius):
 						continue
-					var world_wx := chunk_coord.x * CHUNK_SIZE + pixel_pos.x
-					var world_wy := chunk_coord.y * CHUNK_SIZE + pixel_pos.y
+				var world_wx: int = chunk_coord.x * CHUNK_SIZE + pixel_pos.x
+				var world_wy: int = chunk_coord.y * CHUNK_SIZE + pixel_pos.y
 					impact_list.append({
 						"world_pos": Vector2(world_wx, world_wy),
 						"material_id": material,
