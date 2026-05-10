@@ -42,6 +42,7 @@ func _handle_hit(target: Node) -> void:
 				target.on_hit_impact(global_position, direction, int(damage))
 			queue_free()
 		elif target is StaticBody2D:
+			_carve_terrain()
 			queue_free()
 	else:
 		if target.is_in_group("attackable"):
@@ -49,4 +50,18 @@ func _handle_hit(target: Node) -> void:
 				target.on_hit_impact(global_position, direction, int(damage))
 				queue_free()
 		elif target is StaticBody2D:
+			_carve_terrain()
 			queue_free()
+
+
+func _carve_terrain() -> void:
+	var solids: Array[int] = [
+		MaterialRegistry.MAT_DIRT,
+		MaterialRegistry.MAT_WOOD,
+		MaterialRegistry.MAT_STONE,
+		MaterialRegistry.MAT_COAL,
+		MaterialRegistry.MAT_ICE,
+	]
+	TerrainSurface.clear_and_push_materials_in_arc(
+		global_position, direction, 3.0, TAU, 0.0, 0.0, solids, damage
+	)
