@@ -169,8 +169,8 @@ func disperse_materials_in_arc(origin: Vector2, direction: Vector2, radius: floa
 	terrain_modifier.disperse_materials_in_arc(origin, direction, radius, arc_angle, push_speed, materials)
 
 
-func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array[int]) -> void:
-	terrain_modifier.clear_and_push_materials_in_arc(origin, direction, radius, arc_angle, push_speed, edge_fraction, materials)
+func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array[int], damage: float = -1.0) -> Array:
+	return terrain_modifier.clear_and_push_materials_in_arc(origin, direction, radius, arc_angle, push_speed, edge_fraction, materials, damage)
 
 
 func place_material(world_pos: Vector2, radius: float, material_id: int) -> void:
