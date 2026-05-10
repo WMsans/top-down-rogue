@@ -8,7 +8,7 @@ enum State { IDLE, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
 enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 
 @export var max_health: int = 20
-@export var speed: float = 0.0
+@export var speed: float = 50.0
 @export var enemy_tier: int = DropTable.EnemyTier.NORMAL
 @export var detection_radius: float = 150.0
 @export var windup_duration: float = 0.35
