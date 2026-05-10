@@ -1,31 +1,35 @@
 extends Node
 
-const IMPACT_DATA := {
-	MaterialRegistry.MAT_DIRT: {
-		"particle_color": Color(0.45, 0.32, 0.18),
-		"particle_count": 6,
-	},
-	MaterialRegistry.MAT_WOOD: {
-		"particle_color": Color(0.55, 0.42, 0.25),
-		"particle_count": 8,
-	},
-	MaterialRegistry.MAT_COAL: {
-		"particle_color": Color(0.12, 0.12, 0.14),
-		"particle_count": 8,
-	},
-	MaterialRegistry.MAT_ICE: {
-		"particle_color": Color(0.7, 0.85, 0.95),
-		"particle_count": 10,
-	},
-	MaterialRegistry.MAT_STONE: {
-		"particle_color": Color(0.5, 0.5, 0.5),
-		"particle_count": 6,
-	},
-}
+var impact_data: Dictionary = {}
+
+
+func _ready() -> void:
+	impact_data = {
+		MaterialRegistry.MAT_DIRT: {
+			"particle_color": Color(0.45, 0.32, 0.18),
+			"particle_count": 6,
+		},
+		MaterialRegistry.MAT_WOOD: {
+			"particle_color": Color(0.55, 0.42, 0.25),
+			"particle_count": 8,
+		},
+		MaterialRegistry.MAT_COAL: {
+			"particle_color": Color(0.12, 0.12, 0.14),
+			"particle_count": 8,
+		},
+		MaterialRegistry.MAT_ICE: {
+			"particle_color": Color(0.7, 0.85, 0.95),
+			"particle_count": 10,
+		},
+		MaterialRegistry.MAT_STONE: {
+			"particle_color": Color(0.5, 0.5, 0.5),
+			"particle_count": 6,
+		},
+	}
 
 
 func play_impact(world_pos: Vector2, material_id: int, intensity: float) -> void:
-	var data: Dictionary = IMPACT_DATA.get(material_id, {})
+	var data: Dictionary = impact_data.get(material_id, {})
 	if data.is_empty():
 		return
 	var color: Color = data.get("particle_color", Color(0.5, 0.5, 0.5))
