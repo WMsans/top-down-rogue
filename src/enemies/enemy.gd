@@ -49,6 +49,10 @@ var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 
+var _wander_direction: Vector2 = Vector2.RIGHT
+var _wander_timer: float = 0.0
+var _wander_is_paused: bool = true
+
 
 func _ready() -> void:
 	add_to_group("attackable")
@@ -145,7 +149,7 @@ func _process(delta: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if _state == State.DEATH:
 		return
-	if _state == State.CHASE or _state == State.HURT:
+	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
 		move_and_slide()
 
 
@@ -166,11 +170,25 @@ func _apply_enrage_if_needed() -> void:
 			speed /= 1.5
 
 
-func _process_idle(_delta: float) -> void:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return
-	if _player_in_range:
+func _process_idle(delta: float) -> void:
+	if _player_ref and is_instance_valid(_player_ref) and _player_in_range:
 		_change_state(State.CHASE)
+		return
+
+	_wander_timer -= delta
+	if _wander_timer <= 0.0:
+		if _wander_is_paused:
+			_wander_is_paused = false
+			_wander_direction = Vector2.RIGHT.rotated(randf() * TAU)
+			_wander_timer = randf_range(1.0, 3.0)
+		else:
+			_wander_is_paused = true
+			velocity = Vector2.ZERO
+			_wander_timer = randf_range(0.5, 1.5)
+			return
+
+	if not _wander_is_paused:
+		velocity = _wander_direction * speed * 0.5
 
 
 func _process_chase(_delta: float) -> void:
