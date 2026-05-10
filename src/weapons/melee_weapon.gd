@@ -96,8 +96,18 @@ func _use_impl(user: Node) -> void:
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
-	var materials: Array[int] = MaterialRegistry.get_fluids()
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, push_speed, 0.25, materials)
+	# Push fluids (gas, lava) — existing behavior, no hardness
+	var fluids: Array[int] = MaterialRegistry.get_fluids()
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, push_speed, 0.25, fluids)
+	# Carve solids (wall materials) — new, with hardness scaling
+	var solids: Array[int] = [
+		MaterialRegistry.MAT_DIRT,
+		MaterialRegistry.MAT_WOOD,
+		MaterialRegistry.MAT_STONE,
+		MaterialRegistry.MAT_COAL,
+		MaterialRegistry.MAT_ICE,
+	]
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, 0.0, 0.0, solids, damage)
 	_hit_attackables_in_arc(user, pos, direction)
 
 
