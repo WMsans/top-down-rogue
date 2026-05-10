@@ -49,24 +49,26 @@ func _process_chase(delta: float) -> void:
 	var to_player := _player_ref.global_position - global_position
 	var dist := to_player.length()
 	if dist < 1.0:
+		velocity = Vector2.ZERO
 		return
 
-	var move_dir := to_player.normalized()
+	var move_dir: Vector2
 
 	if dist < preferred_distance - 20.0:
 		move_dir = -to_player.normalized()
-		global_position += move_dir * speed * delta
+		velocity = move_dir * speed
 	elif dist > preferred_distance + 20.0:
-		global_position += move_dir * speed * delta
+		move_dir = to_player.normalized()
+		velocity = move_dir * speed
 	else:
 		_strafe_re_roll -= delta
 		if _strafe_re_roll <= 0.0:
 			_strafe_direction = 1.0 if randf() > 0.5 else -1.0
 			_strafe_re_roll = 1.5
 		var perpendicular := Vector2(-to_player.y, to_player.x).normalized()
-		global_position += perpendicular * _strafe_direction * strafe_speed * delta
+		velocity = perpendicular * _strafe_direction * strafe_speed
 
-	move_dir = _apply_separation(move_dir)
+	velocity = _apply_separation(velocity)
 
 	if dist <= _attack_range and _settle_timer >= min_attack_settle_time:
 		_change_state(State.WINDUP)
