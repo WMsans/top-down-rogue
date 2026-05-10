@@ -307,6 +307,7 @@ func hit(damage: int) -> void:
 
 	health -= damage
 	health_changed.emit(health, max_health)
+	_on_hit()
 	if health <= 0:
 		_change_state(State.DEATH)
 		die()
@@ -330,6 +331,8 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 	spec.source_color = Color.WHITE
 	spec.source_radius = 8.0
 	HitReaction.play(spec)
+
+	TerrainSurface.place_blood(impact_point, 6.0, 120.0)
 
 	if is_elite and elite_ability == EliteAbility.TELEPORT and _teleport_cooldown <= 0.0:
 		var angle := randf() * TAU
