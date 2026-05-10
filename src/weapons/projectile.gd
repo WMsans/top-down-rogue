@@ -62,6 +62,8 @@ func _carve_terrain() -> void:
 		MaterialRegistry.MAT_COAL,
 		MaterialRegistry.MAT_ICE,
 	]
-	TerrainSurface.clear_and_push_materials_in_arc(
+	var impacts: Array = TerrainSurface.clear_and_push_materials_in_arc(
 		global_position, direction, 3.0, TAU, 0.0, 0.0, solids, damage
 	)
+	for impact in impacts:
+		TerrainImpact.play_impact(impact["world_pos"], impact["material_id"], impact["scale"])
