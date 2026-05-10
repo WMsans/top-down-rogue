@@ -210,5 +210,6 @@ func get_glow(material_id: int) -> float:
 
 func get_hardness(material_id: int) -> float:
 	if material_id < 0 or material_id >= materials.size():
-		return 1.0
+		return 0.0
 	return materials[material_id].hardness
+
