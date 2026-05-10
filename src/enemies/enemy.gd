@@ -4,7 +4,7 @@ extends CharacterBody2D
 signal died
 signal health_changed(current: int, maximum: int)
 
-enum State { IDLE, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
+enum State { WANDER, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
 enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 
 @export var max_health: int = 20
@@ -36,10 +36,10 @@ var _flash_tween: Tween = null
 var _squash_tween: Tween = null
 var _death_tween: Tween = null
 
-var _state: int = State.IDLE
+var _state: int = State.WANDER
 var _state_timer: float = 0.0
 var _settle_timer: float = 0.0
-var _prev_state: int = State.IDLE
+var _prev_state: int = State.WANDER
 var _player_ref: Node2D = null
 var _attack_range: float = 32.0
 var _player_in_range: bool = false
@@ -125,7 +125,7 @@ func _process(delta: float) -> void:
 			_settle_timer = 0.0
 
 		match _state:
-			State.IDLE:
+			State.WANDER:
 				_process_idle(delta)
 			State.CHASE:
 				_process_chase(delta)
@@ -175,13 +175,13 @@ func _process_idle(_delta: float) -> void:
 
 func _process_chase(_delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 	if not _player_in_range:
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 	if not _can_see_player():
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 
 	var to_player := _player_ref.global_position - global_position
@@ -201,7 +201,7 @@ func _process_chase(_delta: float) -> void:
 func _process_windup(delta: float) -> void:
 	_state_timer -= delta
 	if not _can_see_player():
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 	if _state_timer <= 0.0:
 		_change_state(State.ATTACK)
@@ -219,7 +219,7 @@ func _process_cooldown(delta: float) -> void:
 		if _player_ref and is_instance_valid(_player_ref) and _player_in_range:
 			_change_state(State.CHASE)
 		else:
-			_change_state(State.IDLE)
+			_change_state(State.WANDER)
 
 
 func _process_hurt(delta: float) -> void:

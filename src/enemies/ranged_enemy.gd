@@ -37,13 +37,13 @@ func _setup_drop_table() -> void:
 
 func _process_chase(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 	if not _player_in_range:
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 	if not _can_see_player():
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 
 	var to_player := _player_ref.global_position - global_position
