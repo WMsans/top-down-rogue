@@ -22,9 +22,10 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		adapter.place_fire(world_pos, radius)
 
 
-func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array) -> void:
+func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array, damage: float = -1.0) -> Array:
 	if adapter:
-		adapter.clear_and_push_materials_in_arc(origin, direction, radius, arc_angle, push_speed, edge_fraction, materials)
+		return adapter.clear_and_push_materials_in_arc(origin, direction, radius, arc_angle, push_speed, edge_fraction, materials, damage)
+	return []
 
 
 func read_region(rect: Rect2i) -> PackedByteArray:
