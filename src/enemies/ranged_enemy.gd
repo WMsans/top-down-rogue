@@ -16,6 +16,7 @@ func _ready() -> void:
 		weapon = weapon_resource.duplicate()
 		_attack_range = preferred_distance * 1.5
 		cooldown_duration = weapon_resource.cooldown
+		speed = 50.0
 	else:
 		weapon = RangedWeapon.new()
 		_attack_range = 180.0
