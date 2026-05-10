@@ -14,6 +14,7 @@ class MaterialDef:
 	var fluid: bool
 	var damage: int
 	var glow: float
+	var hardness: float
 
 	func _init(
 		p_name: String,
@@ -26,7 +27,8 @@ class MaterialDef:
 		p_tint_color: Color = Color(0, 0, 0, 0),
 		p_fluid: bool = false,
 		p_damage: int = 0,
-		p_glow: float = 1.0
+		p_glow: float = 1.0,
+		p_hardness: float = 0.0
 	):
 		name = p_name
 		texture_path = p_texture_path
@@ -39,6 +41,7 @@ class MaterialDef:
 		fluid = p_fluid
 		damage = p_damage
 		glow = p_glow
+		hardness = p_hardness
 
 var materials: Array[MaterialDef] = []
 
@@ -65,7 +68,9 @@ func _init_materials():
 	
 	var mat_wood := MaterialDef.new(
 		"WOOD", "res://textures/Environments/Walls/plank.png",
-		true, 180, 255, true, true
+		true, 180, 255, true, true,
+		Color(0, 0, 0, 0), false, 0, 1.0,
+		2.0
 	)
 	mat_wood.id = materials.size()
 	materials.append(mat_wood)
@@ -73,7 +78,9 @@ func _init_materials():
 	
 	var mat_stone := MaterialDef.new(
 		"STONE", "res://textures/Environments/Walls/stone.png",
-		false, 0, 0, true, true
+		false, 0, 0, true, true,
+		Color(0, 0, 0, 0), false, 0, 1.0,
+		5.0
 	)
 	mat_stone.id = materials.size()
 	materials.append(mat_stone)
@@ -107,7 +114,9 @@ func _init_materials():
 		"DIRT", "res://textures/Environments/Walls/dirt.png",
 		false, 0, 0,
 		true, true,
-		Color(0.45, 0.32, 0.18, 1.0)
+		Color(0.45, 0.32, 0.18, 1.0),
+		false, 0, 1.0,
+		0.5
 	)
 	mat_dirt.id = materials.size()
 	materials.append(mat_dirt)
@@ -120,7 +129,8 @@ func _init_materials():
 		Color(0.12, 0.12, 0.14, 1.0),
 		false,
 		0,
-		20.0
+		20.0,
+		3.0
 	)
 	mat_coal.id = materials.size()
 	materials.append(mat_coal)
@@ -130,7 +140,9 @@ func _init_materials():
 		"ICE", "res://textures/Environments/Walls/ice.png",
 		false, 0, 0,
 		true, true,
-		Color(0.7, 0.85, 0.95, 1.0)
+		Color(0.7, 0.85, 0.95, 1.0),
+		false, 0, 1.0,
+		4.0
 	)
 	mat_ice.id = materials.size()
 	materials.append(mat_ice)
@@ -194,3 +206,10 @@ func get_glow(material_id: int) -> float:
 	if material_id < 0 or material_id >= materials.size():
 		return 1.0
 	return materials[material_id].glow
+
+
+func get_hardness(material_id: int) -> float:
+	if material_id < 0 or material_id >= materials.size():
+		return 0.0
+	return materials[material_id].hardness
+
