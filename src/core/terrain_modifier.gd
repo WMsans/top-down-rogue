@@ -264,8 +264,9 @@ func clear_and_push_materials_in_arc(
 	arc_angle: float,
 	push_speed: float,
 	edge_fraction: float,
-	materials: Array[int]
-) -> void:
+	materials: Array[int],
+	damage: float = -1.0
+) -> Array:
 	var origin_int := Vector2i(int(origin.x), int(origin.y))
 	var r_int := int(ceil(radius))
 	var half_arc := arc_angle / 2.0
@@ -275,6 +276,9 @@ func clear_and_push_materials_in_arc(
 	var inner_r := radius * (1.0 - edge_fraction)
 	var inner_r_sq := int(inner_r) * int(inner_r)
 	var r_sq := r_int * r_int
+	var apply_hardness := damage >= 0.0
+	var safe_damage := maxf(damage, 0.1)
+	var impact_list: Array = []
 
 	var affected: Dictionary = {}
 
@@ -309,12 +313,12 @@ func clear_and_push_materials_in_arc(
 				affected[chunk_coord] = []
 
 			if dist_sq >= inner_r_sq:
-				affected[chunk_coord].append([local, Vector2(float(dx), float(dy)).normalized(), false])
+				affected[chunk_coord].append([local, Vector2(float(dx), float(dy)).normalized(), false, dist_sq])
 			else:
-				affected[chunk_coord].append([local, Vector2.ZERO, true])
+				affected[chunk_coord].append([local, Vector2.ZERO, true, dist_sq])
 
 	if affected.is_empty():
-		return
+		return impact_list
 
 	for chunk_coord in affected:
 		var chunk: Chunk = world_manager.chunks[chunk_coord]
@@ -324,6 +328,7 @@ func clear_and_push_materials_in_arc(
 			var pixel_pos: Vector2i = entry[0]
 			var push_dir: Vector2 = entry[1]
 			var do_clear: bool = entry[2]
+			var dist_sq: int = entry[3]
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
 			var material: int = data[idx]
 
@@ -336,6 +341,19 @@ func clear_and_push_materials_in_arc(
 				continue
 
 			if do_clear:
+				if apply_hardness:
+					var hardness: float = MaterialRegistry.get_hardness(material)
+					var scale: float = clampf(safe_damage / (safe_damage + hardness), 0.1, 1.0)
+					var effective_radius: float = radius * scale
+					if dist_sq > int(effective_radius) * int(effective_radius):
+						continue
+					var world_wx: int = chunk_coord.x * CHUNK_SIZE + pixel_pos.x
+					var world_wy: int = chunk_coord.y * CHUNK_SIZE + pixel_pos.y
+					impact_list.append({
+						"world_pos": Vector2(world_wx, world_wy),
+						"material_id": material,
+						"scale": scale,
+					})
 				data[idx] = MaterialRegistry.MAT_AIR
 				data[idx + 1] = 0
 				data[idx + 2] = 0
@@ -354,3 +372,5 @@ func clear_and_push_materials_in_arc(
 	if terrain_physical:
 		var affected_rect := Rect2i(origin_int.x - r_int, origin_int.y - r_int, r_int * 2 + 1, r_int * 2 + 1)
 		terrain_physical.invalidate_rect(affected_rect)
+
+	return impact_list
