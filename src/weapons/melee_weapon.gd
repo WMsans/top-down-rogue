@@ -107,7 +107,9 @@ func _use_impl(user: Node) -> void:
 		MaterialRegistry.MAT_COAL,
 		MaterialRegistry.MAT_ICE,
 	]
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, 0.0, 0.0, solids, damage)
+	var impacts: Array = TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, 0.0, 0.0, solids, damage)
+	for impact in impacts:
+		TerrainImpact.play_impact(impact["world_pos"], impact["material_id"], impact["scale"])
 	_hit_attackables_in_arc(user, pos, direction)
 
 
