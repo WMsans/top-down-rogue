@@ -23,6 +23,7 @@ var _content_rest_positions: Dictionary = {}
 var _backdrop: ColorRect = null
 var _open_tween: Tween = null
 var _close_tween: Tween = null
+var _content_stagger_tween: Tween = null
 var _original_mouse_filter: int = MOUSE_FILTER_STOP
 
 func _ready() -> void:
@@ -168,10 +169,10 @@ func open() -> void:
 	_open_tween.finished.connect(_on_open_finished, CONNECT_ONE_SHOT)
 	if _content_node:
 		var stagger_delay_total := enter_duration * 0.6
-		var delay_tween := create_tween()
-		delay_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-		delay_tween.tween_interval(stagger_delay_total)
-		delay_tween.tween_callback(_stagger_in_content)
+		_content_stagger_tween = create_tween()
+		_content_stagger_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		_content_stagger_tween.tween_interval(stagger_delay_total)
+		_content_stagger_tween.tween_callback(_stagger_in_content)
 
 func close() -> void:
 	if not _is_open and not _is_animating:
@@ -184,6 +185,9 @@ func close() -> void:
 	_is_open = false
 	_is_animating = true
 	mouse_filter = MOUSE_FILTER_IGNORE
+	if _content_stagger_tween and _content_stagger_tween.is_running():
+		_content_stagger_tween.kill()
+	_content_stagger_tween = null
 	_fade_out_content()
 	_close_tween = create_tween()
 	_close_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
