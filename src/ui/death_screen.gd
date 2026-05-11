@@ -56,7 +56,6 @@ func _on_player_died() -> void:
 	_populate_stats()
 	SceneManager.set_paused(true)
 	_play_red_flash_and_dim()
-	_panel.open()
 
 
 func _populate_stats() -> void:
@@ -87,6 +86,10 @@ func _play_red_flash_and_dim() -> void:
 	tween.parallel().tween_property(_vbox, "position:x", 0.0, 0.075).set_trans(Tween.TRANS_SINE)
 
 	tween.tween_property(_vignette, "color:a", 1.0, 0.8).from(0.0)
+
+	tween.finished.connect(func():
+		_panel.open()
+	, CONNECT_ONE_SHOT)
 
 
 func _on_sequence_complete() -> void:
