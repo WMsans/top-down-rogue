@@ -47,6 +47,7 @@ func _ready() -> void:
 	_title_label.add_theme_constant_override("outline_size", 2)
 	_title_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	visible = false
+	_main_panel.closed.connect(_on_main_panel_closed)
 
 
 func _do_open(title: String) -> void:
@@ -127,6 +128,17 @@ func close() -> void:
 	_clear_modifier_header()
 	_main_panel.close()
 	await _main_panel.closed
+	_do_close_cleanup()
+
+
+func _on_main_panel_closed() -> void:
+	if _is_closing:
+		return
+	_is_closing = true
+	_do_close_cleanup()
+
+
+func _do_close_cleanup() -> void:
 	_skip_button = null
 	visible = false
 	_weapon_manager = null
