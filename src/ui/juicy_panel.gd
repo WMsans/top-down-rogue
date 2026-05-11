@@ -63,6 +63,16 @@ func _on_open_finished() -> void:
 	mouse_filter = _original_mouse_filter
 	opened.emit()
 
+func _on_close_finished() -> void:
+	_is_animating = false
+	visible = false
+	mouse_filter = _original_mouse_filter
+	if _animated_node:
+		_animated_node.position = _rest_position
+		_animated_node.scale = Vector2.ONE
+		_animated_node.modulate.a = 1.0
+	closed.emit()
+
 func open() -> void:
 	if _is_open and not _is_animating:
 		return
@@ -86,4 +96,23 @@ func open() -> void:
 	_open_tween.finished.connect(_on_open_finished, CONNECT_ONE_SHOT)
 
 func close() -> void:
-	pass # implemented in Task 3
+	if not _is_open and not _is_animating:
+		return
+	if _is_animating and _close_tween and _close_tween.is_running():
+		return
+	if _open_tween and _open_tween.is_running():
+		_open_tween.kill()
+		_open_tween = null
+	_is_open = false
+	_is_animating = true
+	mouse_filter = MOUSE_FILTER_IGNORE
+	_close_tween = create_tween()
+	_close_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_close_tween.tween_interval(0.05)
+	_close_tween.set_parallel(true)
+	var fall_y := _rest_position.y + drop_distance
+	_close_tween.tween_property(_animated_node, "position:y", fall_y, exit_duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_close_tween.tween_property(_animated_node, "scale", Vector2(1.02, 0.94), exit_duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_close_tween.chain().tween_interval(exit_duration * 0.4)
+	_close_tween.tween_property(_animated_node, "modulate:a", 0.0, exit_duration * 0.6).set_trans(Tween.TRANS_LINEAR)
+	_close_tween.finished.connect(_on_close_finished, CONNECT_ONE_SHOT)
