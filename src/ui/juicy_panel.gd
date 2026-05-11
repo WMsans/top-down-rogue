@@ -70,6 +70,45 @@ func _on_backdrop_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		close()
 
+func _get_content_children() -> Array[Control]:
+	var out: Array[Control] = []
+	if _content_node == null:
+		return out
+	for child in _content_node.get_children():
+		var c := child as Control
+		if c:
+			out.append(c)
+	return out
+
+func _cache_content_positions() -> void:
+	_content_rest_positions.clear()
+	for child in _get_content_children():
+		_content_rest_positions[child] = child.position
+
+func _prepare_content_for_stagger() -> void:
+	for child in _get_content_children():
+		child.modulate.a = 0.0
+		var rest: Vector2 = _content_rest_positions.get(child, child.position)
+		child.position = rest + Vector2(0, 12)
+
+func _stagger_in_content() -> void:
+	var children := _get_content_children()
+	for i in children.size():
+		var child := children[i]
+		var rest: Vector2 = _content_rest_positions.get(child, child.position)
+		var tw := create_tween()
+		tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_interval(i * stagger_delay)
+		tw.set_parallel(true)
+		tw.tween_property(child, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_LINEAR)
+		tw.tween_property(child, "position:y", rest.y, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _fade_out_content() -> void:
+	for child in _get_content_children():
+		var tw := create_tween()
+		tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tw.tween_property(child, "modulate:a", 0.0, 0.12).set_trans(Tween.TRANS_LINEAR)
+
 func _update_pivot() -> void:
 	if _animated_node:
 		_animated_node.pivot_offset = _animated_node.size * 0.5
@@ -96,6 +135,10 @@ func _on_close_finished() -> void:
 		_animated_node.position = _rest_position
 		_animated_node.scale = Vector2.ONE
 		_animated_node.modulate.a = 1.0
+	for child in _get_content_children():
+		if _content_rest_positions.has(child):
+			child.position = _content_rest_positions[child]
+		child.modulate.a = 1.0
 	closed.emit()
 
 func open() -> void:
@@ -110,7 +153,9 @@ func open() -> void:
 	_is_animating = true
 	visible = true
 	mouse_filter = MOUSE_FILTER_IGNORE
+	_cache_content_positions()
 	_prepare_open_state()
+	_prepare_content_for_stagger()
 	_open_tween = create_tween()
 	_open_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	_open_tween.set_parallel(true)
@@ -121,6 +166,12 @@ func open() -> void:
 	_open_tween.tween_property(_animated_node, "modulate:a", 1.0, enter_duration * 0.4).set_trans(Tween.TRANS_LINEAR)
 	_open_tween.tween_property(_animated_node, "scale", Vector2.ONE, enter_duration * 0.9).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	_open_tween.finished.connect(_on_open_finished, CONNECT_ONE_SHOT)
+	if _content_node:
+		var stagger_delay_total := enter_duration * 0.6
+		var delay_tween := create_tween()
+		delay_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		delay_tween.tween_interval(stagger_delay_total)
+		delay_tween.tween_callback(_stagger_in_content)
 
 func close() -> void:
 	if not _is_open and not _is_animating:
@@ -133,6 +184,7 @@ func close() -> void:
 	_is_open = false
 	_is_animating = true
 	mouse_filter = MOUSE_FILTER_IGNORE
+	_fade_out_content()
 	_close_tween = create_tween()
 	_close_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	_close_tween.tween_interval(0.05)
