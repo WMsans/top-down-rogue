@@ -7,6 +7,7 @@ var _player: CharacterBody2D
 var _detection_area: Area2D
 var _nearby_pickups: Array[Node2D] = []
 var _highlighted: Node2D = null
+var _info_popup: WeaponInfoPopup
 
 
 func _ready() -> void:
@@ -25,6 +26,9 @@ func _ready() -> void:
 	_detection_area.area_entered.connect(_on_area_entered)
 	_detection_area.area_exited.connect(_on_area_exited)
 	_player.add_child.call_deferred(_detection_area)
+	_info_popup = WeaponInfoPopup.new()
+	_info_popup.name = "WeaponInfoPopup"
+	add_child(_info_popup)
 
 
 func _process(_delta: float) -> void:
@@ -35,6 +39,14 @@ func _process(_delta: float) -> void:
 		_highlighted = closest
 		if _highlighted and _highlighted.has_method("set_highlighted"):
 			_highlighted.set_highlighted(true)
+	if get_tree().paused:
+		_info_popup.hide()
+		return
+	if _highlighted is WeaponDrop:
+		_info_popup.show_for(_highlighted)
+		_info_popup.update_position(_highlighted)
+	else:
+		_info_popup.hide()
 
 
 func _unhandled_input(event: InputEvent) -> void:
