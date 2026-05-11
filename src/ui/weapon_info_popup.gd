@@ -62,11 +62,11 @@ func _ready() -> void:
 func show_for(drop: WeaponDrop) -> void:
 	_pending_hide = false
 	if not is_instance_valid(drop):
-		hide()
+		dismiss()
 		return
 	var weapon: Weapon = drop.weapon
 	if weapon == null:
-		hide()
+		dismiss()
 		return
 
 	if _current_drop == drop and _is_visible:
@@ -84,7 +84,7 @@ func show_for(drop: WeaponDrop) -> void:
 	_animate_show()
 
 
-func hide() -> void:
+func dismiss() -> void:
 	if not _is_visible:
 		if _show_tween and _show_tween.is_valid():
 			_show_tween.kill()
@@ -93,7 +93,7 @@ func hide() -> void:
 	_animate_hide()
 
 
-func is_visible() -> bool:
+func is_shown() -> bool:
 	return _is_visible
 
 

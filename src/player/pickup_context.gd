@@ -40,13 +40,13 @@ func _process(_delta: float) -> void:
 		if _highlighted and _highlighted.has_method("set_highlighted"):
 			_highlighted.set_highlighted(true)
 	if get_tree().paused:
-		_info_popup.hide()
+		_info_popup.dismiss()
 		return
 	if _highlighted is WeaponDrop:
 		_info_popup.show_for(_highlighted)
 		_info_popup.update_position(_highlighted)
 	else:
-		_info_popup.hide()
+		_info_popup.dismiss()
 
 
 func _unhandled_input(event: InputEvent) -> void:
