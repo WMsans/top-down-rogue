@@ -2,7 +2,7 @@ class_name Weapon
 extends Resource
 
 @export var name: String = "Weapon"
-var cooldown: float = 0.5
+var cooldown: float = 0.8
 var damage: float = 0.0
 var icon_texture: Texture2D = null
 var visual: Node2D = null

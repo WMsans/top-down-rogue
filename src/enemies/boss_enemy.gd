@@ -23,8 +23,8 @@ func _ready() -> void:
 	else:
 		weapon = RangedWeapon.new()
 		weapon.damage = 6.0
-		weapon.cooldown = 0.5
-		weapon.projectile_speed = 200.0
+		weapon.cooldown = 0.8
+		weapon.projectile_speed = 120.0
 		_original_weapon = RangedWeapon.new()
 		_attack_range = 200.0
 		cooldown_duration = weapon.cooldown

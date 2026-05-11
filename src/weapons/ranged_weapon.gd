@@ -3,7 +3,7 @@ extends Weapon
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 
-@export var projectile_speed: float = 200.0
+@export var projectile_speed: float = 120.0
 @export var projectile_lifetime: float = 3.0
 @export var spread_angle: float = 0.0
 @export var projectile_count: int = 1
@@ -15,7 +15,7 @@ const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 
 
 func _init() -> void:
-	cooldown = 0.6
+	cooldown = 1.0
 	damage = 3.0
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
