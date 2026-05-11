@@ -9,6 +9,7 @@ const CARD_SCENE := preload("res://scenes/ui/card.tscn")
 var _weapons: Array[Weapon] = []
 var _callback: Callable
 var _chosen: bool = false
+var _is_closing: bool = false
 var _card_slots: Array[Control] = []
 
 @onready var _title_label: Label = %TitleLabel
@@ -69,6 +70,7 @@ func open_with_weapons(weapons: Array[Weapon], callback: Callable) -> void:
 	_weapons = weapons
 	_callback = callback
 	_chosen = false
+	_is_closing = false
 	_title_label.text = "Choose a Weapon"
 	_build_cards()
 	SceneManager.set_paused(true)
@@ -77,6 +79,9 @@ func open_with_weapons(weapons: Array[Weapon], callback: Callable) -> void:
 
 
 func close() -> void:
+	if _is_closing:
+		return
+	_is_closing = true
 	_panel_container.close()
 	await _panel_container.closed
 	_clear_cards()
@@ -122,9 +127,12 @@ func _create_weapon_card(weapon: Weapon, index: int) -> Control:
 
 
 func _select_weapon(index: int) -> void:
+	if _is_closing:
+		return
 	if index < 0 or index >= _weapons.size():
 		return
 	_chosen = true
+	_is_closing = true
 	var weapon: Weapon = _weapons[index]
 	_panel_container.close()
 	await _panel_container.closed
