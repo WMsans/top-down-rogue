@@ -15,6 +15,7 @@ var _fade_tween: Tween
 var _current_drop: WeaponDrop = null
 var _shown: bool = false
 var _hiding: bool = false
+var _viewport_scale: float = 1.0
 
 
 func _ready() -> void:
@@ -40,11 +41,24 @@ func show_for(drop: WeaponDrop) -> void:
 	if _current_drop == drop and _shown and not _hiding:
 		return
 	_current_drop = drop
+	_update_viewport_scale(drop)
 	_populate(drop.weapon)
 	_shown = true
 	_hiding = false
 	_card.visible = true
 	_animate_show()
+
+
+func _update_viewport_scale(drop: WeaponDrop) -> void:
+	var svp := drop.get_viewport() as SubViewport
+	if svp == null:
+		_viewport_scale = 1.0
+		return
+	var svc := svp.get_parent() as SubViewportContainer
+	if svc == null or svp.size.x <= 0:
+		_viewport_scale = 1.0
+		return
+	_viewport_scale = float(svc.size.x) / float(svp.size.x)
 
 
 func dismiss() -> void:
@@ -61,34 +75,44 @@ func is_shown() -> bool:
 
 
 func update_position(drop: WeaponDrop, player: Node2D = null) -> void:
-	var cam := get_viewport().get_camera_2d()
+	var svp := drop.get_viewport() as SubViewport
+	if svp == null:
+		return
+	var cam := svp.get_camera_2d()
 	if cam == null:
 		return
+	var svc := svp.get_parent() as SubViewportContainer
+	if svc == null:
+		return
+	var s: float = _viewport_scale
+	var svc_origin: Vector2 = svc.global_position
 	var xform := cam.get_canvas_transform()
-	var drop_screen := xform * drop.global_position
-	var visual_size := _card.card_size * REST_SCALE
+	var drop_sub := xform * drop.global_position
+	var drop_main := svc_origin + drop_sub * s
+
+	var visual_size := _card.card_size * (REST_SCALE * s)
 	var viewport_size := get_viewport().get_visible_rect().size
-	const MARGIN := 4.0
+	var margin: float = 4.0 * s
 
 	var dir := Vector2.UP
 	if player != null and is_instance_valid(player):
-		var player_screen := xform * player.global_position
-		var delta := drop_screen - player_screen
+		var player_sub := xform * player.global_position
+		var delta := drop_sub - player_sub
 		if delta.length_squared() > 0.01:
 			dir = delta.normalized()
 
-	var push: float = POPUP_OFFSET + (visual_size.x * 0.5 if absf(dir.x) > absf(dir.y) else visual_size.y * 0.5)
-	var pivot_screen := drop_screen + dir * push
+	var push: float = (POPUP_OFFSET * s) + (visual_size.x * 0.5 if absf(dir.x) > absf(dir.y) else visual_size.y * 0.5)
+	var pivot_screen := drop_main + dir * push
 
 	pivot_screen.x = clampf(
 		pivot_screen.x,
-		MARGIN + visual_size.x * 0.5,
-		viewport_size.x - MARGIN - visual_size.x * 0.5
+		margin + visual_size.x * 0.5,
+		viewport_size.x - margin - visual_size.x * 0.5
 	)
 	pivot_screen.y = clampf(
 		pivot_screen.y,
-		MARGIN + visual_size.y * 0.5,
-		viewport_size.y - MARGIN - visual_size.y * 0.5
+		margin + visual_size.y * 0.5,
+		viewport_size.y - margin - visual_size.y * 0.5
 	)
 
 	_card.position = pivot_screen - _card.pivot_offset
@@ -118,11 +142,12 @@ func _animate_show() -> void:
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
 
-	_card.scale = Vector2(SHOW_START_SCALE, SHOW_START_SCALE)
+	var s: float = _viewport_scale
+	_card.scale = Vector2(SHOW_START_SCALE * s, SHOW_START_SCALE * s)
 
 	_scale_tween = create_tween()
 	_scale_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	_scale_tween.tween_property(_card, "scale", Vector2(REST_SCALE, REST_SCALE), SHOW_DURATION)\
+	_scale_tween.tween_property(_card, "scale", Vector2(REST_SCALE * s, REST_SCALE * s), SHOW_DURATION)\
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 	_fade_tween = create_tween()
@@ -137,9 +162,10 @@ func _animate_hide() -> void:
 	if _fade_tween and _fade_tween.is_valid():
 		_fade_tween.kill()
 
+	var s: float = _viewport_scale
 	_scale_tween = create_tween()
 	_scale_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	_scale_tween.tween_property(_card, "scale", Vector2(HIDE_END_SCALE, HIDE_END_SCALE), HIDE_DURATION)\
+	_scale_tween.tween_property(_card, "scale", Vector2(HIDE_END_SCALE * s, HIDE_END_SCALE * s), HIDE_DURATION)\
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 
 	_fade_tween = create_tween()
