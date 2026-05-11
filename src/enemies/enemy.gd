@@ -14,7 +14,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var windup_duration: float = 0.35
 @export var death_duration: float = 0.3
 @export var hurt_duration: float = 0.2
-@export var cooldown_duration: float = 0.5
+@export var cooldown_duration: float = 0.8
 @export var is_elite: bool = false
 @export var elite_ability: int = EliteAbility.NONE
 @export var separation_radius: float = 16.0
