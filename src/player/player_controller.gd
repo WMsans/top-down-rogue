@@ -110,9 +110,10 @@ func _get_input_direction() -> Vector2:
 
 func _is_blocked_by_terrain(direction: Vector2) -> bool:
 	var space_state := get_world_2d().direct_space_state
+	var ray_length := max(BODY_WIDTH, BODY_HEIGHT) / 2.0 + 4.0
 	var query := PhysicsRayQueryParameters2D.create(
 		global_position,
-		global_position + direction * 4.0,
+		global_position + direction * ray_length,
 		1,  # terrain collision_layer (see chunk_manager.gd:115)
 		[self]
 	)
