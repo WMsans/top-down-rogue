@@ -71,7 +71,10 @@ func _physics_process(delta: float) -> void:
 	if _knockback_velocity.length_squared() > 0.01:
 		_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
 	var enemy_dir := _find_closest_enemy_direction()
-	if enemy_dir != Vector2.ZERO:
+	var is_pushing_wall := input_dir != Vector2.ZERO and _is_blocked_by_terrain(input_dir)
+	if is_pushing_wall:
+		_last_facing = input_dir
+	elif enemy_dir != Vector2.ZERO:
 		_last_facing = enemy_dir
 	elif input_dir != Vector2.ZERO:
 		_last_facing = input_dir
@@ -103,6 +106,18 @@ func _get_input_direction() -> Vector2:
 	if Input.is_action_pressed("move_down"):
 		dir.y += 1
 	return dir.normalized() if dir != Vector2.ZERO else Vector2.ZERO
+
+
+func _is_blocked_by_terrain(direction: Vector2) -> bool:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(
+		global_position,
+		global_position + direction * 4.0,
+		1,  # terrain collision_layer (see chunk_manager.gd:115)
+		[self]
+	)
+	var result := space_state.intersect_ray(query)
+	return not result.is_empty()
 
 
 func _apply_movement(input_dir: Vector2, delta: float) -> void:
