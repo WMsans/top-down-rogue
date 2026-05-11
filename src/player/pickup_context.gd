@@ -44,7 +44,7 @@ func _process(_delta: float) -> void:
 		return
 	if _highlighted is WeaponDrop:
 		_info_popup.show_for(_highlighted)
-		_info_popup.update_position(_highlighted)
+		_info_popup.update_position(_highlighted, _player)
 	else:
 		_info_popup.dismiss()
 
