@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_spop")
 animated_root = NodePath("Panel")
-content_root = NodePath("VBoxContainer/ScrollContainer/Content")
+content_root = NodePath("Panel/VBoxContainer/ScrollContainer/Content")
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=801711261]
 unique_name_in_owner = true
