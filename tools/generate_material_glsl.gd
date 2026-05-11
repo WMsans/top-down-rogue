@@ -15,6 +15,15 @@ func _init():
 		output += "const int MAT_%s = %d;\n" % [m.name, m.id]
 	output += "\n"
 	
+	output += "const bool IS_FLUID[%d] = bool[%d](\n" % [mat_count, mat_count]
+	for i in registry.materials.size():
+		var m = registry.materials[i]
+		output += "    %s" % ("true" if m.fluid else "false")
+		if i < registry.materials.size() - 1:
+			output += ","
+		output += "\n"
+	output += ");\n\n"
+
 	output += "const bool IS_FLAMMABLE[%d] = bool[%d](\n" % [mat_count, mat_count]
 	for i in registry.materials.size():
 		var m = registry.materials[i]

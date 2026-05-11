@@ -307,6 +307,7 @@ func hit(damage: int) -> void:
 
 	health -= damage
 	health_changed.emit(health, max_health)
+	_on_hit()
 	if health <= 0:
 		_change_state(State.DEATH)
 		die()
@@ -330,6 +331,20 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 	spec.source_color = Color.WHITE
 	spec.source_radius = 8.0
 	HitReaction.play(spec)
+
+	var blood_dir := hit_dir.normalized() if hit_dir.length_squared() > 0.0001 else Vector2.ZERO
+	var splatter_count := 5 if lethal else 3
+	var base_radius := 11.0 if lethal else 8.0
+	var base_speed := 280.0 if lethal else 200.0
+	TerrainSurface.place_blood(impact_point, base_radius, base_speed, blood_dir)
+	for i in range(splatter_count):
+		var spread_angle := randf_range(-0.7, 0.7)
+		var dir := blood_dir.rotated(spread_angle) if blood_dir != Vector2.ZERO else Vector2.from_angle(randf() * TAU)
+		var dist := randf_range(4.0, 14.0)
+		var offset := dir * dist
+		var radius := base_radius * randf_range(0.4, 0.9)
+		var speed := base_speed * randf_range(0.7, 1.4)
+		TerrainSurface.place_blood(impact_point + offset, radius, speed, dir)
 
 	if is_elite and elite_ability == EliteAbility.TELEPORT and _teleport_cooldown <= 0.0:
 		var angle := randf() * TAU
