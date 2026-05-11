@@ -11,7 +11,6 @@ var _callback: Callable
 var _chosen: bool = false
 var _card_slots: Array[Control] = []
 
-@onready var _overlay: ColorRect = %Overlay
 @onready var _title_label: Label = %TitleLabel
 @onready var _card_container: HBoxContainer = %CardContainer
 @onready var _skip_button: Button = %SkipButton
@@ -22,7 +21,6 @@ var _card_slots: Array[Control] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay.gui_input.connect(_on_overlay_input)
 	_skip_button.pressed.connect(close)
 	UiAnimations.setup_button_hover(_skip_button)
 	_style_header()
@@ -75,42 +73,17 @@ func open_with_weapons(weapons: Array[Weapon], callback: Callable) -> void:
 	_build_cards()
 	SceneManager.set_paused(true)
 	visible = true
-	_play_entrance_animation()
+	_panel_container.open()
 
 
 func close() -> void:
+	_panel_container.close()
+	await _panel_container.closed
 	_clear_cards()
 	visible = false
 	SceneManager.set_paused(false)
 	if not _chosen and _callback.is_valid():
 		_callback.call(null)
-
-
-func _play_entrance_animation() -> void:
-	_header_bar.modulate.a = 0.0
-	_action_bar.modulate.a = 0.0
-	var header_tween := _header_bar.create_tween()
-	header_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	header_tween.tween_property(_header_bar, "modulate:a", 1.0, 0.2)
-
-	var action_tween := _action_bar.create_tween()
-	action_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	action_tween.tween_interval(0.1)
-	action_tween.tween_property(_action_bar, "modulate:a", 1.0, 0.2)
-
-	var cards: Array[Control] = []
-	for child in _card_container.get_children():
-		var slot := child as Control
-		if slot:
-			slot.position.y += 20
-			slot.modulate.a = 0.0
-			cards.append(slot)
-	for i in cards.size():
-		var tween_card := cards[i].create_tween()
-		tween_card.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-		tween_card.tween_interval(0.08 * i)
-		tween_card.parallel().tween_property(cards[i], "position:y", cards[i].position.y - 20, 0.3).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-		tween_card.parallel().tween_property(cards[i], "modulate:a", 1.0, 0.3)
 
 
 func _build_cards() -> void:
@@ -153,16 +126,13 @@ func _select_weapon(index: int) -> void:
 		return
 	_chosen = true
 	var weapon: Weapon = _weapons[index]
+	_panel_container.close()
+	await _panel_container.closed
 	_clear_cards()
 	visible = false
 	SceneManager.set_paused(false)
 	if _callback.is_valid():
 		_callback.call(weapon)
-
-
-func _on_overlay_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		close()
 
 
 func _unhandled_input(event: InputEvent) -> void:
