@@ -20,6 +20,7 @@ grow_vertical = 2
 script = ExtResource("3_jp")
 animated_root = NodePath("CenterContainer/PauseCard")
 content_root = NodePath("CenterContainer/PauseCard/VBoxContainer")
+close_on_backdrop_click = false
 
 [node name="CenterContainer" type="CenterContainer" parent="PausePanel" unique_id=50804748]
 layout_mode = 1

@@ -83,10 +83,10 @@ func _on_main_menu_pressed() -> void:
 
 
 func _on_confirm_yes() -> void:
-	SceneManager.set_paused(false)
 	confirmation_panel.close()
 	pause_panel.close()
 	await pause_panel.closed
+	SceneManager.set_paused(false)
 	visible = false
 	SceneManager.go_to_main_menu()
 
