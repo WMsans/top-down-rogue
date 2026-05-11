@@ -52,10 +52,7 @@ func _update_pivot() -> void:
 		_animated_node.pivot_offset = _animated_node.size * 0.5
 
 func _prepare_open_state() -> void:
-	if _animated_node == null:
-		return
-	if _rest_position == Vector2.ZERO:
-		_rest_position = _animated_node.position
+	_rest_position = _animated_node.position
 	_animated_node.position = _rest_position - Vector2(0, drop_distance)
 	_animated_node.modulate.a = 0.0
 	_animated_node.scale = Vector2(0.96, 1.04)
