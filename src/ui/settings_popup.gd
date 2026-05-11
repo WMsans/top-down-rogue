@@ -1,9 +1,8 @@
-extends Control
+extends JuicyPanel
 
 const _UiTheme = preload("res://src/ui/ui_theme.gd")
 const _UiAnimations = preload("res://src/ui/ui_animations.gd")
 
-signal closed
 
 const SETTINGS_PATH := "user://settings.cfg"
 
@@ -22,8 +21,6 @@ var _rebinding_label: Label = null
 @onready var back_button: Button = %BackButton
 @onready var key_bindings_container: VBoxContainer = %KeyBindingsContainer
 @onready var panel: PanelContainer = %Panel
-@onready var dimmer: ColorRect = %Dimmer
-
 
 func _ready() -> void:
 	theme = UiTheme.get_theme()
@@ -61,15 +58,7 @@ func _connect_signals() -> void:
 
 func open() -> void:
 	_apply_loaded_settings()
-	visible = true
-	dimmer.color.a = 0.0
-	panel.position.y += 30.0
-	panel.modulate.a = 0.0
-	var tween := create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.parallel().tween_property(dimmer, "color:a", 0.7, 0.25).set_trans(Tween.TRANS_LINEAR)
-	tween.parallel().tween_property(panel, "position:y", panel.position.y - 30.0, 0.3).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_LINEAR)
+	super.open()
 	back_button.grab_focus()
 
 
@@ -77,8 +66,7 @@ func close() -> void:
 	_save_settings()
 	_rebinding_action = ""
 	_rebinding_label = null
-	visible = false
-	closed.emit()
+	super.close()
 
 
 func _apply_loaded_settings() -> void:
