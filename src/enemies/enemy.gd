@@ -320,6 +320,8 @@ func hit(damage: int) -> void:
 		_change_state(State.DEATH)
 		die()
 		return
+	if _state == State.WINDUP:
+		_cleanup_indicator()
 	if _state != State.HURT:
 		_prev_state = _state
 	_state = State.HURT
