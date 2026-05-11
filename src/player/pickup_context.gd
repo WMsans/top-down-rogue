@@ -28,7 +28,7 @@ func _ready() -> void:
 	_player.add_child.call_deferred(_detection_area)
 	_info_popup = WeaponInfoPopup.new()
 	_info_popup.name = "WeaponInfoPopup"
-	add_child(_info_popup)
+	get_tree().current_scene.add_child.call_deferred(_info_popup)
 
 
 func _process(_delta: float) -> void:
