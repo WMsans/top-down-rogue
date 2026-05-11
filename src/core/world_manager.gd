@@ -165,8 +165,8 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 	terrain_modifier.place_lava(world_pos, radius)
 
 
-func place_blood(world_pos: Vector2, radius: float, outward_speed: float) -> void:
-	terrain_modifier.place_blood(world_pos, radius, outward_speed)
+func place_blood(world_pos: Vector2, radius: float, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	terrain_modifier.place_blood(world_pos, radius, outward_speed, bias_dir)
 
 
 func disperse_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, materials: Array[int]) -> void:

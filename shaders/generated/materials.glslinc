@@ -14,6 +14,19 @@ const int MAT_ICE = 7;
 const int MAT_WATER = 8;
 const int MAT_BLOOD = 9;
 
+const bool IS_FLUID[10] = bool[10](
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true
+);
+
 const bool IS_FLAMMABLE[10] = bool[10](
     false,
     true,

@@ -93,14 +93,29 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 		terrain_physical.invalidate_rect(affected_rect)
 
 
-func place_blood(world_pos: Vector2, radius: float, outward_speed: float) -> void:
+func place_blood(world_pos: Vector2, radius: float, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
 	var center_x := int(floor(world_pos.x))
 	var center_y := int(floor(world_pos.y))
 	var r := int(ceil(radius))
+	var r_sq := float(r * r)
+	var bias_len := bias_dir.length()
+	var bias := Vector2.ZERO
+	if bias_len > 0.0001:
+		bias = bias_dir / bias_len
 	var affected: Dictionary = {}
 	for dx in range(-r, r + 1):
 		for dy in range(-r, r + 1):
-			if dx * dx + dy * dy > r * r:
+			var d_sq := float(dx * dx + dy * dy)
+			if d_sq > r_sq:
+				continue
+			# Irregular splat: keep probability falls off near the edge and gets a
+			# bias toward the hit direction so splatter trails the wound.
+			var t : float = 1.0 - sqrt(d_sq) / max(1.0, float(r))
+			var keep := 0.35 + 0.65 * t
+			if bias != Vector2.ZERO and (dx != 0 or dy != 0):
+				var cell_dir := Vector2(float(dx), float(dy)).normalized()
+				keep += 0.35 * cell_dir.dot(bias)
+			if randf() > keep:
 				continue
 			var wx := center_x + dx
 			var wy := center_y + dy
@@ -122,12 +137,19 @@ func place_blood(world_pos: Vector2, radius: float, outward_speed: float) -> voi
 			if data[idx] != MaterialRegistry.MAT_AIR:
 				continue
 			data[idx] = MaterialRegistry.MAT_BLOOD
-			data[idx + 1] = 200
+			data[idx + 1] = clampi(180 + randi_range(-30, 60), 1, 255)
 			data[idx + 2] = 0
 			var dir_normalized := dir
 			if dir.length_squared() > 0.0001:
 				dir_normalized = dir.normalized()
-			var vel := (dir_normalized * outward_speed) / 60.0
+			elif bias != Vector2.ZERO:
+				dir_normalized = bias
+			var jitter_angle := randf_range(-0.6, 0.6)
+			dir_normalized = dir_normalized.rotated(jitter_angle)
+			var speed := outward_speed * randf_range(0.6, 1.4)
+			if bias != Vector2.ZERO:
+				dir_normalized = (dir_normalized + bias * 0.6).normalized()
+			var vel := (dir_normalized * speed) / 60.0
 			var vx := clampi(int(round(vel.x)) + 8, 0, 15)
 			var vy := clampi(int(round(vel.y)) + 8, 0, 15)
 			data[idx + 3] = (vx << 4) | vy
