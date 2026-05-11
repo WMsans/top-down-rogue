@@ -1,6 +1,5 @@
 extends CanvasLayer
 
-@onready var _overlay: ColorRect = %Overlay
 @onready var _red_flash: ColorRect = %RedFlash
 @onready var _died_label: Label = %DiedLabel
 @onready var _flavor_label: Label = %FlavorLabel
@@ -42,6 +41,7 @@ func _ready() -> void:
 	_continue_button.add_theme_stylebox_override("focus", focus_style)
 	UiAnimations.setup_button_hover(_continue_button, 1.05, 0.95)
 	_continue_button.pressed.connect(_on_continue_pressed)
+	_panel.opened.connect(_on_sequence_complete)
 
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
@@ -55,7 +55,8 @@ func _on_player_died() -> void:
 	visible = true
 	_populate_stats()
 	SceneManager.set_paused(true)
-	_play_death_sequence()
+	_play_red_flash_and_dim()
+	_panel.open()
 
 
 func _populate_stats() -> void:
@@ -67,23 +68,11 @@ func _populate_stats() -> void:
 	]
 
 
-func _play_death_sequence() -> void:
-	_overlay.color = Color(0, 0, 0, 0)
-	_overlay.visible = true
+func _play_red_flash_and_dim() -> void:
 	_red_flash.color = Color(0.6, 0, 0, 0)
 	_red_flash.visible = true
 	_vignette.color = Color(0, 0, 0, 0)
 	_vignette.visible = true
-
-	_panel.modulate.a = 0.0
-	_panel.scale = Vector2(0.6, 0.6)
-	_panel.pivot_offset = _panel.size * 0.5
-
-	_died_label.modulate.a = 0.0
-	_flavor_label.modulate.a = 0.0
-	_stats_label.modulate.a = 0.0
-	_continue_button.modulate.a = 0.0
-	_continue_button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var tween := create_tween()
 	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -97,19 +86,7 @@ func _play_death_sequence() -> void:
 	tween.parallel().tween_property(_vbox, "position:x", -2.0, 0.075).set_trans(Tween.TRANS_SINE)
 	tween.parallel().tween_property(_vbox, "position:x", 0.0, 0.075).set_trans(Tween.TRANS_SINE)
 
-	tween.parallel().tween_property(_overlay, "color:a", 0.85, 0.8).from(0.0).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(_vignette, "color:a", 1.0, 0.8).from(0.0)
-
-	tween.tween_callback(func(): _panel.pivot_offset = _panel.size * 0.5)
-	tween.tween_property(_panel, "modulate:a", 1.0, 0.3)
-	tween.parallel().tween_property(_panel, "scale", Vector2.ONE, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-
-	tween.tween_property(_died_label, "modulate:a", 1.0, 0.25)
-	tween.tween_property(_flavor_label, "modulate:a", 1.0, 0.25)
-	tween.tween_property(_stats_label, "modulate:a", 1.0, 0.25)
-	tween.tween_interval(0.2)
-	tween.tween_property(_continue_button, "modulate:a", 1.0, 0.3)
-	tween.tween_callback(_on_sequence_complete)
+	tween.tween_property(_vignette, "color:a", 1.0, 0.8).from(0.0)
 
 
 func _on_sequence_complete() -> void:
