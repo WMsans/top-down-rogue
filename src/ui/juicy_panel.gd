@@ -51,8 +51,42 @@ func _update_pivot() -> void:
 	if _animated_node:
 		_animated_node.pivot_offset = _animated_node.size * 0.5
 
+func _prepare_open_state() -> void:
+	if _animated_node == null:
+		return
+	if _rest_position == Vector2.ZERO:
+		_rest_position = _animated_node.position
+	_animated_node.position = _rest_position - Vector2(0, drop_distance)
+	_animated_node.modulate.a = 0.0
+	_animated_node.scale = Vector2(0.96, 1.04)
+	_update_pivot()
+
+func _on_open_finished() -> void:
+	_is_animating = false
+	mouse_filter = _original_mouse_filter
+	opened.emit()
+
 func open() -> void:
-	pass # implemented in Task 2
+	if _is_open and not _is_animating:
+		return
+	if _is_animating and _open_tween and _open_tween.is_running():
+		return
+	if _close_tween and _close_tween.is_running():
+		_close_tween.kill()
+		_close_tween = null
+	_is_open = true
+	_is_animating = true
+	visible = true
+	mouse_filter = MOUSE_FILTER_IGNORE
+	_prepare_open_state()
+	_open_tween = create_tween()
+	_open_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_open_tween.set_parallel(true)
+	var target_pos := _rest_position
+	_open_tween.tween_property(_animated_node, "position:y", target_pos.y, enter_duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_open_tween.tween_property(_animated_node, "modulate:a", 1.0, enter_duration * 0.4).set_trans(Tween.TRANS_LINEAR)
+	_open_tween.tween_property(_animated_node, "scale", Vector2.ONE, enter_duration * 0.9).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_open_tween.finished.connect(_on_open_finished, CONNECT_ONE_SHOT)
 
 func close() -> void:
 	pass # implemented in Task 3
