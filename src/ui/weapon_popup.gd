@@ -7,9 +7,11 @@ const TOOLTIP_MAX_WIDTH := 180
 
 const CARD_SCENE := preload("res://scenes/ui/card.tscn")
 
-@onready var _overlay: ColorRect = %Overlay
+var _is_closing: bool = false
+
 @onready var _cards_container: HBoxContainer = %CardsContainer
 @onready var _title_label: Label = %TitleLabel
+@onready var _main_panel: Control = %MainPanel
 
 var _weapon_manager: WeaponManager = null
 var _inventory: PlayerInventory = null
@@ -45,7 +47,15 @@ func _ready() -> void:
 	_title_label.add_theme_constant_override("outline_size", 2)
 	_title_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	visible = false
-	_overlay.gui_input.connect(_on_overlay_input)
+
+
+func _do_open(title: String) -> void:
+	_title_label.text = title
+	_build_cards()
+	SceneManager.set_paused(true)
+	visible = true
+	_is_closing = false
+	_main_panel.open()
 
 
 func open(weapon_manager: WeaponManager) -> void:
@@ -53,10 +63,7 @@ func open(weapon_manager: WeaponManager) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	_inventory = player.get_node_or_null("PlayerInventory") if player else null
 	_selected_slot = -1
-	_title_label.text = "WEAPONS"
-	_build_cards()
-	SceneManager.set_paused(true)
-	visible = true
+	_do_open("WEAPONS")
 
 
 func open_for_pickup(weapon_manager: WeaponManager, new_weapon: Weapon, callback: Callable) -> void:
@@ -68,10 +75,7 @@ func open_for_pickup(weapon_manager: WeaponManager, new_weapon: Weapon, callback
 	var player := get_tree().get_first_node_in_group("player")
 	_inventory = player.get_node_or_null("PlayerInventory") if player else null
 	_selected_slot = -1
-	_title_label.text = "Replace a slot:"
-	_build_cards()
-	SceneManager.set_paused(true)
-	visible = true
+	_do_open("Replace a slot:")
 
 
 func open_for_modifier(weapon_manager: WeaponManager, modifier: Modifier, callback: Callable) -> void:
@@ -83,10 +87,7 @@ func open_for_modifier(weapon_manager: WeaponManager, modifier: Modifier, callba
 	var player := get_tree().get_first_node_in_group("player")
 	_inventory = player.get_node_or_null("PlayerInventory") if player else null
 	_selected_slot = -1
-	_title_label.text = "Add modifier to:"
-	_build_cards()
-	SceneManager.set_paused(true)
-	visible = true
+	_do_open("Add modifier to:")
 
 
 func open_for_remove(weapon_manager: WeaponManager, callback: Callable) -> void:
@@ -99,10 +100,7 @@ func open_for_remove(weapon_manager: WeaponManager, callback: Callable) -> void:
 	_inventory = player.get_node_or_null("PlayerInventory") if player else null
 	_remove_weapon = null
 	_selected_slot = -1
-	_title_label.text = "Remove modifier from:"
-	_build_cards()
-	SceneManager.set_paused(true)
-	visible = true
+	_do_open("Remove modifier from:")
 
 
 func open_for_inventory_modifier(weapon_manager: WeaponManager, player_inventory: PlayerInventory, modifier: Modifier, callback: Callable) -> void:
@@ -115,18 +113,20 @@ func open_for_inventory_modifier(weapon_manager: WeaponManager, player_inventory
 	_inventory = player.get_node_or_null("PlayerInventory") if player else null
 	_selected_slot = -1
 	set_meta("player_inventory_ref", player_inventory)
-	_title_label.text = "Equip modifier to:"
-	_build_cards()
-	SceneManager.set_paused(true)
-	visible = true
+	_do_open("Equip modifier to:")
 
 
 func close() -> void:
+	if _is_closing:
+		return
+	_is_closing = true
 	_cancel_modifier_tooltip()
 	_cancel_feedback()
 	_cancel_skip_button()
 	_clear_pickup_header()
 	_clear_modifier_header()
+	_main_panel.close()
+	await _main_panel.closed
 	_skip_button = null
 	visible = false
 	_weapon_manager = null
@@ -171,7 +171,6 @@ func _build_cards() -> void:
 		var card := _create_card(weapon, i)
 		_cards_container.add_child(card)
 		cards.append(card)
-	UiAnimations.stagger_slide_in(cards, 0.1, 20.0, 0.3)
 
 
 func _add_modifier_header() -> void:
@@ -422,7 +421,6 @@ func _build_remove_modifier_cards(weapon: Weapon) -> void:
 		var card := _create_remove_modifier_card(modifier, i)
 		_cards_container.add_child(card)
 		cards.append(card)
-	UiAnimations.stagger_slide_in(cards, 0.1, 20.0, 0.3)
 
 
 func _create_remove_modifier_card(modifier: Modifier, slot_index: int) -> Control:
@@ -513,12 +511,6 @@ func _swap_weapons(slot_a: int, slot_b: int) -> void:
 		var weapon_b = _inventory.get_weapon(slot_b)
 		_inventory.equip_weapon(slot_a, weapon_b)
 		_inventory.equip_weapon(slot_b, weapon_a)
-
-
-func _on_overlay_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			close()
 
 
 func _get_transferable_modifiers(weapon: Weapon) -> Array[Modifier]:
