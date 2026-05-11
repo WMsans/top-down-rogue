@@ -14,6 +14,7 @@ var _cooldown_label: Label
 var _modifier_container: HBoxContainer
 var _show_tween: Tween
 var _hide_tween: Tween
+var _crossfade_tween: Tween
 var _is_visible: bool = false
 var _current_drop: WeaponDrop = null
 var _pending_hide: bool = false
@@ -71,6 +72,9 @@ func show_for(drop: WeaponDrop) -> void:
 	if _current_drop == drop and _is_visible:
 		return
 
+	if _crossfade_tween and _crossfade_tween.is_valid():
+		return
+
 	if _is_visible and _current_drop != drop:
 		_crossfade_to(drop)
 		return
@@ -82,9 +86,15 @@ func show_for(drop: WeaponDrop) -> void:
 
 func hide() -> void:
 	if not _is_visible:
+		if _show_tween and _show_tween.is_valid():
+			_show_tween.kill()
 		_pending_hide = true
 		return
 	_animate_hide()
+
+
+func is_visible() -> bool:
+	return _is_visible
 
 
 func update_position(drop: WeaponDrop) -> void:
@@ -93,6 +103,11 @@ func update_position(drop: WeaponDrop) -> void:
 		return
 	var screen_pos := cam.get_canvas_transform() * drop.global_position
 	screen_pos.y += POPUP_OFFSET_Y
+	var viewport_size := get_viewport().get_visible_rect().size
+	var panel_size := _card_root.size
+	const MARGIN := 8.0
+	screen_pos.x = clampf(screen_pos.x, MARGIN, viewport_size.x - panel_size.x - MARGIN)
+	screen_pos.y = clampf(screen_pos.y, MARGIN, viewport_size.y - panel_size.y - MARGIN)
 	_card_root.position = screen_pos
 
 
@@ -125,6 +140,8 @@ func _animate_show() -> void:
 		_hide_tween.kill()
 	if _show_tween and _show_tween.is_valid():
 		_show_tween.kill()
+	if _crossfade_tween and _crossfade_tween.is_valid():
+		_crossfade_tween.kill()
 
 	_card_root.show()
 	_card_root.modulate.a = 0.0
@@ -152,9 +169,12 @@ func _animate_hide() -> void:
 		_show_tween.kill()
 	if _hide_tween and _hide_tween.is_valid():
 		_hide_tween.kill()
+	if _crossfade_tween and _crossfade_tween.is_valid():
+		_crossfade_tween.kill()
 
 	_is_visible = false
 	_current_drop = null
+	_pending_hide = false
 
 	_hide_tween = create_tween()
 	_hide_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -173,10 +193,10 @@ func _crossfade_to(drop: WeaponDrop) -> void:
 
 	_is_visible = false
 
-	var crossfade := create_tween()
-	crossfade.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	crossfade.tween_property(_card_root, "modulate:a", 0.0, CROSSFADE_DURATION)
-	crossfade.tween_callback(func() -> void:
+	_crossfade_tween = create_tween()
+	_crossfade_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_crossfade_tween.tween_property(_card_root, "modulate:a", 0.0, CROSSFADE_DURATION)
+	_crossfade_tween.tween_callback(func() -> void:
 		_current_drop = drop
 		_populate(drop.weapon)
 		if _pending_hide:
