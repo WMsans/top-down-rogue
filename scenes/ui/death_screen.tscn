@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/ui/death_screen.gd" id="death_screen_script"]
 [ext_resource type="Shader" path="res://shaders/ui/death_vignette.gdshader" id="death_vignette_shader"]
+[ext_resource type="Script" uid="uid://bjmq2kpe3rwxv" path="res://src/ui/juicy_panel.gd" id="3_jp"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
 shader = ExtResource("death_vignette_shader")
@@ -26,15 +27,6 @@ shadow_size = 16
 [node name="DeathScreen" type="CanvasLayer"]
 layer = 20
 script = ExtResource("death_screen_script")
-
-[node name="Overlay" type="ColorRect" parent="."]
-unique_name_in_owner = true
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0)
 
 [node name="RedFlash" type="ColorRect" parent="."]
 unique_name_in_owner = true
@@ -68,6 +60,12 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("3_jp")
+animated_root = NodePath("")
+content_root = NodePath("PanelMargin/DeathVBox")
+has_backdrop = true
+close_on_backdrop_click = false
+backdrop_color = Color(0, 0, 0, 0.75)
 
 [node name="PanelMargin" type="MarginContainer" parent="CenterContainer/DeathPanel"]
 layout_mode = 2
