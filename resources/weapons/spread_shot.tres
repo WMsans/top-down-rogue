@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1")
 name = "Spread Shot"
-cooldown = 0.7
+cooldown = 1.2
 damage = 2.0
-projectile_speed = 250.0
+projectile_speed = 150.0
 projectile_lifetime = 2.0
 spread_angle = 30.0
 projectile_count = 3

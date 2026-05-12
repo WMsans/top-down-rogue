@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1")
 name = "Fire Orb"
-cooldown = 0.9
+cooldown = 1.5
 damage = 4.0
-projectile_speed = 150.0
+projectile_speed = 90.0
 projectile_lifetime = 1.5
 spread_angle = 0.0
 projectile_count = 1
