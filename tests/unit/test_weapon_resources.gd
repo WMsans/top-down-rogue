@@ -14,7 +14,7 @@ func test_bone_dagger_reach() -> void:
 	assert_that(BONE_DAGGER.cooldown).is_equal(0.25)
 
 func test_throwing_knife_projectile_speed() -> void:
-	assert_that(THROWING_KNIFE.projectile_speed).is_equal(300.0)
+	assert_that(THROWING_KNIFE.projectile_speed).is_equal(180.0)
 	assert_that(THROWING_KNIFE.projectile_count).is_equal(1)
 
 func test_boss_staff_config() -> void:

@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1")
 name = "Throwing Knife"
-cooldown = 0.6
+cooldown = 1.0
 damage = 3.0
-projectile_speed = 300.0
+projectile_speed = 180.0
 projectile_lifetime = 2.0
 spread_angle = 0.0
 projectile_count = 1
