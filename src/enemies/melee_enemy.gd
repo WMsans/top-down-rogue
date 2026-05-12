@@ -9,6 +9,7 @@ func _ready() -> void:
 		weapon = weapon_resource.duplicate()
 		_attack_range = weapon.weapon_reach
 		cooldown_duration = weapon_resource.cooldown
+		speed = 60.0
 	else:
 		weapon = MeleeWeapon.new()
 		_attack_range = 28.0

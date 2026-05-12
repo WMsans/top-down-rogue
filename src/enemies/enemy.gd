@@ -4,17 +4,17 @@ extends CharacterBody2D
 signal died
 signal health_changed(current: int, maximum: int)
 
-enum State { IDLE, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
+enum State { WANDER, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
 enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 
 @export var max_health: int = 20
-@export var speed: float = 0.0
+@export var speed: float = 50.0
 @export var enemy_tier: int = DropTable.EnemyTier.NORMAL
 @export var detection_radius: float = 150.0
 @export var windup_duration: float = 0.35
 @export var death_duration: float = 0.3
 @export var hurt_duration: float = 0.2
-@export var cooldown_duration: float = 0.5
+@export var cooldown_duration: float = 0.8
 @export var is_elite: bool = false
 @export var elite_ability: int = EliteAbility.NONE
 @export var separation_radius: float = 16.0
@@ -36,10 +36,10 @@ var _flash_tween: Tween = null
 var _squash_tween: Tween = null
 var _death_tween: Tween = null
 
-var _state: int = State.IDLE
+var _state: int = State.WANDER
 var _state_timer: float = 0.0
 var _settle_timer: float = 0.0
-var _prev_state: int = State.IDLE
+var _prev_state: int = State.WANDER
 var _player_ref: Node2D = null
 var _attack_range: float = 32.0
 var _player_in_range: bool = false
@@ -48,6 +48,13 @@ var _teleport_cooldown: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
+
+var _wander_direction: Vector2 = Vector2.RIGHT
+var _wander_timer: float = 0.0
+var _wander_is_paused: bool = true
+
+var _exclaim_label: Label = null
+var _exclaim_tween: Tween = null
 
 
 func _ready() -> void:
@@ -80,6 +87,16 @@ func _ready() -> void:
 	detection_area.body_entered.connect(_on_detection_body_entered)
 	detection_area.body_exited.connect(_on_detection_body_exited)
 	add_child(detection_area)
+
+	_exclaim_label = Label.new()
+	_exclaim_label.name = "ExclaimLabel"
+	_exclaim_label.text = "!"
+	_exclaim_label.position = Vector2(0, -16)
+	_exclaim_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_exclaim_label.add_theme_font_size_override("font_size", 22)
+	_exclaim_label.add_theme_color_override("font_color", Color.RED)
+	_exclaim_label.scale = Vector2.ZERO
+	add_child(_exclaim_label)
 
 	_setup_weapon_visual.call_deferred()
 
@@ -125,7 +142,7 @@ func _process(delta: float) -> void:
 			_settle_timer = 0.0
 
 		match _state:
-			State.IDLE:
+			State.WANDER:
 				_process_idle(delta)
 			State.CHASE:
 				_process_chase(delta)
@@ -145,7 +162,7 @@ func _process(delta: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if _state == State.DEATH:
 		return
-	if _state == State.CHASE or _state == State.HURT:
+	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
 		move_and_slide()
 
 
@@ -166,22 +183,36 @@ func _apply_enrage_if_needed() -> void:
 			speed /= 1.5
 
 
-func _process_idle(_delta: float) -> void:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return
-	if _player_in_range:
+func _process_idle(delta: float) -> void:
+	if _player_ref and is_instance_valid(_player_ref) and _player_in_range:
 		_change_state(State.CHASE)
+		return
+
+	_wander_timer -= delta
+	if _wander_timer <= 0.0:
+		if _wander_is_paused:
+			_wander_is_paused = false
+			_wander_direction = Vector2.RIGHT.rotated(randf() * TAU)
+			_wander_timer = randf_range(1.0, 3.0)
+		else:
+			_wander_is_paused = true
+			velocity = Vector2.ZERO
+			_wander_timer = randf_range(0.5, 1.5)
+			return
+
+	if not _wander_is_paused:
+		velocity = _wander_direction * speed * 0.5
 
 
 func _process_chase(_delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 	if not _player_in_range:
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 	if not _can_see_player():
-		_change_state(State.IDLE)
+		_change_state(State.WANDER)
 		return
 
 	var to_player := _player_ref.global_position - global_position
@@ -201,9 +232,11 @@ func _process_chase(_delta: float) -> void:
 func _process_windup(delta: float) -> void:
 	_state_timer -= delta
 	if not _can_see_player():
-		_change_state(State.IDLE)
+		_hide_exclaim()
+		_change_state(State.WANDER)
 		return
 	if _state_timer <= 0.0:
+		_hide_exclaim()
 		_change_state(State.ATTACK)
 
 
@@ -219,7 +252,7 @@ func _process_cooldown(delta: float) -> void:
 		if _player_ref and is_instance_valid(_player_ref) and _player_in_range:
 			_change_state(State.CHASE)
 		else:
-			_change_state(State.IDLE)
+			_change_state(State.WANDER)
 
 
 func _process_hurt(delta: float) -> void:
@@ -277,11 +310,34 @@ func _change_state(new_state: int) -> void:
 		State.WINDUP:
 			_state_timer = windup_duration
 			_settle_timer = 0.0
+			_show_exclaim()
 		State.COOLDOWN:
 			_state_timer = cooldown_duration
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
+
+
+func _show_exclaim() -> void:
+	if _exclaim_label == null:
+		return
+	if _exclaim_tween and _exclaim_tween.is_valid():
+		_exclaim_tween.kill()
+	_exclaim_label.scale = Vector2.ZERO
+	_exclaim_tween = create_tween()
+	_exclaim_tween.set_trans(Tween.TRANS_BACK)
+	_exclaim_tween.set_ease(Tween.EASE_OUT)
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2(1.2, 1.2), 0.05)
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ONE, 0.05)
+
+
+func _hide_exclaim() -> void:
+	if _exclaim_label == null:
+		return
+	if _exclaim_tween and _exclaim_tween.is_valid():
+		_exclaim_tween.kill()
+	_exclaim_tween = create_tween()
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ZERO, 0.05)
 
 
 func _execute_attack() -> void:

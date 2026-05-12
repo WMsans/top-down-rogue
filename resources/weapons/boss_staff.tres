@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1")
 name = "Boss Staff"
-cooldown = 0.5
+cooldown = 0.8
 damage = 6.0
-projectile_speed = 200.0
+projectile_speed = 120.0
 projectile_lifetime = 3.0
 spread_angle = 10.0
 projectile_count = 1
