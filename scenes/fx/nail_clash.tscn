@@ -1,0 +1,65 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Shader" path="res://shaders/fx/shockwave_ring.gdshader" id="1_ring"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ring"]
+shader = ExtResource("1_ring")
+shader_parameter/radius = 0.0
+shader_parameter/thickness = 0.08
+shader_parameter/alpha = 1.0
+shader_parameter/ring_color = Color(1, 1, 1, 1)
+
+[sub_resource type="Gradient" id="Gradient_clash"]
+colors = PackedColorArray(1, 1, 1, 1, 0.6, 0.95, 1, 1, 0.6, 0.95, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture_clash"]
+gradient = SubResource("Gradient_clash")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcess_clash"]
+emission_shape = 0
+direction = Vector3(1, 0, 0)
+spread = 180.0
+initial_velocity_min = 120.0
+initial_velocity_max = 220.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.8
+scale_max = 1.6
+color_ramp = SubResource("GradientTexture_clash")
+
+[sub_resource type="Gradient" id="Gradient_flash"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture_flash"]
+gradient = SubResource("Gradient_flash")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0.0)
+
+[node name="NailClashFX" type="Node2D"]
+
+[node name="Sparks" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 22
+lifetime = 0.25
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcess_clash")
+
+[node name="Flash" type="Sprite2D" parent="."]
+texture = SubResource("GradientTexture_flash")
+modulate = Color(1, 1, 1, 1)
+scale = Vector2(0, 0)
+
+[node name="Ring" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_ring")
+offset_left = -64.0
+offset_top = -64.0
+offset_right = 64.0
+offset_bottom = 64.0
+
+[node name="LifetimeTimer" type="Timer" parent="."]
+wait_time = 0.6
+one_shot = true
+autostart = true

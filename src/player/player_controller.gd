@@ -36,6 +36,9 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
+	var cam_node := get_node_or_null("Camera2D")
+	if cam_node:
+		cam_node.add_to_group("camera")
 	collision_mask = 3
 	collision_layer = 1
 	_original_collision_layer = collision_layer
