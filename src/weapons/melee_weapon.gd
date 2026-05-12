@@ -20,6 +20,9 @@ extends Weapon
 @export var hold_duration: float = 0.025
 @export var return_duration: float = 0.32
 
+@export var parry_window: float = 0.1
+@export var parryable: bool = true
+
 @export var anticipation_pullback: float = PI / 5.0
 @export var overshoot_angle: float = PI / 9.0
 
@@ -47,6 +50,7 @@ enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
 var _is_swinging: bool = false
 var _phase: int = Phase.NONE
 var _phase_time: float = 0.0
+var _swing_elapsed: float = 0.0
 var _start_angle: float = 0.0
 var _end_angle: float = 0.0
 var _swing_dir: float = 1.0
@@ -204,6 +208,7 @@ func _start_swing(direction: Vector2) -> void:
 	_phase_time = 0.0
 	_last_trail_angle = _start_angle - anticipation_pullback * _swing_dir
 	_is_swinging = true
+	_swing_elapsed = 0.0
 
 
 func _capture_from() -> void:
@@ -248,6 +253,7 @@ func _ease_out_elastic(t: float) -> float:
 
 
 func _process_swing(_delta: float) -> void:
+	_swing_elapsed += _delta
 	_phase_time += _delta
 
 	var rest := _rest_pos()
@@ -379,3 +385,15 @@ func _get_facing_direction(user: Node) -> Vector2:
 		if vel is Vector2 and vel.length_squared() > 0.01:
 			return vel.normalized()
 	return Vector2.DOWN
+
+
+func is_swing_active() -> bool:
+	if not _is_swinging:
+		return false
+	return _phase == Phase.PREP or _phase == Phase.ACTION or _phase == Phase.HOLD
+
+
+func is_parry_active() -> bool:
+	if not _is_swinging:
+		return false
+	return _swing_elapsed <= parry_window
