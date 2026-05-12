@@ -119,7 +119,13 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		return
 	var dir_angle: float = direction.angle()
 	var half_arc_angle: float = arc_angle / 2.0
-	for node in user.get_tree().get_nodes_in_group("attackable"):
+	var targets: Array[Node] = []
+	targets.assign(user.get_tree().get_nodes_in_group("attackable"))
+	if user.is_in_group("attackable"):
+		targets.append_array(user.get_tree().get_nodes_in_group("player"))
+	for node in targets:
+		if node == user:
+			continue
 		if not (node is Node2D):
 			continue
 		if not node.has_method("on_hit_impact"):

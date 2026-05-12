@@ -2,7 +2,7 @@ class_name Projectile
 extends Area2D
 
 @export var damage: float = 0.0
-@export var speed: float = 200.0
+@export var speed: float = 120.0
 @export var lifetime: float = 3.0
 @export var is_enemy_projectile: bool = false
 var direction: Vector2 = Vector2.RIGHT
