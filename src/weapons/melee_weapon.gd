@@ -48,6 +48,7 @@ extends Weapon
 enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
 
 var _is_swinging: bool = false
+var _current_user: Node = null
 var _phase: int = Phase.NONE
 var _phase_time: float = 0.0
 var _swing_elapsed: float = 0.0
@@ -97,6 +98,7 @@ func _compute_pommel_offset(tex: Texture2D) -> Vector2:
 
 
 func _use_impl(user: Node) -> void:
+	_current_user = user
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
@@ -151,6 +153,7 @@ func _tick_impl(_delta: float) -> void:
 func update_visual(delta: float, user: Node) -> void:
 	if visual == null:
 		return
+	_current_user = user
 	var dir := _get_facing_direction(user)
 	_facing_angle = dir.angle()
 	if _visual_angle != _visual_angle:
@@ -255,6 +258,9 @@ func _ease_out_elastic(t: float) -> float:
 func _process_swing(_delta: float) -> void:
 	_swing_elapsed += _delta
 	_phase_time += _delta
+
+	if is_swing_active():
+		_destroy_projectiles_in_arc(_current_user, _current_user.global_position if _current_user else Vector2.ZERO, _get_facing_direction(_current_user) if _current_user else Vector2.DOWN)
 
 	var rest := _rest_pos()
 	var facing := _facing_unit()
@@ -397,3 +403,28 @@ func is_parry_active() -> bool:
 	if not _is_swinging:
 		return false
 	return _swing_elapsed <= parry_window
+
+
+func _destroy_projectiles_in_arc(user: Node, origin: Vector2, direction: Vector2) -> void:
+	if user == null:
+		return
+	var dir_angle: float = direction.angle()
+	var half_arc_angle: float = arc_angle / 2.0
+	var destroyed: int = 0
+	for node in user.get_tree().get_nodes_in_group("projectile"):
+		if destroyed >= 8:
+			return
+		if not (node is Projectile):
+			continue
+		var p: Projectile = node
+		if not p.is_enemy_projectile:
+			continue
+		var to_target: Vector2 = p.global_position - origin
+		var dist: float = to_target.length()
+		if dist > weapon_reach or dist <= 0.001:
+			continue
+		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc_angle:
+			continue
+		ProjectileBlockFX.play(p.global_position, -p.direction)
+		p.queue_free()
+		destroyed += 1
