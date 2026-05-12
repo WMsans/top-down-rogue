@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://t5e7r8fmedxh" path="res://src/ui/pause_menu.gd" id="1_pm"]
 [ext_resource type="PackedScene" uid="uid://bqx7kc3no7exp" path="res://scenes/ui/settings_popup.tscn" id="2_sp"]
+[ext_resource type="Script" uid="uid://bjmq2kpe3rwxv" path="res://src/ui/juicy_panel.gd" id="3_jp"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=2013037450]
 process_mode = 3
@@ -16,16 +17,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="Dimmer" type="ColorRect" parent="PausePanel" unique_id=10712110]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.102, 0.059, 0.071, 0.7)
+script = ExtResource("3_jp")
+animated_root = NodePath("CenterContainer/PauseCard")
+content_root = NodePath("CenterContainer/PauseCard/VBoxContainer")
+close_on_backdrop_click = false
 
 [node name="CenterContainer" type="CenterContainer" parent="PausePanel" unique_id=50804748]
 layout_mode = 1
@@ -70,22 +65,16 @@ text = "MAIN MENU"
 
 [node name="ConfirmationPanel" type="Control" parent="." unique_id=611653628]
 unique_name_in_owner = true
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="ConfirmationDimmer" type="ColorRect" parent="ConfirmationPanel" unique_id=673516490]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.3)
+script = ExtResource("3_jp")
+animated_root = NodePath("ConfirmationBox")
+content_root = NodePath("ConfirmationBox/VBoxContainer")
+close_on_backdrop_click = false
 
 [node name="ConfirmationBox" type="PanelContainer" parent="ConfirmationPanel" unique_id=1378624481]
 layout_mode = 1
