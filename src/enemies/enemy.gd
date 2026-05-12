@@ -49,6 +49,9 @@ var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 
+const INDICATOR_SCENE := preload("res://scenes/fx/intent_indicator.tscn")
+var _intent_indicator: IntentIndicator = null
+
 
 func _ready() -> void:
 	add_to_group("attackable")
@@ -270,13 +273,18 @@ func _change_state(new_state: int) -> void:
 		_prev_state = _state
 		_state = new_state
 		_state_timer = hurt_duration
+		_cleanup_indicator()
 		return
+
+	if _state == State.WINDUP and new_state != State.WINDUP:
+		_cleanup_indicator()
 
 	_state = new_state
 	match new_state:
 		State.WINDUP:
 			_state_timer = windup_duration
 			_settle_timer = 0.0
+			_show_intent_indicator()
 		State.COOLDOWN:
 			_state_timer = cooldown_duration
 		State.DEATH:
@@ -312,6 +320,8 @@ func hit(damage: int) -> void:
 		_change_state(State.DEATH)
 		die()
 		return
+	if _state == State.WINDUP:
+		_cleanup_indicator()
 	if _state != State.HURT:
 		_prev_state = _state
 	_state = State.HURT
@@ -415,6 +425,24 @@ func _on_hit() -> void:
 func _setup_weapon_visual() -> void:
 	if weapon and weapon.has_visual():
 		weapon.setup_visual(_weapon_visual, _weapon_sprite)
+
+
+func _show_intent_indicator() -> void:
+	if not is_inside_tree():
+		return
+	var indicator: IntentIndicator = INDICATOR_SCENE.instantiate()
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite:
+		indicator.position = sprite.position + Vector2(0, -16)
+	add_child(indicator)
+	_intent_indicator = indicator
+	indicator.show_indicator()
+
+
+func _cleanup_indicator() -> void:
+	if _intent_indicator and is_instance_valid(_intent_indicator):
+		_intent_indicator.hide_indicator()
+	_intent_indicator = null
 
 
 func _on_death() -> void:
