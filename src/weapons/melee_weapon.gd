@@ -20,6 +20,9 @@ extends Weapon
 @export var hold_duration: float = 0.025
 @export var return_duration: float = 0.32
 
+@export var parry_window: float = 0.1
+@export var parryable: bool = true
+
 @export var anticipation_pullback: float = PI / 5.0
 @export var overshoot_angle: float = PI / 9.0
 
@@ -45,8 +48,10 @@ extends Weapon
 enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
 
 var _is_swinging: bool = false
+var _current_user: Node = null
 var _phase: int = Phase.NONE
 var _phase_time: float = 0.0
+var _swing_elapsed: float = 0.0
 var _start_angle: float = 0.0
 var _end_angle: float = 0.0
 var _swing_dir: float = 1.0
@@ -93,6 +98,7 @@ func _compute_pommel_offset(tex: Texture2D) -> Vector2:
 
 
 func _use_impl(user: Node) -> void:
+	_current_user = user
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
@@ -137,6 +143,9 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc_angle:
 			continue
 		var hit_dir: Vector2 = to_target / dist
+		if node.has_method("try_parry"):
+			if node.try_parry(user, node.global_position, hit_dir):
+				continue
 		node.on_hit_impact(node.global_position, hit_dir, dmg)
 
 
@@ -147,6 +156,7 @@ func _tick_impl(_delta: float) -> void:
 func update_visual(delta: float, user: Node) -> void:
 	if visual == null:
 		return
+	_current_user = user
 	var dir := _get_facing_direction(user)
 	_facing_angle = dir.angle()
 	if _visual_angle != _visual_angle:
@@ -204,6 +214,7 @@ func _start_swing(direction: Vector2) -> void:
 	_phase_time = 0.0
 	_last_trail_angle = _start_angle - anticipation_pullback * _swing_dir
 	_is_swinging = true
+	_swing_elapsed = 0.0
 
 
 func _capture_from() -> void:
@@ -248,7 +259,11 @@ func _ease_out_elastic(t: float) -> float:
 
 
 func _process_swing(_delta: float) -> void:
+	_swing_elapsed += _delta
 	_phase_time += _delta
+
+	if is_swing_active():
+		_destroy_projectiles_in_arc(_current_user, _current_user.global_position if _current_user else Vector2.ZERO, _get_facing_direction(_current_user) if _current_user else Vector2.DOWN)
 
 	var rest := _rest_pos()
 	var facing := _facing_unit()
@@ -379,3 +394,40 @@ func _get_facing_direction(user: Node) -> Vector2:
 		if vel is Vector2 and vel.length_squared() > 0.01:
 			return vel.normalized()
 	return Vector2.DOWN
+
+
+func is_swing_active() -> bool:
+	if not _is_swinging:
+		return false
+	return _phase == Phase.PREP or _phase == Phase.ACTION or _phase == Phase.HOLD
+
+
+func is_parry_active() -> bool:
+	if not _is_swinging:
+		return false
+	return _swing_elapsed <= parry_window
+
+
+func _destroy_projectiles_in_arc(user: Node, origin: Vector2, direction: Vector2) -> void:
+	if user == null:
+		return
+	var dir_angle: float = direction.angle()
+	var half_arc_angle: float = arc_angle / 2.0
+	var destroyed: int = 0
+	for node in user.get_tree().get_nodes_in_group("projectile"):
+		if destroyed >= 8:
+			return
+		if not (node is Projectile):
+			continue
+		var p: Projectile = node
+		if not p.is_enemy_projectile:
+			continue
+		var to_target: Vector2 = p.global_position - origin
+		var dist: float = to_target.length()
+		if dist > weapon_reach or dist <= 0.001:
+			continue
+		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc_angle:
+			continue
+		ProjectileBlockFX.play(p.global_position, -p.direction)
+		p.queue_free()
+		destroyed += 1
