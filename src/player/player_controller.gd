@@ -36,6 +36,9 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
+	var cam_node := get_node_or_null("Camera2D")
+	if cam_node:
+		cam_node.add_to_group("camera")
 	collision_mask = 3
 	collision_layer = 1
 	_original_collision_layer = collision_layer
@@ -201,3 +204,33 @@ func _play_zoom_punch(damage: int) -> void:
 	_zoom_tween = create_tween()
 	_zoom_tween.tween_property(cam, "zoom", punched_zoom, 0.07).set_trans(Tween.TRANS_CUBIC)
 	_zoom_tween.tween_property(cam, "zoom", default_zoom, 0.08)
+
+
+const PARRY_KNOCKBACK_SPEED: float = 40.0
+const PARRY_STUN_DURATION: float = 0.25
+
+
+func try_parry(attacker: Node, hit_pos: Vector2, hit_dir: Vector2) -> bool:
+	var inv := get_node_or_null("PlayerInventory")
+	if inv == null:
+		return false
+	var weapon = inv.get_weapon(inv.active_weapon_slot)
+	if weapon == null or not (weapon is MeleeWeapon):
+		return false
+	var melee: MeleeWeapon = weapon
+	if not melee.is_parry_active():
+		return false
+	if attacker != null and "weapon" in attacker:
+		var aw = attacker.get("weapon")
+		if aw is MeleeWeapon and not aw.parryable:
+			return false
+	var dir := hit_dir.normalized() if hit_dir.length_squared() > 0.0001 else Vector2.RIGHT
+	_knockback_velocity = -dir * PARRY_KNOCKBACK_SPEED
+	if attacker is Node2D and "_knockback_velocity" in attacker:
+		attacker._knockback_velocity = dir * PARRY_KNOCKBACK_SPEED
+	if "_parry_stun_remaining" in attacker:
+		attacker._parry_stun_remaining = PARRY_STUN_DURATION
+	var midpoint: Vector2 = (global_position + (attacker.global_position if attacker is Node2D else hit_pos)) * 0.5
+	var nail_clash := preload("res://src/player/feedback/nail_clash_fx.gd")
+	nail_clash.play(midpoint, dir.orthogonal())
+	return true

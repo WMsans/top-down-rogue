@@ -45,6 +45,7 @@ var _attack_range: float = 32.0
 var _player_in_range: bool = false
 var _speed_base: float = 0.0
 var _teleport_cooldown: float = 0.0
+var _parry_stun_remaining: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
@@ -122,6 +123,14 @@ func _apply_elite_scaling() -> void:
 
 
 func _process(delta: float) -> void:
+	if _parry_stun_remaining > 0.0:
+		_parry_stun_remaining -= delta
+		# Keep cooldown at least as long as the remaining stun.
+		if _state == State.COOLDOWN and _state_timer < _parry_stun_remaining:
+			_state_timer = _parry_stun_remaining
+		velocity = Vector2.ZERO
+		return
+
 	if _teleport_cooldown > 0.0:
 		_teleport_cooldown -= delta
 
