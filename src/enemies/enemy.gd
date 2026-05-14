@@ -27,6 +27,11 @@ const FLASH_DECAY: float = 0.12
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
 
+const TARGETED_SPEED_MULT: float = 1.3
+const TARGETED_COOLDOWN_MULT: float = 0.6
+const PASSIVE_SPEED_MULT: float = 0.7
+const PASSIVE_COOLDOWN_MULT: float = 1.5
+
 var health: int
 var drop_table: DropTable = null
 var weapon: Weapon = null
@@ -492,3 +497,34 @@ func get_facing_direction() -> Vector2:
 		if d.length() > 0.01:
 			return d.normalized()
 	return Vector2.DOWN
+
+
+func _is_targeted() -> bool:
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		return false
+	return player.get("targeted_enemy") == self
+
+
+func _get_effective_speed() -> float:
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		return speed
+	var target = player.get("targeted_enemy")
+	if target == null:
+		return speed
+	if target == self:
+		return speed * TARGETED_SPEED_MULT
+	return speed * PASSIVE_SPEED_MULT
+
+
+func _get_cooldown_multiplier() -> float:
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		return 1.0
+	var target = player.get("targeted_enemy")
+	if target == null:
+		return 1.0
+	if target == self:
+		return TARGETED_COOLDOWN_MULT
+	return PASSIVE_COOLDOWN_MULT
