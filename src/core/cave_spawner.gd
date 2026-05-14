@@ -15,10 +15,10 @@ const SPREAD_SHOT := preload("res://resources/weapons/spread_shot.tres")
 
 @export var spawn_interval: float = 1.0
 @export var attempts_per_cycle: int = 2
-@export var spawn_min_dist: float = 0.0
+@export var spawn_min_dist: float = 600.0
 @export var spawn_max_dist: float = 2000.0
 @export var despawn_dist: float = 2500.0
-@export var mob_cap: int = 99
+@export var mob_cap: int = 70
 @export var spawn_rate: float = 1.0
 @export var group_size_min: int = 3
 @export var group_size_max: int = 5
@@ -138,6 +138,9 @@ func _on_spawn_tick() -> void:
 				break
 
 
+const SPAWN_CLEAR_HALF: int = 6
+
+
 func _validate_position(world_pos: Vector2) -> bool:
 	var player_pos := Vector2.ZERO
 	if is_instance_valid(_world_manager):
@@ -150,49 +153,31 @@ func _validate_position(world_pos: Vector2) -> bool:
 	if randf() > spawn_rate * BASE_SPAWN_CHANCE:
 		return false
 
-	if _terrain_physical == null:
-		return true
-
-	if not _has_solid_floor(world_pos):
-		return false
-
-	if not _has_headroom(world_pos):
+	if not _is_clear_of_walls(world_pos):
 		return false
 
 	return true
 
 
-func _has_solid_floor(world_pos: Vector2) -> bool:
-	if _terrain_physical == null:
+# Ensure the spawn position's footprint contains only air. Reads
+# the actual chunk material data (same source as player spawn
+# validation) rather than the asynchronous terrain_physical probe
+# cache, which is unreliable for newly considered positions.
+func _is_clear_of_walls(world_pos: Vector2) -> bool:
+	if not is_instance_valid(_world_manager):
 		return false
-	var down_offsets := [Vector2.ZERO, Vector2(0, 16), Vector2(0, 32)]
-	var any_probed := false
-	for offset in down_offsets:
-		var pos: Vector2 = world_pos + offset
-		if not _terrain_physical.has_cache(pos):
-			continue
-		any_probed = true
-		if _terrain_physical.query(pos).is_solid:
-			return true
-	if not any_probed:
-		return true
-	return false
-
-
-func _has_headroom(world_pos: Vector2) -> bool:
-	if _terrain_physical == null:
+	var origin := Vector2i(int(floor(world_pos.x)) - SPAWN_CLEAR_HALF, int(floor(world_pos.y)) - SPAWN_CLEAR_HALF)
+	var side := SPAWN_CLEAR_HALF * 2 + 1
+	var rect := Rect2i(origin, Vector2i(side, side))
+	var data: PackedByteArray = _world_manager.read_region(rect)
+	if data.size() != side * side:
 		return false
-	var up_offsets := [Vector2(0, -8), Vector2(0, -24)]
-	var any_probed := false
-	for offset in up_offsets:
-		var pos: Vector2 = world_pos + offset
-		if not _terrain_physical.has_cache(pos):
-			continue
-		any_probed = true
-		if _terrain_physical.query(pos).is_solid:
+	var air := MaterialRegistry.MAT_AIR
+	for i in range(data.size()):
+		# 255 marks cells outside any active chunk; treat as not-clear
+		# so we don't spawn into unloaded terrain.
+		if data[i] != air:
 			return false
-	if not any_probed:
-		return true
 	return true
 
 
@@ -231,7 +216,7 @@ func _spawn_group(center: Vector2, count: int) -> void:
 		)
 		var pos := center + offset
 		retries += 1
-		if _terrain_physical != null and not _has_headroom(pos):
+		if not _is_clear_of_walls(pos):
 			continue
 		_spawn_enemy(pos)
 		placed += 1
