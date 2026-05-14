@@ -20,7 +20,7 @@ extends Weapon
 @export var hold_duration: float = 0.025
 @export var return_duration: float = 0.32
 
-@export var parry_window: float = 0.1
+@export var parry_window: float = 1.0
 @export var parryable: bool = true
 
 @export var anticipation_pullback: float = PI / 5.0
@@ -145,7 +145,8 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		var hit_dir: Vector2 = to_target / dist
 		if node.has_method("try_parry"):
 			if node.try_parry(user, node.global_position, hit_dir):
-				NailClashFX.play(node.global_position, -hit_dir)
+				var tint: Color = trail_color if "trail_color" in self else Color(1, 1, 1, 1)
+				NailClashFX.play(node.global_position, -hit_dir, tint)
 				continue
 		node.on_hit_impact(node.global_position, hit_dir, dmg)
 
