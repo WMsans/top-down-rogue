@@ -56,10 +56,10 @@ func _process_chase(delta: float) -> void:
 
 	if dist < preferred_distance - 20.0:
 		move_dir = -to_player.normalized()
-		velocity = move_dir * speed
+		velocity = move_dir * _get_effective_speed()
 	elif dist > preferred_distance + 20.0:
 		move_dir = to_player.normalized()
-		velocity = move_dir * speed
+		velocity = move_dir * _get_effective_speed()
 	else:
 		_strafe_re_roll -= delta
 		if _strafe_re_roll <= 0.0:
