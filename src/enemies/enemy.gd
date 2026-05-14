@@ -215,7 +215,7 @@ func _process_idle(delta: float) -> void:
 			return
 
 	if not _wander_is_paused:
-		velocity = _wander_direction * speed * 0.5
+		velocity = _wander_direction * _get_effective_speed() * 0.5
 
 
 func _process_chase(_delta: float) -> void:
@@ -236,7 +236,7 @@ func _process_chase(_delta: float) -> void:
 
 	var move_dir := to_player.normalized()
 	move_dir = _apply_separation(move_dir)
-	velocity = move_dir * speed
+	velocity = move_dir * _get_effective_speed()
 
 	if to_player.length() <= _attack_range and _settle_timer >= min_attack_settle_time:
 		velocity = Vector2.ZERO
@@ -326,7 +326,7 @@ func _change_state(new_state: int) -> void:
 			_settle_timer = 0.0
 			_show_exclaim()
 		State.COOLDOWN:
-			_state_timer = cooldown_duration
+			_state_timer = cooldown_duration * _get_cooldown_multiplier()
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
