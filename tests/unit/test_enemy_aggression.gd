@@ -81,3 +81,29 @@ func test_cooldown_multiplier_no_target() -> void:
 	add_child(e)
 	_make_player(null)
 	assert_that(e._get_cooldown_multiplier()).is_equal(1.0)
+
+func test_cooldown_state_timer_uses_targeted_multiplier() -> void:
+	var e: MockAggroEnemy = auto_free(MockAggroEnemy.new())
+	e.cooldown_duration = 1.0
+	add_child(e)
+	_make_player(e)
+	e._change_state(Enemy.State.COOLDOWN)
+	assert_that(e._state_timer).is_equal(0.6)
+
+func test_cooldown_state_timer_uses_passive_multiplier() -> void:
+	var e: MockAggroEnemy = auto_free(MockAggroEnemy.new())
+	e.cooldown_duration = 1.0
+	add_child(e)
+	var other := auto_free(MockAggroEnemy.new())
+	add_child(other)
+	_make_player(other)
+	e._change_state(Enemy.State.COOLDOWN)
+	assert_that(e._state_timer).is_equal(1.5)
+
+func test_cooldown_state_timer_default_when_no_target() -> void:
+	var e: MockAggroEnemy = auto_free(MockAggroEnemy.new())
+	e.cooldown_duration = 1.0
+	add_child(e)
+	_make_player(null)
+	e._change_state(Enemy.State.COOLDOWN)
+	assert_that(e._state_timer).is_equal(1.0)
