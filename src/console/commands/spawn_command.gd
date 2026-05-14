@@ -23,7 +23,7 @@ static func register(registry: CommandRegistry) -> void:
 	registry.register("spawn gold", "Spawn a gold drop (default 10)", _spawn_gold)
 	registry.register("spawn chest", "Spawn a chest", _spawn_chest)
 	registry.register("spawn static_slash", "Spawn a parry dummy that always parries", _spawn_static_slash)
-	registry.register("spawn projectile static", "Spawn a static enemy projectile", _spawn_static_projectile)
+	registry.register("spawn static_projectile", "Spawn a static enemy projectile", _spawn_static_projectile)
 
 
 static func _get_spawn_parent(ctx: Dictionary) -> Node:
