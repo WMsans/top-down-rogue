@@ -145,6 +145,7 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		var hit_dir: Vector2 = to_target / dist
 		if node.has_method("try_parry"):
 			if node.try_parry(user, node.global_position, hit_dir):
+				NailClashFX.play(node.global_position, -hit_dir)
 				continue
 		node.on_hit_impact(node.global_position, hit_dir, dmg)
 

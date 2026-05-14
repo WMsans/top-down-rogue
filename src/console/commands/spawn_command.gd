@@ -5,6 +5,9 @@ const MODIFIER_DROP_SCENE := preload("res://scenes/modifier_drop.tscn")
 const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
 const DUMMY_ENEMY_SCENE := preload("res://scenes/enemies/dummy_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
+const PARDUMMY_SCENE := preload("res://scenes/enemies/parry_dummy.tscn")
+const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
+const PROJECTILE_TEX := preload("res://textures/wall.png")
 
 
 static func register(registry: CommandRegistry) -> void:
@@ -19,6 +22,8 @@ static func register(registry: CommandRegistry) -> void:
 	registry.register("spawn enemy dummy", "Spawn a dummy enemy", _spawn_enemy)
 	registry.register("spawn gold", "Spawn a gold drop (default 10)", _spawn_gold)
 	registry.register("spawn chest", "Spawn a chest", _spawn_chest)
+	registry.register("spawn static_slash", "Spawn a parry dummy that always parries", _spawn_static_slash)
+	registry.register("spawn projectile static", "Spawn a static enemy projectile", _spawn_static_projectile)
 
 
 static func _get_spawn_parent(ctx: Dictionary) -> Node:
@@ -90,3 +95,31 @@ static func _spawn_chest(_args: Array[String], ctx: Dictionary) -> String:
 	parent.add_child(chest)
 	chest.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned chest"
+
+
+static func _spawn_static_slash(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var dummy: Node2D = PARDUMMY_SCENE.instantiate()
+	parent.add_child(dummy)
+	dummy.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned parry dummy (always parries)"
+
+
+static func _spawn_static_projectile(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var proj: Area2D = PROJECTILE_SCENE.instantiate()
+	proj.speed = 0.0
+	proj.is_enemy_projectile = true
+	proj.lifetime = 999.0
+	proj.direction = Vector2.DOWN
+	proj.damage = 10.0
+	var proj_sprite := proj.get_node_or_null("Sprite2D")
+	if proj_sprite:
+		proj_sprite.texture = PROJECTILE_TEX
+	parent.add_child(proj)
+	proj.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned static enemy projectile"
