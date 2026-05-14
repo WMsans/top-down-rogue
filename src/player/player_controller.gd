@@ -8,11 +8,13 @@ const BODY_HEIGHT := 12
 @export var friction: float = 600.0
 @export var max_speed: float = 120.0
 @export var auto_face_range: float = 250.0
+const TARGET_SWITCH_RATIO: float = 0.7
 
 var _last_facing: Vector2 = Vector2.DOWN
 var _facing_left: bool = false
 var _original_collision_layer: int
 var _original_collision_mask: int
+var targeted_enemy: Node2D = null
 
 @onready var _color_rect: ColorRect = $ColorRect
 
@@ -73,6 +75,7 @@ func _physics_process(delta: float) -> void:
 	var input_dir := _get_input_direction()
 	if _knockback_velocity.length_squared() > 0.01:
 		_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
+	_update_target()
 	var enemy_dir := _find_closest_enemy_direction()
 	var is_pushing_wall := input_dir != Vector2.ZERO and _is_blocked_by_terrain(input_dir)
 	if is_pushing_wall:
@@ -137,18 +140,50 @@ func _apply_movement(input_dir: Vector2, delta: float) -> void:
 		velocity = velocity.normalized() * max_speed
 
 
-func _find_closest_enemy_direction() -> Vector2:
+func _can_see_enemy(enemy: Node2D) -> bool:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(global_position, enemy.global_position)
+	query.collision_mask = 1
+	query.exclude = [self, enemy]
+	var result := space_state.intersect_ray(query)
+	return result.is_empty()
+
+
+func _update_target() -> void:
+	if targeted_enemy != null and is_instance_valid(targeted_enemy) and (targeted_enemy is Node2D):
+		var dist_to_current := global_position.distance_to(targeted_enemy.global_position)
+		if dist_to_current <= auto_face_range and _can_see_enemy(targeted_enemy):
+			var closer_enemy: Node2D = null
+			var closer_dist := dist_to_current * TARGET_SWITCH_RATIO
+			for enemy in get_tree().get_nodes_in_group("attackable"):
+				if enemy == targeted_enemy or not is_instance_valid(enemy) or not (enemy is Node2D):
+					continue
+				var dist := global_position.distance_to(enemy.global_position)
+				if dist < closer_dist and _can_see_enemy(enemy):
+					closer_dist = dist
+					closer_enemy = enemy
+			if closer_enemy != null:
+				targeted_enemy = closer_enemy
+			return
+
 	var closest_dist := auto_face_range
-	var closest_dir := Vector2.ZERO
+	var closest_enemy: Node2D = null
 	for enemy in get_tree().get_nodes_in_group("attackable"):
 		if not is_instance_valid(enemy) or not (enemy is Node2D):
 			continue
-		var to_enemy : Vector2 = enemy.global_position - global_position
-		var dist := to_enemy.length()
-		if dist < closest_dist:
+		var dist := global_position.distance_to(enemy.global_position)
+		if dist < closest_dist and _can_see_enemy(enemy):
 			closest_dist = dist
-			closest_dir = to_enemy.normalized()
-	return closest_dir
+			closest_enemy = enemy
+	targeted_enemy = closest_enemy
+
+
+func _find_closest_enemy_direction() -> Vector2:
+	if targeted_enemy != null and is_instance_valid(targeted_enemy):
+		var to_enemy: Vector2 = targeted_enemy.global_position - global_position
+		if to_enemy.length() > 0.01:
+			return to_enemy.normalized()
+	return Vector2.ZERO
 
 
 func get_facing_direction() -> Vector2:
