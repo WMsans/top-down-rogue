@@ -90,7 +90,7 @@ float fbm_2d(vec2 p, uint seed) {
 // Chunk Type Detection
 
 const uint TYPE_MULTI_THRESHOLD = 15u;
-const uint TYPE_CAVE_THRESHOLD = 55u;
+const uint TYPE_CAVE_THRESHOLD = 85u;
 
 // Returns the raw type roll for a coordinate (before secondary override)
 int _raw_chunk_type(ivec2 coord, uint seed) {
