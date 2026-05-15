@@ -147,11 +147,9 @@ bool simulate_oil(ivec2 pos, inout vec4 pixel, inout int material,
                   vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right) {
 	if (material != MAT_OIL && material != MAT_AIR) return false;
 	oil_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
-	if (material == MAT_AIR) {
-		pixel = imageLoad(chunk_tex, pos);
-		material = get_material(pixel);
-	}
-	if (material != MAT_OIL) return false;
+	pixel = imageLoad(chunk_tex, pos);
+	material = get_material(pixel);
+	if (material != MAT_OIL) return material == MAT_OIL;
 
 	int n_mat_up    = get_material(n_up);
 	int n_mat_down  = get_material(n_down);
@@ -175,6 +173,10 @@ bool simulate_oil(ivec2 pos, inout vec4 pixel, inout int material,
 	int burn_health = get_density_oil(pixel);
 	if (temperature >= 200) {
 		burn_health -= 1;
+		if (n_mat_up == MAT_AIR)    imageStore(chunk_tex, pos + ivec2(0, -1), make_pixel(MAT_FIRE, 200, 0));
+		if (n_mat_down == MAT_AIR)  imageStore(chunk_tex, pos + ivec2(0, 1),  make_pixel(MAT_FIRE, 200, 0));
+		if (n_mat_left == MAT_AIR)  imageStore(chunk_tex, pos + ivec2(-1, 0), make_pixel(MAT_FIRE, 200, 0));
+		if (n_mat_right == MAT_AIR) imageStore(chunk_tex, pos + ivec2(1, 0),  make_pixel(MAT_FIRE, 200, 0));
 	}
 	if (burn_health <= 0) {
 		imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, 30));

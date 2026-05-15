@@ -70,6 +70,7 @@ var MAT_MINE_STONE_CRACKED: int
 var MAT_MAGMA_STONE_CRACKED: int
 var MAT_FROZEN_ROCK_CRACKED: int
 var MAT_VAULT_METAL_CRACKED: int
+var MAT_FIRE: int
 
 func _ready():
 	_init_materials()
@@ -252,6 +253,19 @@ func _init_materials():
 		m.id = materials.size()
 		materials.append(m)
 		set("MAT_" + spec.name, m.id)
+
+	# FIRE — transient fire cell spawned by burning oil
+	var mat_fire := MaterialDef.new(
+		"FIRE", "",
+		false, 0, 1,   # non-flammable (already burning), 1 tick lifetime
+		false, false,
+		Color(1.0, 0.5, 0.1, 1.0),
+		false,
+		0, 5.0, 0.0
+	)
+	mat_fire.id = materials.size()
+	materials.append(mat_fire)
+	MAT_FIRE = mat_fire.id
 
 func is_flammable(material_id: int) -> bool:
 	if material_id < 0 or material_id >= materials.size():
