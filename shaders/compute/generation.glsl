@@ -18,7 +18,6 @@ layout(rgba8, set = 0, binding = 0) uniform image2D chunk_tex;
 #include "res://shaders/include/biome_cave_stage.glslinc"
 #include "res://shaders/include/biome_pools_stage.glslinc"
 #include "res://shaders/include/pixel_scene_stamp.glslinc"
-#include "res://shaders/include/secret_ring_stage.glslinc"
 
 void main() {
     Context ctx;
@@ -29,5 +28,4 @@ void main() {
     stage_biome_cave(ctx);
     stage_biome_pools(ctx);
     stage_pixel_scene_stamp(ctx);
-    stage_secret_ring(ctx);
 }

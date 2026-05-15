@@ -222,8 +222,8 @@ func upload_biome_buffer(biome: BiomeDef) -> void:
 	buf.encode_float(12, biome.ridge_scale)
 	buf.encode_s32(16, biome.octaves)
 	buf.encode_s32(20, biome.background_material)
-	buf.encode_s32(24, biome.secret_ring_thickness)
-	buf.encode_s32(28, 0)  # _pad
+	buf.encode_s32(24, biome.perimeter_material)
+	buf.encode_s32(28, biome.cracked_material)
 	var pool_count: int = min(biome.pool_materials.size(), 4)
 	for i in range(pool_count):
 		var p: PoolDef = biome.pool_materials[i]
