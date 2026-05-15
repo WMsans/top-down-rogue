@@ -1,0 +1,60 @@
+// Radial-shell expansion. Each tick:
+//   AIR cells with at least one MAT_EXPLODE_WAVE neighbor become wave cells
+//   with power = max(neighbor_power) - DECAY. Wave cells revert to AIR.
+//   Adjacent flammables get temperature += old_power.
+//   Adjacent terrain takes (power) damage.
+
+const int EXPLODE_WAVE_DECAY = 4;
+
+void stage_explode_wave(ivec2 pos) {
+	vec4 cur = imageLoad(chunk_tex, pos);
+	int mat = int(round(cur.r * 255.0));
+
+	if (mat == MAT_EXPLODE_WAVE) {
+		int power = int(round(cur.b * 255.0));
+		for (int d = 0; d < 4; d++) {
+			ivec2 n = pos;
+			if (d == 0) n.x -= 1;
+			else if (d == 1) n.x += 1;
+			else if (d == 2) n.y -= 1;
+			else n.y += 1;
+			if (n.x < 0 || n.x >= CHUNK_SIZE || n.y < 0 || n.y >= CHUNK_SIZE) continue;
+			vec4 ncur = imageLoad(chunk_tex, n);
+			int nmat = int(round(ncur.r * 255.0));
+			if (IS_FLAMMABLE[nmat] || nmat == MAT_OIL) {
+				int ntemp = int(round(ncur.b * 255.0));
+				ntemp = min(255, ntemp + power);
+				ncur.b = float(ntemp) / 255.0;
+				imageStore(chunk_tex, n, ncur);
+			}
+			int nhealth = int(round(ncur.g * 255.0));
+			if (HAS_COLLIDER[nmat]) {
+				nhealth = max(0, nhealth - power);
+				ncur.g = float(nhealth) / 255.0;
+				imageStore(chunk_tex, n, ncur);
+			}
+		}
+		imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
+		return;
+	}
+
+	if (mat != MAT_AIR) return;
+
+	int best_power = 0;
+	for (int dy = -1; dy <= 1; dy++) {
+		for (int dx = -1; dx <= 1; dx++) {
+			if (dx == 0 && dy == 0) continue;
+			ivec2 n = pos + ivec2(dx, dy);
+			if (n.x < 0 || n.x >= CHUNK_SIZE || n.y < 0 || n.y >= CHUNK_SIZE) continue;
+			vec4 ncur = imageLoad(chunk_tex, n);
+			int nmat = int(round(ncur.r * 255.0));
+			if (nmat != MAT_EXPLODE_WAVE) continue;
+			int np = int(round(ncur.b * 255.0));
+			if (np > best_power) best_power = np;
+		}
+	}
+	int new_power = best_power - EXPLODE_WAVE_DECAY;
+	if (new_power > 0) {
+		imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, new_power));
+	}
+}
