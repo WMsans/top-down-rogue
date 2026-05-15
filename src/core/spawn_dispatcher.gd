@@ -13,6 +13,10 @@ const THROWING_KNIFE := preload("res://resources/weapons/throwing_knife.tres")
 const FIRE_ORB := preload("res://resources/weapons/fire_orb.tres")
 const BOSS_STAFF := preload("res://resources/weapons/boss_staff.tres")
 
+const EXPLOSIVE_BARREL_SCENE := preload("res://scenes/props/explosive_barrel.tscn")
+const OIL_BARREL_SCENE := preload("res://scenes/props/oil_barrel.tscn")
+const GAS_VENT_SCENE := preload("res://scenes/props/gas_vent.tscn")
+
 const CHUNK_SIZE := 256
 
 var _spawned_sectors: Dictionary = {}
@@ -116,6 +120,17 @@ func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num:
 		5: _spawn_chest(world_pos, true)
 		6: _spawn_enemy(world_pos, sector_dist, floor_num, true, false)
 		7: pass
+		8: _spawn_prop_scene(EXPLOSIVE_BARREL_SCENE, world_pos)
+		9: _spawn_prop_scene(OIL_BARREL_SCENE, world_pos)
+		10: _spawn_prop_scene(GAS_VENT_SCENE, world_pos)
+		11: _world_manager.place_lava(world_pos, 1.0)
+		12: _world_manager.place_material(world_pos, 1.0, MaterialRegistry.MAT_OIL)
+		13: _world_manager.place_material(world_pos, 1.0, MaterialRegistry.MAT_WATER)
+
+func _spawn_prop_scene(scene: PackedScene, world_pos: Vector2) -> void:
+	var inst := scene.instantiate()
+	inst.global_position = world_pos
+	_spawn_parent.add_child(inst)
 
 
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
