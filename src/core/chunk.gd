@@ -11,6 +11,9 @@ var injection_buffer: RID
 var static_body: StaticBody2D
 var occluder_instances: Array[LightOccluder2D] = []
 
+var jfa_a: RID
+var jfa_b: RID
+var max_radius_buf: RID
 var light_output_buffer: RID
 var light_pack_uniform_set: RID
 var chunk_lights  # ChunkLights (Node2D)

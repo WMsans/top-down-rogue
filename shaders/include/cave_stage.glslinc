@@ -101,7 +101,7 @@ void carve_multi_cave(ivec2 pos, ivec2 coord, uint seed) {
 
 // Tunnel Carving
 
-const float TUNNEL_RADIUS = 10.0;
+const float TUNNEL_RADIUS = 14.0;
 const float TUNNEL_NOISE_FREQ = 3.0;
 const float TUNNEL_NOISE_AMP = 30.0;
 const float TUNNEL_STUB_LENGTH = 32.0;

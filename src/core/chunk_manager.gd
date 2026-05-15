@@ -62,6 +62,16 @@ func create_chunk(coord: Vector2i) -> void:
 	)
 	chunk.rd_texture = world_manager.rd.texture_create(tf, RDTextureView.new())
 
+	var jfa_tf := RDTextureFormat.new()
+	jfa_tf.width = CHUNK_SIZE
+	jfa_tf.height = CHUNK_SIZE
+	jfa_tf.format = RenderingDevice.DATA_FORMAT_R32G32_SINT
+	jfa_tf.usage_bits = RenderingDevice.TEXTURE_USAGE_STORAGE_BIT
+	chunk.jfa_a = world_manager.rd.texture_create(jfa_tf, RDTextureView.new())
+	chunk.jfa_b = world_manager.rd.texture_create(jfa_tf, RDTextureView.new())
+
+	chunk.max_radius_buf = world_manager.rd.storage_buffer_create(16)
+
 	chunk.injection_buffer = world_manager.rd.storage_buffer_create(INJECTION_BUFFER_SIZE)
 	var zero_data := PackedByteArray()
 	zero_data.resize(INJECTION_BUFFER_SIZE)
@@ -169,6 +179,15 @@ func free_chunk_body(chunk: Chunk) -> void:
 	if chunk.light_output_buffer.is_valid():
 		world_manager.rd.free_rid(chunk.light_output_buffer)
 		chunk.light_output_buffer = RID()
+	if chunk.jfa_a.is_valid():
+		world_manager.rd.free_rid(chunk.jfa_a)
+		chunk.jfa_a = RID()
+	if chunk.jfa_b.is_valid():
+		world_manager.rd.free_rid(chunk.jfa_b)
+		chunk.jfa_b = RID()
+	if chunk.max_radius_buf.is_valid():
+		world_manager.rd.free_rid(chunk.max_radius_buf)
+		chunk.max_radius_buf = RID()
 
 
 func free_chunk_resources(chunk: Chunk) -> void:

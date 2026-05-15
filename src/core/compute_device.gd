@@ -329,19 +329,47 @@ func dispatch_generation(
 		gen_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 		gen_uniform.binding = 0
 		gen_uniform.add_id(chunk.rd_texture)
-		var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
+
+		var u_jfa_a := RDUniform.new()
+		u_jfa_a.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_jfa_a.binding = 1
+		u_jfa_a.add_id(chunk.jfa_a)
+
+		var u_jfa_b := RDUniform.new()
+		u_jfa_b.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_jfa_b.binding = 2
+		u_jfa_b.add_id(chunk.jfa_b)
+
+		var u_max_r := RDUniform.new()
+		u_max_r.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u_max_r.binding = 3
+		u_max_r.add_id(chunk.max_radius_buf)
+
+		var uniform_set := rd.uniform_set_create([gen_uniform, u_jfa_a, u_jfa_b, u_max_r], gen_shader, 0)
 		created_uniform_sets.append(uniform_set)
 		rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
 
 		var push_data := PackedByteArray()
 		push_data.resize(16)
-		push_data.encode_s32(0, coord.x)
-		push_data.encode_s32(4, coord.y)
-		push_data.encode_u32(8, seed_val)
-		push_data.encode_u32(12, 0)
-		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
 
-		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+		# Clear max_radius buffer before the gen pipeline starts
+		var zero_buf := PackedByteArray()
+		zero_buf.resize(16)
+		zero_buf.fill(0)
+		rd.buffer_update(chunk.max_radius_buf, 0, 16, zero_buf)
+
+		const MAX_PASS := 25 + 30 * 12 + 1  # base(25) + 30 dilate iters(12 passes) + alpha clear = 386
+		for pass in range(MAX_PASS):
+			push_data.encode_s32(0, coord.x)
+			push_data.encode_s32(4, coord.y)
+			push_data.encode_u32(8, seed_val)
+			push_data.encode_u32(12, pass)
+			rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
+
+			rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+
+			if pass < MAX_PASS - 1:
+				rd.compute_list_add_barrier(compute_list)
 	rd.compute_list_end()
 
 	return created_uniform_sets
