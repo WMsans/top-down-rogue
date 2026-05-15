@@ -25,6 +25,7 @@ layout(std430, set = 0, binding = 3) buffer ChunkMaxRadius {
 #include "res://shaders/include/stone_fill_stage.glslinc"
 #include "res://shaders/include/simplex_cave_stage.glslinc"
 #include "res://shaders/include/walkability_probe_stage.glslinc"
+#include "res://shaders/include/walkability_enforce_stage.glslinc"
 
 void main() {
     ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
@@ -45,6 +46,38 @@ void main() {
         int read_idx = int(pass - 2u) % 2;
         stage_walkability_jump(pos, stride, read_idx);
     } else if (pass == 10u) {
+        stage_clear_chunk_max(pos);
+    } else if (pass == 11u) {
         stage_walkability_finalize(pos, 0);
+    } else if (pass == 12u) {
+        stage_walkability_strip_pools(pos);
+    } else if (pass == 13u) {
+        stage_clear_chunk_max(pos);
+    } else if (pass == 14u) {
+        stage_walkability_init(pos);
+    } else if (pass >= 15u && pass <= 22u) {
+        int stride = 1 << int(22u - pass);
+        int read_idx = int(pass - 15u) % 2;
+        stage_walkability_jump(pos, stride, read_idx);
+    } else if (pass == 23u) {
+        stage_clear_chunk_max(pos);
+    } else if (pass == 24u) {
+        stage_walkability_finalize(pos, 0);
+    } else if (pass >= 25u) {
+        uint iter_pass = pass - 25u;
+        uint iter_kind = iter_pass % 12u;
+        if (iter_kind == 0u) {
+            stage_walkability_dilate(pos);
+        } else if (iter_kind == 1u) {
+            stage_clear_chunk_max(pos);
+        } else if (iter_kind == 2u) {
+            stage_walkability_init(pos);
+        } else if (iter_kind >= 3u && iter_kind <= 10u) {
+            int stride = 1 << int(10u - iter_kind);
+            int read_idx = int(iter_kind - 3u) % 2;
+            stage_walkability_jump(pos, stride, read_idx);
+        } else if (iter_kind == 11u) {
+            stage_walkability_finalize(pos, 0);
+        }
     }
 }

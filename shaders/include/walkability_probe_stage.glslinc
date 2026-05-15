@@ -69,3 +69,9 @@ void stage_walkability_finalize(ivec2 pos, int final_buf_idx) {
     int packed = (dist << 16) | ((pos.x & 0xFF) << 8) | (pos.y & 0xFF);
     atomicMax(chunk_max.max_radius_packed, packed);
 }
+
+void stage_clear_chunk_max(ivec2 pos) {
+    if (pos.x == 0 && pos.y == 0) {
+        chunk_max.max_radius_packed = 0;
+    }
+}
