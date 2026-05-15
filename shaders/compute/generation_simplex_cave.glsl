@@ -79,5 +79,9 @@ void main() {
         } else if (iter_kind == 11u) {
             stage_walkability_finalize(pos, 0);
         }
+    } else if (pass == 385u) {
+        vec4 cur = imageLoad(chunk_tex, pos);
+        cur.a = 0.0;
+        imageStore(chunk_tex, pos, cur);
     }
 }

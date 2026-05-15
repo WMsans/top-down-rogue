@@ -358,7 +358,7 @@ func dispatch_generation(
 		zero_buf.fill(0)
 		rd.buffer_update(chunk.max_radius_buf, 0, 16, zero_buf)
 
-		const MAX_PASS := 25 + 30 * 12  # base(25) + 30 dilate iterations(12 passes each) = 385
+		const MAX_PASS := 25 + 30 * 12 + 1  # base(25) + 30 dilate iters(12 passes) + alpha clear = 386
 		for pass in range(MAX_PASS):
 			push_data.encode_s32(0, coord.x)
 			push_data.encode_s32(4, coord.y)
