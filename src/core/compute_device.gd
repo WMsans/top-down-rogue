@@ -329,7 +329,18 @@ func dispatch_generation(
 		gen_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
 		gen_uniform.binding = 0
 		gen_uniform.add_id(chunk.rd_texture)
-		var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
+
+		var u_jfa_a := RDUniform.new()
+		u_jfa_a.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_jfa_a.binding = 1
+		u_jfa_a.add_id(chunk.jfa_a)
+
+		var u_jfa_b := RDUniform.new()
+		u_jfa_b.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_jfa_b.binding = 2
+		u_jfa_b.add_id(chunk.jfa_b)
+
+		var uniform_set := rd.uniform_set_create([gen_uniform, u_jfa_a, u_jfa_b], gen_shader, 0)
 		created_uniform_sets.append(uniform_set)
 		rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
 

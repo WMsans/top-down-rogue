@@ -10,6 +10,14 @@ layout(push_constant) uniform PushConstants {
 } push_ctx;
 
 layout(rgba8, set = 0, binding = 0) uniform image2D chunk_tex;
+layout(rg32i, set = 0, binding = 1) uniform iimage2D jfa_a;
+layout(rg32i, set = 0, binding = 2) uniform iimage2D jfa_b;
+layout(std430, set = 0, binding = 3) buffer ChunkMaxRadius {
+    int max_radius_packed;
+    int pad0;
+    int pad1;
+    int pad2;
+} chunk_max;
 
 #include "res://shaders/generated/materials.glslinc"
 #include "res://shaders/include/simplex_2d.glslinc"
