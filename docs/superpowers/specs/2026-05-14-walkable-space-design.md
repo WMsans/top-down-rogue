@@ -59,7 +59,7 @@ Otherwise, using the argmax cell as the centroid of the largest pocket, run a tw
 
 **Step A — strip pools.** For each cell within `chunk_max_radius + 80` of the centroid, if it was added by `stage_biome_pools` (known via a "pool-origin" bit tagged into a scratch channel during step 2), revert it to air. Re-run JFA. If `chunk_max_radius >= 75` now, done.
 
-**Step B — dilate.** While `chunk_max_radius < 75`: turn every solid cell adjacent to an air cell within the pocket-bounded region into air. One iteration ≈ +1 to inscribed radius. Cap at 30 iterations. Re-run JFA between iterations.
+**Step B — dilate.** Define the *pocket-bounded region* as the square of side `2 * (75 + 30)` px centered on the largest-pocket centroid (i.e. the area we could possibly need to widen given the iteration cap). While `chunk_max_radius < 75`: within that region, turn every solid cell adjacent to a cell that's part of the centroid's connected air pocket into air. One iteration ≈ +1 to inscribed radius. Cap at 30 iterations. Re-run JFA between iterations.
 
 **Worst-case cost per chunk:** ~270 compute passes ≈ ~2 ms on a modest GPU at 256² resolution. Streaming generates <10 chunks/sec under normal play → <20 ms/sec budget. Comfortably within frame.
 
