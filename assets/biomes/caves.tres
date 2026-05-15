@@ -4,10 +4,31 @@
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_7cf3p"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_5ujno"]
 
-[sub_resource type="Resource" id="Resource_fs00u"]
+[sub_resource type="Resource" id="Resource_boss_a"]
 script = ExtResource("1_iq0d2")
-png_path = "res://assets/rooms/caves/boss_arena.png"
-size_class = 128
+png_path = "res://assets/rooms/caves/boss_arena_a.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_b"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/boss_arena_b.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_c"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/boss_arena_c.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_d"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/boss_arena_d.png"
+size_class = 512
 is_boss = true
 rotatable = false
 
@@ -33,15 +54,42 @@ png_path = "res://assets/rooms/caves/corridor_a.png"
 weight = 1.5
 size_class = 128
 
+[sub_resource type="Resource" id="Resource_elite_a"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/elite_chest_a.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
+[sub_resource type="Resource" id="Resource_elite_b"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/elite_chest_b.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
+[sub_resource type="Resource" id="Resource_elite_c"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/elite_chest_c.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
 [sub_resource type="Resource" id="Resource_yk633"]
 script = ExtResource("1_iq0d2")
 png_path = "res://assets/rooms/caves/secret_a.png"
 size_class = 32
 is_secret = true
+rotatable = true
 
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
+perimeter_material = 12
+cracked_material = 17
 pool_materials = [SubResource("Resource_xxuj2")]
-room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633")]
-boss_templates = [SubResource("Resource_fs00u")]
+room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_yk633")]
+boss_templates = [SubResource("Resource_boss_a"), SubResource("Resource_boss_b"), SubResource("Resource_boss_c"), SubResource("Resource_boss_d")]

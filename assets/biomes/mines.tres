@@ -4,10 +4,31 @@
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_crnbk"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_53h6i"]
 
-[sub_resource type="Resource" id="Resource_og1t1"]
+[sub_resource type="Resource" id="Resource_boss_a"]
 script = ExtResource("1_2liv1")
-png_path = "res://assets/rooms/mines/boss_arena.png"
-size_class = 128
+png_path = "res://assets/rooms/mines/boss_arena_a.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_b"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/boss_arena_b.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_c"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/boss_arena_c.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_d"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/boss_arena_d.png"
+size_class = 512
 is_boss = true
 rotatable = false
 
@@ -42,11 +63,36 @@ script = ExtResource("1_2liv1")
 png_path = "res://assets/rooms/mines/arena_a.png"
 weight = 2.0
 
+[sub_resource type="Resource" id="Resource_elite_a"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/elite_chest_a.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
+[sub_resource type="Resource" id="Resource_elite_b"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/elite_chest_b.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
+[sub_resource type="Resource" id="Resource_elite_c"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/elite_chest_c.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
 [sub_resource type="Resource" id="Resource_7f5de"]
 script = ExtResource("1_2liv1")
 png_path = "res://assets/rooms/mines/secret_a.png"
 size_class = 32
 is_secret = true
+rotatable = true
 
 [resource]
 script = ExtResource("3_53h6i")
@@ -54,7 +100,9 @@ display_name = "Mines"
 cave_noise_scale = 0.01
 cave_threshold = 0.45
 ridge_weight = 0.4
+perimeter_material = 13
+cracked_material = 18
 pool_materials = [SubResource("Resource_o2tgn"), SubResource("Resource_ogj5k")]
-room_templates = [SubResource("Resource_x6yix"), SubResource("Resource_iria1"), SubResource("Resource_1rrex"), SubResource("Resource_7f5de")]
-boss_templates = [SubResource("Resource_og1t1")]
+room_templates = [SubResource("Resource_x6yix"), SubResource("Resource_iria1"), SubResource("Resource_1rrex"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_7f5de")]
+boss_templates = [SubResource("Resource_boss_a"), SubResource("Resource_boss_b"), SubResource("Resource_boss_c"), SubResource("Resource_boss_d")]
 tint = Color(0.9, 0.85, 0.75, 1)
