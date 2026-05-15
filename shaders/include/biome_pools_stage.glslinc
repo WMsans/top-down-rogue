@@ -22,7 +22,7 @@ void stage_biome_pools(Context ctx) {
         uint pseed = hash_combine(ctx.world_seed, uint(int(round(p.w))));
         float n = simplex_fbm(world_pos * scale, pseed, 2);
         if (n > thr) {
-            imageStore(chunk_tex, pos, vec4(float(pool_mat) / 255.0, 0.0, 0.0, 0.0));
+            imageStore(chunk_tex, pos, vec4(float(pool_mat) / 255.0, 0.0, 0.0, 128.0 / 255.0));
             return;  // first pool wins
         }
     }
