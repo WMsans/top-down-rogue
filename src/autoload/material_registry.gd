@@ -15,6 +15,7 @@ class MaterialDef:
 	var damage: int
 	var glow: float
 	var hardness: float
+	var indestructible: bool = false
 
 	func _init(
 		p_name: String,
@@ -28,7 +29,8 @@ class MaterialDef:
 		p_fluid: bool = false,
 		p_damage: int = 0,
 		p_glow: float = 1.0,
-		p_hardness: float = 0.0
+		p_hardness: float = 0.0,
+		p_indestructible: bool = false
 	):
 		name = p_name
 		texture_path = p_texture_path
@@ -42,6 +44,7 @@ class MaterialDef:
 		damage = p_damage
 		glow = p_glow
 		hardness = p_hardness
+		indestructible = p_indestructible
 
 var materials: Array[MaterialDef] = []
 
@@ -55,6 +58,18 @@ var MAT_COAL: int
 var MAT_ICE: int
 var MAT_WATER: int
 var MAT_BLOOD: int
+var MAT_OIL: int
+var MAT_EXPLODE_WAVE: int
+var MAT_STONE_BRICKS: int
+var MAT_WOOD_BEAM: int
+var MAT_OBSIDIAN: int
+var MAT_PACKED_ICE: int
+var MAT_ENGRAVED_METAL: int
+var MAT_STONE_CRACKED: int
+var MAT_MINE_STONE_CRACKED: int
+var MAT_MAGMA_STONE_CRACKED: int
+var MAT_FROZEN_ROCK_CRACKED: int
+var MAT_VAULT_METAL_CRACKED: int
 
 func _ready():
 	_init_materials()
@@ -171,6 +186,72 @@ func _init_materials():
 	mat_blood.id = materials.size()
 	materials.append(mat_blood)
 	MAT_BLOOD = mat_blood.id
+
+	# OIL — fluid; non-flammable in base state (ignites by direct contact only)
+	var mat_oil := MaterialDef.new(
+		"OIL", "",
+		false, 0, 60,   # not auto-ignitable; burn_health=60 = 60-tick burn lifetime
+		false, false,
+		Color(0.10, 0.06, 0.04, 1.0),
+		true,           # fluid
+		0, 1.0, 0.0
+	)
+	mat_oil.id = materials.size()
+	materials.append(mat_oil)
+	MAT_OIL = mat_oil.id
+
+	# EXPLODE_WAVE — custom sim, transient
+	var mat_explode := MaterialDef.new(
+		"EXPLODE_WAVE", "",
+		false, 0, 0,
+		false, false,
+		Color(1.0, 0.95, 0.5, 1.0),
+		false,
+		0, 30.0, 0.0
+	)
+	mat_explode.id = materials.size()
+	materials.append(mat_explode)
+	MAT_EXPLODE_WAVE = mat_explode.id
+
+	# Per-biome perimeter accents (5)
+	var perim_specs := [
+		{"name": "STONE_BRICKS", "tint": Color(0.55, 0.55, 0.58, 1.0)},
+		{"name": "WOOD_BEAM",    "tint": Color(0.45, 0.30, 0.18, 1.0)},
+		{"name": "OBSIDIAN",     "tint": Color(0.10, 0.08, 0.15, 1.0)},
+		{"name": "PACKED_ICE",   "tint": Color(0.78, 0.90, 0.98, 1.0)},
+		{"name": "ENGRAVED_METAL", "tint": Color(0.65, 0.62, 0.45, 1.0)},
+	]
+	for spec in perim_specs:
+		var m := MaterialDef.new(
+			spec.name, "",
+			false, 0, 0,
+			true, true,           # solid, wall-extension
+			spec.tint,
+			false, 0, 1.0, 5.0
+		)
+		m.id = materials.size()
+		materials.append(m)
+		set("MAT_" + spec.name, m.id)
+
+	# Per-biome cracked variants (5)
+	var cracked_specs := [
+		{"name": "STONE_CRACKED",    "tint": Color(0.50, 0.50, 0.52, 1.0)},
+		{"name": "MINE_STONE_CRACKED", "tint": Color(0.42, 0.36, 0.28, 1.0)},
+		{"name": "MAGMA_STONE_CRACKED", "tint": Color(0.40, 0.20, 0.15, 1.0)},
+		{"name": "FROZEN_ROCK_CRACKED", "tint": Color(0.62, 0.78, 0.88, 1.0)},
+		{"name": "VAULT_METAL_CRACKED", "tint": Color(0.60, 0.58, 0.42, 1.0)},
+	]
+	for spec in cracked_specs:
+		var m := MaterialDef.new(
+			spec.name, "",
+			false, 0, 0,
+			true, true,
+			spec.tint,
+			false, 0, 1.0, 4.0
+		)
+		m.id = materials.size()
+		materials.append(m)
+		set("MAT_" + spec.name, m.id)
 
 func is_flammable(material_id: int) -> bool:
 	if material_id < 0 or material_id >= materials.size():
