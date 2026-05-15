@@ -346,13 +346,17 @@ func dispatch_generation(
 
 		var push_data := PackedByteArray()
 		push_data.resize(16)
-		push_data.encode_s32(0, coord.x)
-		push_data.encode_s32(4, coord.y)
-		push_data.encode_u32(8, seed_val)
-		push_data.encode_u32(12, 0)
-		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
+		for pass in range(11):
+			push_data.encode_s32(0, coord.x)
+			push_data.encode_s32(4, coord.y)
+			push_data.encode_u32(8, seed_val)
+			push_data.encode_u32(12, pass)
+			rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
 
-		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+			rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+
+			if pass >= 1 and pass <= 9:
+				rd.compute_list_add_barrier(compute_list)
 	rd.compute_list_end()
 
 	return created_uniform_sets
