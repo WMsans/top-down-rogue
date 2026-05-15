@@ -359,16 +359,16 @@ func dispatch_generation(
 		rd.buffer_update(chunk.max_radius_buf, 0, 16, zero_buf)
 
 		const MAX_PASS := 25 + 30 * 12 + 1  # base(25) + 30 dilate iters(12 passes) + alpha clear = 386
-		for pass in range(MAX_PASS):
+		for pass1 in range(MAX_PASS):
 			push_data.encode_s32(0, coord.x)
 			push_data.encode_s32(4, coord.y)
 			push_data.encode_u32(8, seed_val)
-			push_data.encode_u32(12, pass)
+			push_data.encode_u32(12, pass1)
 			rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
 
 			rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 
-			if pass < MAX_PASS - 1:
+			if pass1 < MAX_PASS - 1:
 				rd.compute_list_add_barrier(compute_list)
 	rd.compute_list_end()
 
