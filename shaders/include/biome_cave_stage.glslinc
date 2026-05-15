@@ -20,8 +20,8 @@ void stage_biome_cave(Context ctx) {
 
     vec2 world_pos = vec2(ctx.chunk_coord * 256) + vec2(pos);
 
-    float cave_noise = simplex_fbm(world_pos * biome.cave_scale, ctx.world_seed, biome.octaves);
-    float ridge_noise = simplex_ridge(world_pos * biome.ridge_scale, hash_combine(ctx.world_seed, 1000u), 4);
+    float cave_noise = simplex_fbm(world_pos * biome.cave_scale / 3.0, ctx.world_seed, biome.octaves);
+    float ridge_noise = simplex_ridge(world_pos * biome.ridge_scale / 3.0, hash_combine(ctx.world_seed, 1000u), 4);
     float combined = cave_noise * (1.0 - biome.ridge_weight) + ridge_noise * biome.ridge_weight;
 
     if (combined > biome.cave_threshold) {
