@@ -8,7 +8,8 @@ layout(set = 2, binding = 0, std430) readonly buffer BiomeBuffer {
     float ridge_scale;
     int   octaves;
     int   background_material;
-    int   secret_ring_thickness;
+    int   perimeter_material;
+    int   cracked_material;
     int   _pad0;
     // pools[i]: x = material_id (as float), y = noise_scale, z = noise_threshold, w = seed_offset
     vec4 pools[4];

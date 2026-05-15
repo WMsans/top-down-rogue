@@ -7,3 +7,4 @@ extends Resource
 @export var is_secret: bool = false
 @export var is_boss: bool = false
 @export var rotatable: bool = true
+@export var is_elite_chest: bool = false

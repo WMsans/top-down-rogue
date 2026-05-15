@@ -176,6 +176,12 @@ func _process(delta: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if _state == State.DEATH:
 		return
+	# Explode wave damage
+	var wm := get_tree().get_first_node_in_group("world_manager")
+	if wm and wm.has_method("read_cell"):
+		var cell := wm.read_cell(global_position)
+		if cell.material == MaterialRegistry.MAT_EXPLODE_WAVE:
+			hit(cell.temperature)
 	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
 		move_and_slide()
 

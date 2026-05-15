@@ -161,9 +161,9 @@ func bind_template_arrays(template_arrays: Dictionary) -> void:
 	gen_template_array_rids.clear()
 
 	var uniforms: Array[RDUniform] = []
-	var binding_for_size := {16: 0, 32: 1, 64: 2, 128: 3}
+	var binding_for_size := {16: 0, 32: 1, 64: 2, 128: 3, 256: 4, 512: 5}
 
-	for size_class in [16, 32, 64, 128]:
+	for size_class in [16, 32, 64, 128, 256, 512]:
 		var u := RDUniform.new()
 		u.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
 		u.binding = binding_for_size[size_class]
@@ -222,8 +222,8 @@ func upload_biome_buffer(biome: BiomeDef) -> void:
 	buf.encode_float(12, biome.ridge_scale)
 	buf.encode_s32(16, biome.octaves)
 	buf.encode_s32(20, biome.background_material)
-	buf.encode_s32(24, biome.secret_ring_thickness)
-	buf.encode_s32(28, 0)  # _pad
+	buf.encode_s32(24, biome.perimeter_material)
+	buf.encode_s32(28, biome.cracked_material)
 	var pool_count: int = min(biome.pool_materials.size(), 4)
 	for i in range(pool_count):
 		var p: PoolDef = biome.pool_materials[i]

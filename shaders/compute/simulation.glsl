@@ -35,9 +35,11 @@ layout(set = 0, binding = 5, std430) readonly buffer InjectionBuffer {
 #include "res://shaders/include/sim/common.glslinc"
 #include "res://shaders/include/sim/gas.glslinc"
 #include "res://shaders/include/sim/lava.glslinc"
+#include "res://shaders/include/sim/oil.glslinc"
 #include "res://shaders/include/sim/blood.glslinc"
 #include "res://shaders/include/sim/injection.glslinc"
 #include "res://shaders/include/sim/burning.glslinc"
+#include "res://shaders/include/explode_wave_stage.glslinc"
 
 void main() {
 	ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
@@ -53,9 +55,13 @@ void main() {
 	vec4 n_left  = read_neighbor(pos + ivec2(-1, 0));
 	vec4 n_right = read_neighbor(pos + ivec2( 1, 0));
 
+	// Explode wave: resolve before fluids so waves clear to AIR before advection.
+	stage_explode_wave(pos);
+
 	// Fluid dispatch — each simulate_* returns true if the cell is fully processed.
 	// Add new fluids here in priority order (higher priority first).
 	if (simulate_lava(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
+	if (simulate_oil(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
 	if (simulate_blood(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 	if (simulate_gas(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
 

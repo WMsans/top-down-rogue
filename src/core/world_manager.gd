@@ -181,6 +181,10 @@ func place_material(world_pos: Vector2, radius: float, material_id: int) -> void
 	terrain_modifier.place_material(world_pos, radius, material_id)
 
 
+func place_material_with_temp(world_pos: Vector2, radius: float, material_id: int, temperature: int) -> void:
+	terrain_modifier.place_material_with_temp(world_pos, radius, material_id, temperature)
+
+
 func place_fire(world_pos: Vector2, radius: float) -> void:
 	terrain_modifier.place_fire(world_pos, radius)
 
@@ -249,6 +253,22 @@ func read_region(region: Rect2i) -> PackedByteArray:
 					result[result_y * width + result_x] = material
 
 	return result
+
+
+func read_cell(world_pos: Vector2) -> Dictionary:
+	var cx := floori(world_pos.x / CHUNK_SIZE)
+	var cy := floori(world_pos.y / CHUNK_SIZE)
+	var coord := Vector2i(cx, cy)
+	if not chunks.has(coord):
+		return {"material": -1, "temperature": 0}
+	var chunk: Chunk = chunks[coord]
+	var chunk_data: PackedByteArray = rd.texture_get_data(chunk.rd_texture, 0)
+	var lx := int(world_pos.x) - cx * CHUNK_SIZE
+	var ly := int(world_pos.y) - cy * CHUNK_SIZE
+	var idx := (ly * CHUNK_SIZE + lx) * 4
+	var material := int(chunk_data[idx])
+	var temperature := int(chunk_data[idx + 2])
+	return {"material": material, "temperature": temperature}
 
 
 func find_spawn_position(search_origin: Vector2i, body_size: Vector2i, max_radius: float = 800.0) -> Vector2i:

@@ -86,7 +86,9 @@ func build_stamp_bytes(chunk_coords: Array[Vector2i]) -> PackedByteArray:
 			var flags := 0
 			if tmpl.is_secret:
 				flags |= 1
-			var meta := (slot.template_size & 0xFF) | ((rot_steps & 0xFF) << 8) | ((flags & 0xFF) << 16)
+			# bits 0..15 = size_class, 16..19 = rotation, 20..23 = flags.
+			# Kept within 24 bits so it round-trips through the float in the stamp buffer.
+			var meta := (slot.template_size & 0xFFFF) | ((rot_steps & 0xF) << 16) | ((flags & 0xF) << 20)
 
 			stamps.append({
 				"cx": float(center.x),

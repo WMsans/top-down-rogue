@@ -38,3 +38,15 @@ func _physics_process(_delta: float) -> void:
 
 	if total_damage > 0 and inventory:
 		inventory.take_damage(total_damage, Vector2.ZERO)
+
+	# Explode wave damage
+	var wm := get_tree().get_first_node_in_group("world_manager")
+	if wm and wm.has_method("read_cell"):
+		for ix in range(SAMPLE_POINTS_X):
+			for iy in range(SAMPLE_POINTS_Y):
+				var sample_x := int(round(pos.x - half_w + float(ix) * BODY_WIDTH / float(SAMPLE_POINTS_X - 1)))
+				var sample_y := int(round(pos.y - half_h + float(iy) * BODY_HEIGHT / float(SAMPLE_POINTS_Y - 1)))
+				var cell := wm.read_cell(Vector2(sample_x, sample_y))
+				if cell.material == MaterialRegistry.MAT_EXPLODE_WAVE:
+					inventory.take_damage(cell.temperature, Vector2.ZERO)
+					return

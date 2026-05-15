@@ -4,10 +4,31 @@
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_e61lu"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_wsrpv"]
 
-[sub_resource type="Resource" id="Resource_2rwkq"]
+[sub_resource type="Resource" id="Resource_boss_a"]
 script = ExtResource("1_ngues")
-png_path = "res://assets/rooms/vault/boss_arena.png"
-size_class = 128
+png_path = "res://assets/rooms/vault/boss_arena_a.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_b"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/boss_arena_b.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_c"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/boss_arena_c.png"
+size_class = 512
+is_boss = true
+rotatable = false
+
+[sub_resource type="Resource" id="Resource_boss_d"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/boss_arena_d.png"
+size_class = 512
 is_boss = true
 rotatable = false
 
@@ -33,6 +54,37 @@ script = ExtResource("1_ngues")
 png_path = "res://assets/rooms/vault/shop_a.png"
 size_class = 32
 
+[sub_resource type="Resource" id="Resource_elite_a"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/elite_chest_a.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
+[sub_resource type="Resource" id="Resource_elite_b"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/elite_chest_b.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
+[sub_resource type="Resource" id="Resource_elite_c"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/elite_chest_c.png"
+size_class = 256
+is_elite_chest = true
+rotatable = true
+weight = 0.5
+
+[sub_resource type="Resource" id="Resource_secret"]
+script = ExtResource("1_ngues")
+png_path = "res://assets/rooms/vault/secret_a.png"
+size_class = 32
+is_secret = true
+rotatable = true
+
 [resource]
 script = ExtResource("3_wsrpv")
 display_name = "Vault"
@@ -40,7 +92,9 @@ cave_noise_scale = 0.014
 cave_threshold = 0.55
 ridge_weight = 0.5
 background_material = 1
+perimeter_material = 16
+cracked_material = 21
 pool_materials = [SubResource("Resource_0f0hf")]
-room_templates = [SubResource("Resource_xes3i"), SubResource("Resource_wmkmb"), SubResource("Resource_flwj0")]
-boss_templates = [SubResource("Resource_2rwkq")]
+room_templates = [SubResource("Resource_xes3i"), SubResource("Resource_wmkmb"), SubResource("Resource_flwj0"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_secret")]
+boss_templates = [SubResource("Resource_boss_a"), SubResource("Resource_boss_b"), SubResource("Resource_boss_c"), SubResource("Resource_boss_d")]
 tint = Color(1, 0.95, 0.85, 1)
