@@ -1,8 +1,8 @@
 @tool
 class_name SecretVaultGenerator
 
-# Small chamber with secret_loot marker. Outer ring is left transparent —
-# secret_ring stage in the shader adds the wall after pixel_scene stamps.
+# Small chamber with secret_loot marker. Pixel-scene stamp places it inside
+# solid terrain (validated by the shader before stamping).
 static func generate(size: int, gen_seed: int) -> Image:
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))

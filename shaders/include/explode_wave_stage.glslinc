@@ -1,8 +1,20 @@
-// Radial-shell expansion. Each tick:
-//   AIR cells with at least one MAT_EXPLODE_WAVE neighbor become wave cells
-//   with power = max(neighbor_power) - DECAY. Wave cells revert to AIR.
-//   Adjacent flammables get temperature += old_power.
-//   Adjacent terrain takes (power) damage.
+// Radial-shell expansion.
+//
+// Encoding: MAT_EXPLODE_WAVE cells store age in the G byte and power in the B
+// byte. Cells live two ticks:
+//   - age == 0: "fresh"; applies damage/heat to neighbors, then transitions to
+//     age == 1 on the same tick. Still wave material.
+//   - age >= 1: "decaying"; becomes AIR on the next tick.
+//
+// AIR cells with any wave neighbor (any age) become fresh wave cells with
+// power = max(neighbor_power) - DECAY. Pulling from any age (not just 0)
+// keeps propagation race-tolerant: the source cell's age may flip from 0 to
+// 1 mid-dispatch as another thread writes it, but the AIR pull still fires.
+//
+// Cross-thread races on the same cell are still possible (GLSL compute gives
+// no ordering guarantees across workgroups), but power-only pulls converge to
+// similar values, and the 2-tick lifetime gives the wave a second chance to
+// propagate past localized holes.
 
 const int EXPLODE_WAVE_DECAY = 4;
 
@@ -11,7 +23,17 @@ void stage_explode_wave(ivec2 pos) {
 	int mat = int(round(cur.r * 255.0));
 
 	if (mat == MAT_EXPLODE_WAVE) {
+		int age = int(round(cur.g * 255.0));
 		int power = int(round(cur.b * 255.0));
+
+		if (age >= 1) {
+			// Decaying wave: clear to AIR.
+			imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
+			return;
+		}
+
+		// Fresh wave: apply damage/heat to 4-neighbors, then transition to
+		// age=1 so this cell expires next tick.
 		for (int d = 0; d < 4; d++) {
 			ivec2 n = pos;
 			if (d == 0) n.x -= 1;
@@ -19,27 +41,38 @@ void stage_explode_wave(ivec2 pos) {
 			else if (d == 2) n.y -= 1;
 			else n.y += 1;
 			if (n.x < 0 || n.x >= CHUNK_SIZE || n.y < 0 || n.y >= CHUNK_SIZE) continue;
+
 			vec4 ncur = imageLoad(chunk_tex, n);
 			int nmat = int(round(ncur.r * 255.0));
-			if (IS_FLAMMABLE[nmat] || nmat == MAT_OIL) {
-				int ntemp = int(round(ncur.b * 255.0));
-				ntemp = min(255, ntemp + power);
-				ncur.b = float(ntemp) / 255.0;
-				imageStore(chunk_tex, n, ncur);
-			}
+
+			bool flammable = IS_FLAMMABLE[nmat] || nmat == MAT_OIL;
+			bool collider = HAS_COLLIDER[nmat];
+			if (!flammable && !collider) continue;
+
+			int ntemp = int(round(ncur.b * 255.0));
 			int nhealth = int(round(ncur.g * 255.0));
-			if (HAS_COLLIDER[nmat]) {
-				nhealth = max(0, nhealth - power);
-				ncur.g = float(nhealth) / 255.0;
-				imageStore(chunk_tex, n, ncur);
-			}
+			// Wave contact ignites flammables outright (raises temp above the
+			// oil/wood ignition threshold). Wave power still controls how far
+			// the shell reaches, but ignition itself doesn't scale with power.
+			if (flammable) ntemp = max(ntemp, 220);
+			if (collider) nhealth = max(0, nhealth - power);
+			ncur.g = float(nhealth) / 255.0;
+			ncur.b = float(ntemp) / 255.0;
+			imageStore(chunk_tex, n, ncur);
 		}
-		imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
+
+		imageStore(chunk_tex, pos, vec4(
+			float(MAT_EXPLODE_WAVE) / 255.0,
+			1.0 / 255.0,                       // age = 1
+			float(clamp(power, 0, 255)) / 255.0,
+			0.0
+		));
 		return;
 	}
 
 	if (mat != MAT_AIR) return;
 
+	// AIR pulls from any 8-neighbor wave cell (age 0 or 1).
 	int best_power = 0;
 	for (int dy = -1; dy <= 1; dy++) {
 		for (int dx = -1; dx <= 1; dx++) {
@@ -55,6 +88,12 @@ void stage_explode_wave(ivec2 pos) {
 	}
 	int new_power = best_power - EXPLODE_WAVE_DECAY;
 	if (new_power > 0) {
-		imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, new_power));
+		// New fresh wave: age=0 in G, power in B.
+		imageStore(chunk_tex, pos, vec4(
+			float(MAT_EXPLODE_WAVE) / 255.0,
+			0.0,                              // age = 0
+			float(clamp(new_power, 0, 255)) / 255.0,
+			0.0
+		));
 	}
 }

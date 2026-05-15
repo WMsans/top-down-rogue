@@ -161,9 +161,9 @@ func bind_template_arrays(template_arrays: Dictionary) -> void:
 	gen_template_array_rids.clear()
 
 	var uniforms: Array[RDUniform] = []
-	var binding_for_size := {16: 0, 32: 1, 64: 2, 128: 3}
+	var binding_for_size := {16: 0, 32: 1, 64: 2, 128: 3, 256: 4, 512: 5}
 
-	for size_class in [16, 32, 64, 128]:
+	for size_class in [16, 32, 64, 128, 256, 512]:
 		var u := RDUniform.new()
 		u.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
 		u.binding = binding_for_size[size_class]

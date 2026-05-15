@@ -9,7 +9,6 @@ func test_biome_def_has_defaults() -> void:
 	assert_that(b.cave_noise_scale).is_equal(0.008)
 	assert_that(b.cave_threshold).is_equal(0.42)
 	assert_that(b.octaves).is_equal(5)
-	assert_that(b.secret_ring_thickness).is_equal(3)
 
 func test_pool_def_construction() -> void:
 	var p := _PoolDef.new()

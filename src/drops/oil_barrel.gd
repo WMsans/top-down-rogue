@@ -20,10 +20,13 @@ func take_damage(amount: int) -> void:
 
 
 func _detonate() -> void:
+	# Place the wave seed first; place_material guards on AIR only, so any
+	# oil placed first would block the center wave cell. The wave's age=0
+	# heat-transfer ignites the surrounding oil on the next tick.
 	var wm := get_tree().get_first_node_in_group("world_manager")
 	if wm:
-		if wm.has_method("place_material"):
-			wm.place_material(global_position, oil_radius, MaterialRegistry.MAT_OIL)
 		if wm.has_method("place_material_with_temp"):
 			wm.place_material_with_temp(global_position, 1.0, MaterialRegistry.MAT_EXPLODE_WAVE, explosion_power)
+		if wm.has_method("place_material"):
+			wm.place_material(global_position, oil_radius, MaterialRegistry.MAT_OIL)
 	queue_free()

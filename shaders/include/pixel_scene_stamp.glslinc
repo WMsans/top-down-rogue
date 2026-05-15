@@ -7,9 +7,9 @@ layout(set = 1, binding = 0, std430) readonly buffer StampBuffer {
     // Each stamp packed as two vec4s:
     //  s0: world_center.xy, template_index (z), packed_meta (w)
     //  packed_meta encoding (as int, fits in float exactly up to 2^24):
-    //    bits  0..7  = size_class (16/32/64/128 → use as-is)
-    //    bits  8..15 = rotation_steps (0/1/2/3 = 0/90/180/270 deg)
-    //    bits 16..23 = flags (bit0 = is_secret)
+    //    bits  0..15 = size_class (up to 65535; supports 16/32/64/128/256/512)
+    //    bits 16..19 = rotation_steps (0/1/2/3 = 0/90/180/270 deg)
+    //    bits 20..23 = flags (bit0 = is_secret)
     vec4 stamps[128];
 } stamp_buf;
 
@@ -17,12 +17,16 @@ layout(set = 3, binding = 0) uniform sampler2DArray template_array_16;
 layout(set = 3, binding = 1) uniform sampler2DArray template_array_32;
 layout(set = 3, binding = 2) uniform sampler2DArray template_array_64;
 layout(set = 3, binding = 3) uniform sampler2DArray template_array_128;
+layout(set = 3, binding = 4) uniform sampler2DArray template_array_256;
+layout(set = 3, binding = 5) uniform sampler2DArray template_array_512;
 
 vec4 sample_template(int size_class, int idx, vec2 uv) {
     if (size_class == 16)  return texture(template_array_16,  vec3(uv, float(idx)));
     if (size_class == 32)  return texture(template_array_32,  vec3(uv, float(idx)));
     if (size_class == 64)  return texture(template_array_64,  vec3(uv, float(idx)));
-    return texture(template_array_128, vec3(uv, float(idx)));
+    if (size_class == 128) return texture(template_array_128, vec3(uv, float(idx)));
+    if (size_class == 256) return texture(template_array_256, vec3(uv, float(idx)));
+    return texture(template_array_512, vec3(uv, float(idx)));
 }
 
 vec2 rotate_local(vec2 local, int rot_steps, float size) {
@@ -44,11 +48,13 @@ void stage_pixel_scene_stamp(Context ctx) {
         vec2 center = s.xy;
         int idx = int(round(s.z));
         int meta = int(round(s.w));
-        int size_class = meta & 0xFF;
-        int rot_steps = (meta >> 8) & 0xFF;
-        int flags = (meta >> 16) & 0xFF;
+        int size_class = meta & 0xFFFF;
+        int rot_steps = (meta >> 16) & 0xF;
+        int flags = (meta >> 20) & 0xF;
 
         // Solid-validation for secret stamps: check that ≥90% of center region is solid.
+        // Only this chunk's data is visible to gen; skip the stamp if too many samples
+        // fall outside the chunk (we'd be making a decision on too little data).
         if ((flags & 1) != 0) {
             int solid_count = 0;
             int sample_total = 25;
@@ -65,7 +71,7 @@ void stage_pixel_scene_stamp(Context ctx) {
                     if (pmat != MAT_AIR) solid_count += 1;
                 }
             }
-            if (sample_total <= 0 || float(solid_count) / float(sample_total) < 0.9) continue;
+            if (sample_total < 8 || float(solid_count) / float(sample_total) < 0.9) continue;
         }
 
         float half_size = float(size_class) * 0.5;

@@ -169,21 +169,49 @@ bool simulate_oil(ivec2 pos, inout vec4 pixel, inout int material,
 	if (n_mat_left == MAT_LAVA || n_temp_left >= 200)   temperature = max(temperature, 220);
 	if (n_mat_right == MAT_LAVA || n_temp_right >= 200) temperature = max(temperature, 220);
 
-	// Burning behavior: G channel serves as burn countdown.
-	int burn_health = get_density_oil(pixel);
+	// Burning behavior. Density doubles as the fuel reserve — each burning tick
+	// consumes one density. Cells that are too thin to sustain a burn
+	// dissipate harmlessly instead of cascading into micro-explosions.
+	const int MIN_BURN_DENSITY = 16;
+	int fuel = get_density_oil(pixel);
+	ivec2 vel = unpack_velocity_oil(pixel);
+
 	if (temperature >= 200) {
-		burn_health -= 1;
-		if (n_mat_up == MAT_AIR)    imageStore(chunk_tex, pos + ivec2(0, -1), make_pixel(MAT_FIRE, 200, 0));
-		if (n_mat_down == MAT_AIR)  imageStore(chunk_tex, pos + ivec2(0, 1),  make_pixel(MAT_FIRE, 200, 0));
-		if (n_mat_left == MAT_AIR)  imageStore(chunk_tex, pos + ivec2(-1, 0), make_pixel(MAT_FIRE, 200, 0));
-		if (n_mat_right == MAT_AIR) imageStore(chunk_tex, pos + ivec2(1, 0),  make_pixel(MAT_FIRE, 200, 0));
+		if (fuel < MIN_BURN_DENSITY) {
+			imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
+			return true;
+		}
+		fuel -= 1;
+		// Emit fire in adjacent AIR cells. Re-read the neighbor before storing
+		// to avoid stomping a fluid/wave cell that was just written by another
+		// thread in this dispatch. The race isn't fully eliminated (GLSL gives
+		// no cross-workgroup ordering), but the re-check catches the common case.
+		if (n_mat_up == MAT_AIR) {
+			vec4 reread = imageLoad(chunk_tex, pos + ivec2(0, -1));
+			if (get_material(reread) == MAT_AIR)
+				imageStore(chunk_tex, pos + ivec2(0, -1), make_pixel(MAT_FIRE, 200, 0));
+		}
+		if (n_mat_down == MAT_AIR) {
+			vec4 reread = imageLoad(chunk_tex, pos + ivec2(0, 1));
+			if (get_material(reread) == MAT_AIR)
+				imageStore(chunk_tex, pos + ivec2(0, 1), make_pixel(MAT_FIRE, 200, 0));
+		}
+		if (n_mat_left == MAT_AIR) {
+			vec4 reread = imageLoad(chunk_tex, pos + ivec2(-1, 0));
+			if (get_material(reread) == MAT_AIR)
+				imageStore(chunk_tex, pos + ivec2(-1, 0), make_pixel(MAT_FIRE, 200, 0));
+		}
+		if (n_mat_right == MAT_AIR) {
+			vec4 reread = imageLoad(chunk_tex, pos + ivec2(1, 0));
+			if (get_material(reread) == MAT_AIR)
+				imageStore(chunk_tex, pos + ivec2(1, 0), make_pixel(MAT_FIRE, 200, 0));
+		}
 	}
-	if (burn_health <= 0) {
+	if (fuel <= 0) {
 		imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, 30));
 		return true;
 	}
 
-	ivec2 vel = unpack_velocity_oil(pixel);
-	imageStore(chunk_tex, pos, pack_oil(burn_health, temperature, vel));
+	imageStore(chunk_tex, pos, pack_oil(fuel, temperature, vel));
 	return true;
 }

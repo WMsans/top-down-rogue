@@ -46,6 +46,13 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 		slot.is_empty = true
 		return slot
 
+	# Boss arenas can be larger than SECTOR_SIZE_PX (e.g. 512-px stamps in a
+	# 384-px grid), so reserve the sectors immediately inside the boss ring
+	# to keep neighbor stamps from overlapping the boss footprint.
+	if dist == BOSS_RING_DISTANCE - 1:
+		slot.is_empty = true
+		return slot
+
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(_seed ^ (coord.x * 73856093) ^ (coord.y * 19349663))
 
