@@ -340,12 +340,23 @@ func dispatch_generation(
 		u_jfa_b.binding = 2
 		u_jfa_b.add_id(chunk.jfa_b)
 
-		var uniform_set := rd.uniform_set_create([gen_uniform, u_jfa_a, u_jfa_b], gen_shader, 0)
+		var u_max_r := RDUniform.new()
+		u_max_r.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u_max_r.binding = 3
+		u_max_r.add_id(chunk.max_radius_buf)
+
+		var uniform_set := rd.uniform_set_create([gen_uniform, u_jfa_a, u_jfa_b, u_max_r], gen_shader, 0)
 		created_uniform_sets.append(uniform_set)
 		rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
 
 		var push_data := PackedByteArray()
 		push_data.resize(16)
+
+		var zero_buf := PackedByteArray()
+		zero_buf.resize(16)
+		zero_buf.fill(0)
+		rd.buffer_update(chunk.max_radius_buf, 0, 16, zero_buf)
+
 		for pass in range(11):
 			push_data.encode_s32(0, coord.x)
 			push_data.encode_s32(4, coord.y)

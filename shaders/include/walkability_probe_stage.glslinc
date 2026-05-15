@@ -65,4 +65,7 @@ void stage_walkability_finalize(ivec2 pos, int final_buf_idx) {
     int new_alpha = (alpha_byte & 0x80) | (dist & 0x7F);
     cur.a = float(new_alpha) / 255.0;
     imageStore(chunk_tex, pos, cur);
+
+    int packed = (dist << 16) | ((pos.x & 0xFF) << 8) | (pos.y & 0xFF);
+    atomicMax(chunk_max.max_radius_packed, packed);
 }
