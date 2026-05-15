@@ -7,3 +7,4 @@
 .worktree/
 build/
 /reports
+/opencode.json
