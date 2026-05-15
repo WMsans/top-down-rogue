@@ -1,0 +1,68 @@
+// Jump-Flood Algorithm distance transform.
+//
+// For each air cell, computes the Chebyshev distance to the nearest solid cell
+// and stores it (clamped to 127) into alpha bits 0-6 of chunk_tex.
+//
+// Uses an ivec2 ping-pong scratch buffer (jfa_a, jfa_b) — at each cell stores
+// the world-space (chunk-local) coords of the nearest solid seed found so far,
+// or ivec2(-1, -1) for "unknown."
+
+// Bindings (added in gen shader): jfa_a, jfa_b as iimage2D rg32i.
+// Pass index 0 = solid-init; passes 1..8 = JFA strides 128, 64, 32, 16, 8, 4, 2, 1;
+// pass 9 = finalize (write distance to alpha 0..6).
+
+void stage_walkability_init(ivec2 pos) {
+    vec4 current = imageLoad(chunk_tex, pos);
+    int mat_id = int(round(current.r * 255.0));
+    if (mat_id != MAT_AIR) {
+        imageStore(jfa_a, pos, ivec4(pos, 0, 0));
+    } else {
+        imageStore(jfa_a, pos, ivec4(-1, -1, 0, 0));
+    }
+}
+
+void stage_walkability_jump(ivec2 pos, int stride, int read_idx) {
+    ivec2 best = ivec2(-1, -1);
+    int best_dist = 1 << 30;
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            ivec2 sample_pos = pos + ivec2(dx, dy) * stride;
+            if (sample_pos.x < 0 || sample_pos.x >= 256 || sample_pos.y < 0 || sample_pos.y >= 256) continue;
+            ivec2 seed;
+            if (read_idx == 0) {
+                seed = imageLoad(jfa_a, sample_pos).xy;
+            } else {
+                seed = imageLoad(jfa_b, sample_pos).xy;
+            }
+            if (seed.x < 0) continue;
+            int dist = max(abs(seed.x - pos.x), abs(seed.y - pos.y));
+            if (dist < best_dist) {
+                best_dist = dist;
+                best = seed;
+            }
+        }
+    }
+    if (read_idx == 0) {
+        imageStore(jfa_b, pos, ivec4(best, 0, 0));
+    } else {
+        imageStore(jfa_a, pos, ivec4(best, 0, 0));
+    }
+}
+
+void stage_walkability_finalize(ivec2 pos, int final_buf_idx) {
+    ivec2 seed;
+    if (final_buf_idx == 0) {
+        seed = imageLoad(jfa_a, pos).xy;
+    } else {
+        seed = imageLoad(jfa_b, pos).xy;
+    }
+    int dist = 0;
+    if (seed.x >= 0) {
+        dist = clamp(max(abs(seed.x - pos.x), abs(seed.y - pos.y)), 0, 127);
+    }
+    vec4 cur = imageLoad(chunk_tex, pos);
+    int alpha_byte = int(round(cur.a * 255.0));
+    int new_alpha = (alpha_byte & 0x80) | (dist & 0x7F);
+    cur.a = float(new_alpha) / 255.0;
+    imageStore(chunk_tex, pos, cur);
+}
