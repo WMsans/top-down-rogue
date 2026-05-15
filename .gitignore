@@ -8,3 +8,4 @@
 build/
 /reports
 /opencode.json
+.worktrees/
