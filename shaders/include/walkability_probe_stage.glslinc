@@ -11,10 +11,17 @@
 // Pass index 0 = solid-init; passes 1..8 = JFA strides 128, 64, 32, 16, 8, 4, 2, 1;
 // pass 9 = finalize (write distance to alpha 0..6).
 
+// Cells at the chunk border are seeded as virtual solids so the inscribed-disk
+// radius is capped near seams. Without this, argmax can sit on the edge and the
+// dilate footprint then carves perfectly flat seam walls.
+const int WALKABILITY_EDGE_SOLID = 1;
+
 void stage_walkability_init(ivec2 pos) {
     vec4 current = imageLoad(chunk_tex, pos);
     int mat_id = int(round(current.r * 255.0));
-    if (mat_id != MAT_AIR) {
+    bool is_edge = pos.x < WALKABILITY_EDGE_SOLID || pos.x >= 256 - WALKABILITY_EDGE_SOLID
+                || pos.y < WALKABILITY_EDGE_SOLID || pos.y >= 256 - WALKABILITY_EDGE_SOLID;
+    if (mat_id != MAT_AIR || is_edge) {
         imageStore(jfa_a, pos, ivec4(pos, 0, 0));
     } else {
         imageStore(jfa_a, pos, ivec4(-1, -1, 0, 0));

@@ -42,6 +42,11 @@ void stage_walkability_dilate(ivec2 pos) {
     int range = 75 + 30;
     if (max(abs(pos.x - cx), abs(pos.y - cy)) > range) return;
 
+    // Never carve cells flush against the chunk edge — produces flat seam walls.
+    const int EDGE_MARGIN = 6;
+    if (pos.x < EDGE_MARGIN || pos.x >= 256 - EDGE_MARGIN
+     || pos.y < EDGE_MARGIN || pos.y >= 256 - EDGE_MARGIN) return;
+
     vec4 cur = imageLoad(chunk_tex, pos);
     int mat = int(round(cur.r * 255.0));
     if (mat == MAT_AIR) return;
