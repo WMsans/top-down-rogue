@@ -263,8 +263,8 @@ func read_cell(world_pos: Vector2) -> Dictionary:
 		return {"material": -1, "temperature": 0}
 	var chunk: Chunk = chunks[coord]
 	var chunk_data: PackedByteArray = rd.texture_get_data(chunk.rd_texture, 0)
-	var lx := int(world_pos.x) - cx * CHUNK_SIZE
-	var ly := int(world_pos.y) - cy * CHUNK_SIZE
+	var lx := floori(world_pos.x) - cx * CHUNK_SIZE
+	var ly := floori(world_pos.y) - cy * CHUNK_SIZE
 	var idx := (ly * CHUNK_SIZE + lx) * 4
 	var material := int(chunk_data[idx])
 	var temperature := int(chunk_data[idx + 2])
