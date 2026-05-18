@@ -29,75 +29,74 @@ r_max = 280.0
 
 [sub_resource type="Resource" id="Resource_ke6el"]
 script = ExtResource("5_me22a")
+count = 9
 region = SubResource("Resource_naa4q")
 
 [sub_resource type="Resource" id="Resource_xa7an"]
 script = ExtResource("4_q38te")
-r_min = 120.0
-r_max = 220.0
+r_max = 180.0
 
 [sub_resource type="Resource" id="Resource_6uqpy"]
-script = ExtResource("7_fw36d")
-enemy_scene = ExtResource("6_8mj4i")
+script = ExtResource("5_me22a")
 count = 3
 region = SubResource("Resource_xa7an")
 
 [sub_resource type="Resource" id="Resource_nyv45"]
 script = ExtResource("4_q38te")
-r_min = 180.0
-r_max = 260.0
+r_min = 120.0
+r_max = 220.0
 
 [sub_resource type="Resource" id="Resource_rb34i"]
 script = ExtResource("7_fw36d")
 enemy_scene = ExtResource("6_8mj4i")
-count = 1
-is_elite = true
+count = 3
 region = SubResource("Resource_nyv45")
 
 [sub_resource type="Resource" id="Resource_n3o6n"]
 script = ExtResource("4_q38te")
-r_min = 80.0
-r_max = 180.0
+r_min = 180.0
+r_max = 260.0
 
 [sub_resource type="Resource" id="Resource_qr3vk"]
-script = ExtResource("9_akbgy")
-barrel_scene = ExtResource("8_o71e7")
+script = ExtResource("7_fw36d")
+enemy_scene = ExtResource("6_8mj4i")
+count = 1
+is_elite = true
 region = SubResource("Resource_n3o6n")
 
 [sub_resource type="Resource" id="Resource_o2880"]
 script = ExtResource("4_q38te")
-r_min = 180.0
-r_max = 280.0
+r_min = 80.0
+r_max = 180.0
 
 [sub_resource type="Resource" id="Resource_johbg"]
 script = ExtResource("9_akbgy")
 barrel_scene = ExtResource("8_o71e7")
-count = 2
+count = 4
 region = SubResource("Resource_o2880")
 
 [sub_resource type="Resource" id="Resource_5smgr"]
-script = ExtResource("10_5v8qq")
-radius = 50.0
+script = ExtResource("4_q38te")
+r_min = 180.0
+r_max = 280.0
 
 [sub_resource type="Resource" id="Resource_dry1v"]
-script = ExtResource("11_gdqih")
-vent_scene = ExtResource("12_fr2wt")
+script = ExtResource("9_akbgy")
+barrel_scene = ExtResource("8_o71e7")
 region = SubResource("Resource_5smgr")
 
 [sub_resource type="Resource" id="Resource_880wk"]
 script = ExtResource("10_5v8qq")
-center = Vector2(-150, 150)
 radius = 50.0
 
 [sub_resource type="Resource" id="Resource_cx10e"]
-script = ExtResource("9_akbgy")
-barrel_scene = ExtResource("8_o71e7")
-count = 2
+script = ExtResource("11_gdqih")
+vent_scene = ExtResource("12_fr2wt")
 region = SubResource("Resource_880wk")
 
 [sub_resource type="Resource" id="Resource_sxjfe"]
 script = ExtResource("10_5v8qq")
-center = Vector2(150, -150)
+center = Vector2(-150, 150)
 radius = 50.0
 
 [sub_resource type="Resource" id="Resource_v5w54"]
@@ -106,6 +105,17 @@ barrel_scene = ExtResource("8_o71e7")
 count = 2
 region = SubResource("Resource_sxjfe")
 
+[sub_resource type="Resource" id="Resource_jrqbv"]
+script = ExtResource("10_5v8qq")
+center = Vector2(150, -150)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_uobr1"]
+script = ExtResource("9_akbgy")
+barrel_scene = ExtResource("8_o71e7")
+count = 2
+region = SubResource("Resource_jrqbv")
+
 [resource]
 script = ExtResource("13_vre6k")
 biome = &"vault"
@@ -113,4 +123,4 @@ variant_id = &"c"
 nominal_radius = 300
 lobing_amplitude = 50
 inner_disc_radius = 80
-features = [SubResource("Resource_i0ti8"), SubResource("Resource_ke6el"), SubResource("Resource_6uqpy"), SubResource("Resource_rb34i"), SubResource("Resource_qr3vk"), SubResource("Resource_johbg"), SubResource("Resource_dry1v"), SubResource("Resource_cx10e"), SubResource("Resource_v5w54")]
+features = [SubResource("Resource_i0ti8"), SubResource("Resource_ke6el"), SubResource("Resource_6uqpy"), SubResource("Resource_rb34i"), SubResource("Resource_qr3vk"), SubResource("Resource_johbg"), SubResource("Resource_dry1v"), SubResource("Resource_cx10e"), SubResource("Resource_v5w54"), SubResource("Resource_uobr1")]

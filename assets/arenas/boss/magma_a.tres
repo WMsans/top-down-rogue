@@ -28,63 +28,104 @@ r_max = 280.0
 
 [sub_resource type="Resource" id="Resource_7vw6m"]
 script = ExtResource("5_da6jx")
-count = 7
+count = 10
 region = SubResource("Resource_bdu28")
 
 [sub_resource type="Resource" id="Resource_rdtpa"]
 script = ExtResource("4_m7op3")
+r_max = 170.0
 
 [sub_resource type="Resource" id="Resource_lbk1t"]
-script = ExtResource("7_k1sad")
-enemy_scene = ExtResource("6_w7sjp")
+script = ExtResource("5_da6jx")
 count = 3
 region = SubResource("Resource_rdtpa")
 
 [sub_resource type="Resource" id="Resource_jlfq5"]
 script = ExtResource("4_m7op3")
-r_min = 150.0
-r_max = 250.0
 
 [sub_resource type="Resource" id="Resource_7qljl"]
 script = ExtResource("7_k1sad")
 enemy_scene = ExtResource("6_w7sjp")
-count = 1
-is_elite = true
+count = 3
 region = SubResource("Resource_jlfq5")
 
 [sub_resource type="Resource" id="Resource_e4dkv"]
 script = ExtResource("4_m7op3")
-r_min = 220.0
-r_max = 280.0
+r_min = 150.0
+r_max = 250.0
 
 [sub_resource type="Resource" id="Resource_lqu7r"]
 script = ExtResource("7_k1sad")
 enemy_scene = ExtResource("6_w7sjp")
 count = 1
+is_elite = true
 region = SubResource("Resource_e4dkv")
 
 [sub_resource type="Resource" id="Resource_vv5j0"]
+script = ExtResource("4_m7op3")
+r_min = 220.0
+r_max = 280.0
+
+[sub_resource type="Resource" id="Resource_wrlje"]
+script = ExtResource("7_k1sad")
+enemy_scene = ExtResource("6_w7sjp")
+count = 1
+region = SubResource("Resource_vv5j0")
+
+[sub_resource type="Resource" id="Resource_76w6l"]
 script = ExtResource("9_72jqr")
 center = Vector2(-180, -120)
 radius = 50.0
 
-[sub_resource type="Resource" id="Resource_wrlje"]
+[sub_resource type="Resource" id="Resource_m06kk"]
 script = ExtResource("10_4lsnn")
 barrel_scene = ExtResource("8_uadc6")
-region = SubResource("Resource_vv5j0")
+region = SubResource("Resource_76w6l")
 
-[sub_resource type="Resource" id="Resource_76w6l"]
+[sub_resource type="Resource" id="Resource_2mc4d"]
+script = ExtResource("9_72jqr")
+center = Vector2(180, 120)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_mb1ev"]
+script = ExtResource("10_4lsnn")
+barrel_scene = ExtResource("8_uadc6")
+region = SubResource("Resource_2mc4d")
+
+[sub_resource type="Resource" id="Resource_1x61x"]
+script = ExtResource("4_m7op3")
+r_min = 220.0
+r_max = 280.0
+
+[sub_resource type="Resource" id="Resource_gey6j"]
+script = ExtResource("10_4lsnn")
+barrel_scene = ExtResource("8_uadc6")
+region = SubResource("Resource_1x61x")
+
+[sub_resource type="Resource" id="Resource_vrvso"]
 script = ExtResource("4_m7op3")
 r_min = 80.0
 r_max = 160.0
 
-[sub_resource type="Resource" id="Resource_m06kk"]
+[sub_resource type="Resource" id="Resource_iys0w"]
 script = ExtResource("11_ff3a4")
-material_id = 5
-count = 2
+material_id = 4
+count = 3
 size_min_cells = 5
 size_max_cells = 10
-region = SubResource("Resource_76w6l")
+region = SubResource("Resource_vrvso")
+
+[sub_resource type="Resource" id="Resource_b3cfb"]
+script = ExtResource("9_72jqr")
+center = Vector2(200, 180)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_eetek"]
+script = ExtResource("11_ff3a4")
+material_id = 4
+size_min_cells = 5
+size_max_cells = 10
+region = SubResource("Resource_b3cfb")
 
 [resource]
 script = ExtResource("12_dw6yy")
@@ -92,4 +133,4 @@ biome = &"magma"
 nominal_radius = 300
 lobing_amplitude = 50
 inner_disc_radius = 80
-features = [SubResource("Resource_g3a1s"), SubResource("Resource_7vw6m"), SubResource("Resource_lbk1t"), SubResource("Resource_7qljl"), SubResource("Resource_lqu7r"), SubResource("Resource_wrlje"), SubResource("Resource_m06kk")]
+features = [SubResource("Resource_g3a1s"), SubResource("Resource_7vw6m"), SubResource("Resource_lbk1t"), SubResource("Resource_7qljl"), SubResource("Resource_lqu7r"), SubResource("Resource_wrlje"), SubResource("Resource_m06kk"), SubResource("Resource_mb1ev"), SubResource("Resource_gey6j"), SubResource("Resource_iys0w"), SubResource("Resource_eetek")]

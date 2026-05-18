@@ -28,17 +28,17 @@ r_max = 280.0
 
 [sub_resource type="Resource" id="Resource_6comh"]
 script = ExtResource("5_g8igi")
-count = 4
+count = 8
 region = SubResource("Resource_jfi8w")
 
 [sub_resource type="Resource" id="Resource_7bivf"]
 script = ExtResource("6_38bk2")
 center = Vector2(-120, 80)
-radius = 60.0
+radius = 70.0
 
 [sub_resource type="Resource" id="Resource_6ruci"]
 script = ExtResource("5_g8igi")
-count = 4
+spacing_min = 56.0
 region = SubResource("Resource_7bivf")
 
 [sub_resource type="Resource" id="Resource_0le3s"]
@@ -71,7 +71,6 @@ r_max = 180.0
 [sub_resource type="Resource" id="Resource_5yk8l"]
 script = ExtResource("10_pjj11")
 barrel_scene = ExtResource("9_riuji")
-count = 2
 region = SubResource("Resource_empcm")
 
 [sub_resource type="Resource" id="Resource_evp0m"]
@@ -82,21 +81,43 @@ radius = 40.0
 [sub_resource type="Resource" id="Resource_xh6gf"]
 script = ExtResource("10_pjj11")
 barrel_scene = ExtResource("9_riuji")
-count = 2
 region = SubResource("Resource_evp0m")
 
 [sub_resource type="Resource" id="Resource_o216f"]
 script = ExtResource("6_38bk2")
-center = Vector2(220, -180)
-radius = 60.0
+center = Vector2(-200, -180)
+radius = 50.0
 
 [sub_resource type="Resource" id="Resource_jalwm"]
-script = ExtResource("11_ydgrk")
-material_id = 5
+script = ExtResource("10_pjj11")
+barrel_scene = ExtResource("9_riuji")
 count = 2
+region = SubResource("Resource_o216f")
+
+[sub_resource type="Resource" id="Resource_b8ais"]
+script = ExtResource("6_38bk2")
+center = Vector2(220, -180)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_1l7xp"]
+script = ExtResource("11_ydgrk")
+material_id = 4
+count = 3
 size_min_cells = 5
 size_max_cells = 10
-region = SubResource("Resource_o216f")
+region = SubResource("Resource_b8ais")
+
+[sub_resource type="Resource" id="Resource_wtojl"]
+script = ExtResource("6_38bk2")
+center = Vector2(-220, 200)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_l6303"]
+script = ExtResource("11_ydgrk")
+material_id = 4
+size_min_cells = 5
+size_max_cells = 10
+region = SubResource("Resource_wtojl")
 
 [resource]
 script = ExtResource("12_n288l")
@@ -105,4 +126,4 @@ variant_id = &"b"
 nominal_radius = 300
 lobing_amplitude = 50
 inner_disc_radius = 80
-features = [SubResource("Resource_4utvi"), SubResource("Resource_6comh"), SubResource("Resource_6ruci"), SubResource("Resource_smwn8"), SubResource("Resource_hkrpg"), SubResource("Resource_5yk8l"), SubResource("Resource_xh6gf"), SubResource("Resource_jalwm")]
+features = [SubResource("Resource_4utvi"), SubResource("Resource_6comh"), SubResource("Resource_6ruci"), SubResource("Resource_smwn8"), SubResource("Resource_hkrpg"), SubResource("Resource_5yk8l"), SubResource("Resource_xh6gf"), SubResource("Resource_jalwm"), SubResource("Resource_1l7xp"), SubResource("Resource_l6303")]
