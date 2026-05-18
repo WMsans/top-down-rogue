@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="1_3seur"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="2_d86ft"]
+
+[sub_resource type="GDScript" id="GDScript_78ovl"]
+
+[sub_resource type="Resource" id="Resource_4jq2e"]
+script = SubResource("GDScript_78ovl")
+rare = false
+
+[sub_resource type="GDScript" id="GDScript_rhq8y"]
+
+[sub_resource type="Resource" id="Resource_lk48b"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 80.0
+r_max = 180.0
+
+[sub_resource type="GDScript" id="GDScript_xnlfi"]
+
+[sub_resource type="Resource" id="Resource_0kfh4"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("1_3seur")
+count = 3
+is_elite = true
+region = SubResource("Resource_lk48b")
+
+[sub_resource type="Resource" id="Resource_6a5xr"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 100.0
+r_max = 180.0
+
+[sub_resource type="GDScript" id="GDScript_24m7k"]
+
+[sub_resource type="Resource" id="Resource_llc20"]
+script = SubResource("GDScript_24m7k")
+count = 2
+pillar_radius_cells = 10
+spacing_min = 64.0
+region = SubResource("Resource_6a5xr")
+
+[resource]
+script = ExtResource("2_d86ft")
+arena_kind = &"elite"
+biome = &"frozen"
+nominal_radius = 224
+lobing_amplitude = 48
+inner_disc_radius = 48
+features = [SubResource("Resource_4jq2e"), SubResource("Resource_0kfh4"), SubResource("Resource_llc20")]

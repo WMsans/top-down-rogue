@@ -66,6 +66,12 @@ func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
 				continue
 
 			var slot := grid.resolve_sector(sector)
+			if slot.is_boss:
+				_spawned_sectors[sector] = true
+				continue
+			if slot.is_claimed:
+				_spawned_sectors[sector] = true
+				continue
 			if slot.is_empty:
 				_spawned_sectors[sector] = true
 				continue
@@ -77,6 +83,8 @@ func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
 func _spawn_for_slot(grid: SectorGrid, slot, sector: Vector2i, world_center: Vector2i) -> void:
 	var tmpl: RoomTemplate = grid.get_template_for_slot(slot)
 	if tmpl == null:
+		return
+	if tmpl.cavern_carve:
 		return
 	var idx := BiomeRegistry.get_template_index(tmpl)
 	if idx < 0:

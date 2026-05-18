@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="1_86ivs"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="2_5sntp"]
+
+[sub_resource type="GDScript" id="GDScript_78ovl"]
+
+[sub_resource type="Resource" id="Resource_kslei"]
+script = SubResource("GDScript_78ovl")
+rare = false
+
+[sub_resource type="GDScript" id="GDScript_rhq8y"]
+
+[sub_resource type="Resource" id="Resource_3o0ej"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 100.0
+r_max = 200.0
+
+[sub_resource type="GDScript" id="GDScript_xnlfi"]
+
+[sub_resource type="Resource" id="Resource_yohow"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("1_86ivs")
+count = 2
+is_elite = true
+region = SubResource("Resource_3o0ej")
+
+[sub_resource type="GDScript" id="GDScript_vyinj"]
+
+[sub_resource type="Resource" id="Resource_gk0j3"]
+script = SubResource("GDScript_vyinj")
+center = Vector2(60, -60)
+radius = 60.0
+
+[sub_resource type="GDScript" id="GDScript_mdesf"]
+
+[sub_resource type="Resource" id="Resource_b81pp"]
+script = SubResource("GDScript_mdesf")
+material_id = 5
+count = 1
+size_min_cells = 8
+size_max_cells = 16
+region = SubResource("Resource_gk0j3")
+
+[resource]
+script = ExtResource("2_5sntp")
+arena_kind = &"elite"
+biome = &"mines"
+variant_id = &"b"
+nominal_radius = 224
+lobing_amplitude = 48
+inner_disc_radius = 48
+features = [SubResource("Resource_kslei"), SubResource("Resource_yohow"), SubResource("Resource_b81pp")]

@@ -25,9 +25,12 @@ var gen_biome_buffer: RID
 var gen_biome_uniform_set: RID
 var gen_template_uniform_set: RID
 var gen_template_array_rids: Dictionary = {}  # int size_class → RID
+var gen_cavern_buffer: RID
+var gen_cavern_uniform_set: RID
 
 const STAMP_BUFFER_SIZE := 16 + 128 * 16   # 16-byte header + 128 vec4s
 const BIOME_BUFFER_SIZE := 32 + 4 * 16     # 32-byte header + 4 pool vec4s
+const CAVERN_BUFFER_SIZE := 16 + 64 * 2 * 16   # header (4 ints) + 64 caverns x 2 vec4s
 
 const LIGHT_CELL_COUNT := 16
 const LIGHT_CELL_BYTES := 8
@@ -119,6 +122,19 @@ func init_gen_stamp_buffer() -> void:
 	u.binding = 0
 	u.add_id(gen_stamp_buffer)
 	gen_stamp_uniform_set = rd.uniform_set_create([u], gen_shader, 1)
+
+
+func init_gen_cavern_buffer() -> void:
+	var zero := PackedByteArray()
+	zero.resize(CAVERN_BUFFER_SIZE)
+	zero.fill(0)
+	gen_cavern_buffer = rd.storage_buffer_create(CAVERN_BUFFER_SIZE, zero)
+
+	var u := RDUniform.new()
+	u.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u.binding = 0
+	u.add_id(gen_cavern_buffer)
+	gen_cavern_uniform_set = rd.uniform_set_create([u], gen_shader, 4)
 
 
 func init_gen_biome_buffer() -> void:
@@ -252,6 +268,12 @@ func free_resources() -> void:
 	if gen_stamp_buffer.is_valid():
 		rd.free_rid(gen_stamp_buffer)
 		gen_stamp_buffer = RID()
+	if gen_cavern_buffer.is_valid():
+		rd.free_rid(gen_cavern_buffer)
+		gen_cavern_buffer = RID()
+	if gen_cavern_uniform_set.is_valid():
+		rd.free_rid(gen_cavern_uniform_set)
+		gen_cavern_uniform_set = RID()
 	if gen_biome_buffer.is_valid():
 		rd.free_rid(gen_biome_buffer)
 		gen_biome_buffer = RID()
@@ -303,7 +325,8 @@ func dispatch_generation(
 	chunks: Dictionary,
 	new_coords: Array[Vector2i],
 	seed_val: int,
-	stamp_bytes: PackedByteArray = PackedByteArray()
+	stamp_bytes: PackedByteArray = PackedByteArray(),
+	cavern_bytes: PackedByteArray = PackedByteArray()
 ) -> Array[RID]:
 	var created_uniform_sets: Array[RID] = []
 	if new_coords.is_empty():
@@ -316,12 +339,20 @@ func dispatch_generation(
 		upload.resize(STAMP_BUFFER_SIZE)
 	rd.buffer_update(gen_stamp_buffer, 0, STAMP_BUFFER_SIZE, upload)
 
+	var cav_upload := cavern_bytes
+	if cav_upload.size() < CAVERN_BUFFER_SIZE:
+		cav_upload = cavern_bytes.duplicate()
+		cav_upload.resize(CAVERN_BUFFER_SIZE)
+	rd.buffer_update(gen_cavern_buffer, 0, CAVERN_BUFFER_SIZE, cav_upload)
+
 	var compute_list := rd.compute_list_begin()
 	rd.compute_list_bind_compute_pipeline(compute_list, gen_pipeline)
 	rd.compute_list_bind_uniform_set(compute_list, gen_stamp_uniform_set, 1)
 	rd.compute_list_bind_uniform_set(compute_list, gen_biome_uniform_set, 2)
 	if gen_template_uniform_set.is_valid():
 		rd.compute_list_bind_uniform_set(compute_list, gen_template_uniform_set, 3)
+	if gen_cavern_uniform_set.is_valid():
+		rd.compute_list_bind_uniform_set(compute_list, gen_cavern_uniform_set, 4)
 
 	for coord in new_coords:
 		var chunk: Chunk = chunks[coord]
@@ -332,6 +363,14 @@ func dispatch_generation(
 		var uniform_set := rd.uniform_set_create([gen_uniform], gen_shader, 0)
 		created_uniform_sets.append(uniform_set)
 		rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+
+		var flag_uniform := RDUniform.new()
+		flag_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		flag_uniform.binding = 0
+		flag_uniform.add_id(chunk.rd_flag_texture)
+		var flag_uniform_set := rd.uniform_set_create([flag_uniform], gen_shader, 5)
+		created_uniform_sets.append(flag_uniform_set)
+		rd.compute_list_bind_uniform_set(compute_list, flag_uniform_set, 5)
 
 		var push_data := PackedByteArray()
 		push_data.resize(16)

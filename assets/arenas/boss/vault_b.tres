@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_tppiv"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_eax37"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="3_7f61w"]
+
+[sub_resource type="GDScript" id="GDScript_lbpjv"]
+
+[sub_resource type="Resource" id="Resource_bcw26"]
+script = SubResource("GDScript_lbpjv")
+offset = Vector2(0, 0)
+
+[sub_resource type="GDScript" id="GDScript_c63yr"]
+
+[sub_resource type="Resource" id="Resource_ieqvx"]
+script = SubResource("GDScript_c63yr")
+boss_scene = ExtResource("1_tppiv")
+floor_scaling = true
+region = SubResource("Resource_bcw26")
+
+[sub_resource type="GDScript" id="GDScript_rhq8y"]
+
+[sub_resource type="Resource" id="Resource_pwekl"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 700.0
+r_max = 950.0
+
+[sub_resource type="GDScript" id="GDScript_24m7k"]
+
+[sub_resource type="Resource" id="Resource_i4nkq"]
+script = SubResource("GDScript_24m7k")
+count = 4
+pillar_radius_cells = 10
+spacing_min = 64.0
+region = SubResource("Resource_pwekl")
+
+[sub_resource type="Resource" id="Resource_yc7yf"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 800.0
+r_max = 1100.0
+
+[sub_resource type="GDScript" id="GDScript_xnlfi"]
+
+[sub_resource type="Resource" id="Resource_2ylne"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_eax37")
+count = 4
+is_elite = false
+region = SubResource("Resource_yc7yf")
+
+[sub_resource type="Resource" id="Resource_1l43l"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 800.0
+r_max = 1100.0
+
+[sub_resource type="Resource" id="Resource_uqks4"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_eax37")
+count = 2
+is_elite = true
+region = SubResource("Resource_1l43l")
+
+[resource]
+script = ExtResource("3_7f61w")
+biome = &"vault"
+variant_id = &"b"
+features = [SubResource("Resource_ieqvx"), SubResource("Resource_i4nkq"), SubResource("Resource_2ylne"), SubResource("Resource_uqks4")]
