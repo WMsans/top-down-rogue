@@ -3,77 +3,70 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_ts3wl"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_ss8c4"]
 [ext_resource type="Script" path="res://src/core/arena_composition.gd" id="3_e8eyt"]
-
-[sub_resource type="GDScript" id="GDScript_lbpjv"]
+[ext_resource type="Script" path="res://src/core/regions/region_point.gd" id="Script_region_point_0"]
+[ext_resource type="Script" path="res://src/core/features/feature_boss_spawn.gd" id="Script_feature_boss_spawn_0"]
+[ext_resource type="Script" path="res://src/core/regions/region_ring.gd" id="Script_region_ring_0"]
+[ext_resource type="Script" path="res://src/core/features/feature_pillar_cluster.gd" id="Script_feature_pillar_cluster_0"]
+[ext_resource type="Script" path="res://src/core/features/feature_enemy_pack.gd" id="Script_feature_enemy_pack_0"]
+[ext_resource type="Script" path="res://src/core/regions/region_disc.gd" id="Script_region_disc_0"]
+[ext_resource type="Script" path="res://src/core/features/feature_pool_patch.gd" id="Script_feature_pool_patch_0"]
 
 [sub_resource type="Resource" id="Resource_njpv6"]
-script = SubResource("GDScript_lbpjv")
+script = ExtResource("Script_region_point_0")
 offset = Vector2(0, 0)
 
-[sub_resource type="GDScript" id="GDScript_c63yr"]
-
 [sub_resource type="Resource" id="Resource_ee766"]
-script = SubResource("GDScript_c63yr")
+script = ExtResource("Script_feature_boss_spawn_0")
 boss_scene = ExtResource("1_ts3wl")
 floor_scaling = true
 region = SubResource("Resource_njpv6")
 
-[sub_resource type="GDScript" id="GDScript_rhq8y"]
-
 [sub_resource type="Resource" id="Resource_u6vv6"]
-script = SubResource("GDScript_rhq8y")
+script = ExtResource("Script_region_ring_0")
 center = Vector2(0, 0)
 r_min = 600.0
 r_max = 900.0
 
-[sub_resource type="GDScript" id="GDScript_24m7k"]
-
 [sub_resource type="Resource" id="Resource_4nt2s"]
-script = SubResource("GDScript_24m7k")
+script = ExtResource("Script_feature_pillar_cluster_0")
 count = 12
 pillar_radius_cells = 10
 spacing_min = 64.0
 region = SubResource("Resource_u6vv6")
 
 [sub_resource type="Resource" id="Resource_j457y"]
-script = SubResource("GDScript_rhq8y")
+script = ExtResource("Script_region_ring_0")
 center = Vector2(0, 0)
 r_min = 700.0
 r_max = 950.0
 
-[sub_resource type="GDScript" id="GDScript_xnlfi"]
-
 [sub_resource type="Resource" id="Resource_03qy6"]
-script = SubResource("GDScript_xnlfi")
+script = ExtResource("Script_feature_enemy_pack_0")
 enemy_scene = ExtResource("2_ss8c4")
 count = 6
 is_elite = false
 region = SubResource("Resource_j457y")
 
 [sub_resource type="Resource" id="Resource_k6nfg"]
-script = SubResource("GDScript_rhq8y")
+script = ExtResource("Script_region_ring_0")
 center = Vector2(0, 0)
 r_min = 400.0
 r_max = 700.0
 
 [sub_resource type="Resource" id="Resource_xlxa0"]
-script = SubResource("GDScript_xnlfi")
+script = ExtResource("Script_feature_enemy_pack_0")
 enemy_scene = ExtResource("2_ss8c4")
 count = 2
 is_elite = true
 region = SubResource("Resource_k6nfg")
 
-[sub_resource type="GDScript" id="GDScript_vyinj"]
-
 [sub_resource type="Resource" id="Resource_k7l0n"]
-script = SubResource("GDScript_vyinj")
+script = ExtResource("Script_region_disc_0")
 center = Vector2(-200, 100)
 radius = 200.0
 
-[sub_resource type="GDScript" id="GDScript_mdesf"]
-
 [sub_resource type="Resource" id="Resource_n2fj8"]
-script = SubResource("GDScript_mdesf")
+script = ExtResource("Script_feature_pool_patch_0")
 material_id = 6
 count = 1
 size_min_cells = 8

@@ -1,9 +1,9 @@
 extends GdUnitTestSuite
 
-const RegionPoint = preload("res://src/core/arena_region.gd").RegionPoint
-const RegionDisc = preload("res://src/core/arena_region.gd").RegionDisc
-const RegionRing = preload("res://src/core/arena_region.gd").RegionRing
-const RegionArc = preload("res://src/core/arena_region.gd").RegionArc
+const RegionPoint = preload("res://src/core/regions/region_point.gd")
+const RegionDisc = preload("res://src/core/regions/region_disc.gd")
+const RegionRing = preload("res://src/core/regions/region_ring.gd")
+const RegionArc = preload("res://src/core/regions/region_arc.gd")
 
 func _rng() -> RandomNumberGenerator:
 	var r := RandomNumberGenerator.new()

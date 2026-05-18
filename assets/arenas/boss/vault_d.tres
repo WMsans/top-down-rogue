@@ -3,74 +3,69 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_5l4fy"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_sanri"]
 [ext_resource type="Script" path="res://src/core/arena_composition.gd" id="3_suak2"]
-
-[sub_resource type="GDScript" id="GDScript_lbpjv"]
+[ext_resource type="Script" path="res://src/core/regions/region_point.gd" id="Script_region_point_0"]
+[ext_resource type="Script" path="res://src/core/features/feature_boss_spawn.gd" id="Script_feature_boss_spawn_0"]
+[ext_resource type="Script" path="res://src/core/regions/region_ring.gd" id="Script_region_ring_0"]
+[ext_resource type="Script" path="res://src/core/features/feature_pillar_cluster.gd" id="Script_feature_pillar_cluster_0"]
+[ext_resource type="Script" path="res://src/core/features/feature_enemy_pack.gd" id="Script_feature_enemy_pack_0"]
 
 [sub_resource type="Resource" id="Resource_xmoi1"]
-script = SubResource("GDScript_lbpjv")
+script = ExtResource("Script_region_point_0")
 offset = Vector2(0, 0)
 
-[sub_resource type="GDScript" id="GDScript_c63yr"]
-
 [sub_resource type="Resource" id="Resource_ujq23"]
-script = SubResource("GDScript_c63yr")
+script = ExtResource("Script_feature_boss_spawn_0")
 boss_scene = ExtResource("1_5l4fy")
 floor_scaling = true
 region = SubResource("Resource_xmoi1")
 
-[sub_resource type="GDScript" id="GDScript_rhq8y"]
-
 [sub_resource type="Resource" id="Resource_w2ai8"]
-script = SubResource("GDScript_rhq8y")
+script = ExtResource("Script_region_ring_0")
 center = Vector2(0, 0)
 r_min = 500.0
 r_max = 700.0
 
-[sub_resource type="GDScript" id="GDScript_24m7k"]
-
 [sub_resource type="Resource" id="Resource_dh02n"]
-script = SubResource("GDScript_24m7k")
+script = ExtResource("Script_feature_pillar_cluster_0")
 count = 2
 pillar_radius_cells = 10
 spacing_min = 64.0
 region = SubResource("Resource_w2ai8")
 
 [sub_resource type="Resource" id="Resource_bxuvo"]
-script = SubResource("GDScript_rhq8y")
+script = ExtResource("Script_region_ring_0")
 center = Vector2(0, 0)
 r_min = 500.0
 r_max = 800.0
 
-[sub_resource type="GDScript" id="GDScript_xnlfi"]
-
 [sub_resource type="Resource" id="Resource_rmge7"]
-script = SubResource("GDScript_xnlfi")
+script = ExtResource("Script_feature_enemy_pack_0")
 enemy_scene = ExtResource("2_sanri")
 count = 8
 is_elite = false
 region = SubResource("Resource_bxuvo")
 
 [sub_resource type="Resource" id="Resource_orqgs"]
-script = SubResource("GDScript_rhq8y")
+script = ExtResource("Script_region_ring_0")
 center = Vector2(0, 0)
 r_min = 800.0
 r_max = 1100.0
 
 [sub_resource type="Resource" id="Resource_5f5hq"]
-script = SubResource("GDScript_xnlfi")
+script = ExtResource("Script_feature_enemy_pack_0")
 enemy_scene = ExtResource("2_sanri")
 count = 4
 is_elite = false
 region = SubResource("Resource_orqgs")
 
 [sub_resource type="Resource" id="Resource_d2su2"]
-script = SubResource("GDScript_rhq8y")
+script = ExtResource("Script_region_ring_0")
 center = Vector2(0, 0)
 r_min = 600.0
 r_max = 900.0
 
 [sub_resource type="Resource" id="Resource_swhra"]
-script = SubResource("GDScript_xnlfi")
+script = ExtResource("Script_feature_enemy_pack_0")
 enemy_scene = ExtResource("2_sanri")
 count = 1
 is_elite = true
