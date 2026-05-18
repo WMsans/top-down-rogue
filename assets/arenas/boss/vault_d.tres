@@ -1,78 +1,111 @@
 [gd_resource type="Resource" script_class="ArenaComposition" format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_5l4fy"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_sanri"]
-[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="3_suak2"]
-[ext_resource type="Script" path="res://src/core/regions/region_point.gd" id="Script_region_point_0"]
-[ext_resource type="Script" path="res://src/core/features/feature_boss_spawn.gd" id="Script_feature_boss_spawn_0"]
-[ext_resource type="Script" path="res://src/core/regions/region_ring.gd" id="Script_region_ring_0"]
-[ext_resource type="Script" path="res://src/core/features/feature_pillar_cluster.gd" id="Script_feature_pillar_cluster_0"]
-[ext_resource type="Script" path="res://src/core/features/feature_enemy_pack.gd" id="Script_feature_enemy_pack_0"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_5f5hq"]
+[ext_resource type="Script" path="res://src/core/regions/region_point.gd" id="2_d2su2"]
+[ext_resource type="Script" path="res://src/core/features/feature_boss_spawn.gd" id="3_swhra"]
+[ext_resource type="Script" path="res://src/core/regions/region_ring.gd" id="4_ojcnd"]
+[ext_resource type="Script" path="res://src/core/features/feature_pillar_cluster.gd" id="5_efb8c"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="6_pl25t"]
+[ext_resource type="Script" path="res://src/core/features/feature_enemy_pack.gd" id="7_3mnfx"]
+[ext_resource type="Script" path="res://src/core/regions/region_disc.gd" id="8_iihma"]
+[ext_resource type="Script" path="res://src/core/features/feature_vent.gd" id="9_7i3f5"]
+[ext_resource type="PackedScene" path="res://scenes/props/vent.tscn" id="10_gan05"]
+[ext_resource type="PackedScene" path="res://scenes/props/barrel.tscn" id="11_hvnyy"]
+[ext_resource type="Script" path="res://src/core/features/feature_barrel_cluster.gd" id="12_u682r"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="13_f8kbv"]
 
-[sub_resource type="Resource" id="Resource_xmoi1"]
-script = ExtResource("Script_region_point_0")
-offset = Vector2(0, 0)
+[sub_resource type="Resource" id="Resource_b146h"]
+script = ExtResource("2_d2su2")
 
-[sub_resource type="Resource" id="Resource_ujq23"]
-script = ExtResource("Script_feature_boss_spawn_0")
-boss_scene = ExtResource("1_5l4fy")
-floor_scaling = true
-region = SubResource("Resource_xmoi1")
+[sub_resource type="Resource" id="Resource_j3p5b"]
+script = ExtResource("3_swhra")
+boss_scene = ExtResource("1_5f5hq")
+region = SubResource("Resource_b146h")
 
-[sub_resource type="Resource" id="Resource_w2ai8"]
-script = ExtResource("Script_region_ring_0")
-center = Vector2(0, 0)
-r_min = 500.0
-r_max = 700.0
+[sub_resource type="Resource" id="Resource_bj5iq"]
+script = ExtResource("4_ojcnd")
+r_min = 180.0
+r_max = 280.0
 
-[sub_resource type="Resource" id="Resource_dh02n"]
-script = ExtResource("Script_feature_pillar_cluster_0")
-count = 2
-pillar_radius_cells = 10
-spacing_min = 64.0
-region = SubResource("Resource_w2ai8")
+[sub_resource type="Resource" id="Resource_660ux"]
+script = ExtResource("5_efb8c")
+region = SubResource("Resource_bj5iq")
 
-[sub_resource type="Resource" id="Resource_bxuvo"]
-script = ExtResource("Script_region_ring_0")
-center = Vector2(0, 0)
-r_min = 500.0
-r_max = 800.0
+[sub_resource type="Resource" id="Resource_qgq07"]
+script = ExtResource("4_ojcnd")
 
-[sub_resource type="Resource" id="Resource_rmge7"]
-script = ExtResource("Script_feature_enemy_pack_0")
-enemy_scene = ExtResource("2_sanri")
-count = 8
-is_elite = false
-region = SubResource("Resource_bxuvo")
+[sub_resource type="Resource" id="Resource_0flsg"]
+script = ExtResource("7_3mnfx")
+enemy_scene = ExtResource("6_pl25t")
+count = 3
+region = SubResource("Resource_qgq07")
 
-[sub_resource type="Resource" id="Resource_orqgs"]
-script = ExtResource("Script_region_ring_0")
-center = Vector2(0, 0)
-r_min = 800.0
-r_max = 1100.0
+[sub_resource type="Resource" id="Resource_8qc17"]
+script = ExtResource("4_ojcnd")
+r_min = 180.0
+r_max = 260.0
 
-[sub_resource type="Resource" id="Resource_5f5hq"]
-script = ExtResource("Script_feature_enemy_pack_0")
-enemy_scene = ExtResource("2_sanri")
-count = 4
-is_elite = false
-region = SubResource("Resource_orqgs")
-
-[sub_resource type="Resource" id="Resource_d2su2"]
-script = ExtResource("Script_region_ring_0")
-center = Vector2(0, 0)
-r_min = 600.0
-r_max = 900.0
-
-[sub_resource type="Resource" id="Resource_swhra"]
-script = ExtResource("Script_feature_enemy_pack_0")
-enemy_scene = ExtResource("2_sanri")
+[sub_resource type="Resource" id="Resource_wmujc"]
+script = ExtResource("7_3mnfx")
+enemy_scene = ExtResource("6_pl25t")
 count = 1
 is_elite = true
-region = SubResource("Resource_d2su2")
+region = SubResource("Resource_8qc17")
+
+[sub_resource type="Resource" id="Resource_oq4gi"]
+script = ExtResource("8_iihma")
+center = Vector2(100, -80)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_lh53n"]
+script = ExtResource("9_7i3f5")
+vent_scene = ExtResource("10_gan05")
+region = SubResource("Resource_oq4gi")
+
+[sub_resource type="Resource" id="Resource_odwuv"]
+script = ExtResource("8_iihma")
+center = Vector2(-100, 80)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_rfady"]
+script = ExtResource("9_7i3f5")
+vent_scene = ExtResource("10_gan05")
+region = SubResource("Resource_odwuv")
+
+[sub_resource type="Resource" id="Resource_mr3wr"]
+script = ExtResource("4_ojcnd")
+
+[sub_resource type="Resource" id="Resource_f1y6g"]
+script = ExtResource("12_u682r")
+barrel_scene = ExtResource("11_hvnyy")
+region = SubResource("Resource_mr3wr")
+
+[sub_resource type="Resource" id="Resource_gm5p4"]
+script = ExtResource("4_ojcnd")
+r_min = 60.0
+r_max = 150.0
+
+[sub_resource type="Resource" id="Resource_o5w0q"]
+script = ExtResource("5_efb8c")
+count = 2
+region = SubResource("Resource_gm5p4")
+
+[sub_resource type="Resource" id="Resource_4ckhv"]
+script = ExtResource("4_ojcnd")
+r_min = 60.0
+r_max = 150.0
+
+[sub_resource type="Resource" id="Resource_bgghx"]
+script = ExtResource("12_u682r")
+barrel_scene = ExtResource("11_hvnyy")
+count = 2
+region = SubResource("Resource_4ckhv")
 
 [resource]
-script = ExtResource("3_suak2")
+script = ExtResource("13_f8kbv")
 biome = &"vault"
 variant_id = &"d"
-features = [SubResource("Resource_ujq23"), SubResource("Resource_dh02n"), SubResource("Resource_rmge7"), SubResource("Resource_5f5hq"), SubResource("Resource_swhra")]
+nominal_radius = 300
+lobing_amplitude = 50
+inner_disc_radius = 80
+features = [SubResource("Resource_j3p5b"), SubResource("Resource_660ux"), SubResource("Resource_0flsg"), SubResource("Resource_wmujc"), SubResource("Resource_lh53n"), SubResource("Resource_rfady"), SubResource("Resource_f1y6g"), SubResource("Resource_o5w0q"), SubResource("Resource_bgghx")]
