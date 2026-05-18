@@ -55,6 +55,7 @@ var MAT_COAL: int
 var MAT_ICE: int
 var MAT_WATER: int
 var MAT_BLOOD: int
+var MAT_OIL: int
 
 func _ready():
 	_init_materials()
@@ -171,6 +172,20 @@ func _init_materials():
 	mat_blood.id = materials.size()
 	materials.append(mat_blood)
 	MAT_BLOOD = mat_blood.id
+
+	var mat_oil := MaterialDef.new(
+		"OIL", "",
+		true, 200, 60,
+		false, false,
+		Color(0.18, 0.12, 0.06, 1.0),
+		true,
+		0,
+		1.0,
+		0.0
+	)
+	mat_oil.id = materials.size()
+	materials.append(mat_oil)
+	MAT_OIL = mat_oil.id
 
 func is_flammable(material_id: int) -> bool:
 	if material_id < 0 or material_id >= materials.size():
