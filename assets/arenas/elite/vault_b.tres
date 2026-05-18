@@ -33,6 +33,7 @@ r_max = 130.0
 [sub_resource type="Resource" id="Resource_bihfv"]
 script = ExtResource("5_cvqnd")
 count = 7
+spacing_min = 56.0
 region = SubResource("Resource_nisho")
 
 [sub_resource type="Resource" id="Resource_7ey68"]
