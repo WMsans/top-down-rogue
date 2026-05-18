@@ -19,7 +19,7 @@ func apply(ctx) -> void:
 func _sample_air(ctx) -> Variant:
 	if region == null:
 		return null
-	for retry in 8:
+	for retry in 16:
 		var local: Vector2 = region.sample(ctx.rng)
 		var world: Vector2 = ctx.anchor_world_pos + local
 		if ctx.mask_air.call(world):

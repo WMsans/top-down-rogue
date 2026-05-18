@@ -17,7 +17,7 @@ func apply(ctx) -> void:
 func _try_place(ctx, placed: Array[Vector2]) -> Variant:
 	if region == null:
 		return null
-	for retry in 8:
+	for retry in 24:
 		var local: Vector2 = region.sample(ctx.rng)
 		var world: Vector2 = ctx.anchor_world_pos + local
 		if not ctx.mask_air.call(world):

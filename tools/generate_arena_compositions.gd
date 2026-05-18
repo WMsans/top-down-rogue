@@ -67,12 +67,20 @@ static func _boss() -> FeatureBossSpawn:
 	b.boss_scene = BOSS_ENEMY_SCENE
 	return b
 
-static func _pillars(count: int, r_min: float, r_max: float, pillar_mat: int) -> FeaturePillarCluster:
+static func _pillars(count: int, r_min: float, r_max: float, pillar_mat: int, spacing: float = 56.0, radius_cells: int = 10) -> FeaturePillarCluster:
 	var f := FeaturePillarCluster.new()
 	f.region = _ring(r_min, r_max)
 	f.count = count
-	f.pillar_radius_cells = 10
-	f.spacing_min = 64.0
+	f.pillar_radius_cells = radius_cells
+	f.spacing_min = spacing
+	return f
+
+static func _pillars_disc(center: Vector2, radius: float, count: int, spacing: float = 48.0, radius_cells: int = 8) -> FeaturePillarCluster:
+	var f := FeaturePillarCluster.new()
+	f.region = _disc(center, radius)
+	f.count = count
+	f.pillar_radius_cells = radius_cells
+	f.spacing_min = spacing
 	return f
 
 static func _enemies(count: int, r_min: float, r_max: float, is_elite: bool) -> FeatureEnemyPack:
@@ -133,21 +141,30 @@ static func _build_variant_a(biome: StringName) -> ArenaComposition:
 	c.inner_disc_radius = BOSS_INNER_DISC
 	c.features = [
 		_boss(),
-		_pillars(10, 180, 280, p["pillar_mat"]),
-		_pillars(3, 100, 170, p["pillar_mat"]),
-		_enemies(3, 100, 200, false),
-		_enemies(1, 150, 250, true),
-		_enemies(1, 220, 280, false),
-		_barrels_disc(Vector2(-180, -120), 50, 3),
-		_barrels_disc(Vector2(180, 120), 50, 3),
-		_barrels_ring(3, 220, 280),
+		# Pillar bands covering full annular area (r=80..300)
+		_pillars(10, 90, 150, p["pillar_mat"]),
+		_pillars(12, 150, 220, p["pillar_mat"]),
+		_pillars(14, 220, 290, p["pillar_mat"]),
+		# Enemies
+		_enemies(4, 100, 200, false),
+		_enemies(2, 150, 250, true),
+		_enemies(2, 220, 290, false),
+		# Barrel pockets all around the arena
+		_barrels_disc(Vector2(-180, -120), 60, 5),
+		_barrels_disc(Vector2(180, 120), 60, 5),
+		_barrels_disc(Vector2(-200, 180), 50, 3),
+		_barrels_disc(Vector2(200, -180), 50, 3),
+		_barrels_ring(6, 90, 160),
+		_barrels_ring(6, 220, 290),
 	]
 	if p["pool_mat"] > 0:
-		c.features.append(_pool_ring(80, 160, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
-		c.features.append(_pool(Vector2(200, 180), 50, p["pool_mat"], 1, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool_ring(90, 160, p["pool_mat"], 4, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool_ring(170, 230, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(200, 180), 60, p["pool_mat"], 2, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(-200, -180), 60, p["pool_mat"], 2, BOSS_POOL_MIN, BOSS_POOL_MAX))
 	else:
-		c.features.append(_barrels_ring(3, 80, 160))
-		c.features.append(_pillars(3, 100, 160, p["pillar_mat"]))
+		c.features.append(_barrels_ring(6, 90, 160))
+		c.features.append(_pillars(8, 100, 160, p["pillar_mat"]))
 	return c
 
 static func _build_variant_b(biome: StringName) -> ArenaComposition:
@@ -159,27 +176,30 @@ static func _build_variant_b(biome: StringName) -> ArenaComposition:
 	c.inner_disc_radius = BOSS_INNER_DISC
 	c.features = [
 		_boss(),
-		_pillars(8, 150, 280, p["pillar_mat"]),
-		# pillar grove pocket
-		FeaturePillarCluster.new(),
-		_enemies(3, 120, 220, false),
+		# Sparse-ish outer ring + dense grove pockets
+		_pillars(10, 150, 220, p["pillar_mat"]),
+		_pillars(12, 220, 290, p["pillar_mat"]),
+		_pillars_disc(Vector2(-130, 90), 80, 10, 44.0),
+		_pillars_disc(Vector2(160, -130), 70, 8, 44.0),
+		_pillars_disc(Vector2(100, 180), 60, 6, 44.0),
+		# Enemies
+		_enemies(4, 120, 220, false),
 		_enemies(2, 180, 280, true),
-		_barrels_ring(3, 100, 180),
-		_barrels_disc(Vector2(150, 100), 40, 3),
-		_barrels_disc(Vector2(-200, -180), 50, 2),
+		_enemies(2, 100, 200, false),
+		# Barrel clusters scattered
+		_barrels_ring(6, 100, 180),
+		_barrels_ring(5, 200, 280),
+		_barrels_disc(Vector2(150, 100), 50, 4),
+		_barrels_disc(Vector2(-200, -180), 60, 4),
+		_barrels_disc(Vector2(-180, 200), 50, 3),
 	]
-	# fill the pillar grove pocket (index 2)
-	var grove: FeaturePillarCluster = c.features[2]
-	grove.region = _disc(Vector2(-120, 80), 70)
-	grove.count = 6
-	grove.pillar_radius_cells = 10
-	grove.spacing_min = 56.0
 	if p["pool_mat"] > 0:
-		c.features.append(_pool(Vector2(220, -180), 70, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
-		c.features.append(_pool(Vector2(-220, 200), 50, p["pool_mat"], 1, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(220, -180), 80, p["pool_mat"], 4, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(-220, 180), 70, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool_ring(90, 160, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
 	else:
-		c.features.append(_barrels_disc(Vector2(220, -180), 50, 3))
-		c.features.append(_pillars(3, 200, 260, p["pillar_mat"]))
+		c.features.append(_barrels_disc(Vector2(220, -180), 60, 4))
+		c.features.append(_pillars(6, 200, 280, p["pillar_mat"]))
 	return c
 
 static func _build_variant_c(biome: StringName) -> ArenaComposition:
@@ -191,20 +211,31 @@ static func _build_variant_c(biome: StringName) -> ArenaComposition:
 	c.inner_disc_radius = BOSS_INNER_DISC
 	c.features = [
 		_boss(),
-		_pillars(9, 200, 280, p["pillar_mat"]),
-		_pillars(3, 100, 180, p["pillar_mat"]),
-		_enemies(3, 120, 220, false),
-		_enemies(1, 180, 260, true),
-		_barrels_ring(4, 80, 180),
-		_barrels_ring(3, 180, 280),
+		# Concentric pillar rings
+		_pillars(8, 90, 150, p["pillar_mat"]),
+		_pillars(12, 150, 220, p["pillar_mat"]),
+		_pillars(14, 220, 290, p["pillar_mat"]),
+		# Enemies
+		_enemies(4, 120, 220, false),
+		_enemies(2, 180, 260, true),
+		_enemies(2, 220, 290, false),
+		# Barrel rings packing both bands
+		_barrels_ring(8, 90, 180),
+		_barrels_ring(6, 180, 290),
+		# Vents at cardinal positions
 		_vent(Vector2(0, 0), 50, 1),
+		_vent(Vector2(0, 220), 40, 1),
+		_vent(Vector2(0, -220), 40, 1),
 	]
 	if p["pool_mat"] > 0:
-		c.features.append(_pool(Vector2(-150, 150), 60, p["pool_mat"], 2, BOSS_POOL_MIN, BOSS_POOL_MAX))
-		c.features.append(_pool(Vector2(150, -150), 60, p["pool_mat"], 2, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(-160, 160), 70, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(160, -160), 70, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(-160, -160), 60, p["pool_mat"], 2, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool(Vector2(160, 160), 60, p["pool_mat"], 2, BOSS_POOL_MIN, BOSS_POOL_MAX))
 	else:
-		c.features.append(_barrels_disc(Vector2(-150, 150), 50, 2))
-		c.features.append(_barrels_disc(Vector2(150, -150), 50, 2))
+		c.features.append(_barrels_disc(Vector2(-150, 150), 60, 3))
+		c.features.append(_barrels_disc(Vector2(150, -150), 60, 3))
+		c.features.append(_pillars(6, 130, 200, p["pillar_mat"]))
 	return c
 
 static func _build_variant_d(biome: StringName) -> ArenaComposition:
@@ -216,21 +247,28 @@ static func _build_variant_d(biome: StringName) -> ArenaComposition:
 	c.inner_disc_radius = BOSS_INNER_DISC
 	c.features = [
 		_boss(),
-		_pillars(9, 180, 280, p["pillar_mat"]),
-		_pillars(3, 90, 170, p["pillar_mat"]),
-		_enemies(3, 100, 200, false),
-		_enemies(1, 180, 260, true),
+		_pillars(10, 90, 170, p["pillar_mat"]),
+		_pillars(12, 170, 240, p["pillar_mat"]),
+		_pillars(12, 240, 290, p["pillar_mat"]),
+		_enemies(4, 100, 200, false),
+		_enemies(2, 180, 260, true),
+		_enemies(2, 220, 290, false),
 		_vent(Vector2(100, -80), 30, 1),
 		_vent(Vector2(-100, 80), 30, 1),
-		_barrels_ring(4, 100, 200),
-		_barrels_ring(3, 200, 280),
+		_vent(Vector2(200, 200), 40, 1),
+		_vent(Vector2(-200, -200), 40, 1),
+		_barrels_ring(8, 100, 200),
+		_barrels_ring(6, 200, 290),
+		_barrels_disc(Vector2(220, -150), 50, 3),
+		_barrels_disc(Vector2(-220, 150), 50, 3),
 	]
 	if p["pool_mat"] > 0:
-		c.features.append(_pool_ring(60, 150, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
-		c.features.append(_pool_ring(200, 280, p["pool_mat"], 1, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool_ring(90, 160, p["pool_mat"], 4, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool_ring(170, 230, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
+		c.features.append(_pool_ring(230, 290, p["pool_mat"], 2, BOSS_POOL_MIN, BOSS_POOL_MAX))
 	else:
-		c.features.append(_pillars(3, 60, 150, p["pillar_mat"]))
-		c.features.append(_barrels_ring(3, 60, 150))
+		c.features.append(_pillars(6, 90, 160, p["pillar_mat"]))
+		c.features.append(_barrels_ring(6, 90, 160))
 	return c
 
 static func _build_elite_a(biome: StringName) -> ArenaComposition:

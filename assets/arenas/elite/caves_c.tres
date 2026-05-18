@@ -34,6 +34,7 @@ r_max = 130.0
 [sub_resource type="Resource" id="Resource_fcchx"]
 script = ExtResource("5_64dem")
 count = 5
+spacing_min = 56.0
 region = SubResource("Resource_twijw")
 
 [sub_resource type="Resource" id="Resource_vf7nr"]
