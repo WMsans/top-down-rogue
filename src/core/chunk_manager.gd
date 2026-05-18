@@ -16,6 +16,8 @@ const NEIGHBOR_OFFSETS = [
 
 var world_manager: Node2D
 
+const _ArenaComposition = preload("res://src/core/arena_composition.gd")
+
 
 func _init(manager: Node2D) -> void:
 	world_manager = manager
@@ -289,6 +291,54 @@ func clear_all_chunks() -> void:
 	chunks.clear()
 
 
+func _build_cavern_bytes(new_chunks: Array[Vector2i]) -> PackedByteArray:
+	var grid: SectorGrid = LevelManager.get_grid()
+	if grid == null:
+		return PackedByteArray()
+	var anchors: Dictionary = {}
+	for chunk_coord in new_chunks:
+		var chunk_world := chunk_coord * world_manager.CHUNK_SIZE
+		var min_s := grid.world_to_sector(Vector2(chunk_world.x - 1120, chunk_world.y - 1120))
+		var max_s := grid.world_to_sector(Vector2(chunk_world.x + world_manager.CHUNK_SIZE + 1120, chunk_world.y + world_manager.CHUNK_SIZE + 1120))
+		for sx in range(min_s.x, max_s.x + 1):
+			for sy in range(min_s.y, max_s.y + 1):
+				var sector := Vector2i(sx, sy)
+				if anchors.has(sector):
+					continue
+				var slot := grid.resolve_sector(sector)
+				var comp: Resource = slot.composition
+				if comp == null:
+					continue
+				if not slot.is_boss and not (slot.template_index >= 0 and (grid.get_template_for_slot(slot) as RoomTemplate).cavern_carve):
+					continue
+				anchors[sector] = comp
+
+	var bytes := PackedByteArray()
+	bytes.resize(16 + 64 * 32)
+	bytes.fill(0)
+	var count: int = min(anchors.size(), 64)
+	bytes.encode_s32(0, count)
+	var i := 0
+	for sector in anchors:
+		if i >= 64:
+			break
+		var comp: ArenaComposition = anchors[sector]
+		var center := Vector2(grid.sector_to_world_center(sector))
+		var base_r: float = float(comp.nominal_radius)
+		var lobing: float = float(comp.lobing_amplitude)
+		var inner_r: float = float(comp.inner_disc_radius)
+		var noise_seed: float = float(hash(sector.x * 73856093 ^ sector.y * 19349663) & 0xFFFFFF)
+		var off := 16 + i * 32
+		bytes.encode_float(off + 0,  center.x)
+		bytes.encode_float(off + 4,  center.y)
+		bytes.encode_float(off + 8,  base_r)
+		bytes.encode_float(off + 12, lobing)
+		bytes.encode_float(off + 16, inner_r)
+		bytes.encode_float(off + 20, noise_seed)
+		i += 1
+	return bytes
+
+
 func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2i]:
 	var chunks: Dictionary = world_manager.chunks
 
@@ -305,7 +355,9 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2
 	if new_chunks.is_empty():
 		return new_chunks
 
-	world_manager._gen_uniform_sets_to_free = world_manager.compute_device.dispatch_generation(chunks, new_chunks, seed_val)
+	var stamp_bytes := LevelManager.build_stamp_bytes(new_chunks)
+	var cavern_bytes := _build_cavern_bytes(new_chunks)
+	world_manager._gen_uniform_sets_to_free = world_manager.compute_device.dispatch_generation(chunks, new_chunks, seed_val, stamp_bytes, cavern_bytes)
 
 	rebuild_sim_uniform_sets(new_chunks, [])
 	update_render_neighbors(new_chunks, [])
