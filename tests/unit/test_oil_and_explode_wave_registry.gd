@@ -17,3 +17,13 @@ func test_mat_oil_burn_health() -> void:
 	registry._init_materials()
 	var oil_def = registry.materials[registry.MAT_OIL]
 	assert_that(oil_def.burn_health).is_equal(60)
+
+func test_mat_explode_wave_registered() -> void:
+	var registry := _MaterialRegistry.new()
+	registry._init_materials()
+	assert_that(registry.MAT_EXPLODE_WAVE).is_greater(0)
+	assert_that(registry.is_flammable(registry.MAT_EXPLODE_WAVE)).is_false()
+	assert_that(registry.is_fluid(registry.MAT_EXPLODE_WAVE)).is_false()
+	assert_that(registry.has_collider(registry.MAT_EXPLODE_WAVE)).is_false()
+	assert_that(registry.has_wall_extension(registry.MAT_EXPLODE_WAVE)).is_false()
+	assert_that(registry.get_glow(registry.MAT_EXPLODE_WAVE)).is_greater_equal(10.0)
