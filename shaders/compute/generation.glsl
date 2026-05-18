@@ -10,6 +10,7 @@ layout(push_constant) uniform PushConstants {
 } push_ctx;
 
 layout(rgba8, set = 0, binding = 0) uniform image2D chunk_tex;
+layout(r8, set = 5, binding = 0) uniform image2D chunk_flag_tex;
 
 #include "res://shaders/generated/materials.glslinc"
 #include "res://shaders/include/simplex_2d.glslinc"

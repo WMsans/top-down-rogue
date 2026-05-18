@@ -253,6 +253,39 @@ func read_region(region: Rect2i) -> PackedByteArray:
 	return result
 
 
+func read_flag_region(region: Rect2i) -> PackedByteArray:
+	var width: int = region.size.x
+	var height: int = region.size.y
+	var result := PackedByteArray()
+	result.resize(width * height)
+	result.fill(0)
+
+	var min_chunk := Vector2i(floori(float(region.position.x) / CHUNK_SIZE), floori(float(region.position.y) / CHUNK_SIZE))
+	var max_chunk := Vector2i(floori(float(region.end.x - 1) / CHUNK_SIZE), floori(float(region.end.y - 1) / CHUNK_SIZE))
+
+	for cx in range(min_chunk.x, max_chunk.x + 1):
+		for cy in range(min_chunk.y, max_chunk.y + 1):
+			var chunk_coord := Vector2i(cx, cy)
+			if not chunks.has(chunk_coord):
+				continue
+			var chunk: Chunk = chunks[chunk_coord]
+			if not chunk.rd_flag_texture.is_valid():
+				continue
+			var chunk_data: PackedByteArray = rd.texture_get_data(chunk.rd_flag_texture, 0)
+			var chunk_origin := chunk_coord * CHUNK_SIZE
+			var chunk_rect := Rect2i(chunk_origin, Vector2i(CHUNK_SIZE, CHUNK_SIZE))
+			var overlap := region.intersection(chunk_rect)
+			for y in range(overlap.position.y, overlap.end.y):
+				for x in range(overlap.position.x, overlap.end.x):
+					var local_x: int = x - chunk_origin.x
+					var local_y: int = y - chunk_origin.y
+					var src_idx: int = local_y * CHUNK_SIZE + local_x
+					var dst_x: int = x - region.position.x
+					var dst_y: int = y - region.position.y
+					result[dst_y * width + dst_x] = chunk_data[src_idx]
+	return result
+
+
 func find_spawn_position(search_origin: Vector2i, body_size: Vector2i, max_radius: float = 800.0) -> Vector2i:
 	var max_r: float = max(max_radius, float(body_size.x) + float(body_size.y))
 	var max_ri := int(max_r)

@@ -63,6 +63,7 @@ func create_chunk(coord: Vector2i) -> void:
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 	)
 	chunk.rd_texture = world_manager.rd.texture_create(tf, RDTextureView.new())
+	chunk.create_flag_texture(world_manager.rd, CHUNK_SIZE)
 
 	chunk.injection_buffer = world_manager.rd.storage_buffer_create(INJECTION_BUFFER_SIZE)
 	var zero_data := PackedByteArray()
@@ -171,6 +172,9 @@ func free_chunk_body(chunk: Chunk) -> void:
 	if chunk.light_output_buffer.is_valid():
 		world_manager.rd.free_rid(chunk.light_output_buffer)
 		chunk.light_output_buffer = RID()
+	if chunk.rd_flag_texture.is_valid():
+		world_manager.rd.free_rid(chunk.rd_flag_texture)
+		chunk.rd_flag_texture = RID()
 
 
 func free_chunk_resources(chunk: Chunk) -> void:

@@ -61,5 +61,6 @@ void stage_cavern_carve(Context ctx) {
     bool in_inner = false;
     if (cavern_carves_cell(world_pos, in_inner)) {
         imageStore(chunk_tex, pos, vec4(0.0, 0.0, 0.0, 0.0));  // MAT_AIR = 0
+        imageStore(chunk_flag_tex, pos, vec4(1.0 / 255.0, 0.0, 0.0, 0.0));  // bit 0 = NO_PROPS
     }
 }
