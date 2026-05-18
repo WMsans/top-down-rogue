@@ -70,39 +70,98 @@ The chest is the regular chest scene (not the secret rare variant). Reward worth
 
 Two new materials. Both leverage the existing chunk-data layout (R=material, G=health, B=temperature, A=reserved). Burning is a temperature state of oil, not a separate material ID — same pattern as wood ignition.
 
+**Scope note:** This iteration defines the materials and their sim behavior. The only entry point is the existing `spawn_mat` console command (`src/console/commands/spawn_mat_command.gd`), which automatically picks up any new entry in `MaterialRegistry.materials`. Gameplay sources (barrels, gas vents, pool seeds, spawn-dispatcher markers, level-gen placement) are deferred to a later spec.
+
 ### 3.5.1 MAT_OIL
 
-- **Fluid sim:** existing liquid sim (same path as water/lava). Spreads, pools, flows.
-- **Heat diffusion:** **excluded from the heat-diffusion sim.** Temperature rises only via direct contact with `MAT_LAVA`, `MAT_FIRE`, or `MAT_EXPLODE_WAVE` (the wave's power-as-temperature transfer). No gradient soak from generally-hot neighbors. Keeps oil chains gated on fire contact.
-- **Temperature-driven burning:**
-  - When `temperature ≥ 200` ("burning"): the cell emits `MAT_FIRE` into adjacent air, decrements its `health` channel by 1 per tick (~60-tick burn lifetime), and renders glowing orange-red instead of dark amber.
-  - When burning cell `health == 0`: replaced with `MAT_EXPLODE_WAVE` seeded with power ~30.
+- **Fluid sim:** new `shaders/include/sim/oil.glslinc`, modeled on `lava.glslinc`. Spreads, pools, and flows like other liquids.
+- **Heat sim:** **fully participates** in heat diffusion. `IS_FLAMMABLE[MAT_OIL] = true`, `IGNITION_TEMP[MAT_OIL] = 200`. Burning, ignition, and heat spread reuse the existing `burning.glslinc` path unchanged — oil ignites from neighboring fire, lava, hot wood, or hot oil exactly like any other flammable, including gradient soak from generally-hot neighbors.
+- **Burn lifetime:** uses the standard `health` decrement in `burning.glslinc`. Initial health is set so total burn ≈ 60 ticks.
+- **End of burn:** when a burning oil cell reaches `health == 0`, instead of replacing with `MAT_AIR` (the default path in `burning.glslinc`), it replaces with `MAT_EXPLODE_WAVE` seeded at power = `OIL_BURN_END_POWER` (default 18). This is a small special-case in `burning.glslinc`: if the cell that just burned out was `MAT_OIL`, write a wave seed instead of air.
 - **Color:**
-  - Cold (`temp < 200`): dark amber/black.
-  - Burning (`temp ≥ 200`): glowing orange-red. The renderer branches on temperature for this material.
+  - Cold (`temp < IGNITION_TEMP[MAT_OIL]`): dark amber/black.
+  - Burning (`temp ≥ IGNITION_TEMP[MAT_OIL]`): glowing orange-red. Renderer branches on temperature for `MAT_OIL`.
 
 ### 3.5.2 MAT_EXPLODE_WAVE
 
-Custom sim — does not use the gas sim. New stage: `shaders/include/explode_wave_stage.glslinc`.
+Custom sim. New file: `shaders/include/sim/explode_wave.glslinc`. **Not** a fluid; **not** routed through `burning.glslinc`.
 
-- Each frame the wave expands one cell radially outward in all 8 directions. Mechanically uniform — no randomness — front is always a clean expanding ring.
-- The `temperature` channel stores the wave's power. On expansion into a new cell, power is decremented by `decay_rate` (default 4). When `power ≤ 0`, the cell reverts to `MAT_AIR`.
-- On entering a cell: deals damage equal to current power to any entity in the cell; raises adjacent flammable materials' temperature by `power` (igniting oil and burning wood); damages terrain (subtracts power from terrain `health`).
-- A wave cell lasts exactly 1 tick before decaying or propagating. The wave is a thin expanding shell, not a filled disk.
-- **Color:** white-yellow flash (1-tick visible duration per cell).
-- **Source — explosive barrels (marker 8):** when destroyed, spawn `MAT_EXPLODE_WAVE` in a small core with initial power ~120.
-- **Cascade:** burning oil at end-of-life → small wave (power 30) → adjacent oil heats to ≥ 200 → ignites → more waves. Chain reaction emerges without special-case code.
+#### Pixel encoding
 
-### 3.5.3 Tuning constants
+- `material = MAT_EXPLODE_WAVE`
+- `temperature` channel stores the wave's **power** (0–255).
+- `health` channel unused (reserved for future directional state if needed).
 
-| Constant | Default |
-|---|---|
-| Oil ignition temperature | 200 |
-| Oil burning lifetime (health) | 60 ticks |
-| End-of-burn wave power | 30 |
-| Barrel initial power | 120 |
-| Wave decay per cell of travel | 4 |
-| Barrel-wave max travel | 30 cells |
+#### Propagation rule
+
+Each tick, every wave cell:
+
+1. **Writes into its 4 orthogonal neighbors** (up/down/left/right — Manhattan, **not** 8-neighbor) that are currently `MAT_AIR` with `temperature < SCORCH_TEMP`. The neighbor becomes `MAT_EXPLODE_WAVE` with `power_new = power_current - WAVE_DECAY`. If `power_new ≤ 0`, no write.
+2. **Decays to scorched air:** the originator becomes `MAT_AIR` with `temperature = SCORCH_TEMP` (default 100). This prevents the originator from being re-lit by its now-active forward neighbors next tick (backfill prevention).
+3. The scorch heat dissipates naturally via the existing heat-diffusion sim over ~30 ticks. Side effect: leaves a brief warm patch in the wave's wake; nearby flammables can be partially pre-heated by passing waves.
+
+Each wave cell lives exactly one tick. The wave is a clean 1-cell-thick expanding **diamond** (Manhattan front), advancing 1 cell per tick.
+
+#### Per-cell effects (the tick a cell becomes a wave)
+
+- **Damages entities** overlapping that pixel by `power` (treats wave cells as damaging cells, reusing the existing entity-vs-pixel-damage hook used by lava/fire).
+- **Raises adjacent flammable terrain temperature by `power`** — this is what ignites oil chains and burning wood.
+- **Subtracts `power` from terrain `health`** of adjacent solid (rock/wood) cells — wave chews through weak terrain.
+
+#### Chunk boundary handling
+
+Propagation reads neighbors via the existing `read_neighbor` helper in `shaders/include/sim/common.glslinc`, so waves cross chunk seams the same way liquids do. The propagation rule is fully local — no global state needed.
+
+#### Cascade
+
+Burning oil at end-of-life → small wave (power 18 → 4-cell-radius diamond) → adjacent oil temperature instantly raised by 18 (more than enough to push over the 200 ignition threshold if pre-warmed) → those oil cells burn for 60 ticks → each emits its own power-18 wave. Chain reaction emerges without special-case code.
+
+#### Color
+
+White-yellow flash. Renderer branches on `MAT_EXPLODE_WAVE` and ignores temperature for color purposes (temperature is being used as power, not heat).
+
+### 3.5.3 Expected spread pattern
+
+With **console default `WAVE_DEFAULT_POWER = 60`, `WAVE_DECAY = 4`:**
+
+| Tick | Front shape | Manhattan radius | Cell count on front | Power on front |
+|---|---|---|---|---|
+| 0 | single cell | 0 | 1 | 60 |
+| 1 | diamond | 1 | 4 | 56 |
+| 2 | diamond | 2 | 8 | 52 |
+| r | diamond | r | 4r (r > 0) | 60 − 4r |
+| 14 | diamond | 14 | 56 | 4 |
+| 15 | — | 15 | — | 0 → terminates |
+
+At 60 fps that's a ~0.25-second burst reaching 15 cells radius. Behind it, a fading scorch-hot air region that dissipates over the next ~30 ticks.
+
+With **`OIL_BURN_END_POWER = 18`, `WAVE_DECAY = 4`:** wave reaches Manhattan radius 4 in 4 ticks (~0.07 s) before terminating. Tiny pop per cell — visible but localized. Cascades emerge when neighboring oil cells fall inside that 4-cell radius.
+
+### 3.5.4 Console integration (only integration in this iteration)
+
+`spawn_mat oil <radius>` works automatically once `MAT_OIL` is registered — it routes through `world_manager.place_material()` like any solid or liquid.
+
+`spawn_mat explode_wave <radius>` is **seed-and-go**: it stamps a small core of wave cells at the cursor with `temperature = WAVE_DEFAULT_POWER` (default 60), then the sim takes over and the diamond expands until power decays to zero. Implementation: add a minor branch in `spawn_mat_command.gd` (or in `world_manager.place_material`) so wave stamps get `temperature = WAVE_DEFAULT_POWER` rather than 0. The `radius` console arg controls the seed-core size only — propagation distance is governed entirely by `power / WAVE_DECAY`.
+
+### 3.5.5 Tuning constants
+
+Defined in `shaders/include/sim/common.glslinc` (or a dedicated header) and mirrored on the GDScript side where needed.
+
+| Constant | Default | Meaning |
+|---|---|---|
+| `IGNITION_TEMP[MAT_OIL]` | 200 | Heat threshold for oil to start burning |
+| Oil burn lifetime (initial `health`) | 60 | Ticks a burning oil cell lasts before seeding a wave |
+| `OIL_BURN_END_POWER` | 18 | Wave power seeded when a burning oil cell expires |
+| `WAVE_DEFAULT_POWER` | 60 | Power used by `spawn_mat explode_wave` (and future barrels, until per-source overrides exist) |
+| `WAVE_DECAY` | 4 | Power lost per cell of propagation |
+| `SCORCH_TEMP` | 100 | Temperature stamped on air behind a wave; blocks re-light until heat dissipates |
+
+### 3.5.6 Out of scope (deferred to a later spec)
+
+- Barrels, gas vents, pool seeds, and any level-gen markers for these materials.
+- Spawn-dispatcher marker types for these materials.
+- Tuning passes for explosion damage curves vs. enemies.
+- Per-source power overrides (barrel power, end-of-burn power scaling with oil depth, etc.).
 
 ---
 
