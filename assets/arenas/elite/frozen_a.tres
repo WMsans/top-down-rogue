@@ -75,7 +75,7 @@ radius = 40.0
 
 [sub_resource type="Resource" id="Resource_3xih2"]
 script = ExtResource("9_as4ke")
-material_id = 6
+material_id = 8
 count = 2
 size_min_cells = 3
 size_max_cells = 6

@@ -75,7 +75,7 @@ radius = 40.0
 
 [sub_resource type="Resource" id="Resource_2skak"]
 script = ExtResource("9_0dry8")
-material_id = 5
+material_id = 4
 count = 2
 size_min_cells = 3
 size_max_cells = 6

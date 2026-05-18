@@ -30,42 +30,43 @@ r_max = 280.0
 
 [sub_resource type="Resource" id="Resource_akkf0"]
 script = ExtResource("5_dayr1")
+count = 9
 region = SubResource("Resource_p308v")
 
 [sub_resource type="Resource" id="Resource_x4co6"]
 script = ExtResource("4_224yv")
+r_min = 90.0
+r_max = 170.0
 
 [sub_resource type="Resource" id="Resource_edt2j"]
-script = ExtResource("7_wxk3b")
-enemy_scene = ExtResource("6_ytk5o")
+script = ExtResource("5_dayr1")
 count = 3
 region = SubResource("Resource_x4co6")
 
 [sub_resource type="Resource" id="Resource_cgsaf"]
 script = ExtResource("4_224yv")
-r_min = 180.0
-r_max = 260.0
 
 [sub_resource type="Resource" id="Resource_gmm35"]
 script = ExtResource("7_wxk3b")
 enemy_scene = ExtResource("6_ytk5o")
-count = 1
-is_elite = true
+count = 3
 region = SubResource("Resource_cgsaf")
 
 [sub_resource type="Resource" id="Resource_y603l"]
-script = ExtResource("8_qrx4w")
-center = Vector2(100, -80)
-radius = 30.0
+script = ExtResource("4_224yv")
+r_min = 180.0
+r_max = 260.0
 
 [sub_resource type="Resource" id="Resource_q05of"]
-script = ExtResource("9_tutra")
-vent_scene = ExtResource("10_jyy1l")
+script = ExtResource("7_wxk3b")
+enemy_scene = ExtResource("6_ytk5o")
+count = 1
+is_elite = true
 region = SubResource("Resource_y603l")
 
 [sub_resource type="Resource" id="Resource_4pmmh"]
 script = ExtResource("8_qrx4w")
-center = Vector2(-100, 80)
+center = Vector2(100, -80)
 radius = 30.0
 
 [sub_resource type="Resource" id="Resource_ykucs"]
@@ -74,25 +75,58 @@ vent_scene = ExtResource("10_jyy1l")
 region = SubResource("Resource_4pmmh")
 
 [sub_resource type="Resource" id="Resource_bpeyi"]
-script = ExtResource("4_224yv")
+script = ExtResource("8_qrx4w")
+center = Vector2(-100, 80)
+radius = 30.0
 
 [sub_resource type="Resource" id="Resource_fcw36"]
-script = ExtResource("12_3sjim")
-barrel_scene = ExtResource("11_kcika")
+script = ExtResource("9_tutra")
+vent_scene = ExtResource("10_jyy1l")
 region = SubResource("Resource_bpeyi")
 
 [sub_resource type="Resource" id="Resource_cnwya"]
 script = ExtResource("4_224yv")
+
+[sub_resource type="Resource" id="Resource_w25t6"]
+script = ExtResource("12_3sjim")
+barrel_scene = ExtResource("11_kcika")
+count = 4
+region = SubResource("Resource_cnwya")
+
+[sub_resource type="Resource" id="Resource_6e6wj"]
+script = ExtResource("4_224yv")
+r_min = 200.0
+r_max = 280.0
+
+[sub_resource type="Resource" id="Resource_ocj8o"]
+script = ExtResource("12_3sjim")
+barrel_scene = ExtResource("11_kcika")
+region = SubResource("Resource_6e6wj")
+
+[sub_resource type="Resource" id="Resource_e8r8w"]
+script = ExtResource("4_224yv")
 r_min = 60.0
 r_max = 150.0
 
-[sub_resource type="Resource" id="Resource_w25t6"]
+[sub_resource type="Resource" id="Resource_a0tri"]
 script = ExtResource("13_g0yor")
-material_id = 5
-count = 2
+material_id = 4
+count = 3
 size_min_cells = 5
 size_max_cells = 10
-region = SubResource("Resource_cnwya")
+region = SubResource("Resource_e8r8w")
+
+[sub_resource type="Resource" id="Resource_b8jnr"]
+script = ExtResource("4_224yv")
+r_min = 200.0
+r_max = 280.0
+
+[sub_resource type="Resource" id="Resource_2e5pa"]
+script = ExtResource("13_g0yor")
+material_id = 4
+size_min_cells = 5
+size_max_cells = 10
+region = SubResource("Resource_b8jnr")
 
 [resource]
 script = ExtResource("14_pxe2l")
@@ -101,4 +135,4 @@ variant_id = &"d"
 nominal_radius = 300
 lobing_amplitude = 50
 inner_disc_radius = 80
-features = [SubResource("Resource_c824r"), SubResource("Resource_akkf0"), SubResource("Resource_edt2j"), SubResource("Resource_gmm35"), SubResource("Resource_q05of"), SubResource("Resource_ykucs"), SubResource("Resource_fcw36"), SubResource("Resource_w25t6")]
+features = [SubResource("Resource_c824r"), SubResource("Resource_akkf0"), SubResource("Resource_edt2j"), SubResource("Resource_gmm35"), SubResource("Resource_q05of"), SubResource("Resource_ykucs"), SubResource("Resource_fcw36"), SubResource("Resource_w25t6"), SubResource("Resource_ocj8o"), SubResource("Resource_a0tri"), SubResource("Resource_2e5pa")]
