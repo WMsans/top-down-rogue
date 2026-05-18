@@ -130,6 +130,50 @@ static func _build_variant_d(biome: StringName) -> ArenaComposition:
 	]
 	return c
 
+static func _build_elite_a(biome: StringName) -> ArenaComposition:
+	var p := _biome_params(biome)
+	var c := ArenaComposition.new()
+	c.arena_kind = &"elite"
+	c.biome = biome
+	c.variant_id = &"a"
+	c.nominal_radius = 224
+	c.lobing_amplitude = 48
+	c.inner_disc_radius = 48
+	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
+	chest_feature.rare = false
+	c.features = [
+		chest_feature,
+		_enemies(3, 80, 180, true),
+		_pillars(2, 100, 180, p["pillar_mat"]),
+	]
+	return c
+
+static func _build_elite_b(biome: StringName) -> ArenaComposition:
+	var p := _biome_params(biome)
+	var c := ArenaComposition.new()
+	c.arena_kind = &"elite"; c.biome = biome; c.variant_id = &"b"
+	c.nominal_radius = 224; c.lobing_amplitude = 48; c.inner_disc_radius = 48
+	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
+	chest_feature.rare = false
+	c.features = [chest_feature, _enemies(2, 100, 200, true)]
+	if p["pool_mat"] > 0:
+		c.features.append(_pool(Vector2(60, -60), 60, p["pool_mat"], 1))
+	return c
+
+static func _build_elite_c(biome: StringName) -> ArenaComposition:
+	var p := _biome_params(biome)
+	var c := ArenaComposition.new()
+	c.arena_kind = &"elite"; c.biome = biome; c.variant_id = &"c"
+	c.nominal_radius = 224; c.lobing_amplitude = 48; c.inner_disc_radius = 48
+	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
+	chest_feature.rare = false
+	c.features = [
+		chest_feature,
+		_enemies(3, 80, 200, true),
+		_pillars(1, 80, 150, p["pillar_mat"]),
+	]
+	return c
+
 func _init() -> void:
 	var dir := DirAccess.open("res://assets/arenas/boss")
 	if dir == null:
@@ -149,5 +193,19 @@ func _init() -> void:
 			var err := ResourceSaver.save(comp, path)
 			print("Wrote %s — %s" % [path, "OK" if err == OK else var_to_str(err)])
 
-	print("Done generating boss compositions.")
+	DirAccess.make_dir_recursive_absolute("res://assets/arenas/elite")
+	for biome in [&"caves", &"mines", &"magma", &"frozen", &"vault"]:
+		for variant_builder in [
+			[&"a", _build_elite_a],
+			[&"b", _build_elite_b],
+			[&"c", _build_elite_c],
+		]:
+			var variant_id: StringName = variant_builder[0]
+			var build_fn: Callable = variant_builder[1]
+			var comp: ArenaComposition = build_fn.call(biome)
+			var path := "res://assets/arenas/elite/%s_%s.tres" % [biome, variant_id]
+			var err := ResourceSaver.save(comp, path)
+			print("Wrote %s — %s" % [path, "OK" if err == OK else var_to_str(err)])
+
+	print("Done generating compositions.")
 	quit(0)
