@@ -4,12 +4,14 @@
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_7cf3p"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_5ujno"]
 
-[sub_resource type="Resource" id="Resource_fs00u"]
-script = ExtResource("1_iq0d2")
-png_path = "res://assets/rooms/caves/boss_arena.png"
-size_class = 128
-is_boss = true
-rotatable = false
+[ext_resource type="Resource" path="res://assets/arenas/boss/caves_a.tres" id="4_bossa"]
+[ext_resource type="Resource" path="res://assets/arenas/boss/caves_b.tres" id="5_bossb"]
+[ext_resource type="Resource" path="res://assets/arenas/boss/caves_c.tres" id="6_bossc"]
+[ext_resource type="Resource" path="res://assets/arenas/boss/caves_d.tres" id="7_bossd"]
+
+[ext_resource type="Resource" path="res://assets/arenas/elite/caves_a.tres" id="8_elitea"]
+[ext_resource type="Resource" path="res://assets/arenas/elite/caves_b.tres" id="9_eliteb"]
+[ext_resource type="Resource" path="res://assets/arenas/elite/caves_c.tres" id="10_elitec"]
 
 [sub_resource type="Resource" id="Resource_xxuj2"]
 script = ExtResource("2_7cf3p")
@@ -39,9 +41,30 @@ png_path = "res://assets/rooms/caves/secret_a.png"
 size_class = 32
 is_secret = true
 
+[sub_resource type="Resource" id="Resource_elite_a"]
+script = ExtResource("1_iq0d2")
+weight = 1.0
+is_elite_chest = true
+cavern_carve = true
+composition = ExtResource("8_elitea")
+
+[sub_resource type="Resource" id="Resource_elite_b"]
+script = ExtResource("1_iq0d2")
+weight = 1.0
+is_elite_chest = true
+cavern_carve = true
+composition = ExtResource("9_eliteb")
+
+[sub_resource type="Resource" id="Resource_elite_c"]
+script = ExtResource("1_iq0d2")
+weight = 1.0
+is_elite_chest = true
+cavern_carve = true
+composition = ExtResource("10_elitec")
+
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
 pool_materials = [SubResource("Resource_xxuj2")]
-room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633")]
-boss_templates = [SubResource("Resource_fs00u")]
+room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
+boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
