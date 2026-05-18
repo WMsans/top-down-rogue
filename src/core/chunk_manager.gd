@@ -301,9 +301,9 @@ func _build_cavern_bytes(new_chunks: Array[Vector2i]) -> PackedByteArray:
 		return PackedByteArray()
 	var anchors: Dictionary = {}
 	for chunk_coord in new_chunks:
-		var chunk_world := chunk_coord * world_manager.CHUNK_SIZE
+		var chunk_world := chunk_coord * CHUNK_SIZE
 		var min_s := grid.world_to_sector(Vector2(chunk_world.x - 1120, chunk_world.y - 1120))
-		var max_s := grid.world_to_sector(Vector2(chunk_world.x + world_manager.CHUNK_SIZE + 1120, chunk_world.y + world_manager.CHUNK_SIZE + 1120))
+		var max_s := grid.world_to_sector(Vector2(chunk_world.x + CHUNK_SIZE + 1120, chunk_world.y + CHUNK_SIZE + 1120))
 		for sx in range(min_s.x, max_s.x + 1):
 			for sy in range(min_s.y, max_s.y + 1):
 				var sector := Vector2i(sx, sy)

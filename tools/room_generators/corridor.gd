@@ -34,7 +34,7 @@ static func generate(length: int, width: int, has_chest: bool, gen_seed: int) ->
 
 	# Sparse enemies along corridor
 	var placed := 0
-	var enemy_count := max(1, length / 24)
+	var enemy_count : int = max(1, length / 24)
 	var attempts := 0
 	while placed < enemy_count and attempts < 40:
 		attempts += 1
