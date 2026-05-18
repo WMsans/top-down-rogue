@@ -185,42 +185,71 @@ static func _build_elite_a(biome: StringName) -> ArenaComposition:
 	c.arena_kind = &"elite"
 	c.biome = biome
 	c.variant_id = &"a"
-	c.nominal_radius = 224
-	c.lobing_amplitude = 48
-	c.inner_disc_radius = 48
+	c.nominal_radius = ELITE_NOMINAL_R
+	c.lobing_amplitude = ELITE_LOBING
+	c.inner_disc_radius = ELITE_INNER_DISC
 	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
 	chest_feature.rare = false
 	c.features = [
 		chest_feature,
-		_enemies(3, 80, 180, true),
-		_pillars(2, 100, 180, p["pillar_mat"]),
+		_enemies(2, 80, 130, true),
+		_pillars(5, 70, 130, p["pillar_mat"]),
+		_barrels_ring(2, 40, 90),
+		_barrels_disc(Vector2(0, 60), 30, 1),
+		_barrels_disc(Vector2(0, -60), 30, 1),
 	]
+	if p["pool_mat"] > 0:
+		c.features.append(_pool(Vector2(0, 0), 40, p["pool_mat"], 2, ELITE_POOL_MIN, ELITE_POOL_MAX))
+	else:
+		# vault: extra pillars instead of pools
+		c.features.append(_pillars(2, 50, 100, p["pillar_mat"]))
 	return c
 
 static func _build_elite_b(biome: StringName) -> ArenaComposition:
 	var p := _biome_params(biome)
 	var c := ArenaComposition.new()
 	c.arena_kind = &"elite"; c.biome = biome; c.variant_id = &"b"
-	c.nominal_radius = 224; c.lobing_amplitude = 48; c.inner_disc_radius = 48
+	c.nominal_radius = ELITE_NOMINAL_R
+	c.lobing_amplitude = ELITE_LOBING
+	c.inner_disc_radius = ELITE_INNER_DISC
 	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
 	chest_feature.rare = false
-	c.features = [chest_feature, _enemies(2, 100, 200, true)]
+	c.features = [
+		chest_feature,
+		_enemies(2, 60, 120, true),
+		_pillars(7, 30, 130, p["pillar_mat"]),
+		_barrels_ring(2, 50, 110),
+		_barrels_disc(Vector2(-50, 0), 30, 1),
+	]
 	if p["pool_mat"] > 0:
-		c.features.append(_pool(Vector2(60, -60), 60, p["pool_mat"], 1, ELITE_POOL_MIN, ELITE_POOL_MAX))
+		c.features.append(_pool(Vector2(60, -40), 40, p["pool_mat"], 2, ELITE_POOL_MIN, ELITE_POOL_MAX))
+	else:
+		c.features.append(_barrels_disc(Vector2(60, -40), 30, 2))
 	return c
 
 static func _build_elite_c(biome: StringName) -> ArenaComposition:
 	var p := _biome_params(biome)
 	var c := ArenaComposition.new()
 	c.arena_kind = &"elite"; c.biome = biome; c.variant_id = &"c"
-	c.nominal_radius = 224; c.lobing_amplitude = 48; c.inner_disc_radius = 48
+	c.nominal_radius = ELITE_NOMINAL_R
+	c.lobing_amplitude = ELITE_LOBING
+	c.inner_disc_radius = ELITE_INNER_DISC
 	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
 	chest_feature.rare = false
 	c.features = [
 		chest_feature,
-		_enemies(3, 80, 200, true),
-		_pillars(1, 80, 150, p["pillar_mat"]),
+		_enemies(2, 70, 130, true),
+		_pillars(5, 90, 130, p["pillar_mat"]),
+		_barrels_ring(2, 30, 70),
+		_barrels_ring(2, 70, 110),
+		_barrels_disc(Vector2(0, 0), 25, 1),
 	]
+	if p["pool_mat"] > 0:
+		c.features.append(_pool(Vector2(-50, 0), 35, p["pool_mat"], 1, ELITE_POOL_MIN, ELITE_POOL_MAX))
+		c.features.append(_pool(Vector2(50, 0), 35, p["pool_mat"], 1, ELITE_POOL_MIN, ELITE_POOL_MAX))
+	else:
+		c.features.append(_barrels_disc(Vector2(-50, 0), 30, 1))
+		c.features.append(_vent(Vector2(50, 0), 20, 1))
 	return c
 
 func _init() -> void:
