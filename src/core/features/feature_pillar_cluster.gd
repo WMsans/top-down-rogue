@@ -2,19 +2,33 @@ class_name FeaturePillarCluster
 extends ArenaFeature
 
 @export var count: int = 6
-@export var pillar_radius_cells: int = 10
-@export var spacing_min: float = 64.0
+@export var pillar_radius_cells: int = 10  # used when radius_min<=0
+@export var radius_min: int = 0
+@export var radius_max: int = 0
+@export var large_bias: float = 0.65  # 0..1, probability the sampled radius lands in the upper half of the range
+# Minimum allowed distance between centers, as a fraction of the larger radius.
+# 2.0 = no overlap; 1.0 = touching edge-to-center; values below 1.0 produce heavy overlap (merged blobs).
+@export var center_distance_factor: float = 0.7
 
 func apply(ctx) -> void:
-	var placed: Array[Vector2] = []
+	var placed: Array = []  # entries: {"pos": Vector2, "r": float}
 	for i in count:
-		var pos: Variant = _try_place(ctx, placed)
+		var r: float = _sample_radius(ctx)
+		var pos: Variant = _try_place(ctx, placed, r)
 		if pos == null:
 			continue
-		placed.append(pos)
-		ctx.dispatcher.stamp_material_disc(pos, pillar_radius_cells, ctx.background_material)
+		placed.append({"pos": pos, "r": r})
+		ctx.dispatcher.stamp_material_disc(pos, int(round(r)), ctx.background_material)
 
-func _try_place(ctx, placed: Array[Vector2]) -> Variant:
+func _sample_radius(ctx) -> float:
+	if radius_min <= 0 or radius_max <= 0 or radius_max < radius_min:
+		return float(pillar_radius_cells)
+	var mid: float = float(radius_min + radius_max) * 0.5
+	if ctx.rng.randf() < large_bias:
+		return ctx.rng.randf_range(mid, float(radius_max))
+	return ctx.rng.randf_range(float(radius_min), mid)
+
+func _try_place(ctx, placed: Array, radius: float) -> Variant:
 	if region == null:
 		return null
 	for retry in 24:
@@ -23,8 +37,9 @@ func _try_place(ctx, placed: Array[Vector2]) -> Variant:
 		if not ctx.mask_air.call(world):
 			continue
 		var too_close := false
-		for p in placed:
-			if p.distance_to(world) < spacing_min:
+		for entry in placed:
+			var required: float = max(float(entry["r"]), radius) * center_distance_factor
+			if entry["pos"].distance_to(world) < required:
 				too_close = true
 				break
 		if too_close:

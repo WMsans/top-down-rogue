@@ -29,7 +29,10 @@ r_max = 220.0
 [sub_resource type="Resource" id="Resource_813jm"]
 script = ExtResource("5_y70k1")
 count = 10
-spacing_min = 56.0
+radius_min = 18
+radius_max = 42
+large_bias = 0.7
+center_distance_factor = 0.6
 region = SubResource("Resource_ylcvd")
 
 [sub_resource type="Resource" id="Resource_ic0fy"]
@@ -40,7 +43,10 @@ r_max = 290.0
 [sub_resource type="Resource" id="Resource_m65ll"]
 script = ExtResource("5_y70k1")
 count = 12
-spacing_min = 56.0
+radius_min = 18
+radius_max = 42
+large_bias = 0.7
+center_distance_factor = 0.6
 region = SubResource("Resource_ic0fy")
 
 [sub_resource type="Resource" id="Resource_3d28l"]
@@ -50,9 +56,11 @@ radius = 80.0
 
 [sub_resource type="Resource" id="Resource_5m7pd"]
 script = ExtResource("5_y70k1")
-count = 10
-pillar_radius_cells = 8
-spacing_min = 44.0
+count = 8
+radius_min = 14
+radius_max = 32
+large_bias = 0.5
+center_distance_factor = 0.45
 region = SubResource("Resource_3d28l")
 
 [sub_resource type="Resource" id="Resource_p6kpi"]
@@ -62,9 +70,10 @@ radius = 70.0
 
 [sub_resource type="Resource" id="Resource_fmac4"]
 script = ExtResource("5_y70k1")
-count = 8
-pillar_radius_cells = 8
-spacing_min = 44.0
+radius_min = 14
+radius_max = 32
+large_bias = 0.5
+center_distance_factor = 0.45
 region = SubResource("Resource_p6kpi")
 
 [sub_resource type="Resource" id="Resource_kettl"]
@@ -74,8 +83,11 @@ radius = 60.0
 
 [sub_resource type="Resource" id="Resource_w3f8m"]
 script = ExtResource("5_y70k1")
-pillar_radius_cells = 8
-spacing_min = 44.0
+count = 5
+radius_min = 14
+radius_max = 32
+large_bias = 0.5
+center_distance_factor = 0.45
 region = SubResource("Resource_kettl")
 
 [sub_resource type="Resource" id="Resource_rjt58"]
