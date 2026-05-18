@@ -14,3 +14,16 @@ var occluder_instances: Array[LightOccluder2D] = []
 var light_output_buffer: RID
 var light_pack_uniform_set: RID
 var chunk_lights  # ChunkLights (Node2D)
+
+var rd_flag_texture: RID = RID()
+
+func create_flag_texture(rd: RenderingDevice, size: int) -> void:
+	var tf := RDTextureFormat.new()
+	tf.width = size
+	tf.height = size
+	tf.format = RenderingDevice.DATA_FORMAT_R8_UNORM
+	tf.usage_bits = RenderingDevice.TEXTURE_USAGE_STORAGE_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+	var zero := PackedByteArray()
+	zero.resize(size * size)
+	zero.fill(0)
+	rd_flag_texture = rd.texture_create(tf, RDTextureView.new(), [zero])

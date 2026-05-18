@@ -1,0 +1,87 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_i4n4m"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_3rt1d"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="3_1jcyf"]
+
+[sub_resource type="GDScript" id="GDScript_lbpjv"]
+
+[sub_resource type="Resource" id="Resource_cq7c3"]
+script = SubResource("GDScript_lbpjv")
+offset = Vector2(0, 0)
+
+[sub_resource type="GDScript" id="GDScript_c63yr"]
+
+[sub_resource type="Resource" id="Resource_ep63n"]
+script = SubResource("GDScript_c63yr")
+boss_scene = ExtResource("1_i4n4m")
+floor_scaling = true
+region = SubResource("Resource_cq7c3")
+
+[sub_resource type="GDScript" id="GDScript_rhq8y"]
+
+[sub_resource type="Resource" id="Resource_gpvsp"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 700.0
+r_max = 950.0
+
+[sub_resource type="GDScript" id="GDScript_24m7k"]
+
+[sub_resource type="Resource" id="Resource_o2ao5"]
+script = SubResource("GDScript_24m7k")
+count = 4
+pillar_radius_cells = 10
+spacing_min = 64.0
+region = SubResource("Resource_gpvsp")
+
+[sub_resource type="Resource" id="Resource_yw65v"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 800.0
+r_max = 1100.0
+
+[sub_resource type="GDScript" id="GDScript_xnlfi"]
+
+[sub_resource type="Resource" id="Resource_cr24w"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_3rt1d")
+count = 4
+is_elite = false
+region = SubResource("Resource_yw65v")
+
+[sub_resource type="Resource" id="Resource_3nkti"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 800.0
+r_max = 1100.0
+
+[sub_resource type="Resource" id="Resource_36cdo"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_3rt1d")
+count = 2
+is_elite = true
+region = SubResource("Resource_3nkti")
+
+[sub_resource type="GDScript" id="GDScript_vyinj"]
+
+[sub_resource type="Resource" id="Resource_q8yop"]
+script = SubResource("GDScript_vyinj")
+center = Vector2(0, 0)
+radius = 300.0
+
+[sub_resource type="GDScript" id="GDScript_mdesf"]
+
+[sub_resource type="Resource" id="Resource_qdxap"]
+script = SubResource("GDScript_mdesf")
+material_id = 5
+count = 3
+size_min_cells = 8
+size_max_cells = 16
+region = SubResource("Resource_q8yop")
+
+[resource]
+script = ExtResource("3_1jcyf")
+biome = &"mines"
+variant_id = &"b"
+features = [SubResource("Resource_ep63n"), SubResource("Resource_o2ao5"), SubResource("Resource_cr24w"), SubResource("Resource_36cdo"), SubResource("Resource_qdxap")]

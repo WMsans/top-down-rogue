@@ -1,0 +1,86 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_ohgo7"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_52l62"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="3_v7o04"]
+
+[sub_resource type="GDScript" id="GDScript_lbpjv"]
+
+[sub_resource type="Resource" id="Resource_g1hmn"]
+script = SubResource("GDScript_lbpjv")
+offset = Vector2(0, 0)
+
+[sub_resource type="GDScript" id="GDScript_c63yr"]
+
+[sub_resource type="Resource" id="Resource_85tl0"]
+script = SubResource("GDScript_c63yr")
+boss_scene = ExtResource("1_ohgo7")
+floor_scaling = true
+region = SubResource("Resource_g1hmn")
+
+[sub_resource type="GDScript" id="GDScript_rhq8y"]
+
+[sub_resource type="Resource" id="Resource_ynl0o"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 600.0
+r_max = 900.0
+
+[sub_resource type="GDScript" id="GDScript_24m7k"]
+
+[sub_resource type="Resource" id="Resource_ycjbv"]
+script = SubResource("GDScript_24m7k")
+count = 12
+pillar_radius_cells = 10
+spacing_min = 64.0
+region = SubResource("Resource_ynl0o")
+
+[sub_resource type="Resource" id="Resource_o3qfj"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 700.0
+r_max = 950.0
+
+[sub_resource type="GDScript" id="GDScript_xnlfi"]
+
+[sub_resource type="Resource" id="Resource_jee5o"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_52l62")
+count = 6
+is_elite = false
+region = SubResource("Resource_o3qfj")
+
+[sub_resource type="Resource" id="Resource_tff1x"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 400.0
+r_max = 700.0
+
+[sub_resource type="Resource" id="Resource_u777a"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_52l62")
+count = 2
+is_elite = true
+region = SubResource("Resource_tff1x")
+
+[sub_resource type="GDScript" id="GDScript_vyinj"]
+
+[sub_resource type="Resource" id="Resource_465gv"]
+script = SubResource("GDScript_vyinj")
+center = Vector2(-200, 100)
+radius = 200.0
+
+[sub_resource type="GDScript" id="GDScript_mdesf"]
+
+[sub_resource type="Resource" id="Resource_m7op3"]
+script = SubResource("GDScript_mdesf")
+material_id = 5
+count = 1
+size_min_cells = 8
+size_max_cells = 16
+region = SubResource("Resource_465gv")
+
+[resource]
+script = ExtResource("3_v7o04")
+biome = &"magma"
+features = [SubResource("Resource_85tl0"), SubResource("Resource_ycjbv"), SubResource("Resource_jee5o"), SubResource("Resource_u777a"), SubResource("Resource_m7op3")]

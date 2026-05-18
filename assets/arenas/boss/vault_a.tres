@@ -1,0 +1,69 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_31eqi"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_6f463"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="3_tdji1"]
+
+[sub_resource type="GDScript" id="GDScript_lbpjv"]
+
+[sub_resource type="Resource" id="Resource_sjm8a"]
+script = SubResource("GDScript_lbpjv")
+offset = Vector2(0, 0)
+
+[sub_resource type="GDScript" id="GDScript_c63yr"]
+
+[sub_resource type="Resource" id="Resource_g6pi3"]
+script = SubResource("GDScript_c63yr")
+boss_scene = ExtResource("1_31eqi")
+floor_scaling = true
+region = SubResource("Resource_sjm8a")
+
+[sub_resource type="GDScript" id="GDScript_rhq8y"]
+
+[sub_resource type="Resource" id="Resource_xatbh"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 600.0
+r_max = 900.0
+
+[sub_resource type="GDScript" id="GDScript_24m7k"]
+
+[sub_resource type="Resource" id="Resource_etiom"]
+script = SubResource("GDScript_24m7k")
+count = 12
+pillar_radius_cells = 10
+spacing_min = 64.0
+region = SubResource("Resource_xatbh")
+
+[sub_resource type="Resource" id="Resource_1gese"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 700.0
+r_max = 950.0
+
+[sub_resource type="GDScript" id="GDScript_xnlfi"]
+
+[sub_resource type="Resource" id="Resource_fkgba"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_6f463")
+count = 6
+is_elite = false
+region = SubResource("Resource_1gese")
+
+[sub_resource type="Resource" id="Resource_xx70n"]
+script = SubResource("GDScript_rhq8y")
+center = Vector2(0, 0)
+r_min = 400.0
+r_max = 700.0
+
+[sub_resource type="Resource" id="Resource_e2lgy"]
+script = SubResource("GDScript_xnlfi")
+enemy_scene = ExtResource("2_6f463")
+count = 2
+is_elite = true
+region = SubResource("Resource_xx70n")
+
+[resource]
+script = ExtResource("3_tdji1")
+biome = &"vault"
+features = [SubResource("Resource_g6pi3"), SubResource("Resource_etiom"), SubResource("Resource_fkgba"), SubResource("Resource_e2lgy")]
