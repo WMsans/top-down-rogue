@@ -4,6 +4,25 @@ const ArenaComposition = preload("res://src/core/arena_composition.gd")
 const ArenaFeature = preload("res://src/core/arena_feature.gd")
 const ArenaRegion = preload("res://src/core/arena_region.gd")
 
+const BARREL_SCENE = preload("res://scenes/props/barrel.tscn")
+const VENT_SCENE = preload("res://scenes/props/vent.tscn")
+const MELEE_ENEMY_SCENE = preload("res://scenes/enemies/melee_enemy.tscn")
+const BOSS_ENEMY_SCENE = preload("res://scenes/enemies/boss_enemy.tscn")
+
+# Arena-kind dimensions
+const ELITE_NOMINAL_R := 140
+const ELITE_LOBING := 30
+const ELITE_INNER_DISC := 30
+const BOSS_NOMINAL_R := 300
+const BOSS_LOBING := 50
+const BOSS_INNER_DISC := 80
+
+# Pool blob sizes (cells)
+const ELITE_POOL_MIN := 3
+const ELITE_POOL_MAX := 6
+const BOSS_POOL_MIN := 5
+const BOSS_POOL_MAX := 10
+
 const MAT_AIR := 0
 const MAT_STONE := 2
 const MAT_WOOD := 3
@@ -41,7 +60,7 @@ static func _point(pos: Vector2 = Vector2.ZERO) -> ArenaRegion.RegionPoint:
 static func _boss() -> ArenaFeature.FeatureBossSpawn:
 	var b := ArenaFeature.FeatureBossSpawn.new()
 	b.region = _point()
-	b.boss_scene = load("res://scenes/enemies/boss_enemy.tscn")
+	b.boss_scene = BOSS_ENEMY_SCENE
 	return b
 
 static func _pillars(count: int, r_min: float, r_max: float, pillar_mat: int) -> ArenaFeature.FeaturePillarCluster:
@@ -57,16 +76,46 @@ static func _enemies(count: int, r_min: float, r_max: float, is_elite: bool) -> 
 	f.region = _ring(r_min, r_max)
 	f.count = count
 	f.is_elite = is_elite
-	f.enemy_scene = load("res://scenes/enemies/melee_enemy.tscn")
+	f.enemy_scene = MELEE_ENEMY_SCENE
 	return f
 
-static func _pool(center: Vector2, radius: float, mat: int, count: int = 1) -> ArenaFeature.FeaturePoolPatch:
+static func _pool(center: Vector2, radius: float, mat: int, count: int, size_min: int, size_max: int) -> ArenaFeature.FeaturePoolPatch:
 	var f := ArenaFeature.FeaturePoolPatch.new()
 	f.region = _disc(center, radius)
 	f.material_id = mat
 	f.count = count
-	f.size_min_cells = 8
-	f.size_max_cells = 16
+	f.size_min_cells = size_min
+	f.size_max_cells = size_max
+	return f
+
+static func _pool_ring(r_min: float, r_max: float, mat: int, count: int, size_min: int, size_max: int) -> ArenaFeature.FeaturePoolPatch:
+	var f := ArenaFeature.FeaturePoolPatch.new()
+	f.region = _ring(r_min, r_max)
+	f.material_id = mat
+	f.count = count
+	f.size_min_cells = size_min
+	f.size_max_cells = size_max
+	return f
+
+static func _barrels_ring(count: int, r_min: float, r_max: float) -> ArenaFeature.FeatureBarrelCluster:
+	var f := ArenaFeature.FeatureBarrelCluster.new()
+	f.region = _ring(r_min, r_max)
+	f.count = count
+	f.barrel_scene = BARREL_SCENE
+	return f
+
+static func _barrels_disc(center: Vector2, radius: float, count: int) -> ArenaFeature.FeatureBarrelCluster:
+	var f := ArenaFeature.FeatureBarrelCluster.new()
+	f.region = _disc(center, radius)
+	f.count = count
+	f.barrel_scene = BARREL_SCENE
+	return f
+
+static func _vent(center: Vector2, radius: float, count: int = 1) -> ArenaFeature.FeatureVent:
+	var f := ArenaFeature.FeatureVent.new()
+	f.region = _disc(center, radius)
+	f.count = count
+	f.vent_scene = VENT_SCENE
 	return f
 
 static func _build_variant_a(biome: StringName) -> ArenaComposition:
@@ -85,7 +134,7 @@ static func _build_variant_a(biome: StringName) -> ArenaComposition:
 		_enemies(2, 400, 700, true),
 	]
 	if p["pool_mat"] > 0:
-		c.features.append(_pool(Vector2(-200, 100), 200, p["pool_mat"], 1))
+		c.features.append(_pool(Vector2(-200, 100), 200, p["pool_mat"], 1, BOSS_POOL_MIN, BOSS_POOL_MAX))
 	return c
 
 static func _build_variant_b(biome: StringName) -> ArenaComposition:
@@ -100,7 +149,7 @@ static func _build_variant_b(biome: StringName) -> ArenaComposition:
 		_enemies(2, 800, 1100, true),
 	]
 	if p["pool_mat"] > 0:
-		c.features.append(_pool(Vector2(0, 0), 300, p["pool_mat"], 3))
+		c.features.append(_pool(Vector2(0, 0), 300, p["pool_mat"], 3, BOSS_POOL_MIN, BOSS_POOL_MAX))
 	return c
 
 static func _build_variant_c(biome: StringName) -> ArenaComposition:
@@ -157,7 +206,7 @@ static func _build_elite_b(biome: StringName) -> ArenaComposition:
 	chest_feature.rare = false
 	c.features = [chest_feature, _enemies(2, 100, 200, true)]
 	if p["pool_mat"] > 0:
-		c.features.append(_pool(Vector2(60, -60), 60, p["pool_mat"], 1))
+		c.features.append(_pool(Vector2(60, -60), 60, p["pool_mat"], 1, ELITE_POOL_MIN, ELITE_POOL_MAX))
 	return c
 
 static func _build_elite_c(biome: StringName) -> ArenaComposition:
