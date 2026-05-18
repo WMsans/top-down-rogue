@@ -364,6 +364,14 @@ func dispatch_generation(
 		created_uniform_sets.append(uniform_set)
 		rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
 
+		var flag_uniform := RDUniform.new()
+		flag_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		flag_uniform.binding = 0
+		flag_uniform.add_id(chunk.rd_flag_texture)
+		var flag_uniform_set := rd.uniform_set_create([flag_uniform], gen_shader, 5)
+		created_uniform_sets.append(flag_uniform_set)
+		rd.compute_list_bind_uniform_set(compute_list, flag_uniform_set, 5)
+
 		var push_data := PackedByteArray()
 		push_data.resize(16)
 		push_data.encode_s32(0, coord.x)
