@@ -3,21 +3,21 @@ extends GdUnitTestSuite
 const _SectorGrid = preload("res://src/core/sector_grid.gd")
 const _BiomeDef = preload("res://src/core/biome_def.gd")
 const _RoomTemplate = preload("res://src/core/room_template.gd")
+const _ArenaComposition = preload("res://src/core/arena_composition.gd")
 
 func _make_biome() -> Resource:
-	var b: Resource = _BiomeDef.new()
-	var rt: Resource = _RoomTemplate.new()
+	var b := _BiomeDef.new()
+	var rt := _RoomTemplate.new()
 	rt.png_path = "rt0"
 	rt.weight = 1.0
-	var rt2: Resource = _RoomTemplate.new()
+	var rt2 := _RoomTemplate.new()
 	rt2.png_path = "rt1"
 	rt2.weight = 2.0
-	b.room_templates = [rt, rt2]
-	var boss: Resource = _RoomTemplate.new()
-	boss.png_path = "boss"
-	boss.is_boss = true
-	boss.rotatable = false
-	b.boss_templates = [boss]
+	var templates: Array[RoomTemplate] = [rt, rt2]
+	b.room_templates = templates
+	var comp := _ArenaComposition.new()
+	comp.arena_kind = &"boss"
+	b.boss_compositions = [comp]
 	return b
 
 func test_world_to_sector_origin() -> void:
@@ -44,7 +44,7 @@ func test_chebyshev_symmetric() -> void:
 
 func test_boss_ring_returns_boss_slot() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
-	var slot := grid.resolve_sector(Vector2i(10, 0))
+	var slot := grid.resolve_sector(Vector2i(10, -10))
 	assert_that(slot.is_boss).is_true()
 
 func test_outside_boss_ring_is_empty() -> void:
