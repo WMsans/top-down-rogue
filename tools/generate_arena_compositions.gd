@@ -39,48 +39,48 @@ static func _biome_params(biome: StringName) -> Dictionary:
 		&"vault":  return {"pillar_mat": MAT_STONE, "pool_mat": -1}
 	return {}
 
-static func _ring(r_min: float, r_max: float) -> ArenaRegion.RegionRing:
-	var r := ArenaRegion.RegionRing.new()
+static func _ring(r_min: float, r_max: float) -> RegionRing:
+	var r := RegionRing.new()
 	r.center = Vector2.ZERO
 	r.r_min = r_min
 	r.r_max = r_max
 	return r
 
-static func _disc(center: Vector2, radius: float) -> ArenaRegion.RegionDisc:
-	var d := ArenaRegion.RegionDisc.new()
+static func _disc(center: Vector2, radius: float) -> RegionDisc:
+	var d := RegionDisc.new()
 	d.center = center
 	d.radius = radius
 	return d
 
-static func _point(pos: Vector2 = Vector2.ZERO) -> ArenaRegion.RegionPoint:
-	var p := ArenaRegion.RegionPoint.new()
+static func _point(pos: Vector2 = Vector2.ZERO) -> RegionPoint:
+	var p := RegionPoint.new()
 	p.offset = pos
 	return p
 
-static func _boss() -> ArenaFeature.FeatureBossSpawn:
-	var b := ArenaFeature.FeatureBossSpawn.new()
+static func _boss() -> FeatureBossSpawn:
+	var b := FeatureBossSpawn.new()
 	b.region = _point()
 	b.boss_scene = BOSS_ENEMY_SCENE
 	return b
 
-static func _pillars(count: int, r_min: float, r_max: float, pillar_mat: int) -> ArenaFeature.FeaturePillarCluster:
-	var f := ArenaFeature.FeaturePillarCluster.new()
+static func _pillars(count: int, r_min: float, r_max: float, pillar_mat: int) -> FeaturePillarCluster:
+	var f := FeaturePillarCluster.new()
 	f.region = _ring(r_min, r_max)
 	f.count = count
 	f.pillar_radius_cells = 10
 	f.spacing_min = 64.0
 	return f
 
-static func _enemies(count: int, r_min: float, r_max: float, is_elite: bool) -> ArenaFeature.FeatureEnemyPack:
-	var f := ArenaFeature.FeatureEnemyPack.new()
+static func _enemies(count: int, r_min: float, r_max: float, is_elite: bool) -> FeatureEnemyPack:
+	var f := FeatureEnemyPack.new()
 	f.region = _ring(r_min, r_max)
 	f.count = count
 	f.is_elite = is_elite
 	f.enemy_scene = MELEE_ENEMY_SCENE
 	return f
 
-static func _pool(center: Vector2, radius: float, mat: int, count: int, size_min: int, size_max: int) -> ArenaFeature.FeaturePoolPatch:
-	var f := ArenaFeature.FeaturePoolPatch.new()
+static func _pool(center: Vector2, radius: float, mat: int, count: int, size_min: int, size_max: int) -> FeaturePoolPatch:
+	var f := FeaturePoolPatch.new()
 	f.region = _disc(center, radius)
 	f.material_id = mat
 	f.count = count
@@ -88,8 +88,8 @@ static func _pool(center: Vector2, radius: float, mat: int, count: int, size_min
 	f.size_max_cells = size_max
 	return f
 
-static func _pool_ring(r_min: float, r_max: float, mat: int, count: int, size_min: int, size_max: int) -> ArenaFeature.FeaturePoolPatch:
-	var f := ArenaFeature.FeaturePoolPatch.new()
+static func _pool_ring(r_min: float, r_max: float, mat: int, count: int, size_min: int, size_max: int) -> FeaturePoolPatch:
+	var f := FeaturePoolPatch.new()
 	f.region = _ring(r_min, r_max)
 	f.material_id = mat
 	f.count = count
@@ -97,22 +97,22 @@ static func _pool_ring(r_min: float, r_max: float, mat: int, count: int, size_mi
 	f.size_max_cells = size_max
 	return f
 
-static func _barrels_ring(count: int, r_min: float, r_max: float) -> ArenaFeature.FeatureBarrelCluster:
-	var f := ArenaFeature.FeatureBarrelCluster.new()
+static func _barrels_ring(count: int, r_min: float, r_max: float) -> FeatureBarrelCluster:
+	var f := FeatureBarrelCluster.new()
 	f.region = _ring(r_min, r_max)
 	f.count = count
 	f.barrel_scene = BARREL_SCENE
 	return f
 
-static func _barrels_disc(center: Vector2, radius: float, count: int) -> ArenaFeature.FeatureBarrelCluster:
-	var f := ArenaFeature.FeatureBarrelCluster.new()
+static func _barrels_disc(center: Vector2, radius: float, count: int) -> FeatureBarrelCluster:
+	var f := FeatureBarrelCluster.new()
 	f.region = _disc(center, radius)
 	f.count = count
 	f.barrel_scene = BARREL_SCENE
 	return f
 
-static func _vent(center: Vector2, radius: float, count: int = 1) -> ArenaFeature.FeatureVent:
-	var f := ArenaFeature.FeatureVent.new()
+static func _vent(center: Vector2, radius: float, count: int = 1) -> FeatureVent:
+	var f := FeatureVent.new()
 	f.region = _disc(center, radius)
 	f.count = count
 	f.vent_scene = VENT_SCENE
@@ -153,14 +153,14 @@ static func _build_variant_b(biome: StringName) -> ArenaComposition:
 		_boss(),
 		_pillars(4, 150, 280, p["pillar_mat"]),
 		# pillar grove pocket
-		ArenaFeature.FeaturePillarCluster.new(),
+		FeaturePillarCluster.new(),
 		_enemies(3, 120, 220, false),
 		_enemies(2, 180, 280, true),
 		_barrels_ring(2, 100, 180),
 		_barrels_disc(Vector2(150, 100), 40, 2),
 	]
 	# fill the pillar grove pocket (index 2)
-	var grove: ArenaFeature.FeaturePillarCluster = c.features[2]
+	var grove: FeaturePillarCluster = c.features[2]
 	grove.region = _disc(Vector2(-120, 80), 60)
 	grove.count = 4
 	grove.pillar_radius_cells = 10
@@ -228,7 +228,7 @@ static func _build_elite_a(biome: StringName) -> ArenaComposition:
 	c.nominal_radius = ELITE_NOMINAL_R
 	c.lobing_amplitude = ELITE_LOBING
 	c.inner_disc_radius = ELITE_INNER_DISC
-	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
+	var chest_feature := FeatureChestSpawn.new()
 	chest_feature.rare = false
 	c.features = [
 		chest_feature,
@@ -252,7 +252,7 @@ static func _build_elite_b(biome: StringName) -> ArenaComposition:
 	c.nominal_radius = ELITE_NOMINAL_R
 	c.lobing_amplitude = ELITE_LOBING
 	c.inner_disc_radius = ELITE_INNER_DISC
-	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
+	var chest_feature := FeatureChestSpawn.new()
 	chest_feature.rare = false
 	c.features = [
 		chest_feature,
@@ -274,7 +274,7 @@ static func _build_elite_c(biome: StringName) -> ArenaComposition:
 	c.nominal_radius = ELITE_NOMINAL_R
 	c.lobing_amplitude = ELITE_LOBING
 	c.inner_disc_radius = ELITE_INNER_DISC
-	var chest_feature := ArenaFeature.FeatureChestSpawn.new()
+	var chest_feature := FeatureChestSpawn.new()
 	chest_feature.rare = false
 	c.features = [
 		chest_feature,
