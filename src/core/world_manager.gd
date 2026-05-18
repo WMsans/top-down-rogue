@@ -35,6 +35,7 @@ func _ready() -> void:
 	compute_device.render_shader = preload("res://shaders/visual/render_chunk.gdshader")
 	compute_device.init_material_textures()
 	compute_device.init_gen_stamp_buffer()
+	compute_device.init_gen_cavern_buffer()
 	compute_device.init_gen_biome_buffer()
 	compute_device.init_terrain_probe()
 	# Bind biome buffer + template arrays from current biome
@@ -109,8 +110,9 @@ func _update_chunks() -> void:
 
 	if not new_chunks.is_empty():
 		var stamp_bytes := LevelManager.build_stamp_bytes(new_chunks)
+		var cavern_bytes := chunk_manager._build_cavern_bytes(new_chunks)
 		_gen_uniform_sets_to_free = compute_device.dispatch_generation(
-			chunks, new_chunks, LevelManager.world_seed, stamp_bytes
+			chunks, new_chunks, LevelManager.world_seed, stamp_bytes, cavern_bytes
 		)
 		chunks_generated.emit(new_chunks)
 
