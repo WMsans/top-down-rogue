@@ -34,7 +34,10 @@ r_max = 130.0
 [sub_resource type="Resource" id="Resource_wyx53"]
 script = ExtResource("5_l8yq2")
 count = 5
-spacing_min = 56.0
+radius_min = 8
+radius_max = 16
+large_bias = 0.5
+center_distance_factor = 0.8
 region = SubResource("Resource_kvhd4")
 
 [sub_resource type="Resource" id="Resource_330id"]

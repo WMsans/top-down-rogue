@@ -31,7 +31,10 @@ r_max = 170.0
 [sub_resource type="Resource" id="Resource_at55y"]
 script = ExtResource("5_iul7t")
 count = 10
-spacing_min = 56.0
+radius_min = 18
+radius_max = 42
+large_bias = 0.7
+center_distance_factor = 0.6
 region = SubResource("Resource_nx7d6")
 
 [sub_resource type="Resource" id="Resource_y04d4"]
@@ -42,7 +45,10 @@ r_max = 240.0
 [sub_resource type="Resource" id="Resource_dlwlw"]
 script = ExtResource("5_iul7t")
 count = 12
-spacing_min = 56.0
+radius_min = 18
+radius_max = 42
+large_bias = 0.7
+center_distance_factor = 0.6
 region = SubResource("Resource_y04d4")
 
 [sub_resource type="Resource" id="Resource_6iv1r"]
@@ -53,7 +59,10 @@ r_max = 290.0
 [sub_resource type="Resource" id="Resource_ii5ro"]
 script = ExtResource("5_iul7t")
 count = 12
-spacing_min = 56.0
+radius_min = 18
+radius_max = 42
+large_bias = 0.7
+center_distance_factor = 0.6
 region = SubResource("Resource_6iv1r")
 
 [sub_resource type="Resource" id="Resource_w8mco"]
