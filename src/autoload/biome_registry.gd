@@ -23,8 +23,6 @@ func _ready() -> void:
 		biomes.append(b)
 		for tmpl in b.room_templates:
 			_register(tmpl as RoomTemplate)
-		for tmpl in b.boss_templates:
-			_register(tmpl as RoomTemplate)
 	template_pack.build_arrays()
 
 
