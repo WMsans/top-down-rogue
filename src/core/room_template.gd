@@ -6,4 +6,7 @@ extends Resource
 @export var size_class: int = 64
 @export var is_secret: bool = false
 @export var is_boss: bool = false
+@export var is_elite_chest: bool = false
 @export var rotatable: bool = true
+@export var cavern_carve: bool = false
+@export var composition: Resource = null   # ArenaComposition when cavern_carve = true
