@@ -1,6 +1,8 @@
 class_name ArenaFeature
 extends Resource
 
+const ArenaRegion = preload("res://src/core/arena_region.gd")
+
 ## Base class. Concrete subclasses below.
 ## `region` is the spatial distribution; `apply(ctx)` is called by the dispatcher
 ## once per feature. Subclasses spawn entities or stamp material via ctx.
@@ -37,12 +39,12 @@ class FeatureEnemyPack extends ArenaFeature:
 
 	func apply(ctx) -> void:
 		for i in count:
-			var pos := _sample_air(ctx)
+			var pos: Variant = _sample_air(ctx)
 			if pos == null:
 				continue
 			ctx.dispatcher.spawn_enemy(pos, enemy_scene, is_elite)
 
-	func _sample_air(ctx):
+	func _sample_air(ctx) -> Variant:
 		if region == null:
 			return null
 		for retry in 8:
@@ -61,13 +63,13 @@ class FeaturePillarCluster extends ArenaFeature:
 	func apply(ctx) -> void:
 		var placed: Array[Vector2] = []
 		for i in count:
-			var pos := _try_place(ctx, placed)
+			var pos: Variant = _try_place(ctx, placed)
 			if pos == null:
 				continue
 			placed.append(pos)
 			ctx.dispatcher.stamp_material_disc(pos, pillar_radius_cells, ctx.background_material)
 
-	func _try_place(ctx, placed: Array[Vector2]):
+	func _try_place(ctx, placed: Array[Vector2]) -> Variant:
 		if region == null:
 			return null
 		for retry in 8:
@@ -96,13 +98,13 @@ class FeaturePoolPatch extends ArenaFeature:
 		if material_id <= 0:
 			return  # deferred/uninitialized — skip silently
 		for i in count:
-			var pos := _sample_air(ctx)
+			var pos: Variant = _sample_air(ctx)
 			if pos == null:
 				continue
 			var radius: int = ctx.rng.randi_range(size_min_cells, size_max_cells)
 			ctx.dispatcher.stamp_material_disc(pos, radius, material_id)
 
-	func _sample_air(ctx):
+	func _sample_air(ctx) -> Variant:
 		if region == null:
 			return null
 		for retry in 8:
@@ -121,12 +123,12 @@ class FeatureBarrelCluster extends ArenaFeature:
 		if barrel_scene == null:
 			return
 		for i in count:
-			var pos := _sample_air(ctx)
+			var pos: Variant = _sample_air(ctx)
 			if pos == null:
 				continue
 			ctx.dispatcher.spawn_prop(pos, barrel_scene)
 
-	func _sample_air(ctx):
+	func _sample_air(ctx) -> Variant:
 		if region == null:
 			return null
 		for retry in 8:
@@ -145,12 +147,12 @@ class FeatureVent extends ArenaFeature:
 		if vent_scene == null:
 			return
 		for i in count:
-			var pos := _sample_air(ctx)
+			var pos: Variant = _sample_air(ctx)
 			if pos == null:
 				continue
 			ctx.dispatcher.spawn_prop(pos, vent_scene)
 
-	func _sample_air(ctx):
+	func _sample_air(ctx) -> Variant:
 		if region == null:
 			return null
 		for retry in 8:
