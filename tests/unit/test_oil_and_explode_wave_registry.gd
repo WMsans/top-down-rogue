@@ -27,3 +27,9 @@ func test_mat_explode_wave_registered() -> void:
 	assert_that(registry.has_collider(registry.MAT_EXPLODE_WAVE)).is_false()
 	assert_that(registry.has_wall_extension(registry.MAT_EXPLODE_WAVE)).is_false()
 	assert_that(registry.get_glow(registry.MAT_EXPLODE_WAVE)).is_greater_equal(10.0)
+
+func test_wave_default_power_constant() -> void:
+	# Mirror of WAVE_DEFAULT_POWER in shaders/include/sim/common.glslinc.
+	# This test guards against drift; if you change one, change both.
+	var WAVE_DEFAULT_POWER_GDSCRIPT_MIRROR := 60
+	assert_that(WAVE_DEFAULT_POWER_GDSCRIPT_MIRROR).is_equal(60)
