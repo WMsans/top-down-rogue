@@ -6,7 +6,7 @@ const SUB_CELL_SIZE := 64  # CHUNK_SIZE / 4
 const SUB_CELLS_PER_ROW := 4
 const TTL_FRAMES := 8
 
-var MAX_PENDING: int = 1024  # 4 * PROBE_BUDGET; var (not const) so tests can shrink it.
+var MAX_PENDING: int = 1024  # 4 * ComputeDevice.PROBE_BUDGET (256); var so tests can shrink it.
 
 ## Last known probe results: Vector2i(world_x, world_y) -> {mat_id: int, frame: int}
 var _result_cache: Dictionary = {}
