@@ -102,7 +102,7 @@ const int BURN_HEALTH[12] = int[12](
     0,
     0,
     0,
-    60,
+    20,
     0
 );
 const vec4 MATERIAL_TINT[12] = vec4[12](
