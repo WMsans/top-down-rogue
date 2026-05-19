@@ -31,6 +31,21 @@ const bool IS_FLUID[12] = bool[12](
     false
 );
 
+const int HAZARD_BIT[12] = int[12](
+    -1,
+    -1,
+    -1,
+    -1,
+    0,
+    -1,
+    -1,
+    -1,
+    -1,
+    3,
+    2,
+    1
+);
+
 const bool IS_FLAMMABLE[12] = bool[12](
     false,
     true,
