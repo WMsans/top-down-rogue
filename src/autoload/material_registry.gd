@@ -59,7 +59,7 @@ var MAT_OIL: int
 var MAT_EXPLODE_WAVE: int
 
 const HAZARD_LAVA := 1
-const HAZARD_FIRE := 2
+const HAZARD_FIRE := 2  # MAT_EXPLODE_WAVE acts as the fire/heat hazard
 const HAZARD_OIL := 4
 const HAZARD_BLOOD := 8
 
@@ -208,6 +208,8 @@ func _init_materials():
 	MAT_EXPLODE_WAVE = mat_explode_wave.id
 
 func get_hazard_bit(material_id: int) -> int:
+	if material_id < 0 or material_id >= materials.size():
+		return -1
 	if material_id == MAT_LAVA:
 		return 0
 	if material_id == MAT_EXPLODE_WAVE:
