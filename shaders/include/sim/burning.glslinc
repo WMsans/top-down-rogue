@@ -61,15 +61,22 @@ void simulate_burning(
 	}
 
 	if (IS_FLAMMABLE[material]) {
+		int original_material = material;
 		temperature = min(255, temperature + heat_gain);
 		temperature = max(0, temperature - HEAT_DISSIPATION);
 		if (temperature > IGNITION_TEMP[material]) {
 			health = health - 1;
 			temperature = FIRE_TEMP;
 			if (health <= 0) {
-				material = MAT_AIR;
-				health = 0;
-				temperature = 0;
+				if (original_material == MAT_OIL) {
+					material = MAT_EXPLODE_WAVE;
+					health = 0;
+					temperature = OIL_BURN_END_POWER;
+				} else {
+					material = MAT_AIR;
+					health = 0;
+					temperature = 0;
+				}
 			}
 		}
 	}

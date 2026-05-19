@@ -168,6 +168,13 @@ void fragment() {
 		mat = MAT_AIR;
 	}
 
+	// Explode wave: white-yellow flash, fully opaque on top of everything.
+	if (mat == MAT_EXPLODE_WAVE) {
+		fluid_tint = vec4(MATERIAL_TINT[MAT_EXPLODE_WAVE].rgb * MATERIAL_GLOW[MAT_EXPLODE_WAVE], 1.0);
+		fluid_alpha = 1.0;
+		mat = MAT_AIR;
+	}
+
 	vec4 base_color = vec4(0.0);
 
 	if (mat == MAT_AIR) {
