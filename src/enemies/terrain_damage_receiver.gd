@@ -23,6 +23,10 @@ func _physics_process(_delta: float) -> void:
 	if enemy.get("health") <= 0:
 		return
 
+	var hazard_mask := MaterialRegistry.HAZARD_LAVA | MaterialRegistry.HAZARD_FIRE
+	if not _terrain_physical.hazard_at(enemy.position, hazard_mask):
+		return
+
 	var total_damage := 0
 	var pos: Vector2 = enemy.position
 
