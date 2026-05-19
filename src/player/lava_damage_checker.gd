@@ -24,6 +24,10 @@ func _physics_process(_delta: float) -> void:
 	if inventory and inventory.is_dead():
 		return
 
+	var hazard_mask := MaterialRegistry.HAZARD_LAVA | MaterialRegistry.HAZARD_FIRE
+	if not _terrain_physical.hazard_at(player.position, hazard_mask):
+		return
+
 	var total_damage := 0
 	var pos: Vector2 = player.position
 	var half_w := BODY_WIDTH / 2.0
