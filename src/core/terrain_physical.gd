@@ -6,6 +6,8 @@ const SUB_CELL_SIZE := 64  # CHUNK_SIZE / 4
 const SUB_CELLS_PER_ROW := 4
 const TTL_FRAMES := 8
 
+var MAX_PENDING: int = 1024  # 4 * PROBE_BUDGET; var (not const) so tests can shrink it.
+
 ## Last known probe results: Vector2i(world_x, world_y) -> {mat_id: int, frame: int}
 var _result_cache: Dictionary = {}
 
@@ -26,7 +28,11 @@ var world_manager: Node2D = null
 
 func query(world_pos: Vector2) -> TerrainCell:
 	var cell_pos := Vector2i(int(floor(world_pos.x)), int(floor(world_pos.y)))
-	_pending_probes[cell_pos] = true
+	if not _pending_probes.has(cell_pos):
+		if _pending_probes.size() >= MAX_PENDING:
+			var oldest = _pending_probes.keys()[0]
+			_pending_probes.erase(oldest)
+		_pending_probes[cell_pos] = true
 	if _result_cache.has(cell_pos):
 		var entry: Dictionary = _result_cache[cell_pos]
 		if _current_frame - int(entry["frame"]) <= TTL_FRAMES:
