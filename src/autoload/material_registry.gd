@@ -176,11 +176,11 @@ func _init_materials():
 
 	var mat_oil := MaterialDef.new(
 		"OIL", "",
-		true, 200, 60,
+		true, 200, 20,
 		false, false,
 		Color(0.18, 0.12, 0.06, 1.0),
 		true,
-		0,
+		5,
 		1.0,
 		0.0
 	)
@@ -194,7 +194,7 @@ func _init_materials():
 		false, false,
 		Color(1.0, 0.95, 0.6, 1.0),
 		false,
-		0,
+		20,
 		15.0,
 		0.0
 	)
