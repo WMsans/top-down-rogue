@@ -9,6 +9,9 @@ extends ArenaFeature
 # Minimum allowed distance between centers, as a fraction of the larger radius.
 # 2.0 = no overlap; 1.0 = touching edge-to-center; values below 1.0 produce heavy overlap (merged blobs).
 @export var center_distance_factor: float = 0.7
+# Strength of per-angle radius noise applied at stamp time. 0 = perfect circle,
+# 0.25 = noticeably rough edges, 0.4+ = lumpy organic blobs.
+@export var edge_jitter: float = 0.3
 
 func apply(ctx) -> void:
 	var placed: Array = []  # entries: {"pos": Vector2, "r": float}
@@ -18,7 +21,8 @@ func apply(ctx) -> void:
 		if pos == null:
 			continue
 		placed.append({"pos": pos, "r": r})
-		ctx.dispatcher.stamp_material_disc(pos, int(round(r)), ctx.background_material)
+		var stamp_seed: int = ctx.rng.randi()
+		ctx.dispatcher.stamp_material_blob(pos, r, ctx.background_material, stamp_seed, edge_jitter)
 
 func _sample_radius(ctx) -> float:
 	if radius_min <= 0 or radius_max <= 0 or radius_max < radius_min:

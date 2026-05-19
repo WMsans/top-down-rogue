@@ -14,6 +14,11 @@ class CompositionContext:
 var _dispatched_anchors: Dictionary = {}  # sector_coord → true
 var _world_manager: Node = null
 var _spawn_parent: Node = null
+# Replayable material stamps issued by features. Each entry:
+#   {"pos": Vector2, "radius": float, "mat": int, "seed": int, "jitter": float}
+# Stamps that hit unloaded chunks at issue time are re-applied when those chunks
+# later generate, so cross-chunk pillar/pool parts aren't truncated.
+var _stamps: Array = []
 
 
 func _process(_delta: float) -> void:
@@ -30,9 +35,13 @@ func _process(_delta: float) -> void:
 
 func clear() -> void:
 	_dispatched_anchors.clear()
+	_stamps.clear()
 
 
 func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
+	# Replay any prior stamps whose AABB intersects a newly loaded chunk so
+	# cross-chunk pillar/pool parts get filled in.
+	_replay_stamps_for_chunks(new_coords)
 	var grid: SectorGrid = LevelManager.get_grid()
 	if grid == null:
 		return
@@ -130,6 +139,45 @@ func spawn_chest(world_pos: Vector2, rare: bool) -> void:
 	_spawn_parent.add_child(chest)
 
 func stamp_material_disc(world_pos: Vector2, radius_cells: int, material_id: int) -> void:
+	stamp_material_blob(world_pos, float(radius_cells), material_id, 0, 0.0)
+
+
+func stamp_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int, edge_jitter: float) -> void:
 	if _world_manager == null or material_id <= 0:
 		return
-	_world_manager.place_material(world_pos, float(radius_cells), material_id)
+	_stamps.append({
+		"pos": world_pos,
+		"radius": radius,
+		"mat": material_id,
+		"seed": noise_seed,
+		"jitter": edge_jitter,
+	})
+	_world_manager.place_material_blob(world_pos, radius, material_id, noise_seed, edge_jitter)
+
+
+func _replay_stamps_for_chunks(new_coords: Array[Vector2i]) -> void:
+	if _world_manager == null or _stamps.is_empty() or new_coords.is_empty():
+		return
+	var new_chunks := {}
+	for c in new_coords:
+		new_chunks[c] = true
+	for stamp in _stamps:
+		var radius: float = stamp["radius"] * (1.0 + max(float(stamp["jitter"]), 0.0))
+		var min_x := int(floor(stamp["pos"].x - radius))
+		var max_x := int(ceil(stamp["pos"].x + radius))
+		var min_y := int(floor(stamp["pos"].y - radius))
+		var max_y := int(ceil(stamp["pos"].y + radius))
+		var cmin_x := floori(float(min_x) / CHUNK_SIZE)
+		var cmax_x := floori(float(max_x) / CHUNK_SIZE)
+		var cmin_y := floori(float(min_y) / CHUNK_SIZE)
+		var cmax_y := floori(float(max_y) / CHUNK_SIZE)
+		var intersects := false
+		for cx in range(cmin_x, cmax_x + 1):
+			for cy in range(cmin_y, cmax_y + 1):
+				if new_chunks.has(Vector2i(cx, cy)):
+					intersects = true
+					break
+			if intersects:
+				break
+		if intersects:
+			_world_manager.place_material_blob(stamp["pos"], stamp["radius"], stamp["mat"], stamp["seed"], stamp["jitter"])

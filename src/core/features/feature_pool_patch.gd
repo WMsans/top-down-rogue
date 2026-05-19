@@ -5,6 +5,7 @@ extends ArenaFeature
 @export var count: int = 1
 @export var size_min_cells: int = 6
 @export var size_max_cells: int = 14
+@export var edge_jitter: float = 0.35
 
 func apply(ctx) -> void:
 	if material_id <= 0:
@@ -13,8 +14,9 @@ func apply(ctx) -> void:
 		var pos: Variant = _sample_air(ctx)
 		if pos == null:
 			continue
-		var radius: int = ctx.rng.randi_range(size_min_cells, size_max_cells)
-		ctx.dispatcher.stamp_material_disc(pos, radius, material_id)
+		var radius: float = float(ctx.rng.randi_range(size_min_cells, size_max_cells))
+		var stamp_seed: int = ctx.rng.randi()
+		ctx.dispatcher.stamp_material_blob(pos, radius, material_id, stamp_seed, edge_jitter)
 
 func _sample_air(ctx) -> Variant:
 	if region == null:

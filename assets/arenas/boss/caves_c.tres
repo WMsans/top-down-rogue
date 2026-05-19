@@ -158,8 +158,8 @@ radius = 70.0
 script = ExtResource("13_8a03l")
 material_id = 4
 count = 3
-size_min_cells = 5
-size_max_cells = 10
+size_min_cells = 16
+size_max_cells = 32
 region = SubResource("Resource_6kwf6")
 
 [sub_resource type="Resource" id="Resource_2ybyg"]
@@ -171,8 +171,8 @@ radius = 70.0
 script = ExtResource("13_8a03l")
 material_id = 4
 count = 3
-size_min_cells = 5
-size_max_cells = 10
+size_min_cells = 16
+size_max_cells = 32
 region = SubResource("Resource_2ybyg")
 
 [sub_resource type="Resource" id="Resource_vm3qk"]
@@ -184,8 +184,8 @@ radius = 60.0
 script = ExtResource("13_8a03l")
 material_id = 4
 count = 2
-size_min_cells = 5
-size_max_cells = 10
+size_min_cells = 16
+size_max_cells = 32
 region = SubResource("Resource_vm3qk")
 
 [sub_resource type="Resource" id="Resource_gnyni"]
@@ -197,8 +197,8 @@ radius = 60.0
 script = ExtResource("13_8a03l")
 material_id = 4
 count = 2
-size_min_cells = 5
-size_max_cells = 10
+size_min_cells = 16
+size_max_cells = 32
 region = SubResource("Resource_gnyni")
 
 [resource]

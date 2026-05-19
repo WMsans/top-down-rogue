@@ -18,10 +18,10 @@ const BOSS_LOBING := 50
 const BOSS_INNER_DISC := 80
 
 # Pool blob sizes (cells)
-const ELITE_POOL_MIN := 3
-const ELITE_POOL_MAX := 6
-const BOSS_POOL_MIN := 5
-const BOSS_POOL_MAX := 10
+const ELITE_POOL_MIN := 6
+const ELITE_POOL_MAX := 14
+const BOSS_POOL_MIN := 16
+const BOSS_POOL_MAX := 32
 
 # NOTE: must match the order in src/autoload/material_registry.gd::_init_materials
 const MAT_AIR := 0
