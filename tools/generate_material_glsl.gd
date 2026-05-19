@@ -24,6 +24,14 @@ func _init():
 		output += "\n"
 	output += ");\n\n"
 
+	output += "const int HAZARD_BIT[%d] = int[%d](\n" % [mat_count, mat_count]
+	for i in registry.materials.size():
+		output += "    %d" % registry.get_hazard_bit(i)
+		if i < registry.materials.size() - 1:
+			output += ","
+		output += "\n"
+	output += ");\n\n"
+
 	output += "const bool IS_FLAMMABLE[%d] = bool[%d](\n" % [mat_count, mat_count]
 	for i in registry.materials.size():
 		var m = registry.materials[i]
