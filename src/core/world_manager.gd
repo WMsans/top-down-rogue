@@ -387,6 +387,9 @@ func _update_lights() -> void:
 				var decoded := compute_device.decode_light_ssbo(data)
 				chunk.chunk_lights.apply_light_data(decoded)
 
+				for i in range(min(decoded.size(), 16)):
+					chunk.hazard_cells[i] = int(decoded[i].get("hazard", 0))
+
 func reset() -> void:
 	chunk_manager.clear_all_chunks()
 	for us in _gen_uniform_sets_to_free:
