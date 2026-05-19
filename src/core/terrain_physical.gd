@@ -2,6 +2,8 @@ class_name TerrainPhysical
 extends Node
 
 const CHUNK_SIZE := 256
+const SUB_CELL_SIZE := 64  # CHUNK_SIZE / 4
+const SUB_CELLS_PER_ROW := 4
 const TTL_FRAMES := 8
 
 ## Last known probe results: Vector2i(world_x, world_y) -> {mat_id: int, frame: int}
@@ -134,6 +136,27 @@ func apply_probe_results(batch: Array, raw_bytes: PackedByteArray) -> void:
 			var mat_id: int = int(raw_bytes.decode_u32(byte_off))
 			_result_cache[coords[i]] = {"mat_id": mat_id, "frame": _current_frame}
 	_current_frame += 1
+
+
+func hazard_at(world_pos: Vector2, mask: int) -> bool:
+	if world_manager == null or not ("chunks" in world_manager):
+		return false
+	var chunk_coord := Vector2i(
+		floori(world_pos.x / float(CHUNK_SIZE)),
+		floori(world_pos.y / float(CHUNK_SIZE)),
+	)
+	var chunk = world_manager.chunks.get(chunk_coord, null)
+	if chunk == null or not ("hazard_cells" in chunk):
+		return false
+	var cells: PackedInt32Array = chunk.hazard_cells
+	if cells.size() < SUB_CELLS_PER_ROW * SUB_CELLS_PER_ROW:
+		return false
+	var local_x := int(posmod(int(floor(world_pos.x)), CHUNK_SIZE))
+	var local_y := int(posmod(int(floor(world_pos.y)), CHUNK_SIZE))
+	var sx := local_x / SUB_CELL_SIZE
+	var sy := local_y / SUB_CELL_SIZE
+	var idx := sy * SUB_CELLS_PER_ROW + sx
+	return (cells[idx] & mask) != 0
 
 
 func _cell_from_material(mat_id: int) -> TerrainCell:
