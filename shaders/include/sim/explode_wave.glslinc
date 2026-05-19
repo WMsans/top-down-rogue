@@ -27,7 +27,8 @@ int wave_power(vec4 p) {
 }
 
 bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
-                           vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right) {
+                           vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right,
+                           vec4 n_ul, vec4 n_ur, vec4 n_dl, vec4 n_dr) {
 	// Branch A: this cell IS a wave -> decay to scorched air this tick.
 	if (material == MAT_EXPLODE_WAVE) {
 		imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
@@ -42,15 +43,22 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 			return false;
 		}
 
-		int max_neighbor_power = 0;
-		if (is_wave(n_up))    max_neighbor_power = max(max_neighbor_power, wave_power(n_up));
-		if (is_wave(n_down))  max_neighbor_power = max(max_neighbor_power, wave_power(n_down));
-		if (is_wave(n_left))  max_neighbor_power = max(max_neighbor_power, wave_power(n_left));
-		if (is_wave(n_right)) max_neighbor_power = max(max_neighbor_power, wave_power(n_right));
+		int best_power = 0;
+		if (is_wave(n_up))    best_power = max(best_power, wave_power(n_up)    - WAVE_DECAY);
+		if (is_wave(n_down))  best_power = max(best_power, wave_power(n_down)  - WAVE_DECAY);
+		if (is_wave(n_left))  best_power = max(best_power, wave_power(n_left)  - WAVE_DECAY);
+		if (is_wave(n_right)) best_power = max(best_power, wave_power(n_right) - WAVE_DECAY);
 
-		int new_power = max_neighbor_power - WAVE_DECAY;
-		if (new_power > 0) {
-			imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, new_power));
+		// Diagonal propagation: lets the wavefront expand as a square instead of a
+		// Manhattan diamond, roughly doubling area-per-tick (TNT-fireball feel).
+		// Higher decay along diagonals keeps the front close to circular.
+		if (is_wave(n_ul)) best_power = max(best_power, wave_power(n_ul) - WAVE_DIAGONAL_DECAY);
+		if (is_wave(n_ur)) best_power = max(best_power, wave_power(n_ur) - WAVE_DIAGONAL_DECAY);
+		if (is_wave(n_dl)) best_power = max(best_power, wave_power(n_dl) - WAVE_DIAGONAL_DECAY);
+		if (is_wave(n_dr)) best_power = max(best_power, wave_power(n_dr) - WAVE_DIAGONAL_DECAY);
+
+		if (best_power > 0) {
+			imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, best_power));
 			return true;
 		}
 		return false;
@@ -66,6 +74,12 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 		if (is_wave(n_down))  max_neighbor_power = max(max_neighbor_power, wave_power(n_down));
 		if (is_wave(n_left))  max_neighbor_power = max(max_neighbor_power, wave_power(n_left));
 		if (is_wave(n_right)) max_neighbor_power = max(max_neighbor_power, wave_power(n_right));
+		// Diagonal contact also ignites — keeps oil cascade in lockstep with the
+		// 8-way wave expansion above.
+		if (is_wave(n_ul)) max_neighbor_power = max(max_neighbor_power, wave_power(n_ul));
+		if (is_wave(n_ur)) max_neighbor_power = max(max_neighbor_power, wave_power(n_ur));
+		if (is_wave(n_dl)) max_neighbor_power = max(max_neighbor_power, wave_power(n_dl));
+		if (is_wave(n_dr)) max_neighbor_power = max(max_neighbor_power, wave_power(n_dr));
 
 		if (max_neighbor_power > 0) {
 			// Wave instantly detonates oil: direct conversion creates the
