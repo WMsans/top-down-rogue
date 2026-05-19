@@ -168,9 +168,17 @@ void fragment() {
 		mat = MAT_AIR;
 	}
 
-	// Explode wave: white-yellow flash, fully opaque on top of everything.
+	// Explode wave: fiery flash that fades from white-hot core to orange edge as
+	// wave power decays. data.b carries the wave's remaining power (0..1).
 	if (mat == MAT_EXPLODE_WAVE) {
-		fluid_tint = vec4(MATERIAL_TINT[MAT_EXPLODE_WAVE].rgb * MATERIAL_GLOW[MAT_EXPLODE_WAVE], 1.0);
+		// data.b stores wave power / 255. Initial power is ~100/255≈0.39 and
+		// decays to 0 at the edge, so remap to a 0..1 intensity for the gradient.
+		float t = clamp(data.b * 2.6, 0.0, 1.0);
+		vec3 core_color = vec3(1.0, 0.98, 0.75);   // white-yellow
+		vec3 edge_color = vec3(1.0, 0.45, 0.10);   // deep orange
+		vec3 flash_rgb = mix(edge_color, core_color, t);
+		float boost = MATERIAL_GLOW[MAT_EXPLODE_WAVE] * (1.4 + t * 1.5);
+		fluid_tint = vec4(flash_rgb * boost, 1.0);
 		fluid_alpha = 1.0;
 		mat = MAT_AIR;
 	}

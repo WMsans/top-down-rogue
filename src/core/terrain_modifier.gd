@@ -203,7 +203,7 @@ func place_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 			affected[chunk_coord].append(local)
 	var initial_temp := 0
 	if material_id == MaterialRegistry.MAT_EXPLODE_WAVE:
-		initial_temp = 60  # WAVE_DEFAULT_POWER — mirror of shaders/include/sim/common.glslinc
+		initial_temp = 100  # WAVE_DEFAULT_POWER — mirror of shaders/include/sim/common.glslinc
 	for chunk_coord in affected:
 		var chunk: Chunk = world_manager.chunks[chunk_coord]
 		var data: PackedByteArray = world_manager.rd.texture_get_data(chunk.rd_texture, 0)

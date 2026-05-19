@@ -43,5 +43,5 @@ func test_mat_explode_wave_registered() -> void:
 func test_wave_default_power_constant() -> void:
 	# Mirror of WAVE_DEFAULT_POWER in shaders/include/sim/common.glslinc.
 	# This test guards against drift; if you change one, change both.
-	var WAVE_DEFAULT_POWER_GDSCRIPT_MIRROR := 60
-	assert_that(WAVE_DEFAULT_POWER_GDSCRIPT_MIRROR).is_equal(60)
+	var WAVE_DEFAULT_POWER_GDSCRIPT_MIRROR := 100
+	assert_that(WAVE_DEFAULT_POWER_GDSCRIPT_MIRROR).is_equal(100)
