@@ -31,7 +31,7 @@ func query(world_pos: Vector2) -> TerrainCell:
 		var entry: Dictionary = _result_cache[cell_pos]
 		if _current_frame - int(entry["frame"]) <= TTL_FRAMES:
 			return _cell_from_material(int(entry["mat_id"]))
-	return TerrainCell.new()
+	return MaterialRegistry.get_cell(MaterialRegistry.MAT_AIR)
 
 
 func has_cache(world_pos: Vector2) -> bool:
@@ -160,7 +160,4 @@ func hazard_at(world_pos: Vector2, mask: int) -> bool:
 
 
 func _cell_from_material(mat_id: int) -> TerrainCell:
-	var is_solid := MaterialRegistry.has_collider(mat_id)
-	var is_fluid := MaterialRegistry.is_fluid(mat_id)
-	var dmg := MaterialRegistry.get_damage(mat_id)
-	return TerrainCell.new(mat_id, is_solid, is_fluid, dmg)
+	return MaterialRegistry.get_cell(mat_id)

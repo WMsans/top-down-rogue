@@ -45,6 +45,8 @@ class MaterialDef:
 
 var materials: Array[MaterialDef] = []
 
+var _cell_cache: Dictionary = {}
+
 var MAT_AIR: int
 var MAT_WOOD: int
 var MAT_STONE: int
@@ -274,4 +276,17 @@ func get_hardness(material_id: int) -> float:
 	if material_id < 0 or material_id >= materials.size():
 		return 0.0
 	return materials[material_id].hardness
+
+
+func get_cell(material_id: int) -> TerrainCell:
+	if _cell_cache.has(material_id):
+		return _cell_cache[material_id]
+	var cell := TerrainCell.new(
+		material_id,
+		has_collider(material_id),
+		is_fluid(material_id),
+		get_damage(material_id),
+	)
+	_cell_cache[material_id] = cell
+	return cell
 
