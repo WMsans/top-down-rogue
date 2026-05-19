@@ -185,8 +185,8 @@ r_max = 160.0
 script = ExtResource("13_0u4ns")
 material_id = 8
 count = 4
-size_min_cells = 5
-size_max_cells = 10
+size_min_cells = 16
+size_max_cells = 32
 region = SubResource("Resource_rynka")
 
 [sub_resource type="Resource" id="Resource_u3er0"]
@@ -198,8 +198,8 @@ r_max = 230.0
 script = ExtResource("13_0u4ns")
 material_id = 8
 count = 3
-size_min_cells = 5
-size_max_cells = 10
+size_min_cells = 16
+size_max_cells = 32
 region = SubResource("Resource_u3er0")
 
 [sub_resource type="Resource" id="Resource_nof6u"]
@@ -211,8 +211,8 @@ r_max = 290.0
 script = ExtResource("13_0u4ns")
 material_id = 8
 count = 2
-size_min_cells = 5
-size_max_cells = 10
+size_min_cells = 16
+size_max_cells = 32
 region = SubResource("Resource_nof6u")
 
 [resource]

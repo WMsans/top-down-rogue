@@ -80,8 +80,6 @@ radius = 35.0
 [sub_resource type="Resource" id="Resource_3wga8"]
 script = ExtResource("9_m2hdp")
 material_id = 8
-size_min_cells = 3
-size_max_cells = 6
 region = SubResource("Resource_il5p5")
 
 [sub_resource type="Resource" id="Resource_mmjdy"]
@@ -92,8 +90,6 @@ radius = 35.0
 [sub_resource type="Resource" id="Resource_4vovr"]
 script = ExtResource("9_m2hdp")
 material_id = 8
-size_min_cells = 3
-size_max_cells = 6
 region = SubResource("Resource_mmjdy")
 
 [resource]

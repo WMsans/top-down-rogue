@@ -71,8 +71,6 @@ radius = 40.0
 script = ExtResource("9_g18g5")
 material_id = 4
 count = 2
-size_min_cells = 3
-size_max_cells = 6
 region = SubResource("Resource_kv5jh")
 
 [resource]

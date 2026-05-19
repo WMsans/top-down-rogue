@@ -163,13 +163,34 @@ func place_blood(world_pos: Vector2, radius: float, outward_speed: float, bias_d
 
 
 func place_material(world_pos: Vector2, radius: float, material_id: int) -> void:
+	place_material_blob(world_pos, radius, material_id, 0, 0.0)
+
+
+# Place a material blob with optional noisy edges. When edge_jitter > 0, the
+# disc's effective radius varies per-angle using a cheap layered-sine noise seeded
+# by `noise_seed`, producing rough natural shapes instead of perfect circles.
+func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0) -> void:
 	var center_x := int(floor(world_pos.x))
 	var center_y := int(floor(world_pos.y))
-	var r := int(ceil(radius))
+	var max_radius: float = radius * (1.0 + max(edge_jitter, 0.0))
+	var r := int(ceil(max_radius))
+	var seed_a: float = float(noise_seed) * 0.0137
+	var seed_b: float = float(noise_seed) * 0.0291 + 1.7
+	var seed_c: float = float(noise_seed) * 0.0073 + 4.3
 	var affected: Dictionary = {}
 	for dx in range(-r, r + 1):
 		for dy in range(-r, r + 1):
-			if dx * dx + dy * dy > r * r:
+			var d_sq: int = dx * dx + dy * dy
+			if d_sq == 0:
+				pass
+			var local_radius: float = radius
+			if edge_jitter > 0.0 and d_sq > 0:
+				var angle: float = atan2(float(dy), float(dx))
+				var n: float = sin(angle * 3.0 + seed_a) * 0.5 \
+						+ sin(angle * 7.0 + seed_b) * 0.3 \
+						+ cos(angle * 13.0 + seed_c) * 0.2
+				local_radius = radius * (1.0 + n * edge_jitter)
+			if float(d_sq) > local_radius * local_radius:
 				continue
 			var wx := center_x + dx
 			var wy := center_y + dy
