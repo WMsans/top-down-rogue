@@ -68,6 +68,16 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 		if (is_wave(n_right)) max_neighbor_power = max(max_neighbor_power, wave_power(n_right));
 
 		if (max_neighbor_power > 0) {
+			// Oil packs density in .g and velocity in .a, so the generic
+			// get_health/make_pixel path would chew density (treating it like
+			// HP) and clobber velocity. Add heat only, keep density+velocity.
+			if (material == MAT_OIL) {
+				int density = get_density_oil(pixel);
+				int temperature = get_temperature_oil(pixel);
+				int new_temp = min(255, temperature + max_neighbor_power);
+				imageStore(chunk_tex, pos, pack_oil(density, new_temp, unpack_velocity_oil(pixel)));
+				return true;
+			}
 			int health = get_health(pixel);
 			int temperature = get_temperature(pixel);
 			int new_health = max(0, health - max_neighbor_power);
