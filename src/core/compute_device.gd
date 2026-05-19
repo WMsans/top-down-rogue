@@ -33,7 +33,7 @@ const BIOME_BUFFER_SIZE := 32 + 4 * 16     # 32-byte header + 4 pool vec4s
 const CAVERN_BUFFER_SIZE := 16 + 64 * 2 * 16   # header (4 ints) + 64 caverns x 2 vec4s
 
 const LIGHT_CELL_COUNT := 16
-const LIGHT_CELL_BYTES := 8
+const LIGHT_CELL_BYTES := 12
 const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 128
 const LIGHT_CELLS_X := 4
 const LIGHT_CELLS_Y := 4
