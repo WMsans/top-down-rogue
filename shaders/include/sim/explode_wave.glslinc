@@ -68,14 +68,11 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 		if (is_wave(n_right)) max_neighbor_power = max(max_neighbor_power, wave_power(n_right));
 
 		if (max_neighbor_power > 0) {
-			// Wave pre-burns oil: reduce density so adjacent oil pops faster,
-			// creating an accelerating popcorn cascade.
+			// Wave instantly detonates oil: direct conversion creates the
+			// TNT-like chain reaction where each cell pops immediately on
+			// wave contact, propagating the blast in a single tick.
 			if (material == MAT_OIL) {
-				int density = get_density_oil(pixel);
-				int temperature = get_temperature_oil(pixel);
-				int new_density = max(0, density - max_neighbor_power);
-				int new_temp = min(255, temperature + max_neighbor_power);
-				imageStore(chunk_tex, pos, pack_oil(new_density, new_temp, unpack_velocity_oil(pixel)));
+				imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, max_neighbor_power));
 				return true;
 			}
 			int health = get_health(pixel);

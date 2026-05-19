@@ -218,12 +218,8 @@ bool simulate_oil(ivec2 pos, inout vec4 pixel, inout int material,
 		temp = max(0, temp - HEAT_DISSIPATION);
 
 		if (temp > IGNITION_TEMP[MAT_OIL]) {
-			density = density - 1;
-			temp = FIRE_TEMP;
-			if (density <= 0) {
-				imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, OIL_BURN_END_POWER));
-				return true;
-			}
+			imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, OIL_BURN_END_POWER));
+			return true;
 		}
 
 		imageStore(chunk_tex, pos, pack_oil(density, temp, unpack_velocity_oil(pixel)));
