@@ -466,7 +466,7 @@ func read_light_buffer(chunk: Chunk) -> PackedByteArray:
 	return rd.buffer_get_data(chunk.light_output_buffer, 0, LIGHT_OUTPUT_SIZE)
 
 
-## Decodes a 128-byte SSBO into an array of 16 dictionaries with position, energy, and color.
+## Decodes the light SSBO into an array of 16 dictionaries with position, energy, color, and hazard.
 ## Always returns 16 entries — cells with no glowing pixels get energy=0 and will fade out.
 func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -478,6 +478,7 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 		var off := cell_idx * LIGHT_CELL_BYTES
 		var packed_count_glow := data.decode_u32(off)
 		var packed_pos := data.decode_u32(off + 4)
+		var hazard_mask := data.decode_u32(off + 8)
 
 		var pixel_count := packed_count_glow & 0xFFFF
 		var avg_glow_raw := (packed_count_glow >> 16) & 0xFFFF
@@ -496,7 +497,8 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 		result[cell_idx] = {
 			"position": pos,
 			"energy": energy,
-			"color": Color(1.0, 0.5, 0.15, 1.0)
+			"color": Color(1.0, 0.5, 0.15, 1.0),
+			"hazard": int(hazard_mask),
 		}
 
 	return result
