@@ -71,13 +71,6 @@ func create_chunk(coord: Vector2i) -> void:
 	zero_data.fill(0)
 	world_manager.rd.buffer_update(chunk.injection_buffer, 0, zero_data.size(), zero_data)
 
-	var light_output_size := compute.LIGHT_OUTPUT_SIZE
-	chunk.light_output_buffer = world_manager.rd.storage_buffer_create(light_output_size)
-	var light_zero := PackedByteArray()
-	light_zero.resize(light_output_size)
-	light_zero.fill(0)
-	world_manager.rd.buffer_update(chunk.light_output_buffer, 0, light_output_size, light_zero)
-
 	chunk.texture_2d_rd = Texture2DRD.new()
 	chunk.texture_2d_rd.texture_rd_rid = chunk.rd_texture
 
@@ -141,9 +134,10 @@ func free_chunk_uniform_sets(chunk: Chunk) -> void:
 	if chunk.sim_uniform_set.is_valid():
 		world_manager.rd.free_rid(chunk.sim_uniform_set)
 		chunk.sim_uniform_set = RID()
-	if chunk.light_pack_uniform_set.is_valid():
-		world_manager.rd.free_rid(chunk.light_pack_uniform_set)
-		chunk.light_pack_uniform_set = RID()
+	for i in range(2):
+		if chunk.light_pack_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.light_pack_uniform_sets[i])
+			chunk.light_pack_uniform_sets[i] = RID()
 
 
 func free_chunk_body(chunk: Chunk) -> void:
@@ -169,9 +163,6 @@ func free_chunk_body(chunk: Chunk) -> void:
 	if chunk.injection_buffer.is_valid():
 		world_manager.rd.free_rid(chunk.injection_buffer)
 		chunk.injection_buffer = RID()
-	if chunk.light_output_buffer.is_valid():
-		world_manager.rd.free_rid(chunk.light_output_buffer)
-		chunk.light_output_buffer = RID()
 	if chunk.rd_flag_texture.is_valid():
 		world_manager.rd.free_rid(chunk.rd_flag_texture)
 		chunk.rd_flag_texture = RID()
@@ -239,24 +230,24 @@ func build_sim_uniform_set(chunk: Chunk) -> void:
 func build_light_pack_uniform_set(chunk: Chunk) -> void:
 	var compute: ComputeDevice = world_manager.compute_device
 
-	if chunk.light_pack_uniform_set.is_valid():
-		world_manager.rd.free_rid(chunk.light_pack_uniform_set)
+	for i in range(2):
+		if chunk.light_pack_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.light_pack_uniform_sets[i])
+			chunk.light_pack_uniform_sets[i] = RID()
 
-	var uniforms: Array[RDUniform] = []
+	for i in range(2):
+		var u0 := RDUniform.new()
+		u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u0.binding = 0
+		u0.add_id(chunk.rd_texture)
 
-	var u0 := RDUniform.new()
-	u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-	u0.binding = 0
-	u0.add_id(chunk.rd_texture)
-	uniforms.append(u0)
+		var u1 := RDUniform.new()
+		u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u1.binding = 1
+		u1.add_id(compute.light_output_buffers[i])
 
-	var u1 := RDUniform.new()
-	u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
-	u1.binding = 1
-	u1.add_id(chunk.light_output_buffer)
-	uniforms.append(u1)
-
-	chunk.light_pack_uniform_set = world_manager.rd.uniform_set_create(uniforms, compute.light_pack_shader, 0)
+		var uniforms: Array[RDUniform] = [u0, u1]
+		chunk.light_pack_uniform_sets[i] = world_manager.rd.uniform_set_create(uniforms, compute.light_pack_shader, 0)
 
 
 func update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
