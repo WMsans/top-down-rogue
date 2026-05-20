@@ -42,7 +42,7 @@ func _ready() -> void:
 	if cam_node:
 		cam_node.add_to_group("camera")
 	collision_mask = 3
-	collision_layer = 1
+	collision_layer = 1 | (1 << 7)
 	_original_collision_layer = collision_layer
 	_original_collision_mask = collision_mask
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
