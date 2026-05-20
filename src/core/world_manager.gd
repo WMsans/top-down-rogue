@@ -38,6 +38,7 @@ func _ready() -> void:
 	compute_device.init_gen_cavern_buffer()
 	compute_device.init_gen_biome_buffer()
 	compute_device.init_terrain_probe()
+	compute_device.init_melee_arc()
 	# Bind biome buffer + template arrays from current biome
 	compute_device.upload_biome_buffer(LevelManager.current_biome)
 	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
