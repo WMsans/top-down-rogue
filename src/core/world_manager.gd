@@ -402,8 +402,8 @@ func _update_lights() -> void:
 				var decoded := compute_device.decode_light_ssbo(data)
 				chunk.chunk_lights.apply_light_data(decoded)
 
-				for i in range(min(decoded.size(), 16)):
-					chunk.hazard_cells[i] = int(decoded[i].get("hazard", 0))
+				for j in range(min(decoded.size(), 16)):
+					chunk.hazard_cells[j] = int(decoded[j].get("hazard", 0))
 
 func _drain_terrain_impacts() -> void:
 	var hits: Array = compute_device.drain_melee_hits()
