@@ -1,8 +1,16 @@
 extends GdUnitTestSuite
 
-class TestParryTarget extends Node2D:
+class TestParryTarget extends Area2D:
 	var hit_received: bool = false
 	var _should_parry: bool = true
+
+	func _init() -> void:
+		collision_layer = 1 << 7
+		var shape := CircleShape2D.new()
+		shape.radius = 20.0
+		var cs := CollisionShape2D.new()
+		cs.shape = shape
+		add_child(cs)
 
 	func try_parry(_attacker: Node, _hit_pos: Vector2, _hit_dir: Vector2) -> bool:
 		return _should_parry
@@ -14,7 +22,6 @@ class TestParryTarget extends Node2D:
 func test_parry_skips_damage() -> void:
 	var target: TestParryTarget = auto_free(TestParryTarget.new())
 	target._should_parry = true
-	target.add_to_group("attackable")
 	add_child(target)
 	await get_tree().process_frame
 
@@ -34,7 +41,6 @@ func test_parry_skips_damage() -> void:
 func test_unparryable_applies_damage() -> void:
 	var target: TestParryTarget = auto_free(TestParryTarget.new())
 	target._should_parry = false
-	target.add_to_group("attackable")
 	add_child(target)
 	await get_tree().process_frame
 

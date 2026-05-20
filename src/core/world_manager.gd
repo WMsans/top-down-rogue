@@ -38,6 +38,7 @@ func _ready() -> void:
 	compute_device.init_gen_cavern_buffer()
 	compute_device.init_gen_biome_buffer()
 	compute_device.init_terrain_probe()
+	compute_device.init_melee_arc()
 	# Bind biome buffer + template arrays from current biome
 	compute_device.upload_biome_buffer(LevelManager.current_biome)
 	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
@@ -82,6 +83,7 @@ func _process(delta: float) -> void:
 	_collision_helper.rebuild_dirty(chunks, delta)
 	_run_terrain_probes()
 	_update_lights()
+	_drain_terrain_impacts()
 	terrain_physical.set_center(Vector2i(tracking_position))
 
 
@@ -139,20 +141,33 @@ func _run_simulation() -> void:
 func _run_terrain_probes() -> void:
 	if chunks.is_empty():
 		return
+
+	# First: read last frame's results from the GPU (no stall — GPU is one frame ahead).
+	var prev_batch: Array = terrain_physical._last_batch
+	var prev_total_count: int = terrain_physical._last_total_count
+	if prev_total_count > 0:
+		var raw := compute_device.read_terrain_probe(prev_total_count * 4)
+		terrain_physical.apply_probe_results(prev_batch, raw)
+	else:
+		# First frame: advance past the initial empty buffer so the ring is aligned.
+		compute_device.read_terrain_probe(0)
+
+	# Then: drain current pending and dispatch to be read next frame.
 	var batch := terrain_physical.prepare_probe_batch(ComputeDevice.PROBE_BUDGET)
 	if batch.is_empty():
+		terrain_physical.record_dispatched_batch([], 0)
 		return
 
 	var total_count: int = 0
 	for entry in batch:
 		total_count += int(entry["count"])
 	if total_count <= 0:
+		terrain_physical.record_dispatched_batch([], 0)
 		return
 
 	var packed_input := terrain_physical.pack_probe_input(batch, ComputeDevice.PROBE_BUDGET)
 	var probe_uniform_sets := compute_device.dispatch_terrain_probe(chunks, batch, packed_input)
-	var raw := compute_device.read_terrain_probe(total_count * 4)
-	terrain_physical.apply_probe_results(batch, raw)
+	terrain_physical.record_dispatched_batch(batch, total_count)
 
 	for us in probe_uniform_sets:
 		if us.is_valid():
@@ -175,8 +190,8 @@ func disperse_materials_in_arc(origin: Vector2, direction: Vector2, radius: floa
 	terrain_modifier.disperse_materials_in_arc(origin, direction, radius, arc_angle, push_speed, materials)
 
 
-func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array[int], damage: float = -1.0) -> Array:
-	return terrain_modifier.clear_and_push_materials_in_arc(origin, direction, radius, arc_angle, push_speed, edge_fraction, materials, damage)
+func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array[int], damage: float = -1.0) -> void:
+	terrain_modifier.clear_and_push_materials_in_arc(origin, direction, radius, arc_angle, push_speed, edge_fraction, materials, damage)
 
 
 func place_material(world_pos: Vector2, radius: float, material_id: int) -> void:
@@ -386,6 +401,15 @@ func _update_lights() -> void:
 
 				var decoded := compute_device.decode_light_ssbo(data)
 				chunk.chunk_lights.apply_light_data(decoded)
+
+				for i in range(min(decoded.size(), 16)):
+					chunk.hazard_cells[i] = int(decoded[i].get("hazard", 0))
+
+func _drain_terrain_impacts() -> void:
+	var hits: Array = compute_device.drain_melee_hits()
+	for hit in hits:
+		TerrainImpact.play_impact(hit["world_pos"], hit["material_id"], hit["scale"])
+
 
 func reset() -> void:
 	chunk_manager.clear_all_chunks()

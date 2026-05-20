@@ -15,7 +15,13 @@ var light_output_buffer: RID
 var light_pack_uniform_set: RID
 var chunk_lights  # ChunkLights (Node2D)
 
+var hazard_cells: PackedInt32Array = PackedInt32Array()
+
 var rd_flag_texture: RID = RID()
+
+func _init() -> void:
+	hazard_cells.resize(16)
+	hazard_cells.fill(0)
 
 func create_flag_texture(rd: RenderingDevice, size: int) -> void:
 	var tf := RDTextureFormat.new()

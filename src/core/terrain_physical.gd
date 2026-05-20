@@ -2,7 +2,11 @@ class_name TerrainPhysical
 extends Node
 
 const CHUNK_SIZE := 256
+const SUB_CELL_SIZE := 64  # CHUNK_SIZE / 4
+const SUB_CELLS_PER_ROW := 4
 const TTL_FRAMES := 8
+
+var MAX_PENDING: int = 1024  # 4 * ComputeDevice.PROBE_BUDGET (256); var so tests can shrink it.
 
 ## Last known probe results: Vector2i(world_x, world_y) -> {mat_id: int, frame: int}
 var _result_cache: Dictionary = {}
@@ -21,15 +25,22 @@ var _half_grid: int = 64
 ## Reference to WorldManager (provides .chunks for binning).
 var world_manager: Node2D = null
 
+var _last_batch: Array = []
+var _last_total_count: int = 0
+
 
 func query(world_pos: Vector2) -> TerrainCell:
 	var cell_pos := Vector2i(int(floor(world_pos.x)), int(floor(world_pos.y)))
-	_pending_probes[cell_pos] = true
+	if not _pending_probes.has(cell_pos):
+		if _pending_probes.size() >= MAX_PENDING:
+			var oldest = _pending_probes.keys()[0]
+			_pending_probes.erase(oldest)
+		_pending_probes[cell_pos] = true
 	if _result_cache.has(cell_pos):
 		var entry: Dictionary = _result_cache[cell_pos]
 		if _current_frame - int(entry["frame"]) <= TTL_FRAMES:
 			return _cell_from_material(int(entry["mat_id"]))
-	return TerrainCell.new()
+	return MaterialRegistry.get_cell(MaterialRegistry.MAT_AIR)
 
 
 func has_cache(world_pos: Vector2) -> bool:
@@ -136,8 +147,31 @@ func apply_probe_results(batch: Array, raw_bytes: PackedByteArray) -> void:
 	_current_frame += 1
 
 
+func hazard_at(world_pos: Vector2, mask: int) -> bool:
+	if world_manager == null or not ("chunks" in world_manager):
+		return false
+	var chunk_coord := Vector2i(
+		floori(world_pos.x / float(CHUNK_SIZE)),
+		floori(world_pos.y / float(CHUNK_SIZE)),
+	)
+	var chunk = world_manager.chunks.get(chunk_coord, null)
+	if chunk == null or not ("hazard_cells" in chunk):
+		return false
+	var cells: PackedInt32Array = chunk.hazard_cells
+	if cells.size() < SUB_CELLS_PER_ROW * SUB_CELLS_PER_ROW:
+		return false
+	var local_x := int(posmod(int(floor(world_pos.x)), CHUNK_SIZE))
+	var local_y := int(posmod(int(floor(world_pos.y)), CHUNK_SIZE))
+	var sx := local_x / SUB_CELL_SIZE
+	var sy := local_y / SUB_CELL_SIZE
+	var idx := sy * SUB_CELLS_PER_ROW + sx
+	return (cells[idx] & mask) != 0
+
+
+func record_dispatched_batch(batch: Array, total_count: int) -> void:
+	_last_batch = batch
+	_last_total_count = total_count
+
+
 func _cell_from_material(mat_id: int) -> TerrainCell:
-	var is_solid := MaterialRegistry.has_collider(mat_id)
-	var is_fluid := MaterialRegistry.is_fluid(mat_id)
-	var dmg := MaterialRegistry.get_damage(mat_id)
-	return TerrainCell.new(mat_id, is_solid, is_fluid, dmg)
+	return MaterialRegistry.get_cell(mat_id)

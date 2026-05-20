@@ -20,6 +20,7 @@ const uint CELLS_Y = 4u;
 struct LightCell {
 	uint packed_count_glow;   // bits [15:0] = pixel_count, bits [31:16] = avg_glow_raw (glow × 1000)
 	uint packed_pos;          // bits [15:0] = avg_x, bits [31:16] = avg_y
+	uint hazard_mask;
 };
 
 layout(set = 0, binding = 1, std430) buffer LightOutput {
@@ -30,6 +31,7 @@ shared uint s_counts[64];
 shared uint s_sum_x[64];
 shared uint s_sum_y[64];
 shared uint s_sum_glow[64];
+shared uint s_hazard[64];
 
 int get_material(vec4 pixel) {
 	return int(pixel.r * 255.0 + 0.5);
@@ -47,6 +49,7 @@ void main() {
 	uint local_sum_x = 0u;
 	uint local_sum_y = 0u;
 	uint local_sum_glow = 0u;
+	uint local_hazard = 0u;
 
 	uint base_x = cell_x * CELL_SIZE;
 	uint base_y = cell_y * CELL_SIZE;
@@ -58,6 +61,13 @@ void main() {
 
 			vec4 pixel = imageLoad(chunk_tex, ivec2(px, py));
 			int mat = get_material(pixel);
+
+			if (mat >= 0 && mat < MAT_COUNT) {
+				int hbit = HAZARD_BIT[mat];
+				if (hbit >= 0) {
+					local_hazard |= (1u << uint(hbit));
+				}
+			}
 
 			if (mat >= 0 && mat < MAT_COUNT && MATERIAL_GLOW[mat] > 1.0) {
 				local_count += 1u;
@@ -72,15 +82,17 @@ void main() {
 	s_sum_x[thread_idx] = local_sum_x;
 	s_sum_y[thread_idx] = local_sum_y;
 	s_sum_glow[thread_idx] = local_sum_glow;
+	s_hazard[thread_idx] = local_hazard;
 
 	barrier();
 
 	for (uint stride = 32u; stride > 0u; stride >>= 1) {
 		if (thread_idx < stride) {
-			s_counts[thread_idx] += s_counts[thread_idx + stride];
-			s_sum_x[thread_idx] += s_sum_x[thread_idx + stride];
-			s_sum_y[thread_idx] += s_sum_y[thread_idx + stride];
+			s_counts[thread_idx]   += s_counts[thread_idx + stride];
+			s_sum_x[thread_idx]    += s_sum_x[thread_idx + stride];
+			s_sum_y[thread_idx]    += s_sum_y[thread_idx + stride];
 			s_sum_glow[thread_idx] += s_sum_glow[thread_idx + stride];
+			s_hazard[thread_idx]   |= s_hazard[thread_idx + stride];
 		}
 		barrier();
 	}
@@ -98,5 +110,6 @@ void main() {
 			output_data.cells[cell_idx].packed_count_glow = (avg_glow_raw << 16) | (count & 0xFFFFu);
 			output_data.cells[cell_idx].packed_pos = (avg_y << 16) | (avg_x & 0xFFFFu);
 		}
+		output_data.cells[cell_idx].hazard_mask = s_hazard[0];
 	}
 }
