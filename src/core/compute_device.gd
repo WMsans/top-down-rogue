@@ -563,13 +563,12 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 
 
 func read_terrain_probe(byte_count: int) -> PackedByteArray:
-	if byte_count <= 0:
-		return PackedByteArray()
 	if terrain_probe_first_frame:
 		terrain_probe_first_frame = false
-		terrain_probe_write_index = 1 - terrain_probe_write_index
 		return PackedByteArray()
-	var read_index := 1 - terrain_probe_write_index
+	if byte_count <= 0:
+		return PackedByteArray()
+	var read_index := terrain_probe_write_index
 	var result := rd.buffer_get_data(terrain_probe_output_buffers[read_index], 0, byte_count)
 	terrain_probe_write_index = 1 - terrain_probe_write_index
 	return result

@@ -147,7 +147,7 @@ func _run_terrain_probes() -> void:
 		var raw := compute_device.read_terrain_probe(prev_total_count * 4)
 		terrain_physical.apply_probe_results(prev_batch, raw)
 	else:
-		# Still need to advance ring index on first-frame; harmless on subsequent empty frames.
+		# First frame: advance past the initial empty buffer so the ring is aligned.
 		compute_device.read_terrain_probe(0)
 
 	# Then: drain current pending and dispatch to be read next frame.
