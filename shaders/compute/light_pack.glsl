@@ -9,8 +9,8 @@ layout(rgba8, set = 0, binding = 0) readonly uniform image2D chunk_tex;
 
 layout(push_constant, std430) uniform PushConstants {
 	ivec2 chunk_coord;
-	int _pad0;
-	int _pad1;
+	uint slice_idx;
+	uint _pad0;
 } pc;
 
 const uint CELL_SIZE = 64u;
@@ -100,16 +100,17 @@ void main() {
 	if (thread_idx == 0u) {
 		if (cell_idx >= CELLS_X * CELLS_Y) return;
 		uint count = s_counts[0];
+		uint out_idx = pc.slice_idx * 16u + cell_idx;
 		if (count < 4u) {
-			output_data.cells[cell_idx].packed_count_glow = 0u;
-			output_data.cells[cell_idx].packed_pos = 0u;
+			output_data.cells[out_idx].packed_count_glow = 0u;
+			output_data.cells[out_idx].packed_pos = 0u;
 		} else {
 			uint avg_x = s_sum_x[0] / count;
 			uint avg_y = s_sum_y[0] / count;
 			uint avg_glow_raw = s_sum_glow[0] / count;
-			output_data.cells[cell_idx].packed_count_glow = (avg_glow_raw << 16) | (count & 0xFFFFu);
-			output_data.cells[cell_idx].packed_pos = (avg_y << 16) | (avg_x & 0xFFFFu);
+			output_data.cells[out_idx].packed_count_glow = (avg_glow_raw << 16) | (count & 0xFFFFu);
+			output_data.cells[out_idx].packed_pos = (avg_y << 16) | (avg_x & 0xFFFFu);
 		}
-		output_data.cells[cell_idx].hazard_mask = s_hazard[0];
+		output_data.cells[out_idx].hazard_mask = s_hazard[0];
 	}
 }

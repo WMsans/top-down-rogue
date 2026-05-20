@@ -15,6 +15,11 @@ var collider_pipeline: RID
 var collider_storage_buffer: RID
 var light_pack_shader: RID
 var light_pack_pipeline: RID
+var light_output_buffers: Array[RID] = [RID(), RID()]
+var light_write_index: int = 0
+var light_first_frame: bool = true
+# Manifest per buffer: flat PackedInt32Array of [chunk_x, chunk_y, slice_idx, ...]
+var light_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
 var dummy_texture: RID
 var render_shader: Shader
 var material_textures: Texture2DArray
@@ -37,6 +42,9 @@ const LIGHT_CELL_BYTES := 12
 const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 192
 const LIGHT_CELLS_X := 4
 const LIGHT_CELLS_Y := 4
+
+const LIGHT_MAX_ACTIVE_CHUNKS := 32
+const LIGHT_SHARED_BUFFER_SIZE := LIGHT_MAX_ACTIVE_CHUNKS * LIGHT_OUTPUT_SIZE  # 32 * 192 = 6144 bytes
 
 const PROBE_BUDGET := 256
 const PROBE_INPUT_BUFFER_SIZE := PROBE_BUDGET * 8
@@ -97,6 +105,19 @@ func init_dummy_texture() -> void:
 	data.resize(CHUNK_SIZE * CHUNK_SIZE * 4)
 	data.fill(0)
 	dummy_texture = rd.texture_create(tf, RDTextureView.new(), [data])
+
+
+func init_light_shared_buffers() -> void:
+	var zero := PackedByteArray()
+	zero.resize(LIGHT_SHARED_BUFFER_SIZE)
+	zero.fill(0)
+	for i in range(2):
+		light_output_buffers[i] = rd.storage_buffer_create(LIGHT_SHARED_BUFFER_SIZE)
+		rd.buffer_update(light_output_buffers[i], 0, LIGHT_SHARED_BUFFER_SIZE, zero)
+	light_write_index = 0
+	light_first_frame = true
+	light_dispatch_manifests[0] = PackedInt32Array()
+	light_dispatch_manifests[1] = PackedInt32Array()
 
 
 func init_collider_storage_buffer() -> void:
@@ -427,6 +448,10 @@ func free_resources() -> void:
 		if terrain_probe_output_buffers[i].is_valid():
 			rd.free_rid(terrain_probe_output_buffers[i])
 			terrain_probe_output_buffers[i] = RID()
+	for i in range(2):
+		if light_output_buffers[i].is_valid():
+			rd.free_rid(light_output_buffers[i])
+			light_output_buffers[i] = RID()
 	if terrain_probe_pipeline.is_valid():
 		rd.free_rid(terrain_probe_pipeline)
 		terrain_probe_pipeline = RID()
@@ -548,7 +573,10 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 
 
 func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array) -> void:
+	var manifest: PackedInt32Array = PackedInt32Array()
+
 	if bucket_coords.is_empty():
+		light_dispatch_manifests[light_write_index] = manifest
 		return
 
 	var push_data := PackedByteArray()
@@ -558,26 +586,60 @@ func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array) -> void:
 	var compute_list := rd.compute_list_begin()
 	rd.compute_list_bind_compute_pipeline(compute_list, light_pack_pipeline)
 
+	var slice_idx := 0
 	for coord in bucket_coords:
+		if slice_idx >= LIGHT_MAX_ACTIVE_CHUNKS:
+			push_warning("light_pack: bucket exceeds LIGHT_MAX_ACTIVE_CHUNKS, dropping extras")
+			break
 		var chunk: Chunk = chunks.get(coord, null)
-		if not chunk or not chunk.light_pack_uniform_set.is_valid():
+		if chunk == null:
+			continue
+		var us: RID = chunk.light_pack_uniform_sets[light_write_index]
+		if not us.is_valid():
 			continue
 
-		rd.compute_list_bind_uniform_set(compute_list, chunk.light_pack_uniform_set, 0)
+		rd.compute_list_bind_uniform_set(compute_list, us, 0)
 
 		push_data.encode_s32(0, coord.x)
 		push_data.encode_s32(4, coord.y)
+		push_data.encode_u32(8, slice_idx)
+		push_data.encode_u32(12, 0)
 		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
 
 		rd.compute_list_dispatch(compute_list, LIGHT_CELLS_X, LIGHT_CELLS_Y, 1)
 
+		manifest.append(coord.x)
+		manifest.append(coord.y)
+		manifest.append(slice_idx)
+		slice_idx += 1
+
 	rd.compute_list_end()
 
+	light_dispatch_manifests[light_write_index] = manifest
 
-func read_light_buffer(chunk: Chunk) -> PackedByteArray:
-	if not chunk.light_output_buffer.is_valid():
-		return PackedByteArray()
-	return rd.buffer_get_data(chunk.light_output_buffer, 0, LIGHT_OUTPUT_SIZE)
+
+func read_light_buffer_coalesced() -> Dictionary:
+	if light_first_frame:
+		light_first_frame = false
+		light_write_index = 1 - light_write_index
+		return {}
+
+	var read_index := 1 - light_write_index
+	var manifest: PackedInt32Array = light_dispatch_manifests[read_index]
+	if manifest.is_empty():
+		light_write_index = 1 - light_write_index
+		return {}
+
+	var slice_count := manifest.size() / 3
+	var byte_count := slice_count * LIGHT_OUTPUT_SIZE
+	var bytes := rd.buffer_get_data(light_output_buffers[read_index], 0, byte_count)
+
+	light_write_index = 1 - light_write_index
+
+	return {
+		"bytes": bytes,
+		"manifest": manifest,
+	}
 
 
 ## Decodes the light SSBO into an array of 16 dictionaries with position, energy, color, and hazard.
@@ -606,6 +668,43 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 			var avg_glow := float(avg_glow_raw) / 1000.0
 			var coverage := clampf(float(pixel_count) / 32.0, 0.0, 1.0)
 			energy = coverage * (avg_glow / 20.0)  # MAX_GLOW = 20.0
+			pos = Vector2(float(avg_x), float(avg_y))
+
+		result[cell_idx] = {
+			"position": pos,
+			"energy": energy,
+			"color": Color(1.0, 0.5, 0.15, 1.0),
+			"hazard": int(hazard_mask),
+		}
+
+	return result
+
+
+func decode_light_ssbo_slice(data: PackedByteArray, slice_idx: int) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var slice_off := slice_idx * LIGHT_OUTPUT_SIZE
+	if data.size() < slice_off + LIGHT_OUTPUT_SIZE:
+		return result
+	result.resize(LIGHT_CELL_COUNT)
+
+	for cell_idx in range(LIGHT_CELL_COUNT):
+		var off := slice_off + cell_idx * LIGHT_CELL_BYTES
+		var packed_count_glow := data.decode_u32(off)
+		var packed_pos := data.decode_u32(off + 4)
+		var hazard_mask := data.decode_u32(off + 8)
+
+		var pixel_count := packed_count_glow & 0xFFFF
+		var avg_glow_raw := (packed_count_glow >> 16) & 0xFFFF
+		var avg_x := packed_pos & 0xFFFF
+		var avg_y := (packed_pos >> 16) & 0xFFFF
+
+		var energy := 0.0
+		var pos := Vector2.ZERO
+
+		if pixel_count >= 4:
+			var avg_glow := float(avg_glow_raw) / 1000.0
+			var coverage := clampf(float(pixel_count) / 32.0, 0.0, 1.0)
+			energy = coverage * (avg_glow / 20.0)
 			pos = Vector2(float(avg_x), float(avg_y))
 
 		result[cell_idx] = {
