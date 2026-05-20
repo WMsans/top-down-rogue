@@ -312,7 +312,7 @@ func dispatch_melee_arc(chunks: Dictionary, affected_chunk_coords: Array[Vector2
 
 		var origin_chunk := coord * CHUNK_SIZE
 		var push := PackedByteArray()
-		push.resize(64)
+		push.resize(56)
 		push.fill(0)
 		push.encode_s32(0, origin_chunk.x)
 		push.encode_s32(4, origin_chunk.y)
