@@ -33,19 +33,32 @@ const BIOME_BUFFER_SIZE := 32 + 4 * 16     # 32-byte header + 4 pool vec4s
 const CAVERN_BUFFER_SIZE := 16 + 64 * 2 * 16   # header (4 ints) + 64 caverns x 2 vec4s
 
 const LIGHT_CELL_COUNT := 16
-const LIGHT_CELL_BYTES := 8
-const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 128
+const LIGHT_CELL_BYTES := 12
+const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 192
 const LIGHT_CELLS_X := 4
 const LIGHT_CELLS_Y := 4
 
-const PROBE_BUDGET := 64
+const PROBE_BUDGET := 256
 const PROBE_INPUT_BUFFER_SIZE := PROBE_BUDGET * 8
 const PROBE_OUTPUT_BUFFER_SIZE := PROBE_BUDGET * 4
 
 var terrain_probe_shader: RID
 var terrain_probe_pipeline: RID
-var terrain_probe_input_buffer: RID
-var terrain_probe_output_buffer: RID
+var terrain_probe_input_buffers: Array[RID] = [RID(), RID()]
+var terrain_probe_output_buffers: Array[RID] = [RID(), RID()]
+var terrain_probe_write_index: int = 0
+var terrain_probe_first_frame: bool = true
+
+const MELEE_HIT_RING := 3
+const MELEE_HIT_CAPACITY := 64
+const MELEE_HIT_HEADER_BYTES := 16
+const MELEE_HIT_ENTRY_BYTES := 16
+const MELEE_HIT_BUFFER_SIZE := MELEE_HIT_HEADER_BYTES + MELEE_HIT_CAPACITY * MELEE_HIT_ENTRY_BYTES
+
+var melee_arc_shader: RID
+var melee_arc_pipeline: RID
+var melee_hit_buffers: Array[RID] = [RID(), RID(), RID()]
+var melee_hit_write_index: int = 0
 
 
 func _init() -> void:
@@ -158,12 +171,23 @@ func init_terrain_probe() -> void:
 	var zero_in := PackedByteArray()
 	zero_in.resize(PROBE_INPUT_BUFFER_SIZE)
 	zero_in.fill(0)
-	terrain_probe_input_buffer = rd.storage_buffer_create(PROBE_INPUT_BUFFER_SIZE, zero_in)
-
 	var zero_out := PackedByteArray()
 	zero_out.resize(PROBE_OUTPUT_BUFFER_SIZE)
 	zero_out.fill(0)
-	terrain_probe_output_buffer = rd.storage_buffer_create(PROBE_OUTPUT_BUFFER_SIZE, zero_out)
+	for i in range(2):
+		terrain_probe_input_buffers[i] = rd.storage_buffer_create(PROBE_INPUT_BUFFER_SIZE, zero_in)
+		terrain_probe_output_buffers[i] = rd.storage_buffer_create(PROBE_OUTPUT_BUFFER_SIZE, zero_out)
+
+
+func init_melee_arc() -> void:
+	var f: RDShaderFile = load("res://shaders/compute/melee_arc.glsl")
+	melee_arc_shader = rd.shader_create_from_spirv(f.get_spirv())
+	melee_arc_pipeline = rd.compute_pipeline_create(melee_arc_shader)
+	var zero := PackedByteArray()
+	zero.resize(MELEE_HIT_BUFFER_SIZE)
+	zero.fill(0)
+	for i in range(MELEE_HIT_RING):
+		melee_hit_buffers[i] = rd.storage_buffer_create(MELEE_HIT_BUFFER_SIZE, zero)
 
 
 # template_arrays: Dictionary[int size_class → Texture2DArray]
@@ -251,6 +275,85 @@ func upload_biome_buffer(biome: BiomeDef) -> void:
 	rd.buffer_update(gen_biome_buffer, 0, BIOME_BUFFER_SIZE, buf)
 
 
+func dispatch_melee_arc(chunks: Dictionary, affected_chunk_coords: Array[Vector2i],
+		origin: Vector2, direction: Vector2,
+		radius: float, inner_radius: float, arc_half_angle: float,
+		push_speed: float, damage: float, target_mask: int) -> Array[RID]:
+	if affected_chunk_coords.is_empty():
+		return []
+
+	var zero_header := PackedByteArray()
+	zero_header.resize(MELEE_HIT_HEADER_BYTES)
+	zero_header.fill(0)
+	rd.buffer_update(melee_hit_buffers[melee_hit_write_index], 0, MELEE_HIT_HEADER_BYTES, zero_header)
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, melee_arc_pipeline)
+
+	var created: Array[RID] = []
+	for coord in affected_chunk_coords:
+		var chunk: Chunk = chunks.get(coord, null)
+		if chunk == null or not chunk.rd_texture.is_valid():
+			continue
+
+		var u_tex := RDUniform.new()
+		u_tex.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u_tex.binding = 0
+		u_tex.add_id(chunk.rd_texture)
+
+		var u_hits := RDUniform.new()
+		u_hits.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u_hits.binding = 1
+		u_hits.add_id(melee_hit_buffers[melee_hit_write_index])
+
+		var us := rd.uniform_set_create([u_tex, u_hits], melee_arc_shader, 0)
+		created.append(us)
+		rd.compute_list_bind_uniform_set(compute_list, us, 0)
+
+		var origin_chunk := coord * CHUNK_SIZE
+		var push := PackedByteArray()
+		push.resize(56)
+		push.fill(0)
+		push.encode_s32(0, origin_chunk.x)
+		push.encode_s32(4, origin_chunk.y)
+		push.encode_float(8, origin.x)
+		push.encode_float(12, origin.y)
+		push.encode_float(16, direction.x)
+		push.encode_float(20, direction.y)
+		push.encode_float(24, radius)
+		push.encode_float(28, inner_radius)
+		push.encode_float(32, arc_half_angle)
+		push.encode_float(36, push_speed)
+		push.encode_float(40, damage)
+		push.encode_u32(44, target_mask)
+		push.encode_u32(48, MELEE_HIT_CAPACITY)
+		rd.compute_list_set_push_constant(compute_list, push, push.size())
+
+		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
+
+	rd.compute_list_end()
+	return created
+
+
+func drain_melee_hits() -> Array:
+	var read_index := (melee_hit_write_index + 1) % MELEE_HIT_RING
+	var raw := rd.buffer_get_data(melee_hit_buffers[read_index], 0, MELEE_HIT_BUFFER_SIZE)
+	if raw.size() < MELEE_HIT_HEADER_BYTES:
+		return []
+	var count: int = int(raw.decode_u32(0))
+	var capped: int = min(count, MELEE_HIT_CAPACITY)
+	var result: Array = []
+	for i in range(capped):
+		var off := MELEE_HIT_HEADER_BYTES + i * MELEE_HIT_ENTRY_BYTES
+		result.append({
+			"world_pos": Vector2(float(raw.decode_s32(off)), float(raw.decode_s32(off + 4))),
+			"material_id": int(raw.decode_u32(off + 8)),
+			"scale": raw.decode_float(off + 12),
+		})
+	melee_hit_write_index = (melee_hit_write_index + 1) % MELEE_HIT_RING
+	return result
+
+
 func free_resources() -> void:
 	if gen_stamp_uniform_set.is_valid():
 		rd.free_rid(gen_stamp_uniform_set)
@@ -307,12 +410,23 @@ func free_resources() -> void:
 	if light_pack_shader.is_valid():
 		rd.free_rid(light_pack_shader)
 		light_pack_shader = RID()
-	if terrain_probe_input_buffer.is_valid():
-		rd.free_rid(terrain_probe_input_buffer)
-		terrain_probe_input_buffer = RID()
-	if terrain_probe_output_buffer.is_valid():
-		rd.free_rid(terrain_probe_output_buffer)
-		terrain_probe_output_buffer = RID()
+	for i in range(MELEE_HIT_RING):
+		if melee_hit_buffers[i].is_valid():
+			rd.free_rid(melee_hit_buffers[i])
+			melee_hit_buffers[i] = RID()
+	if melee_arc_pipeline.is_valid():
+		rd.free_rid(melee_arc_pipeline)
+		melee_arc_pipeline = RID()
+	if melee_arc_shader.is_valid():
+		rd.free_rid(melee_arc_shader)
+		melee_arc_shader = RID()
+	for i in range(2):
+		if terrain_probe_input_buffers[i].is_valid():
+			rd.free_rid(terrain_probe_input_buffers[i])
+			terrain_probe_input_buffers[i] = RID()
+		if terrain_probe_output_buffers[i].is_valid():
+			rd.free_rid(terrain_probe_output_buffers[i])
+			terrain_probe_output_buffers[i] = RID()
 	if terrain_probe_pipeline.is_valid():
 		rd.free_rid(terrain_probe_pipeline)
 		terrain_probe_pipeline = RID()
@@ -466,7 +580,7 @@ func read_light_buffer(chunk: Chunk) -> PackedByteArray:
 	return rd.buffer_get_data(chunk.light_output_buffer, 0, LIGHT_OUTPUT_SIZE)
 
 
-## Decodes a 128-byte SSBO into an array of 16 dictionaries with position, energy, and color.
+## Decodes the light SSBO into an array of 16 dictionaries with position, energy, color, and hazard.
 ## Always returns 16 entries — cells with no glowing pixels get energy=0 and will fade out.
 func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -478,6 +592,7 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 		var off := cell_idx * LIGHT_CELL_BYTES
 		var packed_count_glow := data.decode_u32(off)
 		var packed_pos := data.decode_u32(off + 4)
+		var hazard_mask := data.decode_u32(off + 8)
 
 		var pixel_count := packed_count_glow & 0xFFFF
 		var avg_glow_raw := (packed_count_glow >> 16) & 0xFFFF
@@ -496,7 +611,8 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 		result[cell_idx] = {
 			"position": pos,
 			"energy": energy,
-			"color": Color(1.0, 0.5, 0.15, 1.0)
+			"color": Color(1.0, 0.5, 0.15, 1.0),
+			"hazard": int(hazard_mask),
 		}
 
 	return result
@@ -506,7 +622,7 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 	if batch.is_empty():
 		return []
 
-	rd.buffer_update(terrain_probe_input_buffer, 0, PROBE_INPUT_BUFFER_SIZE, packed_input)
+	rd.buffer_update(terrain_probe_input_buffers[terrain_probe_write_index], 0, PROBE_INPUT_BUFFER_SIZE, packed_input)
 
 	var compute_list := rd.compute_list_begin()
 	rd.compute_list_bind_compute_pipeline(compute_list, terrain_probe_pipeline)
@@ -530,12 +646,12 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 		var u_in := RDUniform.new()
 		u_in.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
 		u_in.binding = 1
-		u_in.add_id(terrain_probe_input_buffer)
+		u_in.add_id(terrain_probe_input_buffers[terrain_probe_write_index])
 
 		var u_out := RDUniform.new()
 		u_out.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
 		u_out.binding = 2
-		u_out.add_id(terrain_probe_output_buffer)
+		u_out.add_id(terrain_probe_output_buffers[terrain_probe_write_index])
 
 		var us := rd.uniform_set_create([u_tex, u_in, u_out], terrain_probe_shader, 0)
 		created_uniform_sets.append(us)
@@ -558,6 +674,12 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 
 
 func read_terrain_probe(byte_count: int) -> PackedByteArray:
+	if terrain_probe_first_frame:
+		terrain_probe_first_frame = false
+		return PackedByteArray()
 	if byte_count <= 0:
 		return PackedByteArray()
-	return rd.buffer_get_data(terrain_probe_output_buffer, 0, byte_count)
+	var read_index := terrain_probe_write_index
+	var result := rd.buffer_get_data(terrain_probe_output_buffers[read_index], 0, byte_count)
+	terrain_probe_write_index = 1 - terrain_probe_write_index
+	return result

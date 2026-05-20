@@ -45,6 +45,8 @@ class MaterialDef:
 
 var materials: Array[MaterialDef] = []
 
+var _cell_cache: Dictionary = {}
+
 var MAT_AIR: int
 var MAT_WOOD: int
 var MAT_STONE: int
@@ -57,6 +59,11 @@ var MAT_WATER: int
 var MAT_BLOOD: int
 var MAT_OIL: int
 var MAT_EXPLODE_WAVE: int
+
+const HAZARD_LAVA := 1
+const HAZARD_FIRE := 2  # MAT_EXPLODE_WAVE acts as the fire/heat hazard
+const HAZARD_OIL := 4
+const HAZARD_BLOOD := 8
 
 func _ready():
 	_init_materials()
@@ -202,6 +209,19 @@ func _init_materials():
 	materials.append(mat_explode_wave)
 	MAT_EXPLODE_WAVE = mat_explode_wave.id
 
+func get_hazard_bit(material_id: int) -> int:
+	if material_id < 0 or material_id >= materials.size():
+		return -1
+	if material_id == MAT_LAVA:
+		return 0
+	if material_id == MAT_EXPLODE_WAVE:
+		return 1
+	if material_id == MAT_OIL:
+		return 2
+	if material_id == MAT_BLOOD:
+		return 3
+	return -1
+
 func is_flammable(material_id: int) -> bool:
 	if material_id < 0 or material_id >= materials.size():
 		return false
@@ -256,4 +276,17 @@ func get_hardness(material_id: int) -> float:
 	if material_id < 0 or material_id >= materials.size():
 		return 0.0
 	return materials[material_id].hardness
+
+
+func get_cell(material_id: int) -> TerrainCell:
+	if _cell_cache.has(material_id):
+		return _cell_cache[material_id]
+	var cell := TerrainCell.new(
+		material_id,
+		has_collider(material_id),
+		is_fluid(material_id),
+		get_damage(material_id),
+	)
+	_cell_cache[material_id] = cell
+	return cell
 

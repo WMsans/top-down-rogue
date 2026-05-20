@@ -81,6 +81,10 @@ interact={
 
 3d/physics_engine="Jolt Physics"
 
+[layer_names]
+
+2d_physics/layer_8="attackable_hit"
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

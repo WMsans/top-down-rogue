@@ -71,7 +71,7 @@ func create_chunk(coord: Vector2i) -> void:
 	zero_data.fill(0)
 	world_manager.rd.buffer_update(chunk.injection_buffer, 0, zero_data.size(), zero_data)
 
-	var light_output_size := 128  # 16 cells × 8 bytes (2 uints)
+	var light_output_size := compute.LIGHT_OUTPUT_SIZE
 	chunk.light_output_buffer = world_manager.rd.storage_buffer_create(light_output_size)
 	var light_zero := PackedByteArray()
 	light_zero.resize(light_output_size)

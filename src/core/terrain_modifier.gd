@@ -359,111 +359,42 @@ func clear_and_push_materials_in_arc(
 	edge_fraction: float,
 	materials: Array[int],
 	damage: float = -1.0
-) -> Array:
-	var origin_int := Vector2i(int(origin.x), int(origin.y))
+) -> void:
+	if world_manager.chunks.is_empty():
+		return
+
 	var r_int := int(ceil(radius))
-	var half_arc := arc_angle / 2.0
-	var dir_angle := direction.angle()
-	var start_angle := dir_angle - half_arc
-	var end_angle := dir_angle + half_arc
-	var inner_r := radius * (1.0 - edge_fraction)
-	var inner_r_sq := int(inner_r) * int(inner_r)
-	var r_sq := r_int * r_int
-	var apply_hardness := damage >= 0.0
-	var safe_damage := maxf(damage, 0.1)
-	var impact_list: Array = []
+	var origin_int := Vector2i(int(origin.x), int(origin.y))
+	var min_world := origin_int - Vector2i(r_int, r_int)
+	var max_world := origin_int + Vector2i(r_int, r_int)
+	var min_chunk := Vector2i(floori(float(min_world.x) / CHUNK_SIZE), floori(float(min_world.y) / CHUNK_SIZE))
+	var max_chunk := Vector2i(floori(float(max_world.x) / CHUNK_SIZE), floori(float(max_world.y) / CHUNK_SIZE))
 
-	var affected: Dictionary = {}
-
-	for dx in range(-r_int, r_int + 1):
-		for dy in range(-r_int, r_int + 1):
-			var dist_sq := dx * dx + dy * dy
-			if dist_sq > r_sq:
-				continue
-
-			var pixel_angle := atan2(float(dy), float(dx))
-			var delta_start := pixel_angle - start_angle
-			while delta_start > PI:
-				delta_start -= TAU
-			while delta_start < -PI:
-				delta_start += TAU
-			var delta_end := pixel_angle - end_angle
-			while delta_end > PI:
-				delta_end -= TAU
-			while delta_end < -PI:
-				delta_end += TAU
-
-			if delta_start < 0.0 or delta_end > 0.0:
-				continue
-
-			var wx := origin_int.x + dx
-			var wy := origin_int.y + dy
-			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
-			if not world_manager.chunks.has(chunk_coord):
-				continue
-			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
-			if not affected.has(chunk_coord):
-				affected[chunk_coord] = []
-
-			if dist_sq >= inner_r_sq:
-				affected[chunk_coord].append([local, Vector2(float(dx), float(dy)).normalized(), false, dist_sq])
-			else:
-				affected[chunk_coord].append([local, Vector2.ZERO, true, dist_sq])
-
+	var affected: Array[Vector2i] = []
+	for cx in range(min_chunk.x, max_chunk.x + 1):
+		for cy in range(min_chunk.y, max_chunk.y + 1):
+			var coord := Vector2i(cx, cy)
+			if world_manager.chunks.has(coord):
+				affected.append(coord)
 	if affected.is_empty():
-		return impact_list
+		return
 
-	for chunk_coord in affected:
-		var chunk: Chunk = world_manager.chunks[chunk_coord]
-		var data: PackedByteArray = world_manager.rd.texture_get_data(chunk.rd_texture, 0)
-		var modified := false
-		for entry in affected[chunk_coord]:
-			var pixel_pos: Vector2i = entry[0]
-			var push_dir: Vector2 = entry[1]
-			var do_clear: bool = entry[2]
-			var dist_sq: int = entry[3]
-			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
-			var material: int = data[idx]
+	var inner_r := radius * (1.0 - edge_fraction)
+	var half_arc := arc_angle / 2.0
 
-			var is_target := false
-			for mat_id in materials:
-				if material == mat_id:
-					is_target = true
-					break
-			if not is_target:
-				continue
+	var target_mask: int = 0
+	for mat_id in materials:
+		if mat_id >= 0 and mat_id < 32:
+			target_mask |= (1 << mat_id)
 
-			if do_clear:
-				if apply_hardness:
-					var hardness: float = MaterialRegistry.get_hardness(material)
-					var scale: float = clampf(safe_damage / (safe_damage + hardness), 0.1, 1.0)
-					var effective_radius: float = radius * scale
-					if dist_sq > int(effective_radius) * int(effective_radius):
-						continue
-					var world_wx: int = chunk_coord.x * CHUNK_SIZE + pixel_pos.x
-					var world_wy: int = chunk_coord.y * CHUNK_SIZE + pixel_pos.y
-					impact_list.append({
-						"world_pos": Vector2(world_wx, world_wy),
-						"material_id": material,
-						"scale": scale,
-					})
-				data[idx] = MaterialRegistry.MAT_AIR
-				data[idx + 1] = 0
-				data[idx + 2] = 0
-				data[idx + 3] = 136
-			else:
-				var push_vx := int(round(push_dir.x * push_speed / 60.0))
-				var push_vy := int(round(push_dir.y * push_speed / 60.0))
-				var vx_encoded := clampi(push_vx + 8, 0, 15)
-				var vy_encoded := clampi(push_vy + 8, 0, 15)
-				data[idx + 3] = (vx_encoded << 4) | vy_encoded
-			modified = true
+	var uniform_sets := world_manager.compute_device.dispatch_melee_arc(
+		world_manager.chunks, affected, origin, direction,
+		radius, inner_r, half_arc, push_speed, damage, target_mask
+	)
+	for us in uniform_sets:
+		if us.is_valid():
+			world_manager.compute_device.rd.free_rid(us)
 
-		if modified:
-			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
-
+	var modified_rect := Rect2i(min_world, max_world - min_world + Vector2i.ONE)
 	if terrain_physical:
-		var affected_rect := Rect2i(origin_int.x - r_int, origin_int.y - r_int, r_int * 2 + 1, r_int * 2 + 1)
-		terrain_physical.invalidate_rect(affected_rect)
-
-	return impact_list
+		terrain_physical.invalidate_rect(modified_rect)
