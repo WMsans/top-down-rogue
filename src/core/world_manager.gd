@@ -83,6 +83,7 @@ func _process(delta: float) -> void:
 	_collision_helper.rebuild_dirty(chunks, delta)
 	_run_terrain_probes()
 	_update_lights()
+	_drain_terrain_impacts()
 	terrain_physical.set_center(Vector2i(tracking_position))
 
 
@@ -403,6 +404,12 @@ func _update_lights() -> void:
 
 				for i in range(min(decoded.size(), 16)):
 					chunk.hazard_cells[i] = int(decoded[i].get("hazard", 0))
+
+func _drain_terrain_impacts() -> void:
+	var hits: Array = compute_device.drain_melee_hits()
+	for hit in hits:
+		TerrainImpact.play_impact(hit["world_pos"], hit["material_id"], hit["scale"])
+
 
 func reset() -> void:
 	chunk_manager.clear_all_chunks()
