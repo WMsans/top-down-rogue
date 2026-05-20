@@ -99,6 +99,14 @@ func _compute_pommel_offset(tex: Texture2D) -> Vector2:
 	return tex_size * 0.5 - pommel_pixel
 
 
+static func _is_inside_arc(origin: Vector2, target: Vector2, dir_angle: float, half_arc_angle: float, reach: float) -> bool:
+	var to_target := target - origin
+	var dist := to_target.length()
+	if dist > reach or dist <= 0.001:
+		return false
+	return absf(angle_difference(dir_angle, to_target.angle())) <= half_arc_angle
+
+
 func _use_impl(user: Node) -> void:
 	_current_user = user
 	var pos: Vector2 = user.global_position
@@ -127,30 +135,36 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		return
 	var dir_angle: float = direction.angle()
 	var half_arc_angle: float = arc_angle / 2.0
-	var targets: Array[Node] = []
-	targets.assign(user.get_tree().get_nodes_in_group("attackable"))
-	if user.is_in_group("attackable"):
-		targets.append_array(user.get_tree().get_nodes_in_group("player"))
-	for node in targets:
-		if node == user:
+
+	var space_state: PhysicsDirectSpaceState2D = user.get_world_2d().direct_space_state
+	var circle: CircleShape2D = CircleShape2D.new()
+	circle.radius = weapon_reach
+	var params: PhysicsShapeQueryParameters2D = PhysicsShapeQueryParameters2D.new()
+	params.shape = circle
+	params.transform = Transform2D(0.0, origin)
+	params.collision_mask = ATTACKABLE_HIT_LAYER
+	params.collide_with_areas = true
+	params.collide_with_bodies = true
+
+	var hits: Array = space_state.intersect_shape(params, 32)
+	for hit in hits:
+		var node: Node = hit.get("collider", null)
+		if node == null or node == user:
 			continue
 		if not (node is Node2D):
 			continue
 		if not node.has_method("on_hit_impact"):
 			continue
-		var to_target: Vector2 = node.global_position - origin
-		var dist: float = to_target.length()
-		if dist > weapon_reach or dist <= 0.001:
+		var node2d := node as Node2D
+		if not _is_inside_arc(origin, node2d.global_position, dir_angle, half_arc_angle, weapon_reach):
 			continue
-		if absf(angle_difference(dir_angle, to_target.angle())) > half_arc_angle:
-			continue
-		var hit_dir: Vector2 = to_target / dist
+		var hit_dir: Vector2 = (node2d.global_position - origin).normalized()
 		if node.has_method("try_parry"):
-			if node.try_parry(user, node.global_position, hit_dir):
+			if node.try_parry(user, node2d.global_position, hit_dir):
 				var tint: Color = trail_color if "trail_color" in self else Color(1, 1, 1, 1)
-				NailClashFX.play(node.global_position, -hit_dir, tint)
+				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
-		node.on_hit_impact(node.global_position, hit_dir, dmg)
+		node.on_hit_impact(node2d.global_position, hit_dir, dmg)
 
 
 func _tick_impl(_delta: float) -> void:
