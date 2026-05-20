@@ -15,6 +15,11 @@ var collider_pipeline: RID
 var collider_storage_buffer: RID
 var light_pack_shader: RID
 var light_pack_pipeline: RID
+var light_output_buffers: Array[RID] = [RID(), RID()]
+var light_write_index: int = 0
+var light_first_frame: bool = true
+# Manifest per buffer: flat PackedInt32Array of [chunk_x, chunk_y, slice_idx, ...]
+var light_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
 var dummy_texture: RID
 var render_shader: Shader
 var material_textures: Texture2DArray
@@ -37,6 +42,9 @@ const LIGHT_CELL_BYTES := 12
 const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 192
 const LIGHT_CELLS_X := 4
 const LIGHT_CELLS_Y := 4
+
+const LIGHT_MAX_ACTIVE_CHUNKS := 32
+const LIGHT_SHARED_BUFFER_SIZE := LIGHT_MAX_ACTIVE_CHUNKS * LIGHT_OUTPUT_SIZE  # 32 * 192 = 6144 bytes
 
 const PROBE_BUDGET := 256
 const PROBE_INPUT_BUFFER_SIZE := PROBE_BUDGET * 8
@@ -97,6 +105,19 @@ func init_dummy_texture() -> void:
 	data.resize(CHUNK_SIZE * CHUNK_SIZE * 4)
 	data.fill(0)
 	dummy_texture = rd.texture_create(tf, RDTextureView.new(), [data])
+
+
+func init_light_shared_buffers() -> void:
+	var zero := PackedByteArray()
+	zero.resize(LIGHT_SHARED_BUFFER_SIZE)
+	zero.fill(0)
+	for i in range(2):
+		light_output_buffers[i] = rd.storage_buffer_create(LIGHT_SHARED_BUFFER_SIZE)
+		rd.buffer_update(light_output_buffers[i], 0, LIGHT_SHARED_BUFFER_SIZE, zero)
+	light_write_index = 0
+	light_first_frame = true
+	light_dispatch_manifests[0] = PackedInt32Array()
+	light_dispatch_manifests[1] = PackedInt32Array()
 
 
 func init_collider_storage_buffer() -> void:
@@ -427,6 +448,10 @@ func free_resources() -> void:
 		if terrain_probe_output_buffers[i].is_valid():
 			rd.free_rid(terrain_probe_output_buffers[i])
 			terrain_probe_output_buffers[i] = RID()
+	for i in range(2):
+		if light_output_buffers[i].is_valid():
+			rd.free_rid(light_output_buffers[i])
+			light_output_buffers[i] = RID()
 	if terrain_probe_pipeline.is_valid():
 		rd.free_rid(terrain_probe_pipeline)
 		terrain_probe_pipeline = RID()
