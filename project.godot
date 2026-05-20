@@ -77,13 +77,13 @@ interact={
 ]
 }
 
-[physics]
-
-3d/physics_engine="Jolt Physics"
-
 [layer_names]
 
 2d_physics/layer_8="attackable_hit"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
 
 [rendering]
 

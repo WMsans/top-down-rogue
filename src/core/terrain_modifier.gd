@@ -387,7 +387,7 @@ func clear_and_push_materials_in_arc(
 		if mat_id >= 0 and mat_id < 32:
 			target_mask |= (1 << mat_id)
 
-	var uniform_sets := world_manager.compute_device.dispatch_melee_arc(
+	var uniform_sets: Array[RID] = world_manager.compute_device.dispatch_melee_arc(
 		world_manager.chunks, affected, origin, direction,
 		radius, inner_r, half_arc, push_speed, damage, target_mask
 	)
