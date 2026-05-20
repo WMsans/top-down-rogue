@@ -45,6 +45,8 @@ extends Weapon
 @export var trail_drift: float = 6.0
 @export var trail_scale_fade: float = 0.55
 
+const ATTACKABLE_HIT_LAYER := 1 << 7  # layer 8, zero-indexed bit 7
+
 enum Phase { NONE, PREP, ACTION, HOLD, RETURN }
 
 var _is_swinging: bool = false
