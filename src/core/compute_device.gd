@@ -38,14 +38,16 @@ const LIGHT_OUTPUT_SIZE := LIGHT_CELL_COUNT * LIGHT_CELL_BYTES  # 192
 const LIGHT_CELLS_X := 4
 const LIGHT_CELLS_Y := 4
 
-const PROBE_BUDGET := 64
+const PROBE_BUDGET := 256
 const PROBE_INPUT_BUFFER_SIZE := PROBE_BUDGET * 8
 const PROBE_OUTPUT_BUFFER_SIZE := PROBE_BUDGET * 4
 
 var terrain_probe_shader: RID
 var terrain_probe_pipeline: RID
-var terrain_probe_input_buffer: RID
-var terrain_probe_output_buffer: RID
+var terrain_probe_input_buffers: Array[RID] = [RID(), RID()]
+var terrain_probe_output_buffers: Array[RID] = [RID(), RID()]
+var terrain_probe_write_index: int = 0
+var terrain_probe_first_frame: bool = true
 
 
 func _init() -> void:
@@ -158,12 +160,12 @@ func init_terrain_probe() -> void:
 	var zero_in := PackedByteArray()
 	zero_in.resize(PROBE_INPUT_BUFFER_SIZE)
 	zero_in.fill(0)
-	terrain_probe_input_buffer = rd.storage_buffer_create(PROBE_INPUT_BUFFER_SIZE, zero_in)
-
 	var zero_out := PackedByteArray()
 	zero_out.resize(PROBE_OUTPUT_BUFFER_SIZE)
 	zero_out.fill(0)
-	terrain_probe_output_buffer = rd.storage_buffer_create(PROBE_OUTPUT_BUFFER_SIZE, zero_out)
+	for i in range(2):
+		terrain_probe_input_buffers[i] = rd.storage_buffer_create(PROBE_INPUT_BUFFER_SIZE, zero_in)
+		terrain_probe_output_buffers[i] = rd.storage_buffer_create(PROBE_OUTPUT_BUFFER_SIZE, zero_out)
 
 
 # template_arrays: Dictionary[int size_class → Texture2DArray]
@@ -307,12 +309,13 @@ func free_resources() -> void:
 	if light_pack_shader.is_valid():
 		rd.free_rid(light_pack_shader)
 		light_pack_shader = RID()
-	if terrain_probe_input_buffer.is_valid():
-		rd.free_rid(terrain_probe_input_buffer)
-		terrain_probe_input_buffer = RID()
-	if terrain_probe_output_buffer.is_valid():
-		rd.free_rid(terrain_probe_output_buffer)
-		terrain_probe_output_buffer = RID()
+	for i in range(2):
+		if terrain_probe_input_buffers[i].is_valid():
+			rd.free_rid(terrain_probe_input_buffers[i])
+			terrain_probe_input_buffers[i] = RID()
+		if terrain_probe_output_buffers[i].is_valid():
+			rd.free_rid(terrain_probe_output_buffers[i])
+			terrain_probe_output_buffers[i] = RID()
 	if terrain_probe_pipeline.is_valid():
 		rd.free_rid(terrain_probe_pipeline)
 		terrain_probe_pipeline = RID()
@@ -508,7 +511,7 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 	if batch.is_empty():
 		return []
 
-	rd.buffer_update(terrain_probe_input_buffer, 0, PROBE_INPUT_BUFFER_SIZE, packed_input)
+	rd.buffer_update(terrain_probe_input_buffers[terrain_probe_write_index], 0, PROBE_INPUT_BUFFER_SIZE, packed_input)
 
 	var compute_list := rd.compute_list_begin()
 	rd.compute_list_bind_compute_pipeline(compute_list, terrain_probe_pipeline)
@@ -532,12 +535,12 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 		var u_in := RDUniform.new()
 		u_in.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
 		u_in.binding = 1
-		u_in.add_id(terrain_probe_input_buffer)
+		u_in.add_id(terrain_probe_input_buffers[terrain_probe_write_index])
 
 		var u_out := RDUniform.new()
 		u_out.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
 		u_out.binding = 2
-		u_out.add_id(terrain_probe_output_buffer)
+		u_out.add_id(terrain_probe_output_buffers[terrain_probe_write_index])
 
 		var us := rd.uniform_set_create([u_tex, u_in, u_out], terrain_probe_shader, 0)
 		created_uniform_sets.append(us)
@@ -562,4 +565,11 @@ func dispatch_terrain_probe(chunks: Dictionary, batch: Array, packed_input: Pack
 func read_terrain_probe(byte_count: int) -> PackedByteArray:
 	if byte_count <= 0:
 		return PackedByteArray()
-	return rd.buffer_get_data(terrain_probe_output_buffer, 0, byte_count)
+	if terrain_probe_first_frame:
+		terrain_probe_first_frame = false
+		terrain_probe_write_index = 1 - terrain_probe_write_index
+		return PackedByteArray()
+	var read_index := 1 - terrain_probe_write_index
+	var result := rd.buffer_get_data(terrain_probe_output_buffers[read_index], 0, byte_count)
+	terrain_probe_write_index = 1 - terrain_probe_write_index
+	return result

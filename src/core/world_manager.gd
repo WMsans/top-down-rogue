@@ -139,20 +139,33 @@ func _run_simulation() -> void:
 func _run_terrain_probes() -> void:
 	if chunks.is_empty():
 		return
+
+	# First: read last frame's results from the GPU (no stall — GPU is one frame ahead).
+	var prev_batch: Array = terrain_physical._last_batch
+	var prev_total_count: int = terrain_physical._last_total_count
+	if prev_total_count > 0:
+		var raw := compute_device.read_terrain_probe(prev_total_count * 4)
+		terrain_physical.apply_probe_results(prev_batch, raw)
+	else:
+		# Still need to advance ring index on first-frame; harmless on subsequent empty frames.
+		compute_device.read_terrain_probe(0)
+
+	# Then: drain current pending and dispatch to be read next frame.
 	var batch := terrain_physical.prepare_probe_batch(ComputeDevice.PROBE_BUDGET)
 	if batch.is_empty():
+		terrain_physical.record_dispatched_batch([], 0)
 		return
 
 	var total_count: int = 0
 	for entry in batch:
 		total_count += int(entry["count"])
 	if total_count <= 0:
+		terrain_physical.record_dispatched_batch([], 0)
 		return
 
 	var packed_input := terrain_physical.pack_probe_input(batch, ComputeDevice.PROBE_BUDGET)
 	var probe_uniform_sets := compute_device.dispatch_terrain_probe(chunks, batch, packed_input)
-	var raw := compute_device.read_terrain_probe(total_count * 4)
-	terrain_physical.apply_probe_results(batch, raw)
+	terrain_physical.record_dispatched_batch(batch, total_count)
 
 	for us in probe_uniform_sets:
 		if us.is_valid():

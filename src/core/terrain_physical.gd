@@ -25,6 +25,9 @@ var _half_grid: int = 64
 ## Reference to WorldManager (provides .chunks for binning).
 var world_manager: Node2D = null
 
+var _last_batch: Array = []
+var _last_total_count: int = 0
+
 
 func query(world_pos: Vector2) -> TerrainCell:
 	var cell_pos := Vector2i(int(floor(world_pos.x)), int(floor(world_pos.y)))
@@ -163,6 +166,11 @@ func hazard_at(world_pos: Vector2, mask: int) -> bool:
 	var sy := local_y / SUB_CELL_SIZE
 	var idx := sy * SUB_CELLS_PER_ROW + sx
 	return (cells[idx] & mask) != 0
+
+
+func record_dispatched_batch(batch: Array, total_count: int) -> void:
+	_last_batch = batch
+	_last_total_count = total_count
 
 
 func _cell_from_material(mat_id: int) -> TerrainCell:
