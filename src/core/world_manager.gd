@@ -20,8 +20,6 @@ var _gen_uniform_sets_to_free: Array[RID] = []
 
 var _light_frame_counter := 0
 var _light_dispatch_buckets: Array[Array] = []   # 5 slots, each = Array[Vector2i]
-var _light_readback_counter := 0
-
 signal chunks_generated(new_coords: Array[Vector2i])
 
 func _ready() -> void:
@@ -39,6 +37,7 @@ func _ready() -> void:
 	compute_device.init_gen_biome_buffer()
 	compute_device.init_terrain_probe()
 	compute_device.init_melee_arc()
+	compute_device.init_light_shared_buffers()
 	# Bind biome buffer + template arrays from current biome
 	compute_device.upload_biome_buffer(LevelManager.current_biome)
 	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
@@ -356,14 +355,32 @@ func _update_lights() -> void:
 	if chunks.is_empty():
 		return
 
+	# --- Readback: consume the prior frame's coalesced output ---
+	var readback: Dictionary = compute_device.read_light_buffer_coalesced()
+	if not readback.is_empty():
+		var bytes: PackedByteArray = readback["bytes"]
+		var manifest: PackedInt32Array = readback["manifest"]
+		var slice_count := manifest.size() / 3
+		for s in range(slice_count):
+			var coord := Vector2i(manifest[s * 3], manifest[s * 3 + 1])
+			var slice_idx: int = manifest[s * 3 + 2]
+			var chunk: Chunk = chunks.get(coord, null)
+			if not chunk or not chunk.chunk_lights:
+				continue
+			var decoded := compute_device.decode_light_ssbo_slice(bytes, slice_idx)
+			if decoded.is_empty():
+				continue
+			chunk.chunk_lights.apply_light_data(decoded)
+			for j in range(min(decoded.size(), 16)):
+				chunk.hazard_cells[j] = int(decoded[j].get("hazard", 0))
+
+	# --- Dispatch: 1/5 of visible chunks each frame ---
 	_light_frame_counter = (_light_frame_counter + 1) % 5
 
-	# Convert chunk coord keys to array for bucketing
 	var active_coords: Array[Vector2i] = []
 	for coord in chunks:
 		active_coords.append(coord)
 
-	# --- Dispatch: 1/5 of visible chunks each frame ---
 	var bucket_idx := _light_frame_counter
 	_light_dispatch_buckets[bucket_idx].clear()
 
@@ -375,35 +392,6 @@ func _update_lights() -> void:
 			_light_dispatch_buckets[bucket_idx].append(active_coords[i])
 
 	compute_device.dispatch_light_pack(chunks, _light_dispatch_buckets[bucket_idx])
-
-	# --- Readback: drain from 4 older buckets (1/4 of each) ---
-	_light_readback_counter = (_light_readback_counter + 1) % 4
-
-	for age in range(1, 5):
-		var read_bucket := (_light_frame_counter + 5 - age) % 5
-		var pending: Array = _light_dispatch_buckets[read_bucket]
-		if pending.is_empty():
-			continue
-
-		var slice_size := maxi(1, ceili(float(pending.size()) / 4.0))
-		var slice_start := _light_readback_counter * slice_size
-		if slice_start < pending.size():
-			var slice_end := mini(slice_start + slice_size, pending.size())
-			for i in range(slice_start, slice_end):
-				var coord: Vector2i = pending[i]
-				var chunk: Chunk = chunks.get(coord, null)
-				if not chunk or not chunk.chunk_lights:
-					continue
-
-				var data := compute_device.read_light_buffer(chunk)
-				if data.size() == 0:
-					continue
-
-				var decoded := compute_device.decode_light_ssbo(data)
-				chunk.chunk_lights.apply_light_data(decoded)
-
-				for j in range(min(decoded.size(), 16)):
-					chunk.hazard_cells[j] = int(decoded[j].get("hazard", 0))
 
 func _drain_terrain_impacts() -> void:
 	var hits: Array = compute_device.drain_melee_hits()
@@ -425,7 +413,10 @@ func reset() -> void:
 	for i in range(5):
 		_light_dispatch_buckets[i] = []
 	_light_frame_counter = 0
-	_light_readback_counter = 0
+	compute_device.light_first_frame = true
+	compute_device.light_write_index = 0
+	compute_device.light_dispatch_manifests[0] = PackedInt32Array()
+	compute_device.light_dispatch_manifests[1] = PackedInt32Array()
 	tracking_position = Vector2.ZERO
 	compute_device.upload_biome_buffer(LevelManager.current_biome)
 	compute_device.bind_template_arrays(BiomeRegistry.get_template_arrays())
