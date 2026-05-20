@@ -396,4 +396,5 @@ func clear_and_push_materials_in_arc(
 			world_manager.compute_device.rd.free_rid(us)
 
 	var modified_rect := Rect2i(min_world, max_world - min_world + Vector2i.ONE)
-	world_manager.terrain_physical.invalidate_rect(modified_rect)
+	if terrain_physical:
+		terrain_physical.invalidate_rect(modified_rect)
