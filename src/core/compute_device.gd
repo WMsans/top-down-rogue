@@ -599,10 +599,8 @@ func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array) -> void:
 	rd.compute_list_end()
 
 
-func read_light_buffer(chunk: Chunk) -> PackedByteArray:
-	if not chunk.light_output_buffer.is_valid():
-		return PackedByteArray()
-	return rd.buffer_get_data(chunk.light_output_buffer, 0, LIGHT_OUTPUT_SIZE)
+func read_light_buffer(_chunk: Chunk) -> PackedByteArray:
+	return PackedByteArray()
 
 
 ## Decodes the light SSBO into an array of 16 dictionaries with position, energy, color, and hazard.
