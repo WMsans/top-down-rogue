@@ -573,7 +573,10 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 
 
 func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array) -> void:
+	var manifest: PackedInt32Array = PackedInt32Array()
+
 	if bucket_coords.is_empty():
+		light_dispatch_manifests[light_write_index] = manifest
 		return
 
 	var push_data := PackedByteArray()
@@ -583,24 +586,60 @@ func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array) -> void:
 	var compute_list := rd.compute_list_begin()
 	rd.compute_list_bind_compute_pipeline(compute_list, light_pack_pipeline)
 
+	var slice_idx := 0
 	for coord in bucket_coords:
+		if slice_idx >= LIGHT_MAX_ACTIVE_CHUNKS:
+			push_warning("light_pack: bucket exceeds LIGHT_MAX_ACTIVE_CHUNKS, dropping extras")
+			break
 		var chunk: Chunk = chunks.get(coord, null)
-		if not chunk or not chunk.light_pack_uniform_set.is_valid():
+		if chunk == null:
+			continue
+		var us: RID = chunk.light_pack_uniform_sets[light_write_index]
+		if not us.is_valid():
 			continue
 
-		rd.compute_list_bind_uniform_set(compute_list, chunk.light_pack_uniform_set, 0)
+		rd.compute_list_bind_uniform_set(compute_list, us, 0)
 
 		push_data.encode_s32(0, coord.x)
 		push_data.encode_s32(4, coord.y)
+		push_data.encode_u32(8, slice_idx)
+		push_data.encode_u32(12, 0)
 		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
 
 		rd.compute_list_dispatch(compute_list, LIGHT_CELLS_X, LIGHT_CELLS_Y, 1)
 
+		manifest.append(coord.x)
+		manifest.append(coord.y)
+		manifest.append(slice_idx)
+		slice_idx += 1
+
 	rd.compute_list_end()
 
+	light_dispatch_manifests[light_write_index] = manifest
 
-func read_light_buffer(_chunk: Chunk) -> PackedByteArray:
-	return PackedByteArray()
+
+func read_light_buffer_coalesced() -> Dictionary:
+	if light_first_frame:
+		light_first_frame = false
+		light_write_index = 1 - light_write_index
+		return {}
+
+	var read_index := 1 - light_write_index
+	var manifest: PackedInt32Array = light_dispatch_manifests[read_index]
+	if manifest.is_empty():
+		light_write_index = 1 - light_write_index
+		return {}
+
+	var slice_count := manifest.size() / 3
+	var byte_count := slice_count * LIGHT_OUTPUT_SIZE
+	var bytes := rd.buffer_get_data(light_output_buffers[read_index], 0, byte_count)
+
+	light_write_index = 1 - light_write_index
+
+	return {
+		"bytes": bytes,
+		"manifest": manifest,
+	}
 
 
 ## Decodes the light SSBO into an array of 16 dictionaries with position, energy, color, and hazard.
@@ -629,6 +668,43 @@ func decode_light_ssbo(data: PackedByteArray) -> Array[Dictionary]:
 			var avg_glow := float(avg_glow_raw) / 1000.0
 			var coverage := clampf(float(pixel_count) / 32.0, 0.0, 1.0)
 			energy = coverage * (avg_glow / 20.0)  # MAX_GLOW = 20.0
+			pos = Vector2(float(avg_x), float(avg_y))
+
+		result[cell_idx] = {
+			"position": pos,
+			"energy": energy,
+			"color": Color(1.0, 0.5, 0.15, 1.0),
+			"hazard": int(hazard_mask),
+		}
+
+	return result
+
+
+func decode_light_ssbo_slice(data: PackedByteArray, slice_idx: int) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var slice_off := slice_idx * LIGHT_OUTPUT_SIZE
+	if data.size() < slice_off + LIGHT_OUTPUT_SIZE:
+		return result
+	result.resize(LIGHT_CELL_COUNT)
+
+	for cell_idx in range(LIGHT_CELL_COUNT):
+		var off := slice_off + cell_idx * LIGHT_CELL_BYTES
+		var packed_count_glow := data.decode_u32(off)
+		var packed_pos := data.decode_u32(off + 4)
+		var hazard_mask := data.decode_u32(off + 8)
+
+		var pixel_count := packed_count_glow & 0xFFFF
+		var avg_glow_raw := (packed_count_glow >> 16) & 0xFFFF
+		var avg_x := packed_pos & 0xFFFF
+		var avg_y := (packed_pos >> 16) & 0xFFFF
+
+		var energy := 0.0
+		var pos := Vector2.ZERO
+
+		if pixel_count >= 4:
+			var avg_glow := float(avg_glow_raw) / 1000.0
+			var coverage := clampf(float(pixel_count) / 32.0, 0.0, 1.0)
+			energy = coverage * (avg_glow / 20.0)
 			pos = Vector2(float(avg_x), float(avg_y))
 
 		result[cell_idx] = {
