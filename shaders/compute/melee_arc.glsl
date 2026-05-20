@@ -32,6 +32,8 @@ layout(push_constant, std430) uniform PushConstants {
 	uint target_mask_low;
 	uint hit_capacity;
 	uint _pad0;
+	uint _pad1;
+	uint _pad2;
 } pc;
 
 bool is_target(uint mat_id) {
@@ -71,10 +73,6 @@ void main() {
 	bool do_clear = dist_sq < pc.inner_radius * pc.inner_radius;
 	bool is_solid_pass = pc.damage >= 0.0;
 
-	if (!do_clear) {
-		return;
-	}
-
 	if (is_solid_pass) {
 		float hardness = hardness_for(mat);
 		float scale_clamped = clamp(pc.damage / (pc.damage + hardness), 0.1, 1.0);
@@ -90,7 +88,16 @@ void main() {
 			hit_list.entries[idx].mat_id = mat;
 			hit_list.entries[idx].scale = scale_clamped;
 		}
-	} else {
+	} else if (do_clear) {
 		imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
+	} else {
+		float dist = sqrt(dist_sq);
+		vec2 push_dir = (dist > 0.0001) ? to_pixel / dist : pc.direction;
+		float vx_f = push_dir.x * pc.push_speed / 60.0;
+		float vy_f = push_dir.y * pc.push_speed / 60.0;
+		int vx_enc = clamp(int(round(vx_f)) + 8, 0, 15);
+		int vy_enc = clamp(int(round(vy_f)) + 8, 0, 15);
+		float packed = float((vx_enc << 4) | vy_enc) / 255.0;
+		imageStore(chunk_tex, local, vec4(pix.r, pix.g, pix.b, packed));
 	}
 }
