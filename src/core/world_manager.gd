@@ -27,6 +27,7 @@ func _ready() -> void:
 	rd = RenderingServer.get_rendering_device()
 
 	compute_device = ComputeDevice.new()
+	compute_device.world_manager = self
 	compute_device.init_shaders()
 	compute_device.init_dummy_texture()
 	compute_device.init_collider_storage_buffer()
