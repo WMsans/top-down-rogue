@@ -5,6 +5,7 @@ const CHUNK_SIZE := 256
 const WORKGROUP_SIZE := 8
 const NUM_WORKGROUPS := CHUNK_SIZE / WORKGROUP_SIZE
 
+var world_manager = null
 var rd: RenderingDevice
 var gen_shader: RID
 var gen_pipeline: RID
@@ -371,6 +372,11 @@ func dispatch_melee_arc(chunks: Dictionary, affected_chunk_coords: Array[Vector2
 		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 
 	rd.compute_list_end()
+
+	if world_manager:
+		for coord in affected_chunk_coords:
+			world_manager.mark_terrain_dirty(coord)
+
 	return created
 
 
@@ -544,6 +550,10 @@ func dispatch_generation(
 		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 	rd.compute_list_end()
 
+	if world_manager:
+		for coord in new_coords:
+			world_manager.mark_terrain_dirty(coord)
+
 	return created_uniform_sets
 
 
@@ -584,6 +594,10 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 
 	rd.compute_list_end()
+
+	if world_manager:
+		for coord in chunks:
+			world_manager.mark_terrain_dirty(coord)
 
 	if shadow_grid:
 		var grid_rect: Rect2i = shadow_grid.get_world_rect()
