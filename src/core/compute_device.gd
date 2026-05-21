@@ -640,6 +640,55 @@ func dispatch_light_pack(chunks: Dictionary, bucket_coords: Array) -> void:
 	light_dispatch_manifests[light_write_index] = manifest
 
 
+func dispatch_collider_pack(chunks: Dictionary, coords: Array) -> void:
+	var manifest := PackedInt32Array()
+
+	if coords.is_empty():
+		collider_dispatch_manifests[collider_write_index] = manifest
+		return
+
+	# Zero all slot headers in the write buffer (one u32 per slot).
+	var header_clear := PackedByteArray()
+	header_clear.resize(4)
+	header_clear.encode_u32(0, 0)
+	for slot in range(COLLIDER_MAX_DISPATCH_PER_FRAME):
+		var slot_offset := slot * COLLIDER_SLOT_STRIDE_BYTES
+		rd.buffer_update(collider_output_buffers[collider_write_index], slot_offset, 4, header_clear)
+
+	var push_data := PackedByteArray()
+	push_data.resize(16)
+	push_data.fill(0)
+
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, collider_pipeline)
+
+	var slot_idx := 0
+	for coord in coords:
+		if slot_idx >= COLLIDER_MAX_DISPATCH_PER_FRAME:
+			push_warning("collider_pack: dispatch list exceeds COLLIDER_MAX_DISPATCH_PER_FRAME, dropping extras")
+			break
+		var chunk: Chunk = chunks.get(coord, null)
+		if chunk == null:
+			continue
+		var us: RID = chunk.collider_uniform_sets[collider_write_index]
+		if not us.is_valid():
+			continue
+
+		rd.compute_list_bind_uniform_set(compute_list, us, 0)
+		push_data.encode_u32(0, slot_idx)
+		rd.compute_list_set_push_constant(compute_list, push_data, push_data.size())
+		rd.compute_list_dispatch(compute_list, 16, 16, 1)
+
+		manifest.append(coord.x)
+		manifest.append(coord.y)
+		manifest.append(slot_idx)
+		slot_idx += 1
+
+	rd.compute_list_end()
+
+	collider_dispatch_manifests[collider_write_index] = manifest
+
+
 func read_light_buffer_coalesced() -> Dictionary:
 	if light_first_frame:
 		light_first_frame = false
