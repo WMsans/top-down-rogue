@@ -384,4 +384,7 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2
 	rebuild_sim_uniform_sets(new_chunks, [])
 	update_render_neighbors(new_chunks, [])
 
+	for coord in new_chunks:
+		world_manager.mark_terrain_dirty(coord)
+
 	return new_chunks
