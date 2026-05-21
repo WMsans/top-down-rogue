@@ -689,6 +689,59 @@ func dispatch_collider_pack(chunks: Dictionary, coords: Array) -> void:
 	collider_dispatch_manifests[collider_write_index] = manifest
 
 
+func read_collider_buffer_coalesced() -> Dictionary:
+	if collider_first_frame:
+		collider_first_frame = false
+		collider_write_index = 1 - collider_write_index
+		return {}
+
+	var read_index := 1 - collider_write_index
+	var manifest: PackedInt32Array = collider_dispatch_manifests[read_index]
+	if manifest.is_empty():
+		collider_write_index = 1 - collider_write_index
+		return {}
+
+	var entry_count := manifest.size() / 3
+	var bytes_needed := entry_count * COLLIDER_SLOT_STRIDE_BYTES
+	if entry_count == COLLIDER_MAX_DISPATCH_PER_FRAME:
+		bytes_needed = COLLIDER_COALESCED_BUFFER_SIZE
+	var data: PackedByteArray = rd.buffer_get_data(collider_output_buffers[read_index], 0, bytes_needed)
+
+	collider_write_index = 1 - collider_write_index
+
+	var result: Dictionary = {}
+	for i in range(entry_count):
+		var cx := manifest[i * 3]
+		var cy := manifest[i * 3 + 1]
+		var slot := manifest[i * 3 + 2]
+		var coord := Vector2i(cx, cy)
+		result[coord] = decode_collider_slice(data, slot)
+	return result
+
+
+func decode_collider_slice(data: PackedByteArray, slot: int) -> PackedVector2Array:
+	var segments := PackedVector2Array()
+	var slot_offset := slot * COLLIDER_SLOT_STRIDE_BYTES
+	if slot_offset + 4 > data.size():
+		return segments
+	var count: int = data.decode_u32(slot_offset)
+	if count == 0:
+		return segments
+	count = mini(count, COLLIDER_MAX_SEGMENTS_PER_SLOT)
+	var seg_base := slot_offset + 4
+	for i in range(count):
+		var off := seg_base + i * 16
+		if off + 16 > data.size():
+			break
+		var x1 := float(data.decode_u32(off))
+		var y1 := float(data.decode_u32(off + 4))
+		var x2 := float(data.decode_u32(off + 8))
+		var y2 := float(data.decode_u32(off + 12))
+		segments.append(Vector2(x1, y1))
+		segments.append(Vector2(x2, y2))
+	return segments
+
+
 func read_light_buffer_coalesced() -> Dictionary:
 	if light_first_frame:
 		light_first_frame = false
