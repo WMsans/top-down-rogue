@@ -51,6 +51,10 @@ func _ready() -> void:
 	_collision_helper = TerrainCollisionHelper.new()
 	_collision_helper.world_manager = self
 
+func mark_terrain_dirty(coord: Vector2i) -> void:
+	if _collision_helper != null:
+		_collision_helper.mark_dirty(coord)
+
 	terrain_modifier = TerrainModifier.new(self)
 	terrain_modifier.terrain_physical = terrain_physical
 
