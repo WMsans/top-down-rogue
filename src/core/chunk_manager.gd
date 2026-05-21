@@ -127,6 +127,8 @@ func create_chunk(coord: Vector2i) -> void:
 
 func unload_chunk(coord: Vector2i) -> void:
 	var chunk: Chunk = world_manager.chunks[coord]
+	if world_manager._collision_helper != null:
+		world_manager._collision_helper.on_chunk_unloaded(coord)
 	free_chunk_resources(chunk)
 	world_manager.chunks.erase(coord)
 
