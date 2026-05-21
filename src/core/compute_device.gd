@@ -20,6 +20,11 @@ var light_write_index: int = 0
 var light_first_frame: bool = true
 # Manifest per buffer: flat PackedInt32Array of [chunk_x, chunk_y, slice_idx, ...]
 var light_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
+var collider_output_buffers: Array[RID] = [RID(), RID()]
+var collider_write_index: int = 0
+var collider_first_frame: bool = true
+# Manifest entries are [coord.x, coord.y, slot_index] triples; one per dispatched chunk.
+var collider_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
 var dummy_texture: RID
 var render_shader: Shader
 var material_textures: Texture2DArray
@@ -45,6 +50,11 @@ const LIGHT_CELLS_Y := 4
 
 const LIGHT_MAX_ACTIVE_CHUNKS := 32
 const LIGHT_SHARED_BUFFER_SIZE := LIGHT_MAX_ACTIVE_CHUNKS * LIGHT_OUTPUT_SIZE  # 32 * 192 = 6144 bytes
+
+const COLLIDER_MAX_DISPATCH_PER_FRAME := 4
+const COLLIDER_MAX_SEGMENTS_PER_SLOT := 4096
+const COLLIDER_SLOT_STRIDE_BYTES := 4 + COLLIDER_MAX_SEGMENTS_PER_SLOT * 4 * 4
+const COLLIDER_COALESCED_BUFFER_SIZE := COLLIDER_MAX_DISPATCH_PER_FRAME * COLLIDER_SLOT_STRIDE_BYTES
 
 const PROBE_BUDGET := 256
 const PROBE_INPUT_BUFFER_SIZE := PROBE_BUDGET * 8
@@ -121,10 +131,18 @@ func init_light_shared_buffers() -> void:
 
 
 func init_collider_storage_buffer() -> void:
-	var max_segments := 4096
-	var max_vertices := max_segments * 4
-	var buffer_size := 4 + max_vertices * 4
-	collider_storage_buffer = rd.storage_buffer_create(buffer_size)
+	var zero := PackedByteArray()
+	zero.resize(COLLIDER_COALESCED_BUFFER_SIZE)
+	zero.fill(0)
+	for i in range(2):
+		collider_output_buffers[i] = rd.storage_buffer_create(COLLIDER_COALESCED_BUFFER_SIZE)
+		rd.buffer_update(collider_output_buffers[i], 0, COLLIDER_COALESCED_BUFFER_SIZE, zero)
+	collider_write_index = 0
+	collider_first_frame = true
+	collider_dispatch_manifests[0] = PackedInt32Array()
+	collider_dispatch_manifests[1] = PackedInt32Array()
+	# Legacy single buffer retained for any in-flight CPU fallback path; keep as zero RID.
+	collider_storage_buffer = RID()
 
 
 func init_material_textures() -> void:
@@ -407,6 +425,10 @@ func free_resources() -> void:
 	if collider_storage_buffer.is_valid():
 		rd.free_rid(collider_storage_buffer)
 		collider_storage_buffer = RID()
+	for i in range(2):
+		if collider_output_buffers[i].is_valid():
+			rd.free_rid(collider_output_buffers[i])
+			collider_output_buffers[i] = RID()
 	if gen_pipeline.is_valid():
 		rd.free_rid(gen_pipeline)
 		gen_pipeline = RID()
