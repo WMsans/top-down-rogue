@@ -12,6 +12,8 @@ var static_body: StaticBody2D
 var occluder_instances: Array[LightOccluder2D] = []
 
 var light_pack_uniform_sets: Array[RID] = [RID(), RID()]
+# Two persistent uniform sets — one per write-buffer parity, binding rd_texture + collider_output_buffer.
+var collider_uniform_sets: Array[RID] = [RID(), RID()]
 var chunk_lights  # ChunkLights (Node2D)
 
 var hazard_cells: PackedInt32Array = PackedInt32Array()
