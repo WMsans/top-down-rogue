@@ -7,14 +7,24 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(rgba8, set = 0, binding = 0) uniform readonly image2D terrain_texture;
 layout(std430, binding = 1) buffer SegmentBuffer {
-	uint count;
 	uint data[];
 } segment_buffer;
+
+layout(push_constant, std430) uniform Params {
+	uint slot_index;
+	uint _pad0;
+	uint _pad1;
+	uint _pad2;
+} pc;
 
 const uint CELL_SIZE = 2u;
 const uint CHUNK_SIZE = 256u;
 const uint CELLS_PER_SIDE = CHUNK_SIZE / CELL_SIZE;
 const uint MAX_SEGMENTS = 4096u;
+
+// Slot layout: 1 u32 header (segment count) + MAX_SEGMENTS * 4 u32 of segment data.
+// data[] is shared across slots; each slot starts at slot_base.
+const uint SLOT_STRIDE_U32 = 1u + MAX_SEGMENTS * 4u;
 
 void main() {
 	uint cell_x = gl_GlobalInvocationID.x;
@@ -151,15 +161,19 @@ void main() {
 			break;
 	}
 
-	// Atomically reserve space in the buffer and write segments
+	uint slot_base = pc.slot_index * SLOT_STRIDE_U32;
+	uint segments_base = slot_base + 1u;
+	uint cap_u32 = MAX_SEGMENTS * 4u;
+
 	for (uint s = 0u; s < num_segments; s++) {
-		uint idx = atomicAdd(segment_buffer.count, 4u);
-		if (idx + 4u > MAX_SEGMENTS * 4u) {
+		uint segment_idx = atomicAdd(segment_buffer.data[slot_base], 1u);
+		uint write_off = segment_idx * 4u;
+		if (write_off + 4u > cap_u32) {
 			return;
 		}
-		segment_buffer.data[idx + 0] = segments[s * 4 + 0];
-		segment_buffer.data[idx + 1] = segments[s * 4 + 1];
-		segment_buffer.data[idx + 2] = segments[s * 4 + 2];
-		segment_buffer.data[idx + 3] = segments[s * 4 + 3];
+		segment_buffer.data[segments_base + write_off + 0u] = segments[s * 4 + 0];
+		segment_buffer.data[segments_base + write_off + 1u] = segments[s * 4 + 1];
+		segment_buffer.data[segments_base + write_off + 2u] = segments[s * 4 + 2];
+		segment_buffer.data[segments_base + write_off + 3u] = segments[s * 4 + 3];
 	}
 }
