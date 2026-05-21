@@ -48,6 +48,7 @@ func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector
 			modified = true
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
 
 	if terrain_physical:
 		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
@@ -87,6 +88,7 @@ func place_lava(world_pos: Vector2, radius: float) -> void:
 			modified = true
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
 
 	if terrain_physical:
 		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
@@ -156,6 +158,7 @@ func place_blood(world_pos: Vector2, radius: float, outward_speed: float, bias_d
 			modified = true
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
 
 	if terrain_physical:
 		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
@@ -219,6 +222,7 @@ func place_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 			modified = true
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
 
 	if terrain_physical:
 		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
@@ -258,6 +262,7 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 			modified = true
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
 
 	if terrain_physical:
 		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
@@ -344,6 +349,7 @@ func disperse_materials_in_arc(
 
 		if modified:
 			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
 
 	if terrain_physical:
 		var affected_rect := Rect2i(origin_int.x - r_int, origin_int.y - r_int, r_int * 2 + 1, r_int * 2 + 1)
