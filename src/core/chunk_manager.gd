@@ -122,6 +122,7 @@ func create_chunk(coord: Vector2i) -> void:
 	chunks[coord] = chunk
 
 	build_light_pack_uniform_set(chunk)
+	build_collider_uniform_sets(chunk)
 
 
 func unload_chunk(coord: Vector2i) -> void:
@@ -138,6 +139,10 @@ func free_chunk_uniform_sets(chunk: Chunk) -> void:
 		if chunk.light_pack_uniform_sets[i].is_valid():
 			world_manager.rd.free_rid(chunk.light_pack_uniform_sets[i])
 			chunk.light_pack_uniform_sets[i] = RID()
+	for i in range(2):
+		if chunk.collider_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.collider_uniform_sets[i])
+			chunk.collider_uniform_sets[i] = RID()
 
 
 func free_chunk_body(chunk: Chunk) -> void:
@@ -248,6 +253,28 @@ func build_light_pack_uniform_set(chunk: Chunk) -> void:
 
 		var uniforms: Array[RDUniform] = [u0, u1]
 		chunk.light_pack_uniform_sets[i] = world_manager.rd.uniform_set_create(uniforms, compute.light_pack_shader, 0)
+
+
+func build_collider_uniform_sets(chunk: Chunk) -> void:
+	var compute: ComputeDevice = world_manager.compute_device
+	for i in range(2):
+		if chunk.collider_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.collider_uniform_sets[i])
+			chunk.collider_uniform_sets[i] = RID()
+		if not compute.collider_output_buffers[i].is_valid():
+			continue
+		var uniforms: Array[RDUniform] = []
+		var u0 := RDUniform.new()
+		u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u0.binding = 0
+		u0.add_id(chunk.rd_texture)
+		uniforms.append(u0)
+		var u1 := RDUniform.new()
+		u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u1.binding = 1
+		u1.add_id(compute.collider_output_buffers[i])
+		uniforms.append(u1)
+		chunk.collider_uniform_sets[i] = world_manager.rd.uniform_set_create(uniforms, compute.collider_shader, 0)
 
 
 func update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
