@@ -88,3 +88,14 @@ func _spawn_hazards() -> void:
 		var offset := Vector2(randf_range(-80, 80), randf_range(-80, 80))
 		var pos := global_position + offset
 		TerrainSurface.place_lava(pos, 4.0)
+
+
+func _roll_weapon_modifier() -> void:
+	pass
+
+
+func _spawn_drops() -> void:
+	if drop_table:
+		drop_table.resolve(global_position, get_parent())
+	if weapon:
+		_spawn_weapon_drop()
