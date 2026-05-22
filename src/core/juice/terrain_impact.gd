@@ -34,6 +34,9 @@ func play_impact(world_pos: Vector2, material_id: int, intensity: float) -> void
 		return
 	var color: Color = data.get("particle_color", Color(0.5, 0.5, 0.5))
 	var count: int = maxi(1, int(data.get("particle_count", 6) * intensity))
+	# One parallel tween per impact instead of one per particle — avoids
+	# allocating N Tween objects when bursting many impacts in a frame.
+	var tween := create_tween().set_parallel(true)
 	for _i in range(count):
 		var particle := ColorRect.new()
 		particle.color = color
@@ -41,8 +44,8 @@ func play_impact(world_pos: Vector2, material_id: int, intensity: float) -> void
 		particle.position = world_pos + Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))
 		particle.z_index = 100
 		add_child(particle)
-		var tween := create_tween()
 		var target_pos := particle.position + Vector2(randf_range(-20.0, 20.0), randf_range(-20.0, 20.0))
-		tween.tween_property(particle, "position", target_pos, randf_range(0.15, 0.35))
-		tween.parallel().tween_property(particle, "modulate:a", 0.0, randf_range(0.15, 0.35))
-		tween.tween_callback(particle.queue_free)
+		var dur := randf_range(0.15, 0.35)
+		tween.tween_property(particle, "position", target_pos, dur)
+		tween.tween_property(particle, "modulate:a", 0.0, dur)
+		tween.tween_callback(particle.queue_free).set_delay(dur)
