@@ -83,13 +83,29 @@ func populate(icon_texture: Texture2D, card_name: String, stats: Array[String] =
 	if modifier_icons.size() > 0:
 		_modifier_slots.show()
 		for mod_tex in modifier_icons:
-			var slot := TextureRect.new()
-			slot.custom_minimum_size = mod_icon_size
-			slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			slot.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			if mod_tex:
+				var slot := TextureRect.new()
+				slot.custom_minimum_size = mod_icon_size
+				slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				slot.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				slot.texture = mod_tex
-			_modifier_slots.add_child(slot)
+				_modifier_slots.add_child(slot)
+			else:
+				var empty_slot := PanelContainer.new()
+				empty_slot.custom_minimum_size = mod_icon_size
+				var style := StyleBoxFlat.new()
+				style.bg_color = Color(0.165, 0.082, 0.098, 1)
+				style.border_width_left = 1
+				style.border_width_right = 1
+				style.border_width_top = 1
+				style.border_width_bottom = 1
+				style.border_color = Color(0.4, 0.18, 0.14, 1)
+				style.corner_radius_top_left = 4
+				style.corner_radius_top_right = 4
+				style.corner_radius_bottom_right = 4
+				style.corner_radius_bottom_left = 4
+				empty_slot.add_theme_stylebox_override("panel", style)
+				_modifier_slots.add_child(empty_slot)
 	else:
 		_modifier_slots.hide()
 
