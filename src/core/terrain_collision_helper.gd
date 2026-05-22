@@ -11,6 +11,7 @@ var _in_flight: Array = []                     # Array[Vector2i] dispatched last
 var _pending_collision_builds: Array = []      # Array[Vector2i] ready to build shapes
 var _pending_occluder_builds: Array = []       # Array[Vector2i] ready to build occluders
 var _pending_segments: Dictionary = {}         # Vector2i -> PackedVector2Array
+var _last_seg_hash: Dictionary = {}            # Vector2i -> int (hash of last built segments)
 var _dispatch_cursor: int = 0
 
 
@@ -24,6 +25,7 @@ func on_chunk_unloaded(coord: Vector2i) -> void:
 	_pending_collision_builds.erase(coord)
 	_pending_occluder_builds.erase(coord)
 	_pending_segments.erase(coord)
+	_last_seg_hash.erase(coord)
 
 
 func rebuild_dirty(chunks: Dictionary, _delta: float) -> void:
@@ -33,8 +35,8 @@ func rebuild_dirty(chunks: Dictionary, _delta: float) -> void:
 	# 2. Amortize: drain one occluder build per frame.
 	_drain_one_occluder(chunks)
 
-	# 3. Drain all pending collision shape builds.
-	_drain_collision_builds(chunks)
+	# 3. Amortize: drain one collision shape build per frame.
+	_drain_one_collision(chunks)
 
 	# 4. Dispatch up to MAX_DISPATCH_PER_FRAME newly-selected dirty chunks.
 	_dispatch_next_batch(chunks)
@@ -48,6 +50,14 @@ func _consume_readback(chunks: Dictionary) -> void:
 		if not chunks.has(coord):
 			continue
 		var segments: PackedVector2Array = readback[coord]
+		# If segments are byte-identical to what we already built, the shape
+		# and occluders are unchanged — skip the rebuild. This is the common
+		# case for chunks marked dirty by GPU writes that didn't actually
+		# alter the collision boundary.
+		var seg_hash: int = hash(segments)
+		if _last_seg_hash.get(coord, -1) == seg_hash:
+			continue
+		_last_seg_hash[coord] = seg_hash
 		_pending_segments[coord] = segments
 		_pending_collision_builds.append(coord)
 		_pending_occluder_builds.append(coord)
@@ -76,15 +86,19 @@ func _dispatch_next_batch(chunks: Dictionary) -> void:
 	_in_flight = coords
 
 
-func _drain_collision_builds(chunks: Dictionary) -> void:
-	for coord in _pending_collision_builds:
+func _drain_one_collision(chunks: Dictionary) -> void:
+	while not _pending_collision_builds.is_empty():
+		var coord: Vector2i = _pending_collision_builds[0]
+		_pending_collision_builds.remove_at(0)
 		if not chunks.has(coord):
-			_pending_segments.erase(coord)
 			continue
 		var chunk: Chunk = chunks[coord]
 		var segments: PackedVector2Array = _pending_segments.get(coord, PackedVector2Array())
 		_build_collision_shape(chunk, segments)
-	_pending_collision_builds.clear()
+		# Clear segments only after both queues consumed.
+		if not _pending_occluder_builds.has(coord):
+			_pending_segments.erase(coord)
+		return  # Only one per frame.
 
 
 func _drain_one_occluder(chunks: Dictionary) -> void:

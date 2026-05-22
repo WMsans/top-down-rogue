@@ -126,11 +126,23 @@ func create_chunk(coord: Vector2i) -> void:
 
 
 func unload_chunk(coord: Vector2i) -> void:
-	var chunk: Chunk = world_manager.chunks[coord]
+	var chunks: Dictionary = world_manager.chunks
+	var chunk: Chunk = chunks[coord]
 	if world_manager._collision_helper != null:
 		world_manager._collision_helper.on_chunk_unloaded(coord)
-	free_chunk_resources(chunk)
-	world_manager.chunks.erase(coord)
+	# Free our own uniform sets first, while our textures are still alive.
+	free_chunk_uniform_sets(chunk)
+	# Neighbors' sim_uniform_sets reference our rd_texture. Freeing the
+	# texture below auto-invalidates those uniform sets inside the RD, but
+	# their RIDs still pass is_valid(). Clear them now so we never call
+	# free_rid on a dangling handle (the source of the "Attempted to free
+	# invalid ID" error spam).
+	for offset in NEIGHBOR_OFFSETS:
+		var n_coord: Vector2i = coord + offset
+		if chunks.has(n_coord):
+			chunks[n_coord].sim_uniform_set = RID()
+	free_chunk_body(chunk)
+	chunks.erase(coord)
 
 
 func free_chunk_uniform_sets(chunk: Chunk) -> void:

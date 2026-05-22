@@ -398,9 +398,15 @@ func _update_lights() -> void:
 
 	compute_device.dispatch_light_pack(chunks, _light_dispatch_buckets[bucket_idx])
 
+const MAX_IMPACTS_PER_FRAME := 16
+
 func _drain_terrain_impacts() -> void:
 	var hits: Array = compute_device.drain_melee_hits()
-	for hit in hits:
+	# Cap impacts per frame; bursts of 60+ swamped the main thread with
+	# tween/node allocations. Excess hits are dropped (visual only).
+	var to_play: int = mini(hits.size(), MAX_IMPACTS_PER_FRAME)
+	for i in range(to_play):
+		var hit = hits[i]
 		TerrainImpact.play_impact(hit["world_pos"], hit["material_id"], hit["scale"])
 
 
