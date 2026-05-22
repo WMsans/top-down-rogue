@@ -36,7 +36,7 @@ class DropEntry:
 		return DropEntry.new(DropKind.SCENE, p_weight, p_min, p_max, 0, ItemTier.COMMON, p_packed_scene)
 
 const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
-const WEAPON_DROP_SCENE := preload("res://scenes/weapon_drop.tscn")
+
 const MODIFIER_DROP_SCENE := preload("res://scenes/modifier_drop.tscn")
 
 const _TIER_GOLD_MIN: Dictionary = {EnemyTier.EASY: 2, EnemyTier.NORMAL: 4, EnemyTier.HARD: 8}
@@ -57,14 +57,10 @@ func add_entry(entry: DropEntry) -> void:
 	entries.append(entry)
 
 
-static func from_enemy_tier(tier: int, drops_gold: bool = true, drops_weapon: bool = true, drops_modifier: bool = true) -> DropTable:
+static func from_enemy_tier(tier: int, drops_gold: bool = true, _drops_weapon: bool = true, _drops_modifier: bool = true) -> DropTable:
 	var table := DropTable.new()
 	if drops_gold:
 		table.add_entry(DropEntry.gold(1.0, _TIER_GOLD_MIN[tier], _TIER_GOLD_MAX[tier], _TIER_GOLD_PER_DROP[tier]))
-	if drops_weapon:
-		table.add_entry(DropEntry.weapon_pool(_TIER_WEAPON_WEIGHT[tier], tier))
-	if drops_modifier:
-		table.add_entry(DropEntry.modifier_pool(_TIER_MODIFIER_WEIGHT[tier], tier))
 	return table
 
 
@@ -101,8 +97,6 @@ func resolve(position: Vector2, parent: Node) -> void:
 			match entry.kind:
 				DropKind.GOLD:
 					_resolve_gold(position, parent, entry)
-				DropKind.WEAPON_POOL:
-					_resolve_weapon_pool(position, parent, entry)
 				DropKind.MODIFIER_POOL:
 					_resolve_modifier_pool(position, parent, entry)
 				DropKind.SCENE:
@@ -117,17 +111,6 @@ func _resolve_gold(position: Vector2, parent: Node, entry: DropEntry) -> void:
 	parent.add_child(drop)
 	drop.global_position = position + offset
 
-
-func _resolve_weapon_pool(position: Vector2, parent: Node, entry: DropEntry) -> void:
-	var tier := resolve_item_tier(entry.item_tier)
-	var weapon := WeaponRegistry.get_random_weapon(tier)
-	if weapon == null:
-		return
-	var drop: Node = WEAPON_DROP_SCENE.instantiate()
-	drop.weapon = weapon
-	var offset := Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))
-	parent.add_child(drop)
-	drop.global_position = position + offset
 
 
 func _resolve_modifier_pool(position: Vector2, parent: Node, entry: DropEntry) -> void:
