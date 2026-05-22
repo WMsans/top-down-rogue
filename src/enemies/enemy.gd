@@ -105,6 +105,7 @@ func _ready() -> void:
 	add_child(_exclaim_label)
 
 	_setup_weapon_visual.call_deferred()
+	_roll_weapon_modifier()
 
 
 func _apply_elite_scaling() -> void:
@@ -292,12 +293,16 @@ func _process_death(delta: float) -> void:
 func _spawn_drops() -> void:
 	if drop_table:
 		drop_table.resolve(global_position, get_parent())
-	if weapon:
-		var drop_scene := preload("res://scenes/weapon_drop.tscn")
-		var drop: Node = drop_scene.instantiate()
-		drop.weapon = weapon
-		drop.global_position = global_position + Vector2(randf_range(-8, 8), randf_range(-8, 8))
-		get_parent().add_child(drop)
+	if weapon and DropTable.roll_should_drop_weapon(enemy_tier):
+		_spawn_weapon_drop()
+
+
+func _spawn_weapon_drop() -> void:
+	var drop_scene := preload("res://scenes/weapon_drop.tscn")
+	var drop: Node = drop_scene.instantiate()
+	drop.weapon = weapon
+	drop.global_position = global_position + Vector2(randf_range(-8, 8), randf_range(-8, 8))
+	get_parent().add_child(drop)
 
 
 func _apply_separation(move_dir: Vector2) -> Vector2:
@@ -485,6 +490,17 @@ func _on_hit() -> void:
 func _setup_weapon_visual() -> void:
 	if weapon and weapon.has_visual():
 		weapon.setup_visual(_weapon_visual, _weapon_sprite)
+
+
+func _roll_weapon_modifier() -> void:
+	if weapon == null:
+		return
+	var modifier := DropTable.roll_modifier_for_enemy(enemy_tier)
+	if modifier == null:
+		return
+	var slot := weapon.find_empty_modifier_slot()
+	if slot >= 0:
+		weapon.add_modifier(slot, modifier)
 
 
 func _on_death() -> void:
