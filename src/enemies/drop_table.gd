@@ -68,6 +68,18 @@ static func from_enemy_tier(tier: int, drops_gold: bool = true, drops_weapon: bo
 	return table
 
 
+static func roll_modifier_for_enemy(enemy_tier: int) -> Modifier:
+	var chance: float = _TIER_MODIFIER_WEIGHT[enemy_tier]
+	if randf() > chance:
+		return null
+	var tier := resolve_item_tier(enemy_tier)
+	return WeaponRegistry.get_random_modifier(tier)
+
+
+static func roll_should_drop_weapon(enemy_tier: int) -> bool:
+	return randf() <= _TIER_WEAPON_WEIGHT[enemy_tier]
+
+
 static func resolve_item_tier(enemy_tier: int) -> int:
 	var weights: Dictionary = _TIER_ITEM_WEIGHTS[enemy_tier]
 	var roll := randf()
