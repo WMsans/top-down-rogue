@@ -90,3 +90,34 @@ func test_from_enemy_tier_gold_amounts_hard() -> void:
 	var entry: _DropTable.DropEntry = table.entries[0]
 	assert_that(entry.min_count).is_equal(8)
 	assert_that(entry.max_count).is_equal(20)
+
+
+func test_roll_should_drop_weapon_always_true_at_full_weight() -> void:
+	# Force RNG so randf() returns 0.0; with EASY weight 0.3 the check passes.
+	seed(1)
+	var got_true: bool = false
+	for i in 50:
+		if _DropTable.roll_should_drop_weapon(_DropTable.EnemyTier.EASY):
+			got_true = true
+			break
+	assert_that(got_true).is_true()
+
+
+func test_roll_should_drop_weapon_can_return_false() -> void:
+	seed(2)
+	var got_false: bool = false
+	for i in 50:
+		if not _DropTable.roll_should_drop_weapon(_DropTable.EnemyTier.EASY):
+			got_false = true
+			break
+	assert_that(got_false).is_true()
+
+
+func test_roll_modifier_for_enemy_can_return_null() -> void:
+	seed(3)
+	var got_null: bool = false
+	for i in 50:
+		if _DropTable.roll_modifier_for_enemy(_DropTable.EnemyTier.EASY) == null:
+			got_null = true
+			break
+	assert_that(got_null).is_true()
