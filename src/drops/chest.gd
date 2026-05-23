@@ -5,7 +5,7 @@ const CHEST_CLOSED_TEXTURE := preload("res://textures/Assets/Kyrise's 16x16 RPG 
 const CHEST_OPEN_TEXTURE := preload("res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/32x32/giftopen_01a.png")
 const CHOICE_COUNT := 3
 
-@export var tier: int = DropTable.ItemTier.COMMON
+@export var tier: int = DropTable.EnemyTier.NORMAL
 
 var _weapons: Array[Weapon] = []
 var _opened: bool = false
@@ -57,7 +57,8 @@ func _generate_weapons() -> void:
 	for i in CHOICE_COUNT:
 		var weapon: Weapon = null
 		for _attempt in range(5):
-			var candidate: Weapon = WeaponRegistry.get_random_weapon(tier)
+			var rolled_tier: int = DropTable.resolve_item_tier(tier)
+			var candidate: Weapon = WeaponRegistry.get_random_weapon(rolled_tier)
 			if candidate == null:
 				continue
 			var script_key = candidate.get_script()
@@ -68,7 +69,8 @@ func _generate_weapons() -> void:
 				weapon = candidate
 				break
 		if weapon == null:
-			weapon = WeaponRegistry.get_random_weapon(tier)
+			var fallback_tier: int = DropTable.resolve_item_tier(tier)
+			weapon = WeaponRegistry.get_random_weapon(fallback_tier)
 		if weapon != null:
 			_weapons.append(weapon)
 
