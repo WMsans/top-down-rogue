@@ -13,6 +13,14 @@ func test_set_accent_updates_button_hover_color() -> void:
 	var hover_color: Color = ui.get_theme().get_color("font_hover_color", "Button")
 	assert_that(hover_color).is_equal(new_accent)
 
+func test_set_accent_updates_title_label_color() -> void:
+	var ui: Node = load("res://src/ui/ui_theme.gd").new()
+	ui._build_theme()
+	var new_accent := Color(1.0, 0.314, 0.188, 1)
+	ui.set_accent(new_accent)
+	var title_color: Color = ui.get_theme().get_color("font_color", "TitleLabel")
+	assert_that(title_color).is_equal(new_accent)
+
 func test_set_accent_emits_palette_changed() -> void:
 	var ui: Node = load("res://src/ui/ui_theme.gd").new()
 	ui._build_theme()
@@ -20,7 +28,7 @@ func test_set_accent_emits_palette_changed() -> void:
 	ui.set_accent(Color.MAGENTA)
 	await assert_signal(monitor).is_emitted("palette_changed")
 
-func test_theme_uses_pixel_font_at_16px_body() -> void:
+func test_theme_uses_16px_body_font_size() -> void:
 	var ui: Node = load("res://src/ui/ui_theme.gd").new()
 	ui._build_theme()
 	var t: Theme = ui.get_theme()
@@ -32,4 +40,11 @@ func test_panel_stylebox_has_zero_corner_radius() -> void:
 	ui._build_theme()
 	var sb: StyleBoxFlat = ui.get_theme().get_stylebox("panel", "PanelContainer")
 	assert_that(sb.corner_radius_top_left).is_equal(0)
+	assert_that(sb.corner_radius_top_right).is_equal(0)
+	assert_that(sb.corner_radius_bottom_left).is_equal(0)
+	assert_that(sb.corner_radius_bottom_right).is_equal(0)
 	assert_that(sb.border_width_top).is_equal(2)
+	assert_that(sb.border_width_bottom).is_equal(2)
+	assert_that(sb.border_width_left).is_equal(2)
+	assert_that(sb.border_width_right).is_equal(2)
+
