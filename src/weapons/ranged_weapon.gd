@@ -19,6 +19,7 @@ func _init() -> void:
 	damage = 3.0
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
+	rarity = DropTable.ItemTier.UNCOMMON
 
 
 func has_visual() -> bool:
