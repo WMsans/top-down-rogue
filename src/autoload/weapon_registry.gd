@@ -24,24 +24,35 @@ var modifier_scripts: Dictionary = {}
 var weapon_tiers: Dictionary = {}
 var modifier_tiers: Dictionary = {}
 
+var _all_weapons: Array = [
+	{ "script": preload("res://src/weapons/melee_weapon.gd"),  "weight": 1.0 },
+	{ "script": preload("res://src/weapons/test_weapon.gd"),   "weight": 0.5 },
+	{ "script": preload("res://src/weapons/ranged_weapon.gd"), "weight": 1.0 },
+]
+
+
 func _ready() -> void:
 	weapon_scripts["melee"] = preload("res://src/weapons/melee_weapon.gd")
 	weapon_scripts["test"] = preload("res://src/weapons/test_weapon.gd")
+	weapon_scripts["ranged"] = preload("res://src/weapons/ranged_weapon.gd")
 	modifier_scripts["lava_emitter"] = preload("res://src/weapons/lava_emitter_modifier.gd")
 
-	_populate_tiers()
+	_build_tier_buckets()
+	_populate_modifier_tiers()
 
 
-func _populate_tiers() -> void:
-	weapon_tiers[DropTable.ItemTier.COMMON] = [
-		WeaponDropEntry.new(preload("res://src/weapons/melee_weapon.gd"), 1.0),
-		WeaponDropEntry.new(preload("res://src/weapons/test_weapon.gd"), 0.5),
-	]
-	weapon_tiers[DropTable.ItemTier.UNCOMMON] = [
-		WeaponDropEntry.new(preload("res://src/weapons/ranged_weapon.gd"), 0.5),
-	]
-	weapon_tiers[DropTable.ItemTier.RARE] = []
+func _build_tier_buckets() -> void:
+	weapon_tiers.clear()
+	for entry in _all_weapons:
+		var script: GDScript = entry.script
+		var probe: Weapon = script.new()
+		var tier: int = probe.rarity
+		if not weapon_tiers.has(tier):
+			weapon_tiers[tier] = []
+		weapon_tiers[tier].append(WeaponDropEntry.new(script, entry.weight))
 
+
+func _populate_modifier_tiers() -> void:
 	modifier_tiers[DropTable.ItemTier.COMMON] = [
 		ModifierDropEntry.new(preload("res://src/weapons/lava_emitter_modifier.gd"), 1.0),
 	]
