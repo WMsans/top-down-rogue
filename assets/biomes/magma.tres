@@ -66,6 +66,7 @@ composition = ExtResource("10_elitec")
 [resource]
 script = ExtResource("3_silhp")
 display_name = "Magma Caverns"
+ui_accent = Color(1.0, 0.314, 0.188, 1)
 cave_noise_scale = 0.012
 cave_threshold = 0.5
 ridge_weight = 0.5
