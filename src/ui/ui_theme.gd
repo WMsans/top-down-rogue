@@ -14,6 +14,19 @@ const DANGER := Color(0.800, 0.200, 0.200, 1)
 const SUCCESS := Color(0.267, 0.667, 0.267, 1)
 const SHADOW := Color(0, 0, 0, 0.502)
 
+const RARITY_COMMON := Color(1, 1, 1, 1)
+const RARITY_UNCOMMON := Color(0.35, 0.66, 1.0, 1)
+const RARITY_RARE := Color(1.0, 0.843, 0.0, 1)
+
+static func get_rarity_color(rarity: int) -> Color:
+	match rarity:
+		DropTable.ItemTier.UNCOMMON:
+			return RARITY_UNCOMMON
+		DropTable.ItemTier.RARE:
+			return RARITY_RARE
+		_:
+			return RARITY_COMMON
+
 static var _theme: Theme
 
 static func get_theme() -> Theme:

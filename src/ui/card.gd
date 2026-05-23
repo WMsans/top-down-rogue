@@ -32,6 +32,8 @@ signal card_clicked
 
 var _is_hovered: bool = false
 var _is_selected: bool = false
+var _sparkles: CPUParticles2D = null
+var _rarity: int = -1
 var _hover_tween: Tween
 var _exit_tween: Tween
 var _click_tween: Tween
@@ -142,6 +144,67 @@ func set_name_color(color: Color) -> void:
 func set_name_font_size(size: int) -> void:
 	_name_label.add_theme_font_size_override("font_size", size)
 	_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+func set_rarity(rarity: int) -> void:
+	_rarity = rarity
+	set_name_color(UiTheme.get_rarity_color(rarity))
+	_name_label.add_theme_constant_override("outline_size", 2)
+	_name_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	if rarity == DropTable.ItemTier.RARE:
+		_ensure_sparkles()
+	elif _sparkles != null:
+		_sparkles.emitting = false
+		_sparkles.visible = false
+
+func _ensure_sparkles() -> void:
+	if _sparkles == null:
+		_sparkles = CPUParticles2D.new()
+		_sparkles.texture = _make_sparkle_texture()
+		_sparkles.amount = 24
+		_sparkles.lifetime = 1.1
+		_sparkles.preprocess = 0.8
+		_sparkles.explosiveness = 0.0
+		_sparkles.randomness = 1.0
+		_sparkles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+		_sparkles.emission_rect_extents = Vector2(card_size.x * 0.48, card_size.y * 0.48)
+		_sparkles.direction = Vector2.UP
+		_sparkles.spread = 180.0
+		_sparkles.gravity = Vector2.ZERO
+		_sparkles.initial_velocity_min = 4.0
+		_sparkles.initial_velocity_max = 10.0
+		_sparkles.scale_amount_min = 0.5
+		_sparkles.scale_amount_max = 1.2
+		var scale_curve := Curve.new()
+		scale_curve.add_point(Vector2(0.0, 0.0))
+		scale_curve.add_point(Vector2(0.35, 1.0))
+		scale_curve.add_point(Vector2(1.0, 0.0))
+		_sparkles.scale_amount_curve = scale_curve
+		_sparkles.color = UiTheme.ACCENT_GOLD
+		var grad := Gradient.new()
+		grad.set_color(0, Color(1, 1, 1, 0.0))
+		grad.set_color(1, Color(1, 0.9, 0.4, 0.0))
+		grad.add_point(0.2, Color(1, 1, 0.85, 1.0))
+		grad.add_point(0.6, Color(1, 0.85, 0.2, 0.9))
+		_sparkles.color_ramp = grad
+		_sparkles.z_index = 2
+		_sparkles.position = card_size * 0.5
+		add_child(_sparkles)
+	_sparkles.visible = true
+	_sparkles.emitting = true
+
+func _make_sparkle_texture() -> Texture2D:
+	var size := 16
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var center := Vector2(size * 0.5, size * 0.5)
+	var max_r := float(size) * 0.5
+	for y in range(size):
+		for x in range(size):
+			var d := Vector2(x + 0.5, y + 0.5).distance_to(center)
+			var t := clampf(1.0 - d / max_r, 0.0, 1.0)
+			var a := pow(t, 2.2)
+			img.set_pixel(x, y, Color(1, 1, 1, a))
+	return ImageTexture.create_from_image(img)
 
 func _process(delta: float) -> void:
 	var mouse_pos := get_local_mouse_position()
