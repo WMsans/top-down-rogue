@@ -23,6 +23,7 @@ var _rebinding_label: Label = null
 @onready var panel: PanelContainer = %Panel
 
 func _ready() -> void:
+	super._ready()
 	theme = UiTheme.get_theme()
 	_style_section_headers()
 	_connect_signals()
