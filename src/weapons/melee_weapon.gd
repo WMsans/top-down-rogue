@@ -79,6 +79,7 @@ func _init() -> void:
 	icon_texture = weapon_texture
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
+	rarity = DropTable.ItemTier.COMMON
 
 
 func has_visual() -> bool:
