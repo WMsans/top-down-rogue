@@ -1,6 +1,5 @@
 extends JuicyPanel
 
-const _UiTheme = preload("res://src/ui/ui_theme.gd")
 const _UiAnimations = preload("res://src/ui/ui_animations.gd")
 
 
