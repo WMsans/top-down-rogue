@@ -10,6 +10,8 @@ var _collision_helper: RefCounted
 var terrain_modifier: TerrainModifier
 
 @onready var chunk_container: Node2D = $ChunkContainer
+const _FloorContainer = preload("res://src/terrain/floor_container.gd")
+var floor_container: Node2D
 var collision_container: Node2D
 var lights_container: Node2D
 
@@ -25,6 +27,13 @@ signal chunk_unloaded(coord: Vector2i)
 
 func _ready() -> void:
 	add_to_group("world_manager")
+
+	floor_container = _FloorContainer.new()
+	floor_container.name = "FloorContainer"
+	floor_container.z_index = -10
+	add_child(floor_container)
+	floor_container.bind(self)
+
 	rd = RenderingServer.get_rendering_device()
 
 	compute_device = ComputeDevice.new()
