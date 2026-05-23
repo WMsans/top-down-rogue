@@ -65,6 +65,7 @@ composition = ExtResource("10_elitec")
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
+ui_accent = Color(0.851, 0.467, 0.259, 1)
 pool_materials = [SubResource("Resource_xxuj2")]
 room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
