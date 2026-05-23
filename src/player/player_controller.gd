@@ -23,11 +23,14 @@ const KNOCKBACK_DECAY := 12.0
 const ZOOM_PUNCH_THRESHOLD := 10.0
 const ZOOM_PUNCH_AMOUNT := 0.92
 const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
+const MAX_RECOVERY_STEPS := 8
+const RECOVERY_STEP := 2.0
 
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
+var _last_safe_position: Vector2 = Vector2.ZERO
 
 
 func _enter_tree() -> void:
@@ -57,6 +60,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
+	_last_safe_position = position
 
 
 func _physics_process(delta: float) -> void:
