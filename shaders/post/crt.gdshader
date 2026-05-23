@@ -7,9 +7,6 @@ uniform float vignette_strength : hint_range(0.0, 1.0) = 0.35;
 uniform float vignette_softness : hint_range(0.05, 1.0) = 0.45;
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
-
-const float PI = 3.14159265;
-
 vec2 barrel(vec2 uv, float amount) {
     vec2 cc = uv - 0.5;
     float dist = dot(cc, cc);
