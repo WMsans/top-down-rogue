@@ -168,7 +168,6 @@ func _resolve_terrain_overlap() -> void:
 		directions[d_idx] = directions[d_idx].normalized()
 
 	for step in MAX_RECOVERY_STEPS:
-		var escaped := false
 		for dir in directions:
 			var test_pos := global_position + dir * RECOVERY_STEP
 			shape_params.transform = Transform2D(global_rotation, test_pos)
@@ -177,9 +176,6 @@ func _resolve_terrain_overlap() -> void:
 				global_position = test_pos
 				_last_safe_position = global_position
 				return
-			escaped = false
-		if not escaped:
-			break
 
 	global_position = _last_safe_position
 
