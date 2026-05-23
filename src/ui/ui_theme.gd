@@ -97,6 +97,7 @@ static func _apply_accent() -> void:
 	if _theme == null:
 		return
 	var t := _theme
+	t.set_color("font_color", "TitleLabel", accent)
 	# Button hover/focus colors track the accent.
 	t.set_color("font_hover_color", "Button", accent)
 	t.set_color("font_focus_color", "Button", accent)
@@ -145,8 +146,7 @@ static func _make_button_stylebox(normal: bool) -> StyleBoxFlat:
 static func _set_button_styles(t: Theme) -> void:
 	var normal := _make_button_stylebox(true)
 	var hover := _make_button_stylebox(false)
-	var pressed := _make_button_stylebox(true)
-	pressed.bg_color = BG_DEEP
+	var pressed := _make_button_stylebox(false)
 	var focused := _make_button_stylebox(false)
 	t.set_stylebox("normal", "Button", normal)
 	t.set_stylebox("hover", "Button", hover)
