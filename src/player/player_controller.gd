@@ -74,6 +74,7 @@ func _physics_process(delta: float) -> void:
 	if inventory and inventory.is_dead():
 		velocity = Vector2.ZERO
 		move_and_slide()
+		_resolve_terrain_overlap()
 		return
 
 	var input_dir := _get_input_direction()
@@ -97,6 +98,7 @@ func _physics_process(delta: float) -> void:
 	_apply_movement(input_dir, delta)
 	velocity += _knockback_velocity
 	move_and_slide()
+	_resolve_terrain_overlap()
 
 	var wm := get_parent().get_node_or_null("WorldManager")
 	if wm:
