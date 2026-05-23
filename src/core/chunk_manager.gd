@@ -128,6 +128,7 @@ func create_chunk(coord: Vector2i) -> void:
 func unload_chunk(coord: Vector2i) -> void:
 	var chunks: Dictionary = world_manager.chunks
 	var chunk: Chunk = chunks[coord]
+	world_manager.chunk_unloaded.emit(coord)
 	if world_manager._collision_helper != null:
 		world_manager._collision_helper.on_chunk_unloaded(coord)
 	# Free our own uniform sets first, while our textures are still alive.
