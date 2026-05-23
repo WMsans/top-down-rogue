@@ -31,14 +31,12 @@ func _ready() -> void:
 
 
 func _style_section_headers() -> void:
-	var gold := UiTheme.ACCENT_GOLD
 	var content := panel.get_node("VBoxContainer/ScrollContainer/Content")
 	for child in content.get_children():
 		if child is Label and child.text.begins_with("--"):
-			child.add_theme_color_override("font_color", gold)
-			child.add_theme_font_size_override("font_size", 14)
+			child.theme_type_variation = "TitleLabel"
 	var title_label: Label = panel.get_node("VBoxContainer/Header/TitleLabel")
-	title_label.add_theme_color_override("font_color", gold)
+	title_label.theme_type_variation = "TitleLabel"
 
 
 func _setup_button_animations() -> void:
@@ -153,8 +151,6 @@ func _rebuild_key_bindings() -> void:
 		var name_label := Label.new()
 		name_label.text = labels[i]
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
-		name_label.add_theme_font_size_override("font_size", 14)
 		row.add_child(name_label)
 
 		var key_button := Button.new()
