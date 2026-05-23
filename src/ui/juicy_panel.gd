@@ -83,26 +83,19 @@ func _get_content_children() -> Array[Control]:
 
 func _cache_content_positions() -> void:
 	_content_rest_positions.clear()
-	for child in _get_content_children():
-		_content_rest_positions[child] = child.position
 
 func _prepare_content_for_stagger() -> void:
 	for child in _get_content_children():
 		child.modulate.a = 0.0
-		var rest: Vector2 = _content_rest_positions.get(child, child.position)
-		child.position = rest + Vector2(0, 12)
 
 func _stagger_in_content() -> void:
 	var children := _get_content_children()
 	for i in children.size():
 		var child := children[i]
-		var rest: Vector2 = _content_rest_positions.get(child, child.position)
 		var tw := create_tween()
 		tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		tw.tween_interval(i * stagger_delay)
-		tw.set_parallel(true)
 		tw.tween_property(child, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_LINEAR)
-		tw.tween_property(child, "position:y", rest.y, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _fade_out_content() -> void:
 	for child in _get_content_children():
@@ -137,8 +130,6 @@ func _on_close_finished() -> void:
 		_animated_node.scale = Vector2.ONE
 		_animated_node.modulate.a = 1.0
 	for child in _get_content_children():
-		if _content_rest_positions.has(child):
-			child.position = _content_rest_positions[child]
 		child.modulate.a = 1.0
 	closed.emit()
 
