@@ -146,6 +146,7 @@ func _resolve_terrain_overlap() -> void:
 	shape_params.collide_with_areas = false
 	shape_params.collide_with_bodies = true
 	shape_params.margin = 0.0
+	shape_params.exclude = [get_rid()]
 
 	var overlaps := space_state.intersect_shape(shape_params, 1)
 	if overlaps.is_empty():
@@ -169,9 +170,9 @@ func _resolve_terrain_overlap() -> void:
 	for d_idx in directions.size():
 		directions[d_idx] = directions[d_idx].normalized()
 
-	for step in MAX_RECOVERY_STEPS:
+	for step in range(1, MAX_RECOVERY_STEPS + 1):
 		for dir in directions:
-			var test_pos := global_position + dir * RECOVERY_STEP
+			var test_pos := global_position + dir * RECOVERY_STEP * step
 			shape_params.transform = Transform2D(global_rotation, test_pos)
 			var test_overlaps := space_state.intersect_shape(shape_params, 1)
 			if test_overlaps.is_empty():
