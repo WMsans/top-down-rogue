@@ -41,3 +41,65 @@ func test_populate_skips_when_floor_texture_missing() -> void:
 	chunk.populate(Vector2i(0, 0), biome, 12345)
 
 	assert_that(_floor_sprite(chunk)).is_null()
+
+func _decor_sprites(chunk: _FloorChunk) -> Array[Sprite2D]:
+	var out: Array[Sprite2D] = []
+	for child in chunk.get_children():
+		if child.name.begins_with("Decor"):
+			out.append(child as Sprite2D)
+	return out
+
+func test_decor_chance_zero_creates_no_decor() -> void:
+	var chunk := _FloorChunk.new()
+	add_child(chunk)
+	chunk.populate(Vector2i(0, 0), _make_biome(0.0, 3), 42)
+	assert_that(_decor_sprites(chunk).size()).is_equal(0)
+
+func test_decor_chance_one_creates_full_grid() -> void:
+	var chunk := _FloorChunk.new()
+	add_child(chunk)
+	chunk.populate(Vector2i(0, 0), _make_biome(1.0, 3), 42)
+	# 256x256 chunk / 16px tiles = 16x16 = 256 cells
+	assert_that(_decor_sprites(chunk).size()).is_equal(256)
+
+func test_decor_placement_is_deterministic_for_same_seed_and_coord() -> void:
+	var biome := _make_biome(0.5, 3)
+	var a := _FloorChunk.new()
+	var b := _FloorChunk.new()
+	add_child(a)
+	add_child(b)
+	a.populate(Vector2i(3, -2), biome, 999)
+	b.populate(Vector2i(3, -2), biome, 999)
+
+	var ad := _decor_sprites(a)
+	var bd := _decor_sprites(b)
+	assert_that(ad.size()).is_equal(bd.size())
+	for i in range(ad.size()):
+		assert_that(ad[i].position).is_equal(bd[i].position)
+		assert_that(ad[i].texture).is_same(bd[i].texture)
+
+func test_decor_placement_differs_across_coords() -> void:
+	var biome := _make_biome(0.5, 3)
+	var a := _FloorChunk.new()
+	var b := _FloorChunk.new()
+	add_child(a)
+	add_child(b)
+	a.populate(Vector2i(0, 0), biome, 7)
+	b.populate(Vector2i(1, 0), biome, 7)
+
+	var ad := _decor_sprites(a)
+	var bd := _decor_sprites(b)
+	# Same seed + different coords should very rarely produce identical placements.
+	var identical := ad.size() == bd.size()
+	if identical:
+		for i in range(ad.size()):
+			if ad[i].position != bd[i].position:
+				identical = false
+				break
+	assert_that(identical).is_false()
+
+func test_empty_decor_textures_skips_decor_pass() -> void:
+	var chunk := _FloorChunk.new()
+	add_child(chunk)
+	chunk.populate(Vector2i(0, 0), _make_biome(1.0, 0), 42)
+	assert_that(_decor_sprites(chunk).size()).is_equal(0)
