@@ -93,7 +93,6 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="SubViewportContainer/SubViewport/CardPanel/ContentVBox" unique_id=823092170]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.843, 0, 1)
 text = "Name"
 horizontal_alignment = 1
 
