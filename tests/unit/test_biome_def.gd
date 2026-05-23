@@ -25,3 +25,9 @@ func test_room_template_defaults() -> void:
 	assert_that(rt.is_secret).is_false()
 	assert_that(rt.is_boss).is_false()
 	assert_that(rt.rotatable).is_true()
+
+func test_biome_def_floor_defaults() -> void:
+	var b := _BiomeDef.new()
+	assert_that(b.floor_texture).is_null()
+	assert_that(b.decor_textures).is_equal([] as Array[Texture2D])
+	assert_that(b.decor_chance).is_equal(0.02)

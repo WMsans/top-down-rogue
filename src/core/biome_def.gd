@@ -13,6 +13,9 @@ extends Resource
 @export var boss_compositions: Array[Resource] = []   # ArenaComposition list, replaces boss_templates
 @export var secret_ring_thickness: int = 3            # secret system unchanged
 @export var tint: Color = Color.WHITE
+@export var floor_texture: Texture2D = null
+@export var decor_textures: Array[Texture2D] = []
+@export var decor_chance: float = 0.02
 @export var cave_spawn_rate: float = 1.0
 @export var enemy_pool: Array[PackedScene] = []
 @export var elite_chance: float = 0.15
