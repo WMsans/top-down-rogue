@@ -21,6 +21,7 @@ var _gen_uniform_sets_to_free: Array[RID] = []
 var _light_frame_counter := 0
 var _light_dispatch_buckets: Array[Array] = []   # 5 slots, each = Array[Vector2i]
 signal chunks_generated(new_coords: Array[Vector2i])
+signal chunk_unloaded(coord: Vector2i)
 
 func _ready() -> void:
 	add_to_group("world_manager")
