@@ -45,6 +45,7 @@ func _setup_button_animations() -> void:
 	UiAnimations.setup_button_hover(close_button)
 	UiAnimations.setup_button_hover(back_button)
 	UiAnimations.setup_button_hover(fullscreen_button)
+	UiAnimations.setup_button_hover(crt_button)
 
 
 func _connect_signals() -> void:
@@ -181,14 +182,20 @@ func _rebuild_key_bindings() -> void:
 
 
 func _on_crt_toggled() -> void:
+	if not is_instance_valid(CrtOverlay):
+		return
 	var current: bool = CrtOverlay.visible
 	_set_crt_enabled(not current)
 	_update_crt_text()
 
 func _set_crt_enabled(enabled: bool) -> void:
+	if not is_instance_valid(CrtOverlay):
+		return
 	CrtOverlay.visible = enabled
 
 func _update_crt_text() -> void:
+	if not is_instance_valid(CrtOverlay):
+		return
 	crt_button.text = "ON" if CrtOverlay.visible else "OFF"
 
 func _save_settings() -> void:
@@ -196,5 +203,6 @@ func _save_settings() -> void:
 	config.set_value(SECTION_AUDIO, "master", master_slider.value)
 	config.set_value(SECTION_AUDIO, "music", music_slider.value)
 	config.set_value(SECTION_AUDIO, "sfx", sfx_slider.value)
-	config.set_value(SECTION_VIDEO, "crt_enabled", CrtOverlay.visible)
+	if is_instance_valid(CrtOverlay):
+		config.set_value(SECTION_VIDEO, "crt_enabled", CrtOverlay.visible)
 	config.save(SETTINGS_PATH)
