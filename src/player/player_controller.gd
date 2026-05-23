@@ -131,6 +131,59 @@ func _is_blocked_by_terrain(direction: Vector2) -> bool:
 	return not result.is_empty()
 
 
+func _resolve_terrain_overlap() -> void:
+	var shape_node: CollisionShape2D = $CollisionShape2D
+	if shape_node == null or shape_node.shape == null:
+		_last_safe_position = global_position
+		return
+	var space_state := get_world_2d().direct_space_state
+	var shape_params := PhysicsShapeQueryParameters2D.new()
+	shape_params.shape = shape_node.shape
+	shape_params.transform = global_transform
+	shape_params.collision_mask = 1  # terrain layer
+	shape_params.collide_with_areas = false
+	shape_params.collide_with_bodies = true
+	shape_params.margin = 0.0
+
+	var overlaps := space_state.intersect_shape(shape_params, 1)
+	if overlaps.is_empty():
+		_last_safe_position = global_position
+		return
+
+	var priority_dir := _last_facing if _last_facing.length_squared() > 0.01 else Vector2.ZERO
+	var directions: Array[Vector2] = []
+	if priority_dir != Vector2.ZERO:
+		directions.append(priority_dir.normalized())
+	directions.append_array([
+		Vector2.UP,
+		Vector2.RIGHT,
+		Vector2.DOWN,
+		Vector2.LEFT,
+		Vector2.UP + Vector2.RIGHT,
+		Vector2.DOWN + Vector2.RIGHT,
+		Vector2.DOWN + Vector2.LEFT,
+		Vector2.UP + Vector2.LEFT,
+	])
+	for d_idx in directions.size():
+		directions[d_idx] = directions[d_idx].normalized()
+
+	for step in MAX_RECOVERY_STEPS:
+		var escaped := false
+		for dir in directions:
+			var test_pos := global_position + dir * RECOVERY_STEP
+			shape_params.transform = Transform2D(global_rotation, test_pos)
+			var test_overlaps := space_state.intersect_shape(shape_params, 1)
+			if test_overlaps.is_empty():
+				global_position = test_pos
+				_last_safe_position = global_position
+				return
+			escaped = false
+		if not escaped:
+			break
+
+	global_position = _last_safe_position
+
+
 func _apply_movement(input_dir: Vector2, delta: float) -> void:
 	if input_dir != Vector2.ZERO:
 		velocity += input_dir * acceleration * delta
