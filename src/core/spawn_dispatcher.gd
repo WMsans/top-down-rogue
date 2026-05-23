@@ -184,8 +184,7 @@ func _pick_ranged_weapon() -> RangedWeapon:
 func _spawn_chest(world_pos: Vector2, is_secret_loot: bool) -> void:
 	var chest := CHEST_SCENE.instantiate()
 	chest.global_position = world_pos
-	if is_secret_loot and "rare_drop" in chest:
-		chest.rare_drop = true
+	chest.tier = DropTable.EnemyTier.HARD if is_secret_loot else DropTable.EnemyTier.NORMAL
 	_spawn_parent.add_child(chest)
 
 
