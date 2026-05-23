@@ -127,6 +127,19 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "OFF"
 
+[node name="CrtRow" type="HBoxContainer" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=830311222]
+layout_mode = 2
+
+[node name="CrtLabel" type="Label" parent="Panel/VBoxContainer/ScrollContainer/Content/CrtRow" unique_id=130311223]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CRT"
+
+[node name="CrtButton" type="Button" parent="Panel/VBoxContainer/ScrollContainer/Content/CrtRow" unique_id=230311224]
+unique_name_in_owner = true
+layout_mode = 2
+text = "OFF"
+
 [node name="HSeparator3" type="HSeparator" parent="Panel/VBoxContainer/ScrollContainer/Content" unique_id=1814592564]
 layout_mode = 2
 
