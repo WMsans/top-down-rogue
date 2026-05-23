@@ -134,6 +134,7 @@ func _populate(weapon: Weapon) -> void:
 		mod_icons.append(mod.icon_texture if mod else null)
 
 	_card.populate(weapon.icon_texture, weapon.name, stats, mod_icons)
+	_card.set_rarity(weapon.rarity)
 
 
 func _animate_show() -> void:

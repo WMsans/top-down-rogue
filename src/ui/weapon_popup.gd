@@ -235,6 +235,7 @@ func _add_pickup_header() -> void:
 		stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
 		stats.append("Damage: %.0f" % base_stats["damage"])
 		card.populate(_pickup_weapon.icon_texture, _pickup_weapon.name, stats)
+		card.set_rarity(_pickup_weapon.rarity)
 	, CONNECT_ONE_SHOT)
 
 	vbox.add_child(card)
@@ -282,6 +283,7 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 				var mod: Modifier = weapon.get_modifier_at(i)
 				mod_icons.append(mod.icon_texture if mod else null)
 			card.populate(weapon.icon_texture, weapon.name, stats, mod_icons)
+			card.set_rarity(weapon.rarity)
 			_add_modifier_slots_to_card(card, weapon)
 	, CONNECT_ONE_SHOT)
 	return card

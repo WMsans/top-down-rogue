@@ -15,6 +15,12 @@ static func register(registry: CommandRegistry) -> void:
 		var type: String = key
 		registry.register("spawn weapon " + type, "Spawn a " + type + " weapon drop", _spawn_weapon.bind(type))
 
+	registry.register("spawn weapon all", "Spawn one drop for every weapon in the registry", _spawn_all_weapons)
+
+	for entry in WeaponRegistry._all_weapons:
+		var id: String = entry.id
+		registry.register("spawn weapon " + id, "Spawn a " + id + " weapon drop", _spawn_weapon_resource.bind(id))
+
 	for key in WeaponRegistry.modifier_scripts:
 		var type: String = key
 		registry.register("spawn mod " + type, "Spawn a " + type + " modifier drop", _spawn_mod.bind(type))
@@ -35,7 +41,7 @@ static func _get_spawn_parent(ctx: Dictionary) -> Node:
 	return ctx.get("scene")
 
 
-static func _spawn_weapon(type: String, _args: Array[String], ctx: Dictionary) -> String:
+static func _spawn_weapon(_args: Array[String], ctx: Dictionary, type: String) -> String:
 	var script: GDScript = WeaponRegistry.weapon_scripts.get(type)
 	if script == null:
 		return "error: unknown weapon type '" + type + "'"
@@ -49,7 +55,45 @@ static func _spawn_weapon(type: String, _args: Array[String], ctx: Dictionary) -
 	return "Spawned " + type + " weapon"
 
 
-static func _spawn_mod(type: String, _args: Array[String], ctx: Dictionary) -> String:
+static func _spawn_weapon_resource(_args: Array[String], ctx: Dictionary, id: String) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var res: Weapon = null
+	for entry in WeaponRegistry._all_weapons:
+		if entry.id == id:
+			res = entry.resource
+			break
+	if res == null:
+		return "error: unknown weapon '" + id + "'"
+	var drop: WeaponDrop = WEAPON_DROP_SCENE.instantiate()
+	drop.weapon = res.duplicate(true)
+	parent.add_child(drop)
+	drop.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned " + id
+
+
+static func _spawn_all_weapons(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var weapons: Array = WeaponRegistry._all_weapons
+	if weapons.is_empty():
+		return "error: no weapons in registry"
+	var center: Vector2 = ctx.get("world_pos", Vector2.ZERO)
+	var radius := 48.0
+	var count := weapons.size()
+	for i in range(count):
+		var res: Weapon = weapons[i].resource
+		var drop: WeaponDrop = WEAPON_DROP_SCENE.instantiate()
+		drop.weapon = res.duplicate(true)
+		parent.add_child(drop)
+		var angle := TAU * float(i) / float(count)
+		drop.global_position = center + Vector2(cos(angle), sin(angle)) * radius
+	return "Spawned " + str(count) + " weapon drops"
+
+
+static func _spawn_mod(_args: Array[String], ctx: Dictionary, type: String) -> String:
 	var script: GDScript = WeaponRegistry.modifier_scripts.get(type)
 	if script == null:
 		return "error: unknown modifier type '" + type + "'"
