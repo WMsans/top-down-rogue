@@ -23,11 +23,14 @@ const KNOCKBACK_DECAY := 12.0
 const ZOOM_PUNCH_THRESHOLD := 10.0
 const ZOOM_PUNCH_AMOUNT := 0.92
 const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
+const MAX_RECOVERY_STEPS := 8
+const RECOVERY_STEP := 2.0
 
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
+var _last_safe_position: Vector2 = Vector2.ZERO
 
 
 func _enter_tree() -> void:
@@ -57,6 +60,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
+	_last_safe_position = position
 
 
 func _physics_process(delta: float) -> void:
@@ -70,6 +74,7 @@ func _physics_process(delta: float) -> void:
 	if inventory and inventory.is_dead():
 		velocity = Vector2.ZERO
 		move_and_slide()
+		_resolve_terrain_overlap()
 		return
 
 	var input_dir := _get_input_direction()
@@ -93,6 +98,7 @@ func _physics_process(delta: float) -> void:
 	_apply_movement(input_dir, delta)
 	velocity += _knockback_velocity
 	move_and_slide()
+	_resolve_terrain_overlap()
 
 	var wm := get_parent().get_node_or_null("WorldManager")
 	if wm:
@@ -125,6 +131,56 @@ func _is_blocked_by_terrain(direction: Vector2) -> bool:
 	)
 	var result := space_state.intersect_ray(query)
 	return not result.is_empty()
+
+
+func _resolve_terrain_overlap() -> void:
+	var shape_node: CollisionShape2D = $CollisionShape2D
+	if shape_node == null or shape_node.shape == null:
+		_last_safe_position = global_position
+		return
+	var space_state := get_world_2d().direct_space_state
+	var shape_params := PhysicsShapeQueryParameters2D.new()
+	shape_params.shape = shape_node.shape
+	shape_params.transform = global_transform
+	shape_params.collision_mask = 1  # terrain layer
+	shape_params.collide_with_areas = false
+	shape_params.collide_with_bodies = true
+	shape_params.margin = 0.0
+	shape_params.exclude = [get_rid()]
+
+	var overlaps := space_state.intersect_shape(shape_params, 1)
+	if overlaps.is_empty():
+		_last_safe_position = global_position
+		return
+
+	var priority_dir := _last_facing if _last_facing.length_squared() > 0.01 else Vector2.ZERO
+	var directions: Array[Vector2] = []
+	if priority_dir != Vector2.ZERO:
+		directions.append(priority_dir.normalized())
+	directions.append_array([
+		Vector2.UP,
+		Vector2.RIGHT,
+		Vector2.DOWN,
+		Vector2.LEFT,
+		Vector2.UP + Vector2.RIGHT,
+		Vector2.DOWN + Vector2.RIGHT,
+		Vector2.DOWN + Vector2.LEFT,
+		Vector2.UP + Vector2.LEFT,
+	])
+	for d_idx in directions.size():
+		directions[d_idx] = directions[d_idx].normalized()
+
+	for step in range(1, MAX_RECOVERY_STEPS + 1):
+		for dir in directions:
+			var test_pos := global_position + dir * RECOVERY_STEP * step
+			shape_params.transform = Transform2D(global_rotation, test_pos)
+			var test_overlaps := space_state.intersect_shape(shape_params, 1)
+			if test_overlaps.is_empty():
+				global_position = test_pos
+				_last_safe_position = global_position
+				return
+
+	global_position = _last_safe_position
 
 
 func _apply_movement(input_dir: Vector2, delta: float) -> void:
