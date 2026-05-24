@@ -1,6 +1,5 @@
 extends JuicyPanel
 
-const _UiTheme = preload("res://src/ui/ui_theme.gd")
 const _UiAnimations = preload("res://src/ui/ui_animations.gd")
 
 
@@ -9,6 +8,7 @@ const SETTINGS_PATH := "user://settings.cfg"
 const SECTION_AUDIO := "audio"
 const SECTION_DISPLAY := "display"
 const SECTION_KEYS := "keys"
+const SECTION_VIDEO := "video"
 
 var _rebinding_action := ""
 var _rebinding_label: Label = null
@@ -17,6 +17,7 @@ var _rebinding_label: Label = null
 @onready var music_slider: HSlider = %MusicSlider
 @onready var sfx_slider: HSlider = %SfxSlider
 @onready var fullscreen_button: Button = %FullscreenButton
+@onready var crt_button: Button = %CrtButton
 @onready var close_button: Button = %CloseButton
 @onready var back_button: Button = %BackButton
 @onready var key_bindings_container: VBoxContainer = %KeyBindingsContainer
@@ -32,20 +33,19 @@ func _ready() -> void:
 
 
 func _style_section_headers() -> void:
-	var gold := UiTheme.ACCENT_GOLD
 	var content := panel.get_node("VBoxContainer/ScrollContainer/Content")
 	for child in content.get_children():
 		if child is Label and child.text.begins_with("--"):
-			child.add_theme_color_override("font_color", gold)
-			child.add_theme_font_size_override("font_size", 14)
+			child.theme_type_variation = "TitleLabel"
 	var title_label: Label = panel.get_node("VBoxContainer/Header/TitleLabel")
-	title_label.add_theme_color_override("font_color", gold)
+	title_label.theme_type_variation = "TitleLabel"
 
 
 func _setup_button_animations() -> void:
 	UiAnimations.setup_button_hover(close_button)
 	UiAnimations.setup_button_hover(back_button)
 	UiAnimations.setup_button_hover(fullscreen_button)
+	UiAnimations.setup_button_hover(crt_button)
 
 
 func _connect_signals() -> void:
@@ -53,6 +53,7 @@ func _connect_signals() -> void:
 	music_slider.value_changed.connect(_on_volume_changed.bind("Music"))
 	sfx_slider.value_changed.connect(_on_volume_changed.bind("SFX"))
 	fullscreen_button.pressed.connect(_on_fullscreen_toggled)
+	crt_button.pressed.connect(_on_crt_toggled)
 	close_button.pressed.connect(close)
 	back_button.pressed.connect(close)
 
@@ -77,6 +78,8 @@ func _apply_loaded_settings() -> void:
 		music_slider.value = 60
 		sfx_slider.value = 80
 		_update_fullscreen_text()
+		_set_crt_enabled(true)
+		_update_crt_text()
 		_rebuild_key_bindings()
 		return
 
@@ -84,6 +87,9 @@ func _apply_loaded_settings() -> void:
 	music_slider.value = config.get_value(SECTION_AUDIO, "music", 60)
 	sfx_slider.value = config.get_value(SECTION_AUDIO, "sfx", 80)
 	_update_fullscreen_text()
+	var crt_enabled: bool = config.get_value(SECTION_VIDEO, "crt_enabled", true)
+	_set_crt_enabled(crt_enabled)
+	_update_crt_text()
 	_rebuild_key_bindings()
 
 
@@ -154,8 +160,6 @@ func _rebuild_key_bindings() -> void:
 		var name_label := Label.new()
 		name_label.text = labels[i]
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
-		name_label.add_theme_font_size_override("font_size", 14)
 		row.add_child(name_label)
 
 		var key_button := Button.new()
@@ -177,9 +181,28 @@ func _rebuild_key_bindings() -> void:
 		key_bindings_container.add_child(row)
 
 
+func _on_crt_toggled() -> void:
+	if not is_instance_valid(CrtOverlay):
+		return
+	var current: bool = CrtOverlay.visible
+	_set_crt_enabled(not current)
+	_update_crt_text()
+
+func _set_crt_enabled(enabled: bool) -> void:
+	if not is_instance_valid(CrtOverlay):
+		return
+	CrtOverlay.visible = enabled
+
+func _update_crt_text() -> void:
+	if not is_instance_valid(CrtOverlay):
+		return
+	crt_button.text = "ON" if CrtOverlay.visible else "OFF"
+
 func _save_settings() -> void:
 	var config := ConfigFile.new()
 	config.set_value(SECTION_AUDIO, "master", master_slider.value)
 	config.set_value(SECTION_AUDIO, "music", music_slider.value)
 	config.set_value(SECTION_AUDIO, "sfx", sfx_slider.value)
+	if is_instance_valid(CrtOverlay):
+		config.set_value(SECTION_VIDEO, "crt_enabled", CrtOverlay.visible)
 	config.save(SETTINGS_PATH)
