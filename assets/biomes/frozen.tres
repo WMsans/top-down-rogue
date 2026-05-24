@@ -60,6 +60,7 @@ composition = ExtResource("10_elitec")
 [resource]
 script = ExtResource("3_i6yci")
 display_name = "Frozen Depths"
+ui_accent = Color(0.431, 0.776, 0.910, 1)
 cave_noise_scale = 0.009
 cave_threshold = 0.4
 ridge_weight = 0.2

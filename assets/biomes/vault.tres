@@ -59,6 +59,7 @@ composition = ExtResource("10_elitec")
 [resource]
 script = ExtResource("3_wsrpv")
 display_name = "Vault"
+ui_accent = Color(0.784, 0.627, 0.251, 1)
 cave_noise_scale = 0.014
 cave_threshold = 0.55
 ridge_weight = 0.5
