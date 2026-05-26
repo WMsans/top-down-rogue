@@ -35,6 +35,10 @@ const RARITY_COMMON := Color(1, 1, 1, 1)
 const RARITY_UNCOMMON := Color(0.35, 0.66, 1.0, 1)
 const RARITY_RARE := Color(1.0, 0.843, 0.0, 1)
 
+const UILayout = preload("res://src/ui/ui_layout.gd")
+const PANEL_FRAME_STYLEBOX := preload("res://resources/ui/styles/panel_frame.tres")
+const INSET_FRAME_STYLEBOX := preload("res://resources/ui/styles/inset_frame.tres")
+
 # Mutable accent + derived border color, swapped on biome change.
 static var accent: Color = DEFAULT_ACCENT
 static var _theme: Theme = null
@@ -158,6 +162,19 @@ static func _set_button_styles(t: Theme) -> void:
 	t.set_color("font_focus_color", "Button", accent)
 	t.set_color("font_disabled_color", "Button", INK_DIM)
 	t.set_font_size("font_size", "Button", FONT_SIZE_BODY)
+	t.set_constant("button_min_height_marker", "Button", UILayout.BUTTON_MIN_HEIGHT)
+	t.set_type_variation("CompactButton", "Button")
+	t.set_constant("compact_min_width_marker", "CompactButton", UILayout.BUTTON_COMPACT_MIN_WIDTH)
+	t.set_type_variation("IconButton", "Button")
+	var icon_normal: StyleBoxFlat = _make_button_stylebox(true)
+	icon_normal.content_margin_left = 4
+	icon_normal.content_margin_right = 4
+	icon_normal.content_margin_top = 4
+	icon_normal.content_margin_bottom = 4
+	t.set_stylebox("normal", "IconButton", icon_normal)
+	t.set_stylebox("hover", "IconButton", _make_button_stylebox(false))
+	t.set_stylebox("pressed", "IconButton", _make_button_stylebox(false))
+	t.set_stylebox("focused", "IconButton", _make_button_stylebox(false))
 
 static func _set_label_styles(t: Theme) -> void:
 	t.set_color("font_color", "Label", INK)
@@ -197,7 +214,7 @@ static func _set_separator_styles(t: Theme) -> void:
 	sep.bg_color = Color(0, 0, 0, 0)
 	sep.border_color = INK_DIM
 	sep.border_width_top = 1
-	sep.set_content_margin_all(4)
+	sep.set_content_margin_all(UILayout.SEPARATOR_PAD)
 	sep.content_margin_left = 0
 	sep.content_margin_right = 0
 	t.set_stylebox("separator", "HSeparator", sep)
@@ -205,6 +222,7 @@ static func _set_separator_styles(t: Theme) -> void:
 static func _set_container_constants(t: Theme) -> void:
 	t.set_constant("separation", "VBoxContainer", 8)
 	t.set_constant("separation", "HBoxContainer", 8)
+	t.set_constant("separation", "HSeparator", UILayout.SEPARATOR_PAD)
 
 static func get_card_shadow_stylebox() -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
