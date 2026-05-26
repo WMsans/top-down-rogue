@@ -1,6 +1,8 @@
-extends JuicyPanel
+extends ModalPanel
 
 const _UiAnimations = preload("res://src/ui/ui_animations.gd")
+
+signal closed
 
 
 const SETTINGS_PATH := "user://settings.cfg"
@@ -18,13 +20,10 @@ var _rebinding_label: Label = null
 @onready var sfx_slider: HSlider = %SfxSlider
 @onready var fullscreen_button: Button = %FullscreenButton
 @onready var crt_button: Button = %CrtButton
-@onready var close_button: Button = %CloseButton
 @onready var back_button: Button = %BackButton
 @onready var key_bindings_container: VBoxContainer = %KeyBindingsContainer
-@onready var panel: PanelContainer = %Panel
 
 func _ready() -> void:
-	super._ready()
 	theme = UiTheme.get_theme()
 	_style_section_headers()
 	_connect_signals()
@@ -33,16 +32,12 @@ func _ready() -> void:
 
 
 func _style_section_headers() -> void:
-	var content := panel.get_node("VBoxContainer/ScrollContainer/Content")
-	for child in content.get_children():
+	for child in %Content.get_children():
 		if child is Label and child.text.begins_with("--"):
 			child.theme_type_variation = "TitleLabel"
-	var title_label: Label = panel.get_node("VBoxContainer/Header/TitleLabel")
-	title_label.theme_type_variation = "TitleLabel"
 
 
 func _setup_button_animations() -> void:
-	UiAnimations.setup_button_hover(close_button)
 	UiAnimations.setup_button_hover(back_button)
 	UiAnimations.setup_button_hover(fullscreen_button)
 	UiAnimations.setup_button_hover(crt_button)
@@ -54,21 +49,26 @@ func _connect_signals() -> void:
 	sfx_slider.value_changed.connect(_on_volume_changed.bind("SFX"))
 	fullscreen_button.pressed.connect(_on_fullscreen_toggled)
 	crt_button.pressed.connect(_on_crt_toggled)
-	close_button.pressed.connect(close)
-	back_button.pressed.connect(close)
+	close_requested.connect(_on_close)
+	back_button.pressed.connect(_on_close)
 
 
 func open() -> void:
 	_apply_loaded_settings()
-	super.open()
+	visible = true
 	back_button.grab_focus()
 
 
-func close() -> void:
+func _on_close() -> void:
 	_save_settings()
 	_rebinding_action = ""
 	_rebinding_label = null
-	super.close()
+	visible = false
+	closed.emit()
+
+
+func close() -> void:
+	_on_close()
 
 
 func _apply_loaded_settings() -> void:
