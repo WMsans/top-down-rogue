@@ -12,68 +12,13 @@ var _chosen: bool = false
 var _is_closing: bool = false
 var _card_slots: Array[Control] = []
 
-@onready var _title_label: Label = %TitleLabel
 @onready var _card_container: HBoxContainer = %CardContainer
-@onready var _skip_button: Button = %SkipButton
-@onready var _panel_container: PanelContainer = %ShopPanel
-@onready var _header_bar: PanelContainer = %HeaderBar
-@onready var _action_bar: PanelContainer = %ActionBar
-@onready var _overlay: ColorRect = %Overlay
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_skip_button.pressed.connect(close)
-	_overlay.gui_input.connect(_on_overlay_input)
-	UiAnimations.setup_button_hover(_skip_button)
-	_style_header()
-	_style_action_bar()
-	_style_skip_button()
+	%ShopPanel.close_requested.connect(close)
 	visible = false
-
-
-func _style_header() -> void:
-	_title_label.add_theme_font_override("font", UiTheme.PIXEL_FONT)
-	_title_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
-	_title_label.add_theme_font_size_override("font_size", 32)
-	var header_style := StyleBoxFlat.new()
-	header_style.bg_color = UiTheme.SURFACE_BG
-	header_style.set_corner_radius_all(0)
-	header_style.set_corner_radius(CORNER_TOP_LEFT, 6)
-	header_style.set_corner_radius(CORNER_TOP_RIGHT, 6)
-	header_style.border_color = UiTheme.ACCENT
-	header_style.set_border_width_all(0)
-	header_style.set_border_width(SIDE_BOTTOM, 2)
-	header_style.content_margin_top = 14
-	header_style.content_margin_bottom = 14
-	header_style.content_margin_left = 24
-	header_style.content_margin_right = 24
-	header_style.shadow_color = Color(0, 0, 0, 0)
-	_header_bar.add_theme_stylebox_override("panel", header_style)
-
-
-func _style_action_bar() -> void:
-	var action_style := StyleBoxFlat.new()
-	action_style.bg_color = UiTheme.SURFACE_BG
-	action_style.set_corner_radius_all(0)
-	action_style.set_corner_radius(CORNER_BOTTOM_LEFT, 6)
-	action_style.set_corner_radius(CORNER_BOTTOM_RIGHT, 6)
-	action_style.border_color = UiTheme.PANEL_BORDER
-	action_style.set_border_width_all(0)
-	action_style.set_border_width(SIDE_TOP, 1)
-	action_style.content_margin_top = 12
-	action_style.content_margin_bottom = 12
-	action_style.content_margin_left = 16
-	action_style.content_margin_right = 16
-	action_style.shadow_color = Color(0, 0, 0, 0)
-	_action_bar.add_theme_stylebox_override("panel", action_style)
-
-
-func _style_skip_button() -> void:
-	var theme := UiTheme.get_theme()
-	_skip_button.theme = theme
-	_skip_button.add_theme_font_size_override("font_size", 18)
-	_skip_button.custom_minimum_size = Vector2(180, 40)
 
 
 func open_with_weapons(weapons: Array[Weapon], callback: Callable) -> void:
@@ -81,7 +26,7 @@ func open_with_weapons(weapons: Array[Weapon], callback: Callable) -> void:
 	_callback = callback
 	_chosen = false
 	_is_closing = false
-	_title_label.text = "Choose a Weapon"
+	%ShopPanel.title = "Choose a Weapon"
 	_build_cards()
 	SceneManager.set_paused(true)
 	visible = true
@@ -101,22 +46,15 @@ func close() -> void:
 
 
 func _play_entrance_animation() -> void:
-	_overlay.modulate.a = 0.0
-	_panel_container.modulate.a = 0.0
-	_panel_container.pivot_offset = _panel_container.size * 0.5
-	_panel_container.scale = Vector2(0.92, 0.92)
-	_panel_container.position.y += 30
-
-	var overlay_tween := create_tween()
-	overlay_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	overlay_tween.tween_property(_overlay, "modulate:a", 1.0, 0.18)
+	%ShopPanel.modulate.a = 0.0
+	%ShopPanel.pivot_offset = %ShopPanel.size * 0.5
+	%ShopPanel.scale = Vector2(0.92, 0.92)
 
 	var panel_tween := create_tween()
 	panel_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	panel_tween.set_parallel(true)
-	panel_tween.tween_property(_panel_container, "modulate:a", 1.0, 0.22)
-	panel_tween.tween_property(_panel_container, "scale", Vector2.ONE, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	panel_tween.tween_property(_panel_container, "position:y", _panel_container.position.y - 30, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	panel_tween.tween_property(%ShopPanel, "modulate:a", 1.0, 0.22)
+	panel_tween.tween_property(%ShopPanel, "scale", Vector2.ONE, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 	_stagger_cards_in()
 
@@ -134,15 +72,11 @@ func _stagger_cards_in() -> void:
 
 
 func _play_exit_animation() -> void:
-	var overlay_tween := create_tween()
-	overlay_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	overlay_tween.tween_property(_overlay, "modulate:a", 0.0, 0.18)
-
 	var panel_tween := create_tween()
 	panel_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	panel_tween.set_parallel(true)
-	panel_tween.tween_property(_panel_container, "modulate:a", 0.0, 0.18)
-	panel_tween.tween_property(_panel_container, "scale", Vector2(0.94, 0.94), 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	panel_tween.tween_property(%ShopPanel, "modulate:a", 0.0, 0.18)
+	panel_tween.tween_property(%ShopPanel, "scale", Vector2(0.94, 0.94), 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	await panel_tween.finished
 
 
@@ -196,11 +130,6 @@ func _select_weapon(index: int) -> void:
 	SceneManager.set_paused(false)
 	if _callback.is_valid():
 		_callback.call(weapon)
-
-
-func _on_overlay_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		close()
 
 
 func _unhandled_input(event: InputEvent) -> void:

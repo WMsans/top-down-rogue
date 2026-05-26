@@ -10,7 +10,6 @@ const CARD_SCENE := preload("res://scenes/ui/card.tscn")
 var _is_closing: bool = false
 
 @onready var _cards_container: HBoxContainer = %CardsContainer
-@onready var _title_label: Label = %TitleLabel
 @onready var _main_panel: Control = %MainPanel
 
 var _weapon_manager: WeaponManager = null
@@ -42,21 +41,17 @@ var _transfer_placeholders: Array[Control] = []
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_cards_container.theme = UiTheme.get_theme()
-	_title_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
-	_title_label.add_theme_font_size_override("font_size", 28)
-	_title_label.add_theme_constant_override("outline_size", 2)
-	_title_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	visible = false
-	_main_panel.closed.connect(_on_main_panel_closed)
+	_main_panel.close_requested.connect(close)
 
 
 func _do_open(title: String) -> void:
-	_title_label.text = title
+	_main_panel.title = title
 	_build_cards()
 	SceneManager.set_paused(true)
+	_main_panel.visible = true
 	visible = true
 	_is_closing = false
-	_main_panel.open()
 
 
 func open(weapon_manager: WeaponManager) -> void:
@@ -126,15 +121,7 @@ func close() -> void:
 	_cancel_skip_button()
 	_clear_pickup_header()
 	_clear_modifier_header()
-	_main_panel.close()
-	await _main_panel.closed
-	_do_close_cleanup()
-
-
-func _on_main_panel_closed() -> void:
-	if _is_closing:
-		return
-	_is_closing = true
+	_main_panel.visible = false
 	_do_close_cleanup()
 
 
@@ -195,16 +182,15 @@ func _add_modifier_header() -> void:
 	icon.custom_minimum_size = ICON_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	var title_index := (%TitleLabel as Node).get_index()
 	vbox.add_child(icon)
-	vbox.move_child(icon, title_index + 1)
+	vbox.move_child(icon, 0)
 	_modifier_header_elements.append(icon)
 	var name_label := Label.new()
 	name_label.text = _modifier_ref.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
 	vbox.add_child(name_label)
-	vbox.move_child(name_label, title_index + 2)
+	vbox.move_child(name_label, 1)
 	_modifier_header_elements.append(name_label)
 
 
@@ -215,7 +201,6 @@ func _add_pickup_header() -> void:
 	var vbox := %CardsContainer.get_parent() as VBoxContainer
 	if vbox == null:
 		return
-	var title_index := (%TitleLabel as Node).get_index()
 
 	var header_label := Label.new()
 	header_label.text = "New weapon:"
@@ -223,7 +208,7 @@ func _add_pickup_header() -> void:
 	header_label.add_theme_color_override("font_color", UiTheme.ACCENT)
 	header_label.add_theme_font_size_override("font_size", 18)
 	vbox.add_child(header_label)
-	vbox.move_child(header_label, title_index + 1)
+	vbox.move_child(header_label, 0)
 	_pickup_header_elements.append(header_label)
 
 	var card: Card = CARD_SCENE.instantiate()
@@ -239,7 +224,7 @@ func _add_pickup_header() -> void:
 	, CONNECT_ONE_SHOT)
 
 	vbox.add_child(card)
-	vbox.move_child(card, title_index + 2)
+	vbox.move_child(card, 1)
 	_pickup_header_elements.append(card)
 
 
@@ -421,7 +406,7 @@ func _handle_remove_weapon_click(slot_index: int) -> void:
 		_show_feedback("No modifiers on that weapon!")
 		return
 	_remove_weapon = weapon
-	_title_label.text = "Remove which modifier?"
+	_main_panel.title = "Remove which modifier?"
 	_build_remove_modifier_cards(weapon)
 
 
@@ -555,7 +540,7 @@ func _enter_transfer_mode(slot_index: int, replaced_weapon: Weapon, transferable
 	_transfer_slot = slot_index
 	_transfer_weapon = replaced_weapon
 	_transfer_modifiers = transferable_modifiers
-	_title_label.text = "Transfer a modifier?"
+	_main_panel.title = "Transfer a modifier?"
 	_clear_cards()
 	_build_transfer_cards(alt_positions)
 	_add_skip_button()
