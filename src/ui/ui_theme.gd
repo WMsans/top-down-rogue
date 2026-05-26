@@ -35,13 +35,19 @@ const RARITY_COMMON := Color(1, 1, 1, 1)
 const RARITY_UNCOMMON := Color(0.35, 0.66, 1.0, 1)
 const RARITY_RARE := Color(1.0, 0.843, 0.0, 1)
 
+const UILayout = preload("res://src/ui/ui_layout.gd")
+const PANEL_FRAME_STYLEBOX := preload("res://resources/ui/styles/panel_frame.tres")
+const INSET_FRAME_STYLEBOX := preload("res://resources/ui/styles/inset_frame.tres")
+
 # Mutable accent + derived border color, swapped on biome change.
-static var accent: Color = DEFAULT_ACCENT
+var accent: Color = DEFAULT_ACCENT
 static var _theme: Theme = null
 
-static var ACCENT: Color = DEFAULT_ACCENT
-static var ACCENT_GOLD: Color = DEFAULT_ACCENT
-static var PANEL_BORDER: Color = DEFAULT_ACCENT
+var ACCENT: Color = DEFAULT_ACCENT
+var ACCENT_GOLD: Color = DEFAULT_ACCENT
+var PANEL_BORDER: Color = DEFAULT_ACCENT
+
+var _overlays: Array[WeakRef] = []
 
 func _ready() -> void:
 	_build_theme()
@@ -52,7 +58,7 @@ func _ready() -> void:
 func _has_autoload(name: String) -> bool:
 	return get_tree() != null and get_tree().root.has_node(name)
 
-static func get_theme() -> Theme:
+func get_theme() -> Theme:
 	if _theme == null:
 		_build_theme()
 	return _theme
@@ -72,6 +78,7 @@ func set_accent(c: Color) -> void:
 	ACCENT_GOLD = c
 	PANEL_BORDER = c
 	_apply_accent()
+	_apply_overlay_modulate()
 	palette_changed.emit()
 
 func _on_floor_changed(_floor: int) -> void:
@@ -80,7 +87,7 @@ func _on_floor_changed(_floor: int) -> void:
 		return
 	set_accent(biome.ui_accent)
 
-static func _build_theme() -> void:
+func _build_theme() -> void:
 	var t := Theme.new()
 	t.default_font = PIXEL_FONT
 	t.default_font_size = FONT_SIZE_BODY
@@ -93,7 +100,7 @@ static func _build_theme() -> void:
 	_theme = t
 	_apply_accent()
 
-static func _apply_accent() -> void:
+func _apply_accent() -> void:
 	if _theme == null:
 		return
 	var t := _theme
@@ -123,7 +130,20 @@ static func _apply_accent() -> void:
 		slider_grab_hi.bg_color = accent
 		slider_grab_hi.border_color = accent
 
-static func _make_panel_stylebox() -> StyleBoxFlat:
+func register_overlay(rect: NinePatchRect) -> void:
+	_overlays.append(weakref(rect))
+	rect.modulate = accent
+
+func _apply_overlay_modulate() -> void:
+	var alive: Array[WeakRef] = []
+	for w in _overlays:
+		var node = w.get_ref()
+		if node != null and is_instance_valid(node):
+			node.modulate = accent
+			alive.append(w)
+	_overlays = alive
+
+func _make_panel_stylebox() -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = BG_DEEP
 	s.border_color = accent
@@ -132,7 +152,7 @@ static func _make_panel_stylebox() -> StyleBoxFlat:
 	s.set_content_margin_all(16)
 	return s
 
-static func _make_button_stylebox(normal: bool) -> StyleBoxFlat:
+func _make_button_stylebox(normal: bool) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = BG_MID if normal else BG_DEEP
 	s.border_color = INK_DIM if normal else accent
@@ -143,7 +163,7 @@ static func _make_button_stylebox(normal: bool) -> StyleBoxFlat:
 	s.content_margin_right = 16
 	return s
 
-static func _set_button_styles(t: Theme) -> void:
+func _set_button_styles(t: Theme) -> void:
 	var normal := _make_button_stylebox(true)
 	var hover := _make_button_stylebox(false)
 	var pressed := _make_button_stylebox(false)
@@ -158,8 +178,21 @@ static func _set_button_styles(t: Theme) -> void:
 	t.set_color("font_focus_color", "Button", accent)
 	t.set_color("font_disabled_color", "Button", INK_DIM)
 	t.set_font_size("font_size", "Button", FONT_SIZE_BODY)
+	t.set_constant("button_min_height_marker", "Button", UILayout.BUTTON_MIN_HEIGHT)
+	t.set_type_variation("CompactButton", "Button")
+	t.set_constant("compact_min_width_marker", "CompactButton", UILayout.BUTTON_COMPACT_MIN_WIDTH)
+	t.set_type_variation("IconButton", "Button")
+	var icon_normal: StyleBoxFlat = _make_button_stylebox(true)
+	icon_normal.content_margin_left = 4
+	icon_normal.content_margin_right = 4
+	icon_normal.content_margin_top = 4
+	icon_normal.content_margin_bottom = 4
+	t.set_stylebox("normal", "IconButton", icon_normal)
+	t.set_stylebox("hover", "IconButton", _make_button_stylebox(false))
+	t.set_stylebox("pressed", "IconButton", _make_button_stylebox(false))
+	t.set_stylebox("focused", "IconButton", _make_button_stylebox(false))
 
-static func _set_label_styles(t: Theme) -> void:
+func _set_label_styles(t: Theme) -> void:
 	t.set_color("font_color", "Label", INK)
 	t.set_font_size("font_size", "Label", FONT_SIZE_BODY)
 	# Variation "Title" for screen/section headers.
@@ -167,10 +200,10 @@ static func _set_label_styles(t: Theme) -> void:
 	t.set_color("font_color", "TitleLabel", accent)
 	t.set_font_size("font_size", "TitleLabel", FONT_SIZE_TITLE)
 
-static func _set_panel_styles(t: Theme) -> void:
+func _set_panel_styles(t: Theme) -> void:
 	t.set_stylebox("panel", "PanelContainer", _make_panel_stylebox())
 
-static func _set_slider_styles(t: Theme) -> void:
+func _set_slider_styles(t: Theme) -> void:
 	var track := StyleBoxFlat.new()
 	track.bg_color = BG_DEEP
 	track.border_color = accent
@@ -197,7 +230,7 @@ static func _set_separator_styles(t: Theme) -> void:
 	sep.bg_color = Color(0, 0, 0, 0)
 	sep.border_color = INK_DIM
 	sep.border_width_top = 1
-	sep.set_content_margin_all(4)
+	sep.set_content_margin_all(UILayout.SEPARATOR_PAD)
 	sep.content_margin_left = 0
 	sep.content_margin_right = 0
 	t.set_stylebox("separator", "HSeparator", sep)
@@ -205,6 +238,7 @@ static func _set_separator_styles(t: Theme) -> void:
 static func _set_container_constants(t: Theme) -> void:
 	t.set_constant("separation", "VBoxContainer", 8)
 	t.set_constant("separation", "HBoxContainer", 8)
+	t.set_constant("separation", "HSeparator", UILayout.SEPARATOR_PAD)
 
 static func get_card_shadow_stylebox() -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()

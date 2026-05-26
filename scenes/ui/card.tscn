@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://hqowupdmhpoy" path="res://src/ui/card.gd" id="1_card_script"]
 [ext_resource type="Shader" uid="uid://cy1l6f2ejtvgo" path="res://shaders/ui/fake_3d.gdshader" id="2_shader"]
+[ext_resource type="StyleBox" path="res://resources/ui/styles/panel_frame.tres" id="3_panel_frame"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_fake3d"]
 resource_local_to_scene = true
@@ -19,17 +20,6 @@ shader_parameter/rim_color = Color(1, 0.55, 0.25, 1)
 shader_parameter/selected = 0.0
 shader_parameter/selected_color = Color(1, 0.85, 0.15, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBox_card_panel"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-bg_color = Color(0.212, 0.11, 0.133, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.545, 0.227, 0.165, 1)
 
 [node name="Card" type="Control" unique_id=665513293]
 custom_minimum_size = Vector2(160, 240)
@@ -77,7 +67,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBox_card_panel")
+theme_override_styles/panel = ExtResource("3_panel_frame")
 
 [node name="ContentVBox" type="VBoxContainer" parent="SubViewportContainer/SubViewport/CardPanel" unique_id=298166104]
 layout_mode = 2

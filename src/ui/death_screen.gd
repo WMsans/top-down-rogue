@@ -1,12 +1,9 @@
 extends CanvasLayer
 
 @onready var _red_flash: ColorRect = %RedFlash
-@onready var _died_label: Label = %DiedLabel
 @onready var _flavor_label: Label = %FlavorLabel
 @onready var _stats_label: RichTextLabel = %StatsLabel
 @onready var _continue_button: Button = %ContinueButton
-@onready var _vbox: VBoxContainer = %DeathVBox
-@onready var _panel: PanelContainer = %DeathPanel
 @onready var _vignette: ColorRect = %VignetteOverlay
 
 var _inventory: PlayerInventory
@@ -15,13 +12,6 @@ var _inventory: PlayerInventory
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	_vbox.theme = UiTheme.get_theme()
-	_panel.theme = UiTheme.get_theme()
-
-	_died_label.add_theme_font_size_override("font_size", 72)
-	_died_label.add_theme_color_override("font_color", UiTheme.DANGER)
-	_died_label.add_theme_constant_override("outline_size", 6)
-	_died_label.add_theme_color_override("font_outline_color", Color.BLACK)
 
 	_flavor_label.add_theme_font_size_override("font_size", 18)
 	_flavor_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
@@ -41,7 +31,6 @@ func _ready() -> void:
 	_continue_button.add_theme_stylebox_override("focus", focus_style)
 	UiAnimations.setup_button_hover(_continue_button, 1.05, 0.95)
 	_continue_button.pressed.connect(_on_continue_pressed)
-	_panel.opened.connect(_on_sequence_complete)
 
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
@@ -75,21 +64,10 @@ func _play_red_flash_and_dim() -> void:
 
 	var tween := create_tween()
 	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-
 	tween.tween_property(_red_flash, "color:a", 0.6, 0.08).from(0.0)
 	tween.tween_property(_red_flash, "color:a", 0.0, 0.5)
-
-	tween.parallel().tween_property(_vbox, "position:x", 4.0, 0.075).from(0.0).set_trans(Tween.TRANS_SINE)
-	tween.parallel().tween_property(_vbox, "position:x", -4.0, 0.075).set_trans(Tween.TRANS_SINE)
-	tween.parallel().tween_property(_vbox, "position:x", 3.0, 0.075).set_trans(Tween.TRANS_SINE)
-	tween.parallel().tween_property(_vbox, "position:x", -2.0, 0.075).set_trans(Tween.TRANS_SINE)
-	tween.parallel().tween_property(_vbox, "position:x", 0.0, 0.075).set_trans(Tween.TRANS_SINE)
-
 	tween.tween_property(_vignette, "color:a", 1.0, 0.8).from(0.0)
-
-	tween.finished.connect(func():
-		_panel.open()
-	, CONNECT_ONE_SHOT)
+	tween.finished.connect(_on_sequence_complete, CONNECT_ONE_SHOT)
 
 
 func _on_sequence_complete() -> void:

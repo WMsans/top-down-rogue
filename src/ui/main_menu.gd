@@ -6,10 +6,6 @@ const _UiAnimations = preload("res://src/ui/ui_animations.gd")
 @onready var settings_button: Button = %SettingsButton
 @onready var quit_button: Button = %QuitButton
 @onready var settings_popup: Control = %SettingsPopup
-@onready var button_container: VBoxContainer = %ButtonContainer
-@onready var title_top: Label = %TitleTop
-@onready var title_bottom: Label = %TitleBottom
-@onready var menu_card: PanelContainer = %MenuCard
 
 var _buttons: Array[Button] = []
 
@@ -32,13 +28,7 @@ func _connect_buttons() -> void:
 
 
 func _play_entrance() -> void:
-	title_top.modulate.a = 0.0
-	title_bottom.modulate.a = 0.0
-	var tween := create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.parallel().tween_property(title_top, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_LINEAR)
-	tween.parallel().tween_property(title_bottom, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_LINEAR).set_delay(0.1)
-	UiAnimations.slide_in_up(button_container, 20.0, 0.4)
+	pass
 
 
 func _unhandled_input(event: InputEvent) -> void:

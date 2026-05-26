@@ -19,76 +19,18 @@ var _card_slots: Array[Control] = []
 var _remove_card: Control = null
 var _remove_price_label: Label = null
 
-@onready var _shop_panel: PanelContainer = %ShopPanel
-@onready var _header_bar: PanelContainer = %HeaderBar
-@onready var _action_bar: PanelContainer = %ActionBar
 @onready var _reroll_button: Button = %RerollButton
-@onready var _overlay: ColorRect = %Overlay
 @onready var _gold_label: Label = %GoldLabel
 @onready var _buy_container: HBoxContainer = %BuyContainer
-@onready var _close_button: Button = %CloseButton
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_overlay.gui_input.connect(_on_overlay_input)
-	_close_button.pressed.connect(close)
 	_reroll_button.pressed.connect(_on_reroll_pressed)
 	_reroll_button.text = "Reroll — %d g" % _reroll_cost
 	UiAnimations.setup_button_hover(_reroll_button)
-	UiAnimations.setup_button_hover(_close_button)
-	_apply_bar_styles()
-	_style_action_buttons()
-	_style_header_labels()
+	%ShopPanel.close_requested.connect(close)
 	visible = false
-
-
-func _apply_bar_styles() -> void:
-	var header_style := StyleBoxFlat.new()
-	header_style.bg_color = UiTheme.SURFACE_BG
-	header_style.set_corner_radius_all(0)
-	header_style.set_corner_radius(CORNER_TOP_LEFT, 6)
-	header_style.set_corner_radius(CORNER_TOP_RIGHT, 6)
-	header_style.border_color = UiTheme.ACCENT
-	header_style.set_border_width_all(0)
-	header_style.set_border_width(SIDE_BOTTOM, 2)
-	header_style.shadow_color = Color(0, 0, 0, 0)
-	_header_bar.add_theme_stylebox_override("panel", header_style)
-
-	var action_style := StyleBoxFlat.new()
-	action_style.bg_color = UiTheme.SURFACE_BG
-	action_style.set_corner_radius_all(0)
-	action_style.set_corner_radius(CORNER_BOTTOM_LEFT, 6)
-	action_style.set_corner_radius(CORNER_BOTTOM_RIGHT, 6)
-	action_style.border_color = UiTheme.PANEL_BORDER
-	action_style.set_border_width_all(0)
-	action_style.set_border_width(SIDE_TOP, 1)
-	action_style.shadow_color = Color(0, 0, 0, 0)
-	_action_bar.add_theme_stylebox_override("panel", action_style)
-
-
-func _style_action_buttons() -> void:
-	var theme := UiTheme.get_theme()
-	_reroll_button.theme = theme
-	_close_button.theme = theme
-	_reroll_button.add_theme_font_size_override("font_size", 16)
-	_close_button.add_theme_font_size_override("font_size", 16)
-	_reroll_button.custom_minimum_size = Vector2(0, 36)
-	_close_button.custom_minimum_size = Vector2(0, 36)
-
-
-func _style_header_labels() -> void:
-	var hbox := _header_bar.get_node_or_null("HeaderHBox")
-	if not hbox:
-		return
-	var title := hbox.get_node_or_null("TitleLabel") as Label
-	if title:
-		title.add_theme_font_override("font", UiTheme.PIXEL_FONT)
-		title.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
-		title.add_theme_font_size_override("font_size", 28)
-	_gold_label.add_theme_font_override("font", UiTheme.PIXEL_FONT)
-	_gold_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
-	_gold_label.add_theme_font_size_override("font_size", 22)
 
 
 func open(offerings: Array[ShopOffer]) -> void:
@@ -107,16 +49,10 @@ func open(offerings: Array[ShopOffer]) -> void:
 
 
 func _play_entrance_animation() -> void:
-	_header_bar.modulate.a = 0.0
-	_action_bar.modulate.a = 0.0
-	var header_tween := _header_bar.create_tween()
-	header_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	header_tween.tween_property(_header_bar, "modulate:a", 1.0, 0.2)
-
-	var action_tween := _action_bar.create_tween()
-	action_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	action_tween.tween_interval(0.1)
-	action_tween.tween_property(_action_bar, "modulate:a", 1.0, 0.2)
+	%ShopPanel.modulate.a = 0.0
+	var panel_tween := create_tween()
+	panel_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	panel_tween.tween_property(%ShopPanel, "modulate:a", 1.0, 0.3)
 
 	var cards: Array[Control] = []
 	for child in _buy_container.get_children():
@@ -463,11 +399,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):
 		close()
 		get_viewport().set_input_as_handled()
-
-
-func _on_overlay_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		close()
 
 
 func _on_remove_card_input(card: Control) -> void:
