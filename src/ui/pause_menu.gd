@@ -8,7 +8,6 @@ extends CanvasLayer
 @onready var confirmation_panel: Control = %ConfirmationPanel
 @onready var confirm_yes_button: Button = %ConfirmYesButton
 @onready var confirm_no_button: Button = %ConfirmNoButton
-@onready var pause_card: PanelContainer = %PauseCard
 var _buttons: Array[Button] = []
 
 
@@ -37,7 +36,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if settings_popup.visible:
 			settings_popup.close()
 		elif confirmation_panel.visible:
-			confirmation_panel.close()
+			confirmation_panel.visible = false
 			_focus_first_button()
 		elif pause_panel.visible:
 			_resume_game()
@@ -58,13 +57,12 @@ func _connect_buttons() -> void:
 func _show_pause() -> void:
 	visible = true
 	SceneManager.set_paused(true)
-	pause_panel.open()
+	pause_panel.visible = true
 	_focus_first_button()
 
 
 func _resume_game() -> void:
-	pause_panel.close()
-	await pause_panel.closed
+	pause_panel.visible = false
 	visible = false
 	SceneManager.set_paused(false)
 
@@ -78,21 +76,20 @@ func _on_settings_closed() -> void:
 
 
 func _on_main_menu_pressed() -> void:
-	confirmation_panel.open()
+	confirmation_panel.visible = true
 	confirm_no_button.grab_focus()
 
 
 func _on_confirm_yes() -> void:
-	confirmation_panel.close()
-	pause_panel.close()
-	await pause_panel.closed
+	confirmation_panel.visible = false
+	pause_panel.visible = false
 	SceneManager.set_paused(false)
 	visible = false
 	SceneManager.go_to_main_menu()
 
 
 func _on_confirm_no() -> void:
-	confirmation_panel.close()
+	confirmation_panel.visible = false
 	_focus_first_button()
 
 
