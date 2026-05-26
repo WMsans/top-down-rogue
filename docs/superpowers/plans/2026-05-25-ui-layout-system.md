@@ -4,7 +4,7 @@
 
 **Goal:** Make every UI scene in the game share one layout system — one spacing scale, one modal composition, one HUD scene with 9-slice DawnLike frames, so the UI finally feels like part of the game.
 
-**Architecture:** Add a `UILayout` static-constant class for layout tokens. Add a reusable `ModalPanel` scene + script that every modal embeds. Extract two `StyleBoxTexture` resources from `textures/Assets/DawnLike/GUI/GUI0.png` (via `AtlasTexture` regions — no PNG editing). Extend the existing `UiTheme` autoload with button-size defaults, two button theme variations, and a registry of "accent overlay" NinePatchRects retinted on biome change. Replace `health_ui.tscn` and `weapon_button.tscn` with one `hud.tscn` (TL = health+gold frame, TR = weapon frame). Migrate eight UI scenes to instance `ModalPanel`.
+**Architecture:** Add a `UILayout` static-constant class for layout tokens. Add a reusable `ModalPanel` scene + script that every modal embeds. Two `StyleBoxTexture` resources point at the pre-extracted `textures/Assets/DawnLike/GUI/Frame1.png` (48×48 dark panel with bevel + corner accents) — see Task 2. Extend the existing `UiTheme` autoload with button-size defaults, two button theme variations, and a registry of "accent overlay" NinePatchRects retinted on biome change. The accent overlay uses the same `Frame1.png` with `draw_center = false` so `modulate` recolours ONLY the bevel pixels; the dark interior comes from the underlying `panel_frame.tres` stylebox. Replace `health_ui.tscn` and `weapon_button.tscn` with one `hud.tscn` (TL = health+gold frame, TR = weapon frame). Migrate eight UI scenes to instance `ModalPanel`.
 
 **Tech Stack:** Godot 4, GDScript, gdUnit4 (`extends GdUnitTestSuite`).
 
@@ -127,148 +127,66 @@ git commit -m "feat(ui): add UILayout token class"
 
 ---
 
-## Task 2: 9-slice frame textures from `GUI0.png`
+## Task 2: 9-slice frame styleboxes (PRE-CREATED — verify only)
 
-**Files:**
-- Create: `textures/ui/panel_frame_atlas.tres`
-- Create: `textures/ui/inset_frame_atlas.tres`
-- Create: `textures/ui/panel_frame_border_atlas.tres`
-- Create: `resources/ui/styles/panel_frame.tres`
-- Create: `resources/ui/styles/inset_frame.tres`
+**Status:** The texture and stylebox resources for this task have already been authored from `textures/Assets/DawnLike/GUI/Frame1.png` (a 48×48 pre-extracted dark panel with a 1-px grey-pink bevel + corner accents). The agent that ran this plan-prep step had vision; the agent executing this plan does not need to inspect any image.
 
-The DawnLike `GUI0.png` bottom-grid contains 9-slice frame cells. We extract them with `AtlasTexture` (no PNG editing). The grid is 8 cells wide × 4 cells tall starting below the icon/bar strips. Each cell is **24×24 px** in the source.
+**Files (already on disk, do NOT recreate):**
+- `resources/ui/styles/panel_frame.tres` — 9-slice stylebox, fills + bevels modals/cards. `texture_margin = 4` preserves the 1-px bevel + 3-px corner accent region; `content_margin = 6` is the inner padding all `PanelContainer`s using this stylebox get. `axis_stretch_horizontal/vertical = 1` (TILE).
+- `resources/ui/styles/inset_frame.tres` — same texture, tighter `content_margin = 4` for HUD clusters that need compact framing.
+- `textures/ui/gold_icon_atlas.tres` — `AtlasTexture` over `GUI0.png` at `Rect2(80, 88, 16, 16)` (the gold coin in the small-icon strip). Used in Task 13.
 
-**Cell selection (final, confirmed against the sheet shown in chat):**
-- `panel_frame` — bottom-grid, **column 7, row 0** (zero-indexed) — light-cream bevel on dark fill, the cleanest neutral.
-- `inset_frame` — bottom-grid, **column 6, row 0** — grey bevel on dark fill, for HUD and inset rows.
-- `panel_frame_border` — identical region to `panel_frame`. Used as an overlay; tinting via `modulate` recolours only the visible bevel (the centre is opaque dark, so `modulate` darkens it but the outer NinePatchRect is layered above the PanelContainer's filled stylebox — the dark tint is hidden by the underlying fill).
+**Notes for the executing agent:**
+- The source texture is `res://textures/Assets/DawnLike/GUI/Frame1.png`, NOT a region of `GUI0.png`. Do not re-create `panel_frame_atlas.tres` / `inset_frame_atlas.tres` / `panel_frame_border_atlas.tres` — they are obsolete; the styleboxes reference `Frame1.png` directly.
+- The earlier plan idea of a separate `panel_frame_border_atlas.tres` for a tinted overlay is replaced by using `Frame1.png` directly in the `AccentOverlay` `NinePatchRect` with `draw_center = false`. This way, modulating the overlay recolours ONLY the bevel pixels; the interior fill comes from the underlying `PanelContainer`'s `panel_frame.tres` stylebox and stays dark regardless of accent.
+- `Frame1.png` has not been imported by Godot yet (no `.import` sidecar). Opening the project in the editor once will auto-generate it. If your sandboxed agent run never opens the editor, the `.tres` will still resolve at runtime — Godot generates the import on first project scan when running headless.
 
-Open `GUI0.png` once in the Godot editor and use the Inspector to verify the bottom-grid origin. Expected: bottom grid starts at `y = 56` (the top three rows are hearts / bars / icons; mini-icon strip; coloured swatch strip / icon-button strip). The 24×24 cells then begin. If exact pixel origin differs by a few px (sheet may have transparent padding), adjust the `region` offsets below by the same delta — the relative cell positions are unchanged.
-
-Bottom-grid origin: `(x0, y0) = (0, 56)`. Cell stride: 24 px both axes.
-
-- [ ] **Step 1: Create panel-frame atlas texture**
-
-Create `textures/ui/panel_frame_atlas.tres`:
-
-```
-[gd_resource type="AtlasTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" path="res://textures/Assets/DawnLike/GUI/GUI0.png" id="1"]
-
-[resource]
-atlas = ExtResource("1")
-region = Rect2(168, 56, 24, 24)
-```
-
-`168 = 7 * 24` (column 7), `56` = bottom-grid `y0`.
-
-- [ ] **Step 2: Create inset-frame atlas texture**
-
-Create `textures/ui/inset_frame_atlas.tres`:
-
-```
-[gd_resource type="AtlasTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" path="res://textures/Assets/DawnLike/GUI/GUI0.png" id="1"]
-
-[resource]
-atlas = ExtResource("1")
-region = Rect2(144, 56, 24, 24)
-```
-
-- [ ] **Step 3: Create border-overlay atlas texture**
-
-Create `textures/ui/panel_frame_border_atlas.tres`:
-
-```
-[gd_resource type="AtlasTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" path="res://textures/Assets/DawnLike/GUI/GUI0.png" id="1"]
-
-[resource]
-atlas = ExtResource("1")
-region = Rect2(168, 56, 24, 24)
-```
-
-(Same region as `panel_frame` — a NinePatchRect using this and `modulate = accent` will recolour the bevel; see Task 6 for how the overlay is layered so the modulated centre doesn't darken the interior.)
-
-- [ ] **Step 4: Create panel-frame stylebox**
-
-Create `resources/ui/styles/panel_frame.tres`:
-
-```
-[gd_resource type="StyleBoxTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" path="res://textures/ui/panel_frame_atlas.tres" id="1"]
-
-[resource]
-texture = ExtResource("1")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
-content_margin_left = 6.0
-content_margin_top = 6.0
-content_margin_right = 6.0
-content_margin_bottom = 6.0
-axis_stretch_horizontal = 1
-axis_stretch_vertical = 1
-```
-
-`axis_stretch = 1` is `AXIS_STRETCH_TILE`. 6-px texture margin matches the visible bevel in the DawnLike cell.
-
-- [ ] **Step 5: Create inset-frame stylebox**
-
-Create `resources/ui/styles/inset_frame.tres`:
-
-```
-[gd_resource type="StyleBoxTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" path="res://textures/ui/inset_frame_atlas.tres" id="1"]
-
-[resource]
-texture = ExtResource("1")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
-content_margin_left = 6.0
-content_margin_top = 6.0
-content_margin_right = 6.0
-content_margin_bottom = 6.0
-axis_stretch_horizontal = 1
-axis_stretch_vertical = 1
-```
-
-- [ ] **Step 6: Visual verification in editor**
-
-Open Godot editor, create a temporary test scene (`scenes/ui/_frame_preview.tscn`, do not commit) containing:
-
-```
-Control (full-rect)
-├── PanelContainer (custom_minimum_size = 320 × 160,
-│                   theme_override_styles/panel = panel_frame.tres)
-│   └── Label "panel_frame"
-└── PanelContainer (anchor below first,
-                   custom_minimum_size = 320 × 80,
-                   theme_override_styles/panel = inset_frame.tres)
-    └── Label "inset_frame"
-```
-
-Run the scene (F6). Expected:
-- Both panels show a continuous bevelled border with no stretched/blurred corners — corner 6-px regions stay crisp; edges tile cleanly; centre fill is dark.
-- If bevel looks pinched: bottom-grid `y0` is off — re-measure the source PNG in an image viewer and adjust `region.position.y` in steps 1–3.
-- If bevel is stretched/blurred at corners: `texture_margin` is wrong — try 5 or 7 px.
-
-Delete `scenes/ui/_frame_preview.tscn` before committing.
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 1: Verify files exist**
 
 ```bash
-git add textures/ui/ resources/ui/styles/
-git commit -m "feat(ui): add 9-slice frame textures from DawnLike GUI0"
+ls -1 resources/ui/styles/panel_frame.tres \
+       resources/ui/styles/inset_frame.tres \
+       textures/ui/gold_icon_atlas.tres \
+       textures/Assets/DawnLike/GUI/Frame1.png
 ```
+
+Expected: all four paths print with no error. If any are missing, STOP and ask the operator — do not attempt to re-derive frame cell positions from `GUI0.png` (the agent running this plan has no vision).
+
+- [ ] **Step 2: Sanity-check stylebox contents**
+
+```bash
+cat resources/ui/styles/panel_frame.tres
+```
+
+Expected output contains:
+- `ext_resource ... path="res://textures/Assets/DawnLike/GUI/Frame1.png"`
+- `texture_margin_left = 4.0` (and right/top/bottom)
+- `content_margin_left = 6.0` (and right/top/bottom)
+- `axis_stretch_horizontal = 1` and `axis_stretch_vertical = 1`
+
+```bash
+cat resources/ui/styles/inset_frame.tres
+```
+
+Expected: same except `content_margin_* = 4.0`.
+
+```bash
+cat textures/ui/gold_icon_atlas.tres
+```
+
+Expected: `region = Rect2(80, 88, 16, 16)`.
+
+- [ ] **Step 3: Runtime smoke check (optional — only if `godot` CLI is configured)**
+
+```bash
+godot --headless --check-only --quit-after 1 2>&1 | grep -iE "(error|fail|frame1)" || echo "no resource-load errors"
+```
+
+Expected: no error lines mentioning `Frame1.png` or the two styleboxes. (A first-run import message is fine.)
+
+- [ ] **Step 4: Commit (only if files were modified by this task — typically no commit needed)**
+
+The files were committed in the prep step that authored them. If `git status` shows changes here, something went wrong — investigate before committing.
 
 ---
 
@@ -604,7 +522,7 @@ func _on_backdrop_gui_input(event: InputEvent) -> void:
 
 [ext_resource type="Script" path="res://src/ui/modal_panel.gd" id="1"]
 [ext_resource type="StyleBox" path="res://resources/ui/styles/panel_frame.tres" id="2"]
-[ext_resource type="Texture2D" path="res://textures/ui/panel_frame_border_atlas.tres" id="3"]
+[ext_resource type="Texture2D" path="res://textures/Assets/DawnLike/GUI/Frame1.png" id="3"]
 
 [node name="ModalPanel" type="Control"]
 layout_mode = 3
@@ -649,10 +567,13 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("3")
-patch_margin_left = 6
-patch_margin_top = 6
-patch_margin_right = 6
-patch_margin_bottom = 6
+draw_center = false
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
 modulate = Color(1, 1, 1, 1)
 
 [node name="Margin" type="MarginContainer" parent="CenterContainer/Root"]
@@ -1733,23 +1654,23 @@ text = "Damage: 0"
 
 The gold icon texture is set in step 4 (from a region of GUI0.png).
 
-- [ ] **Step 4: Add gold icon atlas**
+- [ ] **Step 4: Wire gold icon atlas (PRE-CREATED)**
 
-Create `textures/ui/gold_icon_atlas.tres`:
+`textures/ui/gold_icon_atlas.tres` was authored in Task 2 — `AtlasTexture` over `GUI0.png` at `Rect2(80, 88, 16, 16)` (the gold coin in the small-icon strip, sixth icon from the left at y=88). Do NOT recreate.
+
+Verify it exists:
+```bash
+cat textures/ui/gold_icon_atlas.tres
+```
+Expected: `region = Rect2(80, 88, 16, 16)`.
+
+In `hud.tscn` from Step 3 above, the `GoldIcon` `TextureRect` node needs its `texture` property pointing at this atlas. Add to the scene header:
 
 ```
-[gd_resource type="AtlasTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" path="res://textures/Assets/DawnLike/GUI/GUI0.png" id="1"]
-
-[resource]
-atlas = ExtResource("1")
-region = Rect2(0, 40, 16, 16)
+[ext_resource type="Texture2D" path="res://textures/ui/gold_icon_atlas.tres" id="4"]
 ```
 
-(The small coin/gem swatch row sits just below the heart/bar strip — confirm `region` against the source PNG; expected x=0, y=40 for the first 16×16 swatch. Adjust if the chosen swatch isn't a gold coin visually.)
-
-In `hud.tscn`, set the `GoldIcon` node's `texture` property to `res://textures/ui/gold_icon_atlas.tres` (add as `ext_resource` in the header and reference).
+…and set the `GoldIcon` node's `texture = ExtResource("4")`. (Adjust the ext_resource id number to whatever's free in the scene header.)
 
 - [ ] **Step 5: Update `scenes/game.tscn`**
 
