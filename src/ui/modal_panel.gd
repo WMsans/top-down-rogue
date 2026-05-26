@@ -52,6 +52,8 @@ func _ready() -> void:
 	_refresh_close_button()
 	_refresh_backdrop()
 	_refresh_section_visibility()
+	var overlay: NinePatchRect = $CenterContainer/Root/AccentOverlay
+	UiTheme.register_overlay(overlay)
 
 func get_body() -> VBoxContainer:
 	return _body
