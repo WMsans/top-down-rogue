@@ -3,7 +3,7 @@ shader_type canvas_item;
 uniform float scanline_intensity : hint_range(0.0, 1.0) = 0.25;
 uniform float scanline_period_rows : hint_range(2.0, 16.0) = 3.0;
 uniform float scanline_dark_rows : hint_range(1.0, 8.0) = 1.0;
-uniform float scanline_speed : hint_range(0.0, 20.0) = 0.0;
+uniform float scanline_speed : hint_range(0.0, 60.0) = 12.0;
 uniform float curvature : hint_range(0.0, 0.3) = 0.08;
 uniform float vignette_strength : hint_range(0.0, 1.0) = 0.35;
 uniform float vignette_softness : hint_range(0.05, 1.0) = 0.45;
