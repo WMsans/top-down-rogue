@@ -3,14 +3,15 @@ extends RefCounted
 
 const SCENE: PackedScene = preload("res://scenes/fx/nail_clash.tscn")
 
-const HITSTOP_DURATION: float = 0.16
-const FLASH_DURATION: float = 0.22
-const SLASH_DURATION: float = 0.18
-const RING_DURATION: float = 0.28
-const RING2_DELAY: float = 0.05
-const RING2_DURATION: float = 0.34
-const SHAKE_AMPLITUDE: float = 5.0
-const SHAKE_DURATION: float = 0.18
+const HITSTOP_DURATION: float = 0.06
+const FLASH_DURATION: float = 0.14
+const SLASH_DURATION: float = 0.12
+const RING_DURATION: float = 0.20
+const RING2_DELAY: float = 0.04
+const RING2_DURATION: float = 0.24
+const SHAKE_AMPLITUDE: float = 1.5
+const SHAKE_DURATION: float = 0.10
+const FX_SCALE: float = 0.55
 
 
 static func play(pos: Vector2, normal: Vector2, tint: Color = Color(1, 1, 1, 1)) -> void:
@@ -26,8 +27,9 @@ static func play(pos: Vector2, normal: Vector2, tint: Color = Color(1, 1, 1, 1))
 	fx.global_position = pos
 	var ang := normal.angle() if normal.length_squared() > 0.0001 else 0.0
 	fx.rotation = ang
+	fx.scale = Vector2(FX_SCALE, FX_SCALE)
 
-	var spark_tint := Color(tint.r, tint.g, tint.b, 1.0)
+	var spark_tint := Color(tint.r, tint.g, tint.b, 0.7)
 	var sparks := fx.get_node_or_null("Sparks") as GPUParticles2D
 	if sparks:
 		sparks.self_modulate = spark_tint
@@ -74,15 +76,15 @@ static func _play_flash(rect: ColorRect, tint: Color) -> void:
 	if rect == null or not (rect.material is ShaderMaterial):
 		return
 	var mat: ShaderMaterial = rect.material
-	var hot := Color(maxf(tint.r, 1.5), maxf(tint.g, 1.5), maxf(tint.b, 1.5), 1.0)
+	var hot := Color(maxf(tint.r, 1.1), maxf(tint.g, 1.1), maxf(tint.b, 1.1), 0.7)
 	mat.set_shader_parameter("core_color", hot)
-	mat.set_shader_parameter("halo_color", tint)
-	mat.set_shader_parameter("intensity", 1.0)
+	mat.set_shader_parameter("halo_color", Color(tint.r, tint.g, tint.b, tint.a * 0.6))
+	mat.set_shader_parameter("intensity", 0.55)
 	rect.scale = Vector2(0.35, 0.35)
 	var tw := rect.create_tween().set_parallel(true)
 	tw.tween_property(rect, "scale", Vector2(1.0, 1.0), FLASH_DURATION)\
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("intensity", v), 1.0, 0.0, FLASH_DURATION)\
+	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("intensity", v), 0.55, 0.0, FLASH_DURATION)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
@@ -90,15 +92,15 @@ static func _play_slash(rect: ColorRect, tint: Color) -> void:
 	if rect == null or not (rect.material is ShaderMaterial):
 		return
 	var mat: ShaderMaterial = rect.material
-	mat.set_shader_parameter("streak_color", tint)
-	mat.set_shader_parameter("intensity", 1.0)
-	mat.set_shader_parameter("thickness", 0.04)
+	mat.set_shader_parameter("streak_color", Color(tint.r, tint.g, tint.b, tint.a * 0.6))
+	mat.set_shader_parameter("intensity", 0.5)
+	mat.set_shader_parameter("thickness", 0.025)
 	rect.scale = Vector2(0.2, 0.2)
 	var tw := rect.create_tween().set_parallel(true)
 	tw.tween_property(rect, "scale", Vector2(0.9, 0.9), SLASH_DURATION)\
 		.set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
-	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("thickness", v), 0.04, 0.005, SLASH_DURATION)
-	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("intensity", v), 1.0, 0.0, SLASH_DURATION)\
+	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("thickness", v), 0.025, 0.003, SLASH_DURATION)
+	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("intensity", v), 0.5, 0.0, SLASH_DURATION)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
@@ -106,14 +108,14 @@ static func _play_ring(rect: ColorRect, delay: float, duration: float, scale_mul
 	if rect == null or not (rect.material is ShaderMaterial):
 		return
 	var mat: ShaderMaterial = rect.material
-	mat.set_shader_parameter("ring_color", tint)
+	mat.set_shader_parameter("ring_color", Color(tint.r, tint.g, tint.b, tint.a * 0.55))
 	mat.set_shader_parameter("radius", 0.0)
-	mat.set_shader_parameter("alpha", 1.0)
+	mat.set_shader_parameter("alpha", 0.55)
 	rect.scale = Vector2(scale_mul, scale_mul)
 	var tw := rect.create_tween().set_parallel(true)
 	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("radius", v), 0.0, 1.0, duration)\
 		.set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("alpha", v), 1.0, 0.0, duration)\
+	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("alpha", v), 0.55, 0.0, duration)\
 		.set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_property(rect, "scale", Vector2(scale_mul * 1.5, scale_mul * 1.5), duration)\
 		.set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

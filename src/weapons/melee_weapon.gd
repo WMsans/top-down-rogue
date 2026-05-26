@@ -20,7 +20,7 @@ extends Weapon
 @export var hold_duration: float = 0.025
 @export var return_duration: float = 0.32
 
-@export var parry_window: float = 1.0
+@export var parry_window: float = 0.3
 @export var parryable: bool = true
 
 @export var anticipation_pullback: float = PI / 5.0
