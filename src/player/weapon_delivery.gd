@@ -63,9 +63,9 @@ func _offer_modifier(spec: WeaponOfferSpec, callback: Callable) -> void:
 				found = true
 				break
 		if not found:
-			var wpn_button := get_tree().current_scene.get_node_or_null("WeaponButton")
-			if wpn_button and wpn_button.has_method("flash_slots_full"):
-				wpn_button.flash_slots_full()
+			var hud := get_tree().current_scene.get_node_or_null("HUD")
+			if hud and hud.has_method("flash_slots_full"):
+				hud.flash_slots_full()
 			callback.call(false, -1)
 			return
 	if _test_mode:
