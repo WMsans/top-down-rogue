@@ -13,7 +13,7 @@ func apply(ctx) -> void:
 	spr.texture = texture
 	spr.centered = true
 	spr.z_index = z_index_value
-	var tex_size: Vector2 = texture.get_size()
-	if tex_size.x > 0 and tex_size.y > 0:
-		spr.scale = Vector2(size.x / tex_size.x, size.y / tex_size.y)
+	spr.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	spr.region_enabled = true
+	spr.region_rect = Rect2(Vector2.ZERO, size)
 	ctx.dispatcher.spawn_node(spr, ctx.anchor_world_pos + offset)

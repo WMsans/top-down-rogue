@@ -15,44 +15,44 @@
 [sub_resource type="Resource" id="Resource_floor"]
 script = ExtResource("2_floor")
 texture = ExtResource("7_planks")
-size = Vector2(1024, 1024)
+size = Vector2(256, 256)
 offset = Vector2(0, 0)
 z_index_value = -5
 
 [sub_resource type="Resource" id="Resource_lantern_nw"]
 script = ExtResource("5_lspec")
-offset = Vector2(-300, -300)
+offset = Vector2(-90, -90)
 prop_scene = ExtResource("8_lantern_scene")
 light_color = Color(1, 0.85, 0.6, 1)
 light_energy = 1.2
-light_radius = 450.0
+light_radius = 200.0
 flicker_amplitude = 0.08
 
 [sub_resource type="Resource" id="Resource_lantern_ne"]
 script = ExtResource("5_lspec")
-offset = Vector2(300, -300)
+offset = Vector2(90, -90)
 prop_scene = ExtResource("8_lantern_scene")
 light_color = Color(1, 0.85, 0.6, 1)
 light_energy = 1.2
-light_radius = 450.0
+light_radius = 200.0
 flicker_amplitude = 0.08
 
 [sub_resource type="Resource" id="Resource_lantern_sw"]
 script = ExtResource("5_lspec")
-offset = Vector2(-300, 300)
+offset = Vector2(-90, 90)
 prop_scene = ExtResource("8_lantern_scene")
 light_color = Color(1, 0.85, 0.6, 1)
 light_energy = 1.2
-light_radius = 450.0
+light_radius = 200.0
 flicker_amplitude = 0.08
 
 [sub_resource type="Resource" id="Resource_lantern_se"]
 script = ExtResource("5_lspec")
-offset = Vector2(300, 300)
+offset = Vector2(90, 90)
 prop_scene = ExtResource("8_lantern_scene")
 light_color = Color(1, 0.85, 0.6, 1)
 light_energy = 1.2
-light_radius = 450.0
+light_radius = 200.0
 flicker_amplitude = 0.08
 
 [sub_resource type="Resource" id="Resource_lantern_cluster"]
@@ -61,23 +61,23 @@ lanterns = Array[ExtResource("5_lspec")]([SubResource("Resource_lantern_nw"), Su
 
 [sub_resource type="Resource" id="Resource_plaque_goal"]
 script = ExtResource("6_pspec")
-offset = Vector2(0, -360)
+offset = Vector2(0, -100)
 texture = ExtResource("9_goal")
-size = Vector2(96, 96)
+size = Vector2(48, 48)
 z_index_value = 5
 
 [sub_resource type="Resource" id="Resource_plaque_move"]
 script = ExtResource("6_pspec")
-offset = Vector2(-360, 0)
+offset = Vector2(-100, 0)
 texture = ExtResource("10_move")
-size = Vector2(64, 64)
+size = Vector2(32, 32)
 z_index_value = 5
 
 [sub_resource type="Resource" id="Resource_plaque_attack"]
 script = ExtResource("6_pspec")
-offset = Vector2(360, 0)
+offset = Vector2(100, 0)
 texture = ExtResource("11_attack")
-size = Vector2(64, 64)
+size = Vector2(32, 32)
 z_index_value = 5
 
 [sub_resource type="Resource" id="Resource_plaque_set"]
@@ -89,7 +89,7 @@ script = ExtResource("1_comp")
 arena_kind = &"guidance"
 biome = &"caves"
 variant_id = &"a"
-nominal_radius = 500
-lobing_amplitude = 30
-inner_disc_radius = 240
+nominal_radius = 128
+lobing_amplitude = 8
+inner_disc_radius = 60
 features = [SubResource("Resource_floor"), SubResource("Resource_lantern_cluster"), SubResource("Resource_plaque_set")]
