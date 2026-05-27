@@ -1,0 +1,95 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="1_comp"]
+[ext_resource type="Script" path="res://src/core/features/feature_floor_overlay.gd" id="2_floor"]
+[ext_resource type="Script" path="res://src/core/features/feature_lantern_cluster.gd" id="3_lantern"]
+[ext_resource type="Script" path="res://src/core/features/feature_plaque_set.gd" id="4_plaque"]
+[ext_resource type="Script" path="res://src/core/features/lantern_spec.gd" id="5_lspec"]
+[ext_resource type="Script" path="res://src/core/features/plaque_spec.gd" id="6_pspec"]
+[ext_resource type="Texture2D" path="res://textures/Guidance/wooden_planks.png" id="7_planks"]
+[ext_resource type="PackedScene" path="res://scenes/props/lantern.tscn" id="8_lantern_scene"]
+[ext_resource type="Texture2D" path="res://textures/Guidance/sign_goal.png" id="9_goal"]
+[ext_resource type="Texture2D" path="res://textures/Guidance/sign_move.png" id="10_move"]
+[ext_resource type="Texture2D" path="res://textures/Guidance/sign_attack.png" id="11_attack"]
+
+[sub_resource type="Resource" id="Resource_floor"]
+script = ExtResource("2_floor")
+texture = ExtResource("7_planks")
+size = Vector2(1024, 1024)
+offset = Vector2(0, 0)
+z_index_value = -5
+
+[sub_resource type="Resource" id="Resource_lantern_nw"]
+script = ExtResource("5_lspec")
+offset = Vector2(-300, -300)
+prop_scene = ExtResource("8_lantern_scene")
+light_color = Color(1, 0.85, 0.6, 1)
+light_energy = 1.2
+light_radius = 450.0
+flicker_amplitude = 0.08
+
+[sub_resource type="Resource" id="Resource_lantern_ne"]
+script = ExtResource("5_lspec")
+offset = Vector2(300, -300)
+prop_scene = ExtResource("8_lantern_scene")
+light_color = Color(1, 0.85, 0.6, 1)
+light_energy = 1.2
+light_radius = 450.0
+flicker_amplitude = 0.08
+
+[sub_resource type="Resource" id="Resource_lantern_sw"]
+script = ExtResource("5_lspec")
+offset = Vector2(-300, 300)
+prop_scene = ExtResource("8_lantern_scene")
+light_color = Color(1, 0.85, 0.6, 1)
+light_energy = 1.2
+light_radius = 450.0
+flicker_amplitude = 0.08
+
+[sub_resource type="Resource" id="Resource_lantern_se"]
+script = ExtResource("5_lspec")
+offset = Vector2(300, 300)
+prop_scene = ExtResource("8_lantern_scene")
+light_color = Color(1, 0.85, 0.6, 1)
+light_energy = 1.2
+light_radius = 450.0
+flicker_amplitude = 0.08
+
+[sub_resource type="Resource" id="Resource_lantern_cluster"]
+script = ExtResource("3_lantern")
+lanterns = Array[ExtResource("5_lspec")]([SubResource("Resource_lantern_nw"), SubResource("Resource_lantern_ne"), SubResource("Resource_lantern_sw"), SubResource("Resource_lantern_se")])
+
+[sub_resource type="Resource" id="Resource_plaque_goal"]
+script = ExtResource("6_pspec")
+offset = Vector2(0, -360)
+texture = ExtResource("9_goal")
+size = Vector2(96, 96)
+z_index_value = 5
+
+[sub_resource type="Resource" id="Resource_plaque_move"]
+script = ExtResource("6_pspec")
+offset = Vector2(-360, 0)
+texture = ExtResource("10_move")
+size = Vector2(64, 64)
+z_index_value = 5
+
+[sub_resource type="Resource" id="Resource_plaque_attack"]
+script = ExtResource("6_pspec")
+offset = Vector2(360, 0)
+texture = ExtResource("11_attack")
+size = Vector2(64, 64)
+z_index_value = 5
+
+[sub_resource type="Resource" id="Resource_plaque_set"]
+script = ExtResource("4_plaque")
+plaques = Array[ExtResource("6_pspec")]([SubResource("Resource_plaque_goal"), SubResource("Resource_plaque_move"), SubResource("Resource_plaque_attack")])
+
+[resource]
+script = ExtResource("1_comp")
+arena_kind = &"guidance"
+biome = &"caves"
+variant_id = &"a"
+nominal_radius = 500
+lobing_amplitude = 30
+inner_disc_radius = 240
+features = [SubResource("Resource_floor"), SubResource("Resource_lantern_cluster"), SubResource("Resource_plaque_set")]
