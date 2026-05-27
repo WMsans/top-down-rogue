@@ -21,3 +21,4 @@ extends Resource
 @export var enemy_pool: Array[PackedScene] = []
 @export var elite_chance: float = 0.15
 @export var boss_scene: PackedScene = null
+@export var fixed_anchors: Dictionary = {}  # Vector2i sector -> RoomTemplate
