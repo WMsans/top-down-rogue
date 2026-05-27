@@ -8,9 +8,6 @@ extends CanvasLayer
 @onready var confirmation_panel: Control = %ConfirmationPanel
 @onready var confirm_yes_button: Button = %ConfirmYesButton
 @onready var confirm_no_button: Button = %ConfirmNoButton
-@onready var pause_card: PanelContainer = %PauseCard
-@onready var dimmer: ColorRect = %Dimmer
-
 var _buttons: Array[Button] = []
 
 
@@ -29,8 +26,6 @@ func _ready() -> void:
 	UiAnimations.setup_button_hover(confirm_yes_button)
 	UiAnimations.setup_button_hover(confirm_no_button)
 	_connect_buttons()
-	confirmation_panel.visible = false
-	pause_panel.visible = false
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -63,15 +58,6 @@ func _show_pause() -> void:
 	visible = true
 	SceneManager.set_paused(true)
 	pause_panel.visible = true
-	confirmation_panel.visible = false
-	dimmer.color.a = 0.0
-	pause_card.position.y += 30.0
-	pause_card.modulate.a = 0.0
-	var tween := create_tween()
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.parallel().tween_property(dimmer, "color:a", 0.7, 0.25).set_trans(Tween.TRANS_LINEAR)
-	tween.parallel().tween_property(pause_card, "position:y", pause_card.position.y - 30.0, 0.3).set_trans(Tween.TRANS_CIRC).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(pause_card, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_LINEAR)
 	_focus_first_button()
 
 
@@ -95,8 +81,9 @@ func _on_main_menu_pressed() -> void:
 
 
 func _on_confirm_yes() -> void:
-	SceneManager.set_paused(false)
+	confirmation_panel.visible = false
 	pause_panel.visible = false
+	SceneManager.set_paused(false)
 	visible = false
 	SceneManager.go_to_main_menu()
 

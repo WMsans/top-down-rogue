@@ -18,11 +18,29 @@ config/icon="res://icon.svg"
 [autoload]
 
 MaterialRegistry="*res://src/autoload/material_registry.gd"
+BiomeRegistry="*res://src/autoload/biome_registry.gd"
+LevelManager="*res://src/autoload/level_manager.gd"
+UiTheme="*res://src/ui/ui_theme.gd"
+CrtOverlay="*res://scenes/ui/crt_overlay.tscn"
 SceneManager="*res://src/autoload/scene_manager.gd"
+WeaponRegistry="*res://src/autoload/weapon_registry.gd"
+ConsoleManager="*res://src/autoload/console_manager.gd"
+HitReaction="*res://src/core/juice/hit_reaction.gd"
+TerrainSurface="*res://src/core/terrain_surface.gd"
+TerrainImpact="*res://src/core/juice/terrain_impact.gd"
+GameModeManager="*res://src/autoload/game_mode_manager.gd"
+CompositionDispatcher="*res://src/core/composition_dispatcher.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/resizable=false
+window/stretch/mode="viewport"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/level_preview/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
 [input]
 
@@ -60,6 +78,10 @@ interact={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":69,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+
+[layer_names]
+
+2d_physics/layer_8="attackable_hit"
 
 [physics]
 

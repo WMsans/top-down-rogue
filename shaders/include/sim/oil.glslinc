@@ -1,0 +1,231 @@
+int get_density_oil(vec4 p) { return int(round(p.g * 255.0)); }
+int get_temperature_oil(vec4 p) { return int(round(p.b * 255.0)); }
+
+ivec2 unpack_velocity_oil(vec4 p) {
+	uint a = uint(round(p.a * 255.0));
+	return ivec2(int(a >> 4) - 8, int(a & 15u) - 8);
+}
+
+vec4 pack_oil(int density, int temperature, ivec2 vel) {
+	int vx = clamp(vel.x + 8, 0, 15);
+	int vy = clamp(vel.y + 8, 0, 15);
+	uint a = (uint(vx) << 4) | uint(vy);
+	return vec4(
+		float(MAT_OIL) / 255.0,
+		float(clamp(density, 0, 255)) / 255.0,
+		float(clamp(temperature, 0, 255)) / 255.0,
+		float(a) / 255.0
+	);
+}
+
+bool is_solid_for_oil(int mat) {
+	return mat != MAT_AIR && mat != MAT_OIL;
+}
+
+void oil_advect_pull(
+	ivec2 pos, vec4 pixel,
+	vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right
+) {
+	int material = get_material(pixel);
+
+	int n_mat_up    = get_material(n_up);
+	int n_mat_down  = get_material(n_down);
+	int n_mat_left  = get_material(n_left);
+	int n_mat_right = get_material(n_right);
+
+	bool any_oil_neighbor =
+		n_mat_up == MAT_OIL || n_mat_down == MAT_OIL ||
+		n_mat_left == MAT_OIL || n_mat_right == MAT_OIL;
+
+	if (material == MAT_AIR && !any_oil_neighbor) {
+		return;
+	}
+
+	int density = (material == MAT_OIL) ? get_density_oil(pixel) : 0;
+	int temperature = (material == MAT_OIL) ? get_temperature_oil(pixel) : 0;
+	ivec2 vel = (material == MAT_OIL) ? unpack_velocity_oil(pixel) : ivec2(0);
+
+	int comp_up    = max(0, -vel.y);
+	int comp_down  = max(0,  vel.y);
+	int comp_left  = max(0, -vel.x);
+	int comp_right = max(0,  vel.x);
+
+	if (is_solid_for_oil(n_mat_up))    comp_up    = 0;
+	if (is_solid_for_oil(n_mat_down))  comp_down  = 0;
+	if (is_solid_for_oil(n_mat_left))  comp_left  = 0;
+	if (is_solid_for_oil(n_mat_right)) comp_right = 0;
+
+	int out_up    = stochastic_div(density * comp_up,    V_MAX_OUTFLOW, pos, 101u);
+	int out_down  = stochastic_div(density * comp_down,  V_MAX_OUTFLOW, pos, 102u);
+	int out_left  = stochastic_div(density * comp_left,  V_MAX_OUTFLOW, pos, 103u);
+	int out_right = stochastic_div(density * comp_right, V_MAX_OUTFLOW, pos, 104u);
+
+	int total_out = out_up + out_down + out_left + out_right;
+	int max_outflow = min(density, max(1, density / 2));
+	if (total_out > max_outflow) {
+		out_up    = out_up    * max_outflow / max(1, total_out);
+		out_down  = out_down  * max_outflow / max(1, total_out);
+		out_left  = out_left  * max_outflow / max(1, total_out);
+		out_right = out_right * max_outflow / max(1, total_out);
+		total_out = out_up + out_down + out_left + out_right;
+	}
+
+	int in_up = 0, in_down = 0, in_left = 0, in_right = 0;
+	ivec2 vin_up = ivec2(0), vin_down = ivec2(0), vin_left = ivec2(0), vin_right = ivec2(0);
+
+	if (n_mat_up == MAT_OIL) {
+		int dN = get_density_oil(n_up);
+		ivec2 vN = unpack_velocity_oil(n_up);
+		in_up = stochastic_div(dN * max(0, vN.y), V_MAX_OUTFLOW, pos, 105u);
+		vin_up = vN;
+	}
+	if (n_mat_down == MAT_OIL) {
+		int dN = get_density_oil(n_down);
+		ivec2 vN = unpack_velocity_oil(n_down);
+		in_down = stochastic_div(dN * max(0, -vN.y), V_MAX_OUTFLOW, pos, 106u);
+		vin_down = vN;
+	}
+	if (n_mat_left == MAT_OIL) {
+		int dN = get_density_oil(n_left);
+		ivec2 vN = unpack_velocity_oil(n_left);
+		in_left = stochastic_div(dN * max(0, vN.x), V_MAX_OUTFLOW, pos, 107u);
+		vin_left = vN;
+	}
+	if (n_mat_right == MAT_OIL) {
+		int dN = get_density_oil(n_right);
+		ivec2 vN = unpack_velocity_oil(n_right);
+		in_right = stochastic_div(dN * max(0, -vN.x), V_MAX_OUTFLOW, pos, 108u);
+		vin_right = vN;
+	}
+
+	int total_in = in_up + in_down + in_left + in_right;
+
+	if (is_solid_for_oil(n_mat_up)    && vel.y < 0) vel.y = -vel.y;
+	if (is_solid_for_oil(n_mat_down)  && vel.y > 0) vel.y = -vel.y;
+	if (is_solid_for_oil(n_mat_left)  && vel.x < 0) vel.x = -vel.x;
+	if (is_solid_for_oil(n_mat_right) && vel.x > 0) vel.x = -vel.x;
+
+	int new_density = clamp(density - total_out + total_in, 0, 255);
+
+	int stayed = max(0, density - total_out);
+	int weight = max(1, stayed + total_in);
+	ivec2 vsum = vel * stayed
+	           + vin_up * in_up + vin_down * in_down
+	           + vin_left * in_left + vin_right * in_right;
+	ivec2 new_vel = vsum / weight;
+	// Heavy damping toward rest. Oil should sit still by default; it only moves
+	// when actively pushed by a rigidbody (via injection.glslinc) or when
+	// drained into adjacent air. Without strong damping, velocity introduced
+	// by a transient (rigidbody push, or in past versions a wave clobber that
+	// wrote a=0 → vel=(-8,-8)) self-perpetuates through advection because the
+	// inflow mixing preserves the common velocity of donor cells.
+	new_vel = (new_vel * 3) / 4;
+	new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
+
+	int temp_weight = stayed * temperature;
+	if (n_mat_up == MAT_OIL) temp_weight += get_temperature_oil(n_up) * in_up;
+	if (n_mat_down == MAT_OIL) temp_weight += get_temperature_oil(n_down) * in_down;
+	if (n_mat_left == MAT_OIL) temp_weight += get_temperature_oil(n_left) * in_left;
+	if (n_mat_right == MAT_OIL) temp_weight += get_temperature_oil(n_right) * in_right;
+	int new_temp = temp_weight / max(1, stayed + total_in);
+	// Once a cell is burning, inflow of cool oil should not extinguish it —
+	// physically the cool oil heats up to flame temp, not the other way around.
+	// Without this clamp, advection dilutes FIRE_TEMP below IGNITION_TEMP, the
+	// next burn tick sees temp<ignition and skips the density decrement, and
+	// the surface fire stalls into sparse short-lived flashes instead of
+	// consuming the pool.
+	if (material == MAT_OIL && temperature > IGNITION_TEMP[MAT_OIL]) {
+		new_temp = max(new_temp, FIRE_TEMP);
+	}
+
+	if (material == MAT_AIR) {
+		if (total_in >= THRESHOLD_BECOME_LAVA) {
+			ivec2 inflow_vel = ivec2(0);
+			if (total_in > 0) {
+				inflow_vel = (vin_up * in_up + vin_down * in_down + vin_left * in_left + vin_right * in_right) / total_in;
+				inflow_vel = (inflow_vel * 3) / 4;
+				inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
+			}
+			imageStore(chunk_tex, pos, pack_oil(total_in, new_temp, inflow_vel));
+			return;
+		}
+		return;
+	}
+
+	if (new_density < THRESHOLD_DISSIPATE) {
+		imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
+		return;
+	}
+	imageStore(chunk_tex, pos, pack_oil(new_density, new_temp, new_vel));
+}
+
+bool simulate_oil(ivec2 pos, inout vec4 pixel, inout int material,
+                  vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right) {
+	if (material != MAT_OIL && material != MAT_AIR) return false;
+	oil_advect_pull(pos, pixel, n_up, n_down, n_left, n_right);
+	if (material == MAT_OIL) {
+		pixel = imageLoad(chunk_tex, pos);
+		material = get_material(pixel);
+		if (material != MAT_OIL) return false;
+
+		if ((pos.x + pos.y) % 2 != pc.phase) return true;
+
+		int density = get_density_oil(pixel);
+		int temp = get_temperature_oil(pixel);
+
+		uint base_rng = hash(uint(pos.x) ^ hash(uint(pos.y) ^ uint(pc.frame_seed)));
+		int heat_gain = 0;
+
+		if (is_burning(n_up)) {
+			int n_mat = get_material(n_up);
+			int n_temp = get_temperature(n_up);
+			float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
+			uint rng = hash(base_rng ^ 1u);
+			if (rng % 100 < uint(prob * 100.0))
+				heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		}
+		if (is_burning(n_down)) {
+			int n_mat = get_material(n_down);
+			int n_temp = get_temperature(n_down);
+			float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
+			uint rng = hash(base_rng ^ 2u);
+			if (rng % 100 < uint(prob * 100.0))
+				heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		}
+		if (is_burning(n_left)) {
+			int n_mat = get_material(n_left);
+			int n_temp = get_temperature(n_left);
+			float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
+			uint rng = hash(base_rng ^ 3u);
+			if (rng % 100 < uint(prob * 100.0))
+				heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		}
+		if (is_burning(n_right)) {
+			int n_mat = get_material(n_right);
+			int n_temp = get_temperature(n_right);
+			float prob = float(n_temp - IGNITION_TEMP[n_mat]) / float(FIRE_TEMP - IGNITION_TEMP[n_mat]) * SPREAD_PROB_MAX;
+			uint rng = hash(base_rng ^ 4u);
+			if (rng % 100 < uint(prob * 100.0))
+				heat_gain += HEAT_SPREAD / 2 + int(rng % uint(HEAT_SPREAD));
+		}
+
+		if (is_hot_lava(n_up, MAT_OIL))    heat_gain += get_temperature_lava(n_up) / 4;
+		if (is_hot_lava(n_down, MAT_OIL))  heat_gain += get_temperature_lava(n_down) / 4;
+		if (is_hot_lava(n_left, MAT_OIL))  heat_gain += get_temperature_lava(n_left) / 4;
+		if (is_hot_lava(n_right, MAT_OIL)) heat_gain += get_temperature_lava(n_right) / 4;
+
+		temp = min(255, temp + heat_gain);
+		temp = max(0, temp - HEAT_DISSIPATION);
+
+		if (temp > IGNITION_TEMP[MAT_OIL]) {
+			imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, OIL_BURN_END_POWER));
+			return true;
+		}
+
+		imageStore(chunk_tex, pos, pack_oil(density, temp, unpack_velocity_oil(pixel)));
+		return true;
+	}
+	pixel = imageLoad(chunk_tex, pos);
+	material = get_material(pixel);
+	return material == MAT_OIL;
+}

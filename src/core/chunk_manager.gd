@@ -16,6 +16,8 @@ const NEIGHBOR_OFFSETS = [
 
 var world_manager: Node2D
 
+const _ArenaComposition = preload("res://src/core/arena_composition.gd")
+
 
 func _init(manager: Node2D) -> void:
 	world_manager = manager
@@ -61,6 +63,7 @@ func create_chunk(coord: Vector2i) -> void:
 		| RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 	)
 	chunk.rd_texture = world_manager.rd.texture_create(tf, RDTextureView.new())
+	chunk.create_flag_texture(world_manager.rd, CHUNK_SIZE)
 
 	chunk.injection_buffer = world_manager.rd.storage_buffer_create(INJECTION_BUFFER_SIZE)
 	var zero_data := PackedByteArray()
@@ -111,32 +114,83 @@ func create_chunk(coord: Vector2i) -> void:
 
 	chunk.occluder_instances = []
 
+	var lights_node := ChunkLights.new(coord)
+	lights_node.position = Vector2(coord) * CHUNK_SIZE
+	world_manager.lights_container.add_child(lights_node)
+	chunk.chunk_lights = lights_node
+
 	chunks[coord] = chunk
+
+	build_light_pack_uniform_set(chunk)
+	build_collider_uniform_sets(chunk)
 
 
 func unload_chunk(coord: Vector2i) -> void:
-	var chunk: Chunk = world_manager.chunks[coord]
-	free_chunk_resources(chunk)
-	world_manager.chunks.erase(coord)
+	var chunks: Dictionary = world_manager.chunks
+	var chunk: Chunk = chunks[coord]
+	world_manager.chunk_unloaded.emit(coord)
+	if world_manager._collision_helper != null:
+		world_manager._collision_helper.on_chunk_unloaded(coord)
+	# Free our own uniform sets first, while our textures are still alive.
+	free_chunk_uniform_sets(chunk)
+	# Neighbors' sim_uniform_sets reference our rd_texture. Freeing the
+	# texture below auto-invalidates those uniform sets inside the RD, but
+	# their RIDs still pass is_valid(). Clear them now so we never call
+	# free_rid on a dangling handle (the source of the "Attempted to free
+	# invalid ID" error spam).
+	for offset in NEIGHBOR_OFFSETS:
+		var n_coord: Vector2i = coord + offset
+		if chunks.has(n_coord):
+			chunks[n_coord].sim_uniform_set = RID()
+	free_chunk_body(chunk)
+	chunks.erase(coord)
 
 
-func free_chunk_resources(chunk: Chunk) -> void:
+func free_chunk_uniform_sets(chunk: Chunk) -> void:
+	if chunk.sim_uniform_set.is_valid():
+		world_manager.rd.free_rid(chunk.sim_uniform_set)
+		chunk.sim_uniform_set = RID()
+	for i in range(2):
+		if chunk.light_pack_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.light_pack_uniform_sets[i])
+			chunk.light_pack_uniform_sets[i] = RID()
+	for i in range(2):
+		if chunk.collider_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.collider_uniform_sets[i])
+			chunk.collider_uniform_sets[i] = RID()
+
+
+func free_chunk_body(chunk: Chunk) -> void:
 	if chunk.mesh_instance and is_instance_valid(chunk.mesh_instance):
+		chunk.mesh_instance.material = null
+		chunk.mesh_instance.visible = false
 		chunk.mesh_instance.queue_free()
 	if chunk.wall_mesh_instance and is_instance_valid(chunk.wall_mesh_instance):
+		chunk.wall_mesh_instance.material = null
+		chunk.wall_mesh_instance.visible = false
 		chunk.wall_mesh_instance.queue_free()
 	if chunk.static_body and is_instance_valid(chunk.static_body):
 		chunk.static_body.queue_free()
+	if chunk.chunk_lights and is_instance_valid(chunk.chunk_lights):
+		chunk.chunk_lights.queue_free()
 	for occluder in chunk.occluder_instances:
 		if is_instance_valid(occluder):
 			occluder.queue_free()
 	chunk.occluder_instances.clear()
-	if chunk.injection_buffer.is_valid():
-		world_manager.rd.free_rid(chunk.injection_buffer)
-	if chunk.sim_uniform_set.is_valid():
-		world_manager.rd.free_rid(chunk.sim_uniform_set)
 	if chunk.rd_texture.is_valid():
 		world_manager.rd.free_rid(chunk.rd_texture)
+		chunk.rd_texture = RID()
+	if chunk.injection_buffer.is_valid():
+		world_manager.rd.free_rid(chunk.injection_buffer)
+		chunk.injection_buffer = RID()
+	if chunk.rd_flag_texture.is_valid():
+		world_manager.rd.free_rid(chunk.rd_flag_texture)
+		chunk.rd_flag_texture = RID()
+
+
+func free_chunk_resources(chunk: Chunk) -> void:
+	free_chunk_uniform_sets(chunk)
+	free_chunk_body(chunk)
 
 
 func rebuild_sim_uniform_sets(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
@@ -193,6 +247,51 @@ func build_sim_uniform_set(chunk: Chunk) -> void:
 	chunk.sim_uniform_set = world_manager.rd.uniform_set_create(uniforms, compute.sim_shader, 0)
 
 
+func build_light_pack_uniform_set(chunk: Chunk) -> void:
+	var compute: ComputeDevice = world_manager.compute_device
+
+	for i in range(2):
+		if chunk.light_pack_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.light_pack_uniform_sets[i])
+			chunk.light_pack_uniform_sets[i] = RID()
+
+	for i in range(2):
+		var u0 := RDUniform.new()
+		u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u0.binding = 0
+		u0.add_id(chunk.rd_texture)
+
+		var u1 := RDUniform.new()
+		u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u1.binding = 1
+		u1.add_id(compute.light_output_buffers[i])
+
+		var uniforms: Array[RDUniform] = [u0, u1]
+		chunk.light_pack_uniform_sets[i] = world_manager.rd.uniform_set_create(uniforms, compute.light_pack_shader, 0)
+
+
+func build_collider_uniform_sets(chunk: Chunk) -> void:
+	var compute: ComputeDevice = world_manager.compute_device
+	for i in range(2):
+		if chunk.collider_uniform_sets[i].is_valid():
+			world_manager.rd.free_rid(chunk.collider_uniform_sets[i])
+			chunk.collider_uniform_sets[i] = RID()
+		if not compute.collider_output_buffers[i].is_valid():
+			continue
+		var uniforms: Array[RDUniform] = []
+		var u0 := RDUniform.new()
+		u0.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+		u0.binding = 0
+		u0.add_id(chunk.rd_texture)
+		uniforms.append(u0)
+		var u1 := RDUniform.new()
+		u1.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u1.binding = 1
+		u1.add_id(compute.collider_output_buffers[i])
+		uniforms.append(u1)
+		chunk.collider_uniform_sets[i] = world_manager.rd.uniform_set_create(uniforms, compute.collider_shader, 0)
+
+
 func update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i]) -> void:
 	var chunks: Dictionary = world_manager.chunks
 	var to_update: Dictionary = {}
@@ -216,15 +315,65 @@ func update_render_neighbors(loaded: Array[Vector2i], unloaded: Array[Vector2i])
 			mat.set_shader_parameter("neighbor_data", chunks[north_coord].texture_2d_rd)
 			mat.set_shader_parameter("has_neighbor", true)
 		else:
+			mat.set_shader_parameter("neighbor_data", chunk.texture_2d_rd)
 			mat.set_shader_parameter("has_neighbor", false)
 
 
 func clear_all_chunks() -> void:
 	var chunks: Dictionary = world_manager.chunks
 	for coord in chunks:
-		var chunk: Chunk = chunks[coord]
-		free_chunk_resources(chunk)
+		free_chunk_uniform_sets(chunks[coord])
+	for coord in chunks:
+		free_chunk_body(chunks[coord])
 	chunks.clear()
+
+
+func _build_cavern_bytes(new_chunks: Array[Vector2i]) -> PackedByteArray:
+	var grid: SectorGrid = LevelManager.get_grid()
+	if grid == null:
+		return PackedByteArray()
+	var anchors: Dictionary = {}
+	for chunk_coord in new_chunks:
+		var chunk_world := chunk_coord * CHUNK_SIZE
+		var min_s := grid.world_to_sector(Vector2(chunk_world.x - 1120, chunk_world.y - 1120))
+		var max_s := grid.world_to_sector(Vector2(chunk_world.x + CHUNK_SIZE + 1120, chunk_world.y + CHUNK_SIZE + 1120))
+		for sx in range(min_s.x, max_s.x + 1):
+			for sy in range(min_s.y, max_s.y + 1):
+				var sector := Vector2i(sx, sy)
+				if anchors.has(sector):
+					continue
+				var slot := grid.resolve_sector(sector)
+				var comp: Resource = slot.composition
+				if comp == null:
+					continue
+				if not slot.is_boss and not (slot.template_index >= 0 and (grid.get_template_for_slot(slot) as RoomTemplate).cavern_carve):
+					continue
+				anchors[sector] = comp
+
+	var bytes := PackedByteArray()
+	bytes.resize(16 + 64 * 32)
+	bytes.fill(0)
+	var count: int = min(anchors.size(), 64)
+	bytes.encode_s32(0, count)
+	var i := 0
+	for sector in anchors:
+		if i >= 64:
+			break
+		var comp: ArenaComposition = anchors[sector]
+		var center := Vector2(grid.sector_to_world_center(sector))
+		var base_r: float = float(comp.nominal_radius)
+		var lobing: float = float(comp.lobing_amplitude)
+		var inner_r: float = float(comp.inner_disc_radius)
+		var noise_seed: float = float(hash(sector.x * 73856093 ^ sector.y * 19349663) & 0xFFFFFF)
+		var off := 16 + i * 32
+		bytes.encode_float(off + 0,  center.x)
+		bytes.encode_float(off + 4,  center.y)
+		bytes.encode_float(off + 8,  base_r)
+		bytes.encode_float(off + 12, lobing)
+		bytes.encode_float(off + 16, inner_r)
+		bytes.encode_float(off + 20, noise_seed)
+		i += 1
+	return bytes
 
 
 func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2i]:
@@ -243,9 +392,14 @@ func generate_chunks_at(coords: Array[Vector2i], seed_val: int) -> Array[Vector2
 	if new_chunks.is_empty():
 		return new_chunks
 
-	world_manager._gen_uniform_sets_to_free = world_manager.compute_device.dispatch_generation(chunks, new_chunks, seed_val)
+	var stamp_bytes := LevelManager.build_stamp_bytes(new_chunks)
+	var cavern_bytes := _build_cavern_bytes(new_chunks)
+	world_manager._gen_uniform_sets_to_free = world_manager.compute_device.dispatch_generation(chunks, new_chunks, seed_val, stamp_bytes, cavern_bytes)
 
 	rebuild_sim_uniform_sets(new_chunks, [])
 	update_render_neighbors(new_chunks, [])
+
+	for coord in new_chunks:
+		world_manager.mark_terrain_dirty(coord)
 
 	return new_chunks

@@ -1,9 +1,10 @@
-[gd_scene format=3 uid="uid://c7y2m8wx1knpj"]
+[gd_scene load_steps=4 format=3 uid="uid://c7y2m8wx1knpj"]
 
-[ext_resource type="Script" uid="uid://cj7qpo5fj27gp" path="res://src/ui/main_menu.gd" id="1_mn"]
-[ext_resource type="PackedScene" uid="uid://bqx7kc3no7exp" path="res://scenes/ui/settings_popup.tscn" id="2_sp"]
+[ext_resource type="Script" path="res://src/ui/main_menu.gd" id="1_mn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/modal_panel.tscn" id="2_mp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings_popup.tscn" id="3_sp"]
 
-[node name="MainMenu" type="Control" unique_id=24682183]
+[node name="MainMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,91 +13,38 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_mn")
 
-[node name="Background" type="ColorRect" parent="." unique_id=1756724303]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.102, 0.059, 0.071, 1)
+color = Color(0.102, 0.078, 0.063, 1)
 
-[node name="TitleTop" type="Label" parent="." unique_id=125773998]
+[node name="MenuCard" parent="." instance=ExtResource("2_mp")]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -200.0
-offset_top = 50.0
-offset_right = 200.0
-offset_bottom = 140.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.843, 0, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 64
-text = "TOP DOWN"
-horizontal_alignment = 1
+editable_instance = true
+title = "TOP DOWN ROGUE"
+show_close_button = false
+has_backdrop = false
+width = 0
 
-[node name="TitleBottom" type="Label" parent="." unique_id=866784233]
+[node name="PlayButton" type="Button" parent="MenuCard/CenterContainer/Root/Margin/VBox/Body"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -200.0
-offset_top = 148.0
-offset_right = 200.0
-offset_bottom = 182.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.42, 0.208, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 28
-text = "ROGUE"
-horizontal_alignment = 1
-
-[node name="MenuCard" type="PanelContainer" parent="." unique_id=377435365]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -140.0
-offset_top = -80.0
-offset_right = 140.0
-offset_bottom = 80.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ButtonContainer" type="VBoxContainer" parent="MenuCard" unique_id=245531920]
-unique_name_in_owner = true
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 12
-
-[node name="PlayButton" type="Button" parent="MenuCard/ButtonContainer" unique_id=31766559]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.42, 0.208, 1)
 text = "PLAY"
+size_flags_horizontal = 3
 
-[node name="SettingsButton" type="Button" parent="MenuCard/ButtonContainer" unique_id=405901494]
+[node name="SettingsButton" type="Button" parent="MenuCard/CenterContainer/Root/Margin/VBox/Body"]
 unique_name_in_owner = true
-layout_mode = 2
 text = "SETTINGS"
+size_flags_horizontal = 3
 
-[node name="QuitButton" type="Button" parent="MenuCard/ButtonContainer" unique_id=1656175076]
+[node name="QuitButton" type="Button" parent="MenuCard/CenterContainer/Root/Margin/VBox/Body"]
 unique_name_in_owner = true
-layout_mode = 2
 text = "QUIT"
+size_flags_horizontal = 3
 
-[node name="SettingsPopup" parent="." unique_id=1236389963 instance=ExtResource("2_sp")]
+[node name="SettingsPopup" parent="." instance=ExtResource("3_sp")]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1

@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="Script" path="res://src/core/features/feature_chest_spawn.gd" id="1_qaeme"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="2_4elon"]
+[ext_resource type="Script" path="res://src/core/regions/region_ring.gd" id="3_ewp36"]
+[ext_resource type="Script" path="res://src/core/features/feature_enemy_pack.gd" id="4_rmax0"]
+[ext_resource type="Script" path="res://src/core/features/feature_pillar_cluster.gd" id="5_u8ook"]
+[ext_resource type="PackedScene" path="res://scenes/props/barrel.tscn" id="6_kfjoo"]
+[ext_resource type="Script" path="res://src/core/features/feature_barrel_cluster.gd" id="7_rqday"]
+[ext_resource type="Script" path="res://src/core/regions/region_disc.gd" id="8_cwlwb"]
+[ext_resource type="Script" path="res://src/core/features/feature_pool_patch.gd" id="9_ndrjo"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="10_xspo6"]
+
+[sub_resource type="Resource" id="Resource_m1hce"]
+script = ExtResource("1_qaeme")
+
+[sub_resource type="Resource" id="Resource_kxr0d"]
+script = ExtResource("3_ewp36")
+r_min = 60.0
+r_max = 120.0
+
+[sub_resource type="Resource" id="Resource_o17nm"]
+script = ExtResource("4_rmax0")
+enemy_scene = ExtResource("2_4elon")
+count = 2
+is_elite = true
+region = SubResource("Resource_kxr0d")
+
+[sub_resource type="Resource" id="Resource_vygn3"]
+script = ExtResource("3_ewp36")
+r_min = 30.0
+r_max = 130.0
+
+[sub_resource type="Resource" id="Resource_8x2xn"]
+script = ExtResource("5_u8ook")
+count = 7
+radius_min = 8
+radius_max = 16
+large_bias = 0.5
+center_distance_factor = 0.8
+region = SubResource("Resource_vygn3")
+
+[sub_resource type="Resource" id="Resource_6a7rs"]
+script = ExtResource("3_ewp36")
+r_min = 50.0
+r_max = 110.0
+
+[sub_resource type="Resource" id="Resource_3jo0j"]
+script = ExtResource("7_rqday")
+barrel_scene = ExtResource("6_kfjoo")
+count = 2
+region = SubResource("Resource_6a7rs")
+
+[sub_resource type="Resource" id="Resource_ildit"]
+script = ExtResource("8_cwlwb")
+center = Vector2(-50, 0)
+radius = 30.0
+
+[sub_resource type="Resource" id="Resource_nedfc"]
+script = ExtResource("7_rqday")
+barrel_scene = ExtResource("6_kfjoo")
+count = 1
+region = SubResource("Resource_ildit")
+
+[sub_resource type="Resource" id="Resource_okcde"]
+script = ExtResource("8_cwlwb")
+center = Vector2(60, -40)
+radius = 40.0
+
+[sub_resource type="Resource" id="Resource_kjr6j"]
+script = ExtResource("9_ndrjo")
+material_id = 8
+count = 2
+region = SubResource("Resource_okcde")
+
+[resource]
+script = ExtResource("10_xspo6")
+arena_kind = &"elite"
+biome = &"frozen"
+variant_id = &"b"
+nominal_radius = 140
+lobing_amplitude = 30
+inner_disc_radius = 30
+features = [SubResource("Resource_m1hce"), SubResource("Resource_o17nm"), SubResource("Resource_8x2xn"), SubResource("Resource_3jo0j"), SubResource("Resource_nedfc"), SubResource("Resource_kjr6j")]

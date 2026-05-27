@@ -1,5 +1,12 @@
+// Generic rigidbody → fluid pusher.
+//
+// Works for any material flagged `fluid` in material_registry.gd. All fluids
+// must share the channel layout:
+//   R = material id, G = density (0..255), A = packed velocity nibbles (vx<<4|vy, biased by 8).
+// The B channel is preserved (e.g. lava's temperature) — we never touch it here.
+// Add a new fluid by setting `fluid = true` in MaterialRegistry; nothing in this file needs to change.
 bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
-	if (material != MAT_GAS && material != MAT_LAVA) return false;
+	if (!IS_FLUID[material]) return false;
 	bool wrote = false;
 	int n = min(injections.count, MAX_INJECTIONS_PER_CHUNK);
 	for (int i = 0; i < n; i++) {
@@ -7,52 +14,39 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
 		if (pos.x < b.aabb_min.x || pos.x >= b.aabb_max.x) continue;
 		if (pos.y < b.aabb_min.y || pos.y >= b.aabb_max.y) continue;
 
-		if (material == MAT_GAS) {
-			ivec2 cur_vel = unpack_velocity(pixel);
-			ivec2 center = (b.aabb_min + b.aabb_max) / 2;
-			ivec2 diff = pos - center;
-			ivec2 push_dir = ivec2(0);
-			if (diff.x == 0 && diff.y == 0) {
-				push_dir = b.velocity;
-			} else {
-				int dist_x = abs(diff.x);
-				int dist_y = abs(diff.y);
-				if (dist_x >= dist_y) {
-					push_dir.x = (diff.x >= 0) ? 7 : -7;
-				} else {
-					push_dir.y = (diff.y >= 0) ? 7 : -7;
-				}
-			}
-			ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
-			int dens = get_density(pixel);
-			bool in_front = (b.velocity.x > 0 && diff.x > 0) || (b.velocity.x < 0 && diff.x < 0) ||
-			                (b.velocity.y > 0 && diff.y > 0) || (b.velocity.y < 0 && diff.y < 0);
-			if (in_front && (b.velocity.x != 0 || b.velocity.y != 0)) {
-				dens = dens * 3 / 4;
-			}
-			pixel = pack_gas(dens, new_vel);
+		ivec2 center = (b.aabb_min + b.aabb_max) / 2;
+		ivec2 diff = pos - center;
+
+		ivec2 push_dir = ivec2(0);
+		// Gas's center cell falls back to body velocity so a still cell isn't stuck at 0.
+		if (material == MAT_GAS && diff.x == 0 && diff.y == 0) {
+			push_dir = b.velocity;
 		} else {
-			ivec2 cur_vel = unpack_velocity_lava(pixel);
-			ivec2 center = (b.aabb_min + b.aabb_max) / 2;
-			ivec2 diff = pos - center;
 			int dist_x = abs(diff.x);
 			int dist_y = abs(diff.y);
-			ivec2 push_dir = ivec2(0);
 			if (dist_x >= dist_y) {
 				push_dir.x = (diff.x >= 0) ? 7 : -7;
 			} else {
 				push_dir.y = (diff.y >= 0) ? 7 : -7;
 			}
-			ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
-			int dens = get_density_lava(pixel);
-			int temp = get_temperature_lava(pixel);
-			bool in_front = (b.velocity.x > 0 && diff.x > 0) || (b.velocity.x < 0 && diff.x < 0) ||
-			                (b.velocity.y > 0 && diff.y > 0) || (b.velocity.y < 0 && diff.y < 0);
-			if (in_front && (b.velocity.x != 0 || b.velocity.y != 0)) {
-				dens = dens * 3 / 4;
-			}
-			pixel = pack_lava(dens, temp, new_vel);
 		}
+
+		uint a = uint(round(pixel.a * 255.0));
+		ivec2 cur_vel = ivec2(int(a >> 4) - 8, int(a & 15u) - 8);
+		ivec2 new_vel = clamp(cur_vel + push_dir, ivec2(-8), ivec2(7));
+
+		int dens = int(round(pixel.g * 255.0));
+		bool in_front = (b.velocity.x > 0 && diff.x > 0) || (b.velocity.x < 0 && diff.x < 0) ||
+		                (b.velocity.y > 0 && diff.y > 0) || (b.velocity.y < 0 && diff.y < 0);
+		if (in_front && (b.velocity.x != 0 || b.velocity.y != 0)) {
+			dens = dens * 3 / 4;
+		}
+
+		int vx = clamp(new_vel.x + 8, 0, 15);
+		int vy = clamp(new_vel.y + 8, 0, 15);
+		uint new_a = (uint(vx) << 4) | uint(vy);
+		pixel.g = float(clamp(dens, 0, 255)) / 255.0;
+		pixel.a = float(new_a) / 255.0;
 		wrote = true;
 	}
 	if (wrote) imageStore(chunk_tex, pos, pixel);

@@ -35,6 +35,9 @@ layout(set = 0, binding = 5, std430) readonly buffer InjectionBuffer {
 #include "res://shaders/include/sim/common.glslinc"
 #include "res://shaders/include/sim/gas.glslinc"
 #include "res://shaders/include/sim/lava.glslinc"
+#include "res://shaders/include/sim/oil.glslinc"
+#include "res://shaders/include/sim/explode_wave.glslinc"
+#include "res://shaders/include/sim/blood.glslinc"
 #include "res://shaders/include/sim/injection.glslinc"
 #include "res://shaders/include/sim/burning.glslinc"
 
@@ -51,10 +54,19 @@ void main() {
 	vec4 n_down  = read_neighbor(pos + ivec2(0,  1));
 	vec4 n_left  = read_neighbor(pos + ivec2(-1, 0));
 	vec4 n_right = read_neighbor(pos + ivec2( 1, 0));
+	// Diagonals — only the wave sim uses these; read here so all neighbor loads
+	// happen before any thread writes.
+	vec4 n_ul = read_neighbor(pos + ivec2(-1, -1));
+	vec4 n_ur = read_neighbor(pos + ivec2( 1, -1));
+	vec4 n_dl = read_neighbor(pos + ivec2(-1,  1));
+	vec4 n_dr = read_neighbor(pos + ivec2( 1,  1));
 
 	// Fluid dispatch — each simulate_* returns true if the cell is fully processed.
 	// Add new fluids here in priority order (higher priority first).
+	if (simulate_explode_wave(pos, pixel, material, n_up, n_down, n_left, n_right, n_ul, n_ur, n_dl, n_dr)) return;
 	if (simulate_lava(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
+	if (simulate_oil(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
+	if (simulate_blood(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 	if (simulate_gas(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
 
 	simulate_burning(pos, pixel, n_up, n_down, n_left, n_right);

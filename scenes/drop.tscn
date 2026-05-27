@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://b2eqrxwgnewxd" path="res://src/drops/drop.gd" id="1"]
 [ext_resource type="Shader" uid="uid://bgkst7g0qd22q" path="res://shaders/visual/outline.gdshader" id="2_8i0xm"]
-[ext_resource type="Script" uid="uid://cf1nyxv740dt7" path="res://src/interactables/interactable.gd" id="3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8i0xm"]
 shader = ExtResource("2_8i0xm")
@@ -23,7 +22,3 @@ material = SubResource("ShaderMaterial_8i0xm")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=615290080]
 shape = SubResource("CircleShape2D_1")
-
-[node name="Interactable" type="Node" parent="." unique_id=764727390 node_paths=PackedStringArray("canvas_item")]
-script = ExtResource("3")
-canvas_item = NodePath("../Sprite2D")

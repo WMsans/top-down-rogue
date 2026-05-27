@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://chromatic_flash_fx"]
+
+[ext_resource type="Shader" path="res://shaders/chromatic_flash.gdshader" id="1"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_chrom"]
+shader = ExtResource("1")
+shader_parameter/strength = 0.0
+shader_parameter/axis = Vector2(1, 0)
+
+[node name="ChromaticFlash" type="CanvasLayer"]
+layer = 100
+
+[node name="Rect" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_chrom")
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0)

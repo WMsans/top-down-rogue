@@ -1,0 +1,66 @@
+// Carves organic caverns at registered anchors. Each cavern is parameterized by
+// center, base radius, lobing amplitude, inner disc radius, and angular noise seed.
+// Buffer at set=4 binding=0. Compatible with materials.glslinc and Context.
+
+layout(set = 4, binding = 0, std430) readonly buffer CavernBuffer {
+    int count;
+    int _pad[3];
+    // Each cavern packed as two vec4s:
+    //   c0: center.xy, base_radius, lobing_amplitude
+    //   c1: inner_disc_radius, noise_seed, _pad, _pad
+    vec4 caverns[64];
+} cavern_buf;
+
+// Periodic 1D noise over angle. 4-harmonic sine sum with seeded phase/amplitude.
+float cavern_angular_noise(float theta, float seed) {
+    float n = 0.0;
+    for (int k = 1; k <= 4; k++) {
+        float phase = fract(sin(seed * 12.9898 + float(k) * 78.233) * 43758.5453) * 6.28318530718;
+        float amp   = (1.0 / float(k));
+        n += amp * sin(float(k) * theta + phase);
+    }
+    return n * 0.5;  // ≈ [-1, 1]
+}
+
+// Returns true if this cell is inside any cavern's carve region (interior or guaranteed disc).
+// `out_in_inner` set when inside the hard-guaranteed inner disc.
+bool cavern_carves_cell(vec2 world_pos, out bool out_in_inner) {
+    out_in_inner = false;
+    for (int i = 0; i < cavern_buf.count; i++) {
+        vec4 c0 = cavern_buf.caverns[i * 2 + 0];
+        vec4 c1 = cavern_buf.caverns[i * 2 + 1];
+        vec2 center = c0.xy;
+        float base_r = c0.z;
+        float lobing = c0.w;
+        float inner_r = c1.x;
+        float noise_seed = c1.y;
+
+        vec2 d = world_pos - center;
+        float dist = length(d);
+        if (dist < inner_r) {
+            out_in_inner = true;
+            return true;
+        }
+        if (dist >= base_r + lobing + 4.0) continue;  // outside max reach
+
+        float theta = atan(d.y, d.x);
+        float r = base_r + cavern_angular_noise(theta, noise_seed) * lobing;
+        if (dist < r - 16.0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void stage_cavern_carve(Context ctx) {
+    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+    if (pos.x >= 256 || pos.y >= 256) return;
+
+    vec2 world_pos = vec2(ctx.chunk_coord * 256) + vec2(pos);
+
+    bool in_inner = false;
+    if (cavern_carves_cell(world_pos, in_inner)) {
+        imageStore(chunk_tex, pos, vec4(0.0, 0.0, 0.0, 0.0));  // MAT_AIR = 0
+        imageStore(chunk_flag_tex, pos, vec4(1.0 / 255.0, 0.0, 0.0, 0.0));  // bit 0 = NO_PROPS
+    }
+}

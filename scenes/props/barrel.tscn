@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://barrel_stub_0001"]
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_barrel"]
+size = Vector2(16, 20)
+
+[node name="Barrel" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.6, 0.35, 0.15, 1)
+texture = SubResource("PlaceholderTexture2D_barrel")

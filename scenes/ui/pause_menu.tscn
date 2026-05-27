@@ -1,134 +1,61 @@
-[gd_scene format=3 uid="uid://dc5am8wxl3knp"]
+[gd_scene load_steps=4 format=3 uid="uid://dc5am8wxl3knp"]
 
-[ext_resource type="Script" uid="uid://t5e7r8fmedxh" path="res://src/ui/pause_menu.gd" id="1_pm"]
-[ext_resource type="PackedScene" uid="uid://bqx7kc3no7exp" path="res://scenes/ui/settings_popup.tscn" id="2_sp"]
+[ext_resource type="Script" path="res://src/ui/pause_menu.gd" id="1_pm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/components/modal_panel.tscn" id="2_mp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings_popup.tscn" id="3_sp"]
 
-[node name="PauseMenu" type="CanvasLayer" unique_id=2013037450]
+[node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
 layer = 10
 script = ExtResource("1_pm")
 
-[node name="PausePanel" type="Control" parent="." unique_id=166618561]
+[node name="PausePanel" parent="." instance=ExtResource("2_mp")]
 unique_name_in_owner = true
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+editable_instance = true
+title = "PAUSED"
+show_close_button = false
+width = 0
 
-[node name="Dimmer" type="ColorRect" parent="PausePanel" unique_id=10712110]
+[node name="ResumeButton" type="Button" parent="PausePanel/CenterContainer/Root/Margin/VBox/Body"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.102, 0.059, 0.071, 0.7)
-
-[node name="CenterContainer" type="CenterContainer" parent="PausePanel" unique_id=50804748]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="PauseCard" type="PanelContainer" parent="PausePanel/CenterContainer" unique_id=478569123]
-unique_name_in_owner = true
-layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="PausePanel/CenterContainer/PauseCard" unique_id=392039906]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="PausedLabel" type="Label" parent="PausePanel/CenterContainer/PauseCard/VBoxContainer" unique_id=970009467]
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
-theme_override_colors/font_color = Color(1, 0.843, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-text = "PAUSED"
-horizontal_alignment = 1
-
-[node name="ResumeButton" type="Button" parent="PausePanel/CenterContainer/PauseCard/VBoxContainer" unique_id=1663117715]
-unique_name_in_owner = true
-layout_mode = 2
 text = "RESUME"
+size_flags_horizontal = 3
 
-[node name="SettingsButton" type="Button" parent="PausePanel/CenterContainer/PauseCard/VBoxContainer" unique_id=7959953]
+[node name="SettingsButton" type="Button" parent="PausePanel/CenterContainer/Root/Margin/VBox/Body"]
 unique_name_in_owner = true
-layout_mode = 2
 text = "SETTINGS"
+size_flags_horizontal = 3
 
-[node name="MainMenuButton" type="Button" parent="PausePanel/CenterContainer/PauseCard/VBoxContainer" unique_id=773685461]
+[node name="MainMenuButton" type="Button" parent="PausePanel/CenterContainer/Root/Margin/VBox/Body"]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
 text = "MAIN MENU"
+size_flags_horizontal = 3
 
-[node name="ConfirmationPanel" type="Control" parent="." unique_id=611653628]
+[node name="ConfirmationPanel" parent="." instance=ExtResource("2_mp")]
 unique_name_in_owner = true
+editable_instance = true
+title = "QUIT?"
+show_close_button = false
+width = 0
+close_on_backdrop_click = false
 visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
-[node name="ConfirmationDimmer" type="ColorRect" parent="ConfirmationPanel" unique_id=673516490]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.3)
-
-[node name="ConfirmationBox" type="PanelContainer" parent="ConfirmationPanel" unique_id=1378624481]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -120.0
-offset_top = -40.0
-offset_right = 120.0
-offset_bottom = 40.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="ConfirmationPanel/ConfirmationBox" unique_id=1411021126]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="MessageLabel" type="Label" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer" unique_id=2094664480]
-layout_mode = 2
-text = "Quit to main menu?
-All progress will be lost!"
+[node name="MessageLabel" type="Label" parent="ConfirmationPanel/CenterContainer/Root/Margin/VBox/Body"]
+text = "All progress will be lost!"
 horizontal_alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer" unique_id=535091930]
-layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="ConfirmYesButton" type="Button" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer/HBoxContainer" unique_id=719617688]
+[node name="ConfirmYesButton" type="Button" parent="ConfirmationPanel/CenterContainer/Root/Margin/VBox/Footer"]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
+theme_type_variation = "CompactButton"
 text = "YES"
-
-[node name="ConfirmNoButton" type="Button" parent="ConfirmationPanel/ConfirmationBox/VBoxContainer/HBoxContainer" unique_id=701220310]
-unique_name_in_owner = true
-layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.843, 0, 1)
-text = "NO"
 
-[node name="SettingsPopup" parent="." unique_id=2084564084 instance=ExtResource("2_sp")]
+[node name="ConfirmNoButton" type="Button" parent="ConfirmationPanel/CenterContainer/Root/Margin/VBox/Footer"]
+unique_name_in_owner = true
+theme_type_variation = "CompactButton"
+text = "NO"
+size_flags_horizontal = 3
+
+[node name="SettingsPopup" parent="." instance=ExtResource("3_sp")]
 unique_name_in_owner = true
 visible = false

@@ -1,0 +1,223 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss_enemy.tscn" id="1_amy17"]
+[ext_resource type="Script" path="res://src/core/regions/region_point.gd" id="2_qhobi"]
+[ext_resource type="Script" path="res://src/core/features/feature_boss_spawn.gd" id="3_7whfr"]
+[ext_resource type="Script" path="res://src/core/regions/region_ring.gd" id="4_wgiod"]
+[ext_resource type="Script" path="res://src/core/features/feature_pillar_cluster.gd" id="5_y70k1"]
+[ext_resource type="Script" path="res://src/core/regions/region_disc.gd" id="6_lpm6e"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_enemy.tscn" id="7_ngis6"]
+[ext_resource type="Script" path="res://src/core/features/feature_enemy_pack.gd" id="8_yjl6p"]
+[ext_resource type="PackedScene" path="res://scenes/props/barrel.tscn" id="9_t4ge1"]
+[ext_resource type="Script" path="res://src/core/features/feature_barrel_cluster.gd" id="10_43ixq"]
+[ext_resource type="Script" path="res://src/core/features/feature_pool_patch.gd" id="11_4qtkp"]
+[ext_resource type="Script" path="res://src/core/arena_composition.gd" id="12_a7761"]
+
+[sub_resource type="Resource" id="Resource_gavuv"]
+script = ExtResource("2_qhobi")
+
+[sub_resource type="Resource" id="Resource_8jowa"]
+script = ExtResource("3_7whfr")
+boss_scene = ExtResource("1_amy17")
+region = SubResource("Resource_gavuv")
+
+[sub_resource type="Resource" id="Resource_ylcvd"]
+script = ExtResource("4_wgiod")
+r_min = 150.0
+r_max = 220.0
+
+[sub_resource type="Resource" id="Resource_813jm"]
+script = ExtResource("5_y70k1")
+count = 10
+radius_min = 18
+radius_max = 42
+large_bias = 0.7
+center_distance_factor = 0.6
+region = SubResource("Resource_ylcvd")
+
+[sub_resource type="Resource" id="Resource_ic0fy"]
+script = ExtResource("4_wgiod")
+r_min = 220.0
+r_max = 290.0
+
+[sub_resource type="Resource" id="Resource_m65ll"]
+script = ExtResource("5_y70k1")
+count = 12
+radius_min = 18
+radius_max = 42
+large_bias = 0.7
+center_distance_factor = 0.6
+region = SubResource("Resource_ic0fy")
+
+[sub_resource type="Resource" id="Resource_3d28l"]
+script = ExtResource("6_lpm6e")
+center = Vector2(-130, 90)
+radius = 80.0
+
+[sub_resource type="Resource" id="Resource_5m7pd"]
+script = ExtResource("5_y70k1")
+count = 8
+radius_min = 14
+radius_max = 32
+large_bias = 0.5
+center_distance_factor = 0.45
+region = SubResource("Resource_3d28l")
+
+[sub_resource type="Resource" id="Resource_p6kpi"]
+script = ExtResource("6_lpm6e")
+center = Vector2(160, -130)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_fmac4"]
+script = ExtResource("5_y70k1")
+radius_min = 14
+radius_max = 32
+large_bias = 0.5
+center_distance_factor = 0.45
+region = SubResource("Resource_p6kpi")
+
+[sub_resource type="Resource" id="Resource_kettl"]
+script = ExtResource("6_lpm6e")
+center = Vector2(100, 180)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_w3f8m"]
+script = ExtResource("5_y70k1")
+count = 5
+radius_min = 14
+radius_max = 32
+large_bias = 0.5
+center_distance_factor = 0.45
+region = SubResource("Resource_kettl")
+
+[sub_resource type="Resource" id="Resource_rjt58"]
+script = ExtResource("4_wgiod")
+r_min = 120.0
+r_max = 220.0
+
+[sub_resource type="Resource" id="Resource_xr2y4"]
+script = ExtResource("8_yjl6p")
+enemy_scene = ExtResource("7_ngis6")
+region = SubResource("Resource_rjt58")
+
+[sub_resource type="Resource" id="Resource_35ukd"]
+script = ExtResource("4_wgiod")
+r_min = 180.0
+r_max = 280.0
+
+[sub_resource type="Resource" id="Resource_56hl4"]
+script = ExtResource("8_yjl6p")
+enemy_scene = ExtResource("7_ngis6")
+count = 2
+is_elite = true
+region = SubResource("Resource_35ukd")
+
+[sub_resource type="Resource" id="Resource_yt1jh"]
+script = ExtResource("4_wgiod")
+
+[sub_resource type="Resource" id="Resource_0oi0q"]
+script = ExtResource("8_yjl6p")
+enemy_scene = ExtResource("7_ngis6")
+count = 2
+region = SubResource("Resource_yt1jh")
+
+[sub_resource type="Resource" id="Resource_xdpby"]
+script = ExtResource("4_wgiod")
+r_max = 180.0
+
+[sub_resource type="Resource" id="Resource_8jwqd"]
+script = ExtResource("10_43ixq")
+barrel_scene = ExtResource("9_t4ge1")
+count = 6
+region = SubResource("Resource_xdpby")
+
+[sub_resource type="Resource" id="Resource_7u8ay"]
+script = ExtResource("4_wgiod")
+r_min = 200.0
+r_max = 280.0
+
+[sub_resource type="Resource" id="Resource_62tup"]
+script = ExtResource("10_43ixq")
+barrel_scene = ExtResource("9_t4ge1")
+count = 5
+region = SubResource("Resource_7u8ay")
+
+[sub_resource type="Resource" id="Resource_ntbwk"]
+script = ExtResource("6_lpm6e")
+center = Vector2(150, 100)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_0ld6h"]
+script = ExtResource("10_43ixq")
+barrel_scene = ExtResource("9_t4ge1")
+count = 4
+region = SubResource("Resource_ntbwk")
+
+[sub_resource type="Resource" id="Resource_hhys4"]
+script = ExtResource("6_lpm6e")
+center = Vector2(-200, -180)
+radius = 60.0
+
+[sub_resource type="Resource" id="Resource_s8qb0"]
+script = ExtResource("10_43ixq")
+barrel_scene = ExtResource("9_t4ge1")
+count = 4
+region = SubResource("Resource_hhys4")
+
+[sub_resource type="Resource" id="Resource_7tduj"]
+script = ExtResource("6_lpm6e")
+center = Vector2(-180, 200)
+radius = 50.0
+
+[sub_resource type="Resource" id="Resource_mo5jt"]
+script = ExtResource("10_43ixq")
+barrel_scene = ExtResource("9_t4ge1")
+region = SubResource("Resource_7tduj")
+
+[sub_resource type="Resource" id="Resource_0qjov"]
+script = ExtResource("6_lpm6e")
+center = Vector2(220, -180)
+radius = 80.0
+
+[sub_resource type="Resource" id="Resource_xl421"]
+script = ExtResource("11_4qtkp")
+material_id = 4
+count = 4
+size_min_cells = 16
+size_max_cells = 32
+region = SubResource("Resource_0qjov")
+
+[sub_resource type="Resource" id="Resource_ylc1g"]
+script = ExtResource("6_lpm6e")
+center = Vector2(-220, 180)
+radius = 70.0
+
+[sub_resource type="Resource" id="Resource_b7gfy"]
+script = ExtResource("11_4qtkp")
+material_id = 4
+count = 3
+size_min_cells = 16
+size_max_cells = 32
+region = SubResource("Resource_ylc1g")
+
+[sub_resource type="Resource" id="Resource_gexdi"]
+script = ExtResource("4_wgiod")
+r_min = 90.0
+r_max = 160.0
+
+[sub_resource type="Resource" id="Resource_mubba"]
+script = ExtResource("11_4qtkp")
+material_id = 4
+count = 3
+size_min_cells = 16
+size_max_cells = 32
+region = SubResource("Resource_gexdi")
+
+[resource]
+script = ExtResource("12_a7761")
+biome = &"magma"
+variant_id = &"b"
+nominal_radius = 300
+lobing_amplitude = 50
+inner_disc_radius = 80
+features = [SubResource("Resource_8jowa"), SubResource("Resource_813jm"), SubResource("Resource_m65ll"), SubResource("Resource_5m7pd"), SubResource("Resource_fmac4"), SubResource("Resource_w3f8m"), SubResource("Resource_xr2y4"), SubResource("Resource_56hl4"), SubResource("Resource_0oi0q"), SubResource("Resource_8jwqd"), SubResource("Resource_62tup"), SubResource("Resource_0ld6h"), SubResource("Resource_s8qb0"), SubResource("Resource_mo5jt"), SubResource("Resource_xl421"), SubResource("Resource_b7gfy"), SubResource("Resource_mubba")]

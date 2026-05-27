@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="BiomeDef" format=3]
+
+[ext_resource type="Script" path="res://src/core/room_template.gd" id="1_6wibb"]
+[ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_n64xd"]
+[ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_i6yci"]
+[ext_resource type="Texture2D" uid="uid://ckgb3apqjd4at" path="res://textures/Environments/Floors/frozen_floor.png" id="11_floor"]
+
+[ext_resource type="Resource" path="res://assets/arenas/boss/frozen_a.tres" id="4_bossa"]
+[ext_resource type="Resource" path="res://assets/arenas/boss/frozen_b.tres" id="5_bossb"]
+[ext_resource type="Resource" path="res://assets/arenas/boss/frozen_c.tres" id="6_bossc"]
+[ext_resource type="Resource" path="res://assets/arenas/boss/frozen_d.tres" id="7_bossd"]
+
+[ext_resource type="Resource" path="res://assets/arenas/elite/frozen_a.tres" id="8_elitea"]
+[ext_resource type="Resource" path="res://assets/arenas/elite/frozen_b.tres" id="9_eliteb"]
+[ext_resource type="Resource" path="res://assets/arenas/elite/frozen_c.tres" id="10_elitec"]
+
+[sub_resource type="Resource" id="Resource_40u6d"]
+script = ExtResource("2_n64xd")
+material_id = 8
+noise_scale = 0.007
+noise_threshold = 0.62
+seed_offset = 41
+
+[sub_resource type="Resource" id="Resource_bwax5"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/blob_water_a.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_oment"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/blob_water_b.png"
+weight = 2.0
+
+[sub_resource type="Resource" id="Resource_2nk8f"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/corridor_a.png"
+weight = 1.5
+size_class = 128
+
+[sub_resource type="Resource" id="Resource_elite_a"]
+script = ExtResource("1_6wibb")
+weight = 1.0
+is_elite_chest = true
+cavern_carve = true
+composition = ExtResource("8_elitea")
+
+[sub_resource type="Resource" id="Resource_elite_b"]
+script = ExtResource("1_6wibb")
+weight = 1.0
+is_elite_chest = true
+cavern_carve = true
+composition = ExtResource("9_eliteb")
+
+[sub_resource type="Resource" id="Resource_elite_c"]
+script = ExtResource("1_6wibb")
+weight = 1.0
+is_elite_chest = true
+cavern_carve = true
+composition = ExtResource("10_elitec")
+
+[resource]
+script = ExtResource("3_i6yci")
+display_name = "Frozen Depths"
+ui_accent = Color(0.431, 0.776, 0.910, 1)
+cave_noise_scale = 0.009
+cave_threshold = 0.4
+ridge_weight = 0.2
+octaves = 4
+background_material = 7
+pool_materials = [SubResource("Resource_40u6d")]
+room_templates = [SubResource("Resource_bwax5"), SubResource("Resource_oment"), SubResource("Resource_2nk8f"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
+boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
+tint = Color(0.7, 0.85, 1, 1)
+floor_texture = ExtResource("11_floor")

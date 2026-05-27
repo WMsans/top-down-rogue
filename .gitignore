@@ -4,3 +4,8 @@
 .superpowers/
 /.claude
 .worktrees/
+.worktree/
+build/
+/reports
+/opencode.json
+.worktrees/

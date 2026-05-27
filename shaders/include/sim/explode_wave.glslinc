@@ -1,0 +1,125 @@
+// Explode wave: a custom 1-cell-thick Manhattan-diamond shell that expands one
+// cell per tick and leaves scorched air behind to prevent backfill.
+//
+// Encoding:
+//   material    = MAT_EXPLODE_WAVE
+//   temperature = power (0..255)
+//   health      = unused
+//
+// Pulled-write model (each thread only writes its own cell):
+//   - If this cell is a wave: become air with temperature = SCORCH_TEMP.
+//     Adjacent terrain effects (heat-up flammables, damage solids) are
+//     applied in the same tick via separate writes (handled by the
+//     terrain-side branches below; see neighbor damage block).
+//   - If this cell is air with temperature < SCORCH_TEMP and any 4-neighbor
+//     is a wave with power > WAVE_DECAY: become a wave with
+//     power = max(neighbor_power) - WAVE_DECAY.
+//   - If this cell is flammable and a 4-neighbor is a wave: raise temperature
+//     by neighbor's power (ignites oil, burning wood) and decrement health by
+//     min(health, neighbor_power) (chews terrain).
+
+bool is_wave(vec4 p) {
+	return get_material(p) == MAT_EXPLODE_WAVE;
+}
+
+int wave_power(vec4 p) {
+	return get_temperature(p);
+}
+
+bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
+                           vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right,
+                           vec4 n_ul, vec4 n_ur, vec4 n_dl, vec4 n_dr) {
+	// Branch A: this cell IS a wave -> decay to scorched air this tick.
+	if (material == MAT_EXPLODE_WAVE) {
+		imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
+		return true;
+	}
+
+	// Branch B: this cell is AIR. Check if any neighbor wave wants to propagate in.
+	if (material == MAT_AIR) {
+		int current_temp = get_temperature(pixel);
+		if (current_temp >= SCORCH_TEMP) {
+			// Recently scorched -> blocked from re-lighting until heat dissipates.
+			return false;
+		}
+
+		int best_power = 0;
+		if (is_wave(n_up))    best_power = max(best_power, wave_power(n_up)    - WAVE_DECAY);
+		if (is_wave(n_down))  best_power = max(best_power, wave_power(n_down)  - WAVE_DECAY);
+		if (is_wave(n_left))  best_power = max(best_power, wave_power(n_left)  - WAVE_DECAY);
+		if (is_wave(n_right)) best_power = max(best_power, wave_power(n_right) - WAVE_DECAY);
+
+		// Diagonal propagation: lets the wavefront expand as a square instead of a
+		// Manhattan diamond, roughly doubling area-per-tick (TNT-fireball feel).
+		// Higher decay along diagonals keeps the front close to circular.
+		if (is_wave(n_ul)) best_power = max(best_power, wave_power(n_ul) - WAVE_DIAGONAL_DECAY);
+		if (is_wave(n_ur)) best_power = max(best_power, wave_power(n_ur) - WAVE_DIAGONAL_DECAY);
+		if (is_wave(n_dl)) best_power = max(best_power, wave_power(n_dl) - WAVE_DIAGONAL_DECAY);
+		if (is_wave(n_dr)) best_power = max(best_power, wave_power(n_dr) - WAVE_DIAGONAL_DECAY);
+
+		if (best_power > 0) {
+			imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, best_power));
+			return true;
+		}
+		return false;
+	}
+
+	// Branch C: this cell is flammable and a wave neighbor is touching it.
+	// Apply heat-up + terrain-chew. We bias the writes so they happen in the
+	// same pass as the wave's self-decay; the flammable will then be picked up
+	// by burning.glslinc on the NEXT tick.
+	if (IS_FLAMMABLE[material]) {
+		int max_neighbor_power = 0;
+		if (is_wave(n_up))    max_neighbor_power = max(max_neighbor_power, wave_power(n_up));
+		if (is_wave(n_down))  max_neighbor_power = max(max_neighbor_power, wave_power(n_down));
+		if (is_wave(n_left))  max_neighbor_power = max(max_neighbor_power, wave_power(n_left));
+		if (is_wave(n_right)) max_neighbor_power = max(max_neighbor_power, wave_power(n_right));
+		// Diagonal contact also ignites — keeps oil cascade in lockstep with the
+		// 8-way wave expansion above.
+		if (is_wave(n_ul)) max_neighbor_power = max(max_neighbor_power, wave_power(n_ul));
+		if (is_wave(n_ur)) max_neighbor_power = max(max_neighbor_power, wave_power(n_ur));
+		if (is_wave(n_dl)) max_neighbor_power = max(max_neighbor_power, wave_power(n_dl));
+		if (is_wave(n_dr)) max_neighbor_power = max(max_neighbor_power, wave_power(n_dr));
+
+		if (max_neighbor_power > 0) {
+			// Wave instantly detonates oil: direct conversion creates the
+			// TNT-like chain reaction where each cell pops immediately on
+			// wave contact, propagating the blast in a single tick.
+			if (material == MAT_OIL) {
+				imageStore(chunk_tex, pos, make_pixel(MAT_EXPLODE_WAVE, 0, max_neighbor_power));
+				return true;
+			}
+			int health = get_health(pixel);
+			int temperature = get_temperature(pixel);
+			int new_health = max(0, health - max_neighbor_power);
+			int new_temp   = min(255, temperature + max_neighbor_power);
+			imageStore(chunk_tex, pos, make_pixel(material, new_health, new_temp));
+			return true;
+		}
+		return false;
+	}
+
+	// Branch D: this cell is non-flammable solid touching a wave: chew terrain.
+	if (HAS_COLLIDER[material]) {
+		int max_neighbor_power = 0;
+		if (is_wave(n_up))    max_neighbor_power = max(max_neighbor_power, wave_power(n_up));
+		if (is_wave(n_down))  max_neighbor_power = max(max_neighbor_power, wave_power(n_down));
+		if (is_wave(n_left))  max_neighbor_power = max(max_neighbor_power, wave_power(n_left));
+		if (is_wave(n_right)) max_neighbor_power = max(max_neighbor_power, wave_power(n_right));
+
+		if (max_neighbor_power > 0) {
+			int health = get_health(pixel);
+			int temperature = get_temperature(pixel);
+			int new_health = health - max_neighbor_power;
+			if (new_health <= 0) {
+				imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
+			} else {
+				imageStore(chunk_tex, pos, make_pixel(material, new_health, temperature));
+			}
+			return true;
+		}
+		return false;
+	}
+
+	return false;
+}

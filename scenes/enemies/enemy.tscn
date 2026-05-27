@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://enemybase01"]
+
+[ext_resource type="Script" uid="uid://cc4lahptvy7gb" path="res://src/enemies/enemy.gd" id="1"]
+[ext_resource type="Script" path="res://src/enemies/terrain_damage_receiver.gd" id="2"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 8.0
+
+[node name="Enemy" type="CharacterBody2D" unique_id=693161229]
+collision_layer = 129
+script = ExtResource("1")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1889048081]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=35090790]
+shape = SubResource("CircleShape2D_1")
+
+[node name="TerrainDamageReceiver" type="Node" parent="."]
+script = ExtResource("2")
