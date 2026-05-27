@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RoomTemplate" format=3]
+
+[ext_resource type="Resource" path="res://assets/arenas/guidance/guidance_room_composition.tres" id="1_composition"]
+[ext_resource type="Script" path="res://src/core/room_template.gd" id="2_template"]
+
+[resource]
+script = ExtResource("2_template")
+png_path = ""
+weight = 0.0
+size_class = 128
+is_secret = false
+is_boss = false
+is_elite_chest = false
+rotatable = false
+cavern_carve = true
+composition = ExtResource("1_composition")
