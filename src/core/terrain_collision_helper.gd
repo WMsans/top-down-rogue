@@ -3,6 +3,7 @@ extends RefCounted
 
 const CHUNK_SIZE := 256
 const MAX_DISPATCH_PER_FRAME := 4
+const FRESH_BUILDS_PER_FRAME := 2
 
 var world_manager  # WorldManager (Node2D)
 
@@ -12,6 +13,7 @@ var _pending_collision_builds: Array = []      # Array[Vector2i] ready to build 
 var _pending_occluder_builds: Array = []       # Array[Vector2i] ready to build occluders
 var _pending_segments: Dictionary = {}         # Vector2i -> PackedVector2Array
 var _last_seg_hash: Dictionary = {}            # Vector2i -> int (hash of last built segments)
+var _fresh_pending: Dictionary = {}            # Vector2i -> true; first-build, drain immediately
 var _dispatch_cursor: int = 0
 
 
@@ -26,6 +28,7 @@ func on_chunk_unloaded(coord: Vector2i) -> void:
 	_pending_occluder_builds.erase(coord)
 	_pending_segments.erase(coord)
 	_last_seg_hash.erase(coord)
+	_fresh_pending.erase(coord)
 
 
 func rebuild_dirty(chunks: Dictionary, _delta: float) -> void:
@@ -55,12 +58,15 @@ func _consume_readback(chunks: Dictionary) -> void:
 		# case for chunks marked dirty by GPU writes that didn't actually
 		# alter the collision boundary.
 		var seg_hash: int = hash(segments)
+		var is_first_build: bool = not _last_seg_hash.has(coord)
 		if _last_seg_hash.get(coord, -1) == seg_hash:
 			continue
 		_last_seg_hash[coord] = seg_hash
 		_pending_segments[coord] = segments
 		_pending_collision_builds.append(coord)
 		_pending_occluder_builds.append(coord)
+		if is_first_build:
+			_fresh_pending[coord] = true
 
 
 func _dispatch_next_batch(chunks: Dictionary) -> void:
@@ -68,15 +74,40 @@ func _dispatch_next_batch(chunks: Dictionary) -> void:
 		world_manager.compute_device.dispatch_collider_pack(chunks, [])
 		return
 
-	var coords: Array = []
-	var keys: Array = _dirty_chunks.keys()
-	# Stable selection: take up to MAX in iteration order, skipping unloaded chunks.
-	for k in keys:
-		if coords.size() >= MAX_DISPATCH_PER_FRAME:
-			break
+	# Chunks that have never had a collision shape built (no _last_seg_hash entry)
+	# are gameplay-critical: the player can walk through them until the first
+	# build completes. Promote them ahead of stale rebuilds, which the sim
+	# re-marks every frame and which the hash check below usually skips anyway.
+	var fresh: Array = []
+	var stale: Array = []
+	for k in _dirty_chunks.keys():
 		if not chunks.has(k):
 			_dirty_chunks.erase(k)
 			continue
+		if _last_seg_hash.has(k):
+			stale.append(k)
+		else:
+			fresh.append(k)
+
+	# Within fresh, prefer chunks closest to the player so the ones the player
+	# is about to enter get built first — even if the rest must wait a frame.
+	if fresh.size() > 1:
+		var player_chunk := Vector2i(
+			floori(world_manager.tracking_position.x / CHUNK_SIZE),
+			floori(world_manager.tracking_position.y / CHUNK_SIZE)
+		)
+		fresh.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+			return (a - player_chunk).length_squared() < (b - player_chunk).length_squared()
+		)
+
+	var coords: Array = []
+	for k in fresh:
+		if coords.size() >= MAX_DISPATCH_PER_FRAME:
+			break
+		coords.append(k)
+	for k in stale:
+		if coords.size() >= MAX_DISPATCH_PER_FRAME:
+			break
 		coords.append(k)
 
 	for c in coords:
@@ -87,33 +118,67 @@ func _dispatch_next_batch(chunks: Dictionary) -> void:
 
 
 func _drain_one_collision(chunks: Dictionary) -> void:
-	while not _pending_collision_builds.is_empty():
-		var coord: Vector2i = _pending_collision_builds[0]
-		_pending_collision_builds.remove_at(0)
+	# Fresh (first-build) chunks are gameplay-critical, but each build —
+	# polygon decomposition + node allocation — is heavy. Cap fresh builds at
+	# FRESH_BUILDS_PER_FRAME so a burst of 8+ new chunks doesn't freeze the
+	# frame. Stale rebuilds stay rate-limited to one per frame.
+	var fresh_built := 0
+	var built_stale := false
+	var i := 0
+	while i < _pending_collision_builds.size():
+		var coord: Vector2i = _pending_collision_builds[i]
+		var is_fresh: bool = _fresh_pending.has(coord)
+		if is_fresh:
+			if fresh_built >= FRESH_BUILDS_PER_FRAME:
+				i += 1
+				continue
+		elif built_stale:
+			i += 1
+			continue
+		_pending_collision_builds.remove_at(i)
 		if not chunks.has(coord):
 			continue
 		var chunk: Chunk = chunks[coord]
 		var segments: PackedVector2Array = _pending_segments.get(coord, PackedVector2Array())
 		_build_collision_shape(chunk, segments)
+		if is_fresh:
+			fresh_built += 1
+		else:
+			built_stale = true
 		# Clear segments only after both queues consumed.
 		if not _pending_occluder_builds.has(coord):
 			_pending_segments.erase(coord)
-		return  # Only one per frame.
+			_fresh_pending.erase(coord)
 
 
 func _drain_one_occluder(chunks: Dictionary) -> void:
-	while not _pending_occluder_builds.is_empty():
-		var coord: Vector2i = _pending_occluder_builds[0]
-		_pending_occluder_builds.remove_at(0)
+	var fresh_built := 0
+	var built_stale := false
+	var i := 0
+	while i < _pending_occluder_builds.size():
+		var coord: Vector2i = _pending_occluder_builds[i]
+		var is_fresh: bool = _fresh_pending.has(coord)
+		if is_fresh:
+			if fresh_built >= FRESH_BUILDS_PER_FRAME:
+				i += 1
+				continue
+		elif built_stale:
+			i += 1
+			continue
+		_pending_occluder_builds.remove_at(i)
 		if not chunks.has(coord):
 			continue
 		var chunk: Chunk = chunks[coord]
 		var segments: PackedVector2Array = _pending_segments.get(coord, PackedVector2Array())
 		_build_occluders(chunk, segments)
+		if is_fresh:
+			fresh_built += 1
+		else:
+			built_stale = true
 		# Clear segments only after both queues consumed.
 		if not _pending_collision_builds.has(coord):
 			_pending_segments.erase(coord)
-		return  # Only one per frame.
+			_fresh_pending.erase(coord)
 
 
 func _build_collision_shape(chunk: Chunk, segments: PackedVector2Array) -> void:
