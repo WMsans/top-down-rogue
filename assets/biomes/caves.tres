@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://src/core/room_template.gd" id="1_iq0d2"]
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_7cf3p"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_5ujno"]
+[ext_resource type="Texture2D" uid="uid://dm32nab0jw4aq" path="res://textures/Environments/Floors/cave_floor.png" id="11_floor"]
 
 [ext_resource type="Resource" path="res://assets/arenas/boss/caves_a.tres" id="4_bossa"]
 [ext_resource type="Resource" path="res://assets/arenas/boss/caves_b.tres" id="5_bossb"]
@@ -69,3 +70,4 @@ ui_accent = Color(0.851, 0.467, 0.259, 1)
 pool_materials = [SubResource("Resource_xxuj2")]
 room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
+floor_texture = ExtResource("11_floor")

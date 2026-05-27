@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://src/core/room_template.gd" id="1_6wibb"]
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_n64xd"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_i6yci"]
+[ext_resource type="Texture2D" uid="uid://ckgb3apqjd4at" path="res://textures/Environments/Floors/frozen_floor.png" id="11_floor"]
 
 [ext_resource type="Resource" path="res://assets/arenas/boss/frozen_a.tres" id="4_bossa"]
 [ext_resource type="Resource" path="res://assets/arenas/boss/frozen_b.tres" id="5_bossb"]
@@ -70,3 +71,4 @@ pool_materials = [SubResource("Resource_40u6d")]
 room_templates = [SubResource("Resource_bwax5"), SubResource("Resource_oment"), SubResource("Resource_2nk8f"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 tint = Color(0.7, 0.85, 1, 1)
+floor_texture = ExtResource("11_floor")

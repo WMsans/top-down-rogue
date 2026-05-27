@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://src/core/room_template.gd" id="1_8divj"]
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_0amv1"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_silhp"]
+[ext_resource type="Texture2D" uid="uid://dn3ytgb51cvqo" path="res://textures/Environments/Floors/magma_floor.png" id="11_floor"]
 
 [ext_resource type="Resource" path="res://assets/arenas/boss/magma_a.tres" id="4_bossa"]
 [ext_resource type="Resource" path="res://assets/arenas/boss/magma_b.tres" id="5_bossb"]
@@ -74,3 +75,4 @@ pool_materials = [SubResource("Resource_sajre"), SubResource("Resource_hi480")]
 room_templates = [SubResource("Resource_bp58i"), SubResource("Resource_t5id5"), SubResource("Resource_opoei"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 tint = Color(1, 0.7, 0.5, 1)
+floor_texture = ExtResource("11_floor")
