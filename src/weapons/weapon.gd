@@ -1,8 +1,9 @@
 class_name Weapon
-extends RefCounted
+extends Resource
 
-var name: String = "Weapon"
-var cooldown: float = 0.5
+@export var name: String = "Weapon"
+@export var rarity: int = DropTable.ItemTier.COMMON
+var cooldown: float = 0.8
 var damage: float = 0.0
 var icon_texture: Texture2D = null
 var visual: Node2D = null

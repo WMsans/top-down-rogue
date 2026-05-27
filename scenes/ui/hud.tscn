@@ -1,0 +1,184 @@
+[gd_scene format=3 uid="uid://hud00000001"]
+
+[ext_resource type="Script" uid="uid://dgo7jg16jcux8" path="res://src/ui/hud.gd" id="1"]
+[ext_resource type="StyleBox" path="res://resources/ui/styles/inset_frame.tres" id="2"]
+[ext_resource type="Shader" uid="uid://5h53yqww8n6t" path="res://shaders/ui/health_bar_shimmer.gdshader" id="3"]
+[ext_resource type="Texture2D" uid="uid://dqyowb5gsntmk" path="res://textures/ui/gold_icon_atlas.tres" id="4"]
+[ext_resource type="FontFile" uid="uid://djmcix6v8np5e" path="res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf" id="4_136eg"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_shimmer"]
+shader = ExtResource("3")
+shader_parameter/shimmer_speed = 0.5
+shader_parameter/shimmer_width = 0.08
+shader_parameter/shimmer_brightness = 0.4
+
+[node name="HUD" type="CanvasLayer" unique_id=591189703]
+layer = 5
+script = ExtResource("1")
+
+[node name="TopLeft" type="MarginContainer" parent="." unique_id=1970585705]
+anchors_preset = -1
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Frame" type="PanelContainer" parent="TopLeft" unique_id=1924783326]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2")
+
+[node name="InnerMargin" type="MarginContainer" parent="TopLeft/Frame" unique_id=1093401228]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="TopLeft/Frame/InnerMargin" unique_id=1540724762]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HealthBar" type="Panel" parent="TopLeft/Frame/InnerMargin/VBox" unique_id=19971121]
+unique_name_in_owner = true
+clip_contents = true
+custom_minimum_size = Vector2(220, 32)
+layout_mode = 2
+
+[node name="BarFill" type="ColorRect" parent="TopLeft/Frame/InnerMargin/VBox/HealthBar" unique_id=1681402564]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_shimmer")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+color = Color(1, 0.42, 0.208, 1)
+
+[node name="HealthLabel" type="RichTextLabel" parent="TopLeft/Frame/InnerMargin/VBox/HealthBar" unique_id=2052188509]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_fonts/normal_font = ExtResource("4_136eg")
+bbcode_enabled = true
+text = "100 / 100"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GoldRow" type="HBoxContainer" parent="TopLeft/Frame/InnerMargin/VBox" unique_id=2141193169]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GoldIcon" type="TextureRect" parent="TopLeft/Frame/InnerMargin/VBox/GoldRow" unique_id=15057766]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("4")
+
+[node name="GoldLabel" type="Label" parent="TopLeft/Frame/InnerMargin/VBox/GoldRow" unique_id=829101901]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("4_136eg")
+text = "0"
+vertical_alignment = 1
+
+[node name="TopRight" type="MarginContainer" parent="." unique_id=1733334793]
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_bottom = 120.0
+grow_horizontal = 0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Frame" type="PanelContainer" parent="TopRight" unique_id=752333875]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2")
+
+[node name="InnerMargin" type="MarginContainer" parent="TopRight/Frame" unique_id=111223726]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="TopRight/Frame/InnerMargin" unique_id=368513047]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WeaponIconButton" type="TextureButton" parent="TopRight/Frame/InnerMargin/VBox" unique_id=1454777211]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="WeaponFallback" type="ColorRect" parent="TopRight/Frame/InnerMargin/VBox/WeaponIconButton" unique_id=1074141807]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.212, 0.11, 0.133, 1)
+
+[node name="WeaponFallbackLabel" type="Label" parent="TopRight/Frame/InnerMargin/VBox/WeaponIconButton/WeaponFallback" unique_id=1712849623]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "?"
+
+[node name="WeaponTooltip" type="PanelContainer" parent="." unique_id=1133777046]
+unique_name_in_owner = true
+visible = false
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -310.0
+offset_top = 16.0
+offset_right = -130.0
+offset_bottom = 96.0
+grow_horizontal = 0
+
+[node name="TooltipMargin" type="MarginContainer" parent="WeaponTooltip" unique_id=855526282]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="TooltipVBox" type="VBoxContainer" parent="WeaponTooltip/TooltipMargin" unique_id=1568886359]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WeaponTooltipName" type="Label" parent="WeaponTooltip/TooltipMargin/TooltipVBox" unique_id=1604495294]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Weapon"
+
+[node name="WeaponTooltipCooldown" type="Label" parent="WeaponTooltip/TooltipMargin/TooltipVBox" unique_id=285137903]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cooldown: 0.5s"
+
+[node name="WeaponTooltipDamage" type="Label" parent="WeaponTooltip/TooltipMargin/TooltipVBox" unique_id=597486116]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Damage: 0"

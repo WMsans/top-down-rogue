@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://new_gold_drop"]
+
+[ext_resource type="Script" path="res://src/drops/gold_drop.gd" id="2"]
+[ext_resource type="Texture2D" path="res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/coin_01a.png" id="4"]
+
+[node name="GoldDrop" type="Area2D"]
+script = ExtResource("2")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("4")

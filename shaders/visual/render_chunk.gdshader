@@ -122,7 +122,7 @@ vec3 material_color(vec4 data, ivec2 pixel_pos) {
 		return vec3(1.0, 0.0, 1.0);
 	}
 	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
-	return apply_temperature_tint(base_color, data.b);
+	return apply_temperature_tint(base_color, data.b) * MATERIAL_GLOW[mat];
 }
 
 vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, ivec2 pixel_pos) {
@@ -132,7 +132,7 @@ vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, 
 	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
 	vec3 tex_color = srgb_to_linear(srgb);
 	vec3 tint = get_temperature_tint(src_data.b);
-	return tex_color * tint;
+	return tex_color * tint * MATERIAL_GLOW[material];
 }
 
 // Check if any air pixel exists within euclidean distance 3 of pos.
@@ -160,11 +160,26 @@ void fragment() {
 	// --- Fluid overlay: remember the tint and fall through as if this cell were air. ---
 	vec4 fluid_tint = vec4(0.0);
 	float fluid_alpha = 0.0;
-	if (mat == MAT_GAS || mat == MAT_LAVA) {
+	if (mat == MAT_GAS || mat == MAT_LAVA || mat == MAT_BLOOD) {
 		vec4 tint = MATERIAL_TINT[mat];
-		fluid_tint = vec4(tint.rgb, 1.0);
+		fluid_tint = vec4(tint.rgb * MATERIAL_GLOW[mat], 1.0);
 		// Ensure visibility even at low density: minimum 25% alpha, scales to tint.a at max
 		fluid_alpha = mix(0.25, tint.a, data.g);
+		mat = MAT_AIR;
+	}
+
+	// Explode wave: fiery flash that fades from white-hot core to orange edge as
+	// wave power decays. data.b carries the wave's remaining power (0..1).
+	if (mat == MAT_EXPLODE_WAVE) {
+		// data.b stores wave power / 255. Initial power is ~100/255≈0.39 and
+		// decays to 0 at the edge, so remap to a 0..1 intensity for the gradient.
+		float t = clamp(data.b * 2.6, 0.0, 1.0);
+		vec3 core_color = vec3(1.0, 0.98, 0.75);   // white-yellow
+		vec3 edge_color = vec3(1.0, 0.45, 0.10);   // deep orange
+		vec3 flash_rgb = mix(edge_color, core_color, t);
+		float boost = MATERIAL_GLOW[MAT_EXPLODE_WAVE] * (1.4 + t * 1.5);
+		fluid_tint = vec4(flash_rgb * boost, 1.0);
+		fluid_alpha = 1.0;
 		mat = MAT_AIR;
 	}
 

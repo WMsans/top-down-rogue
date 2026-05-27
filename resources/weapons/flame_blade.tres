@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MeleeWeapon" load_steps=3 format=3 uid="uid://bflameblade"]
+
+[ext_resource type="Script" path="res://src/weapons/melee_weapon.gd" id="1"]
+[ext_resource type="Script" path="res://src/weapons/lava_emitter_modifier.gd" id="2"]
+
+[sub_resource type="Resource" id="sub_0"]
+script = ExtResource("2")
+
+[resource]
+script = ExtResource("1")
+name = "Flame Blade"
+cooldown = 0.4
+damage = 5.0
+weapon_reach = 32.0
+arc_angle = 1.5707963268
+modifiers = Array[Resource]([SubResource("sub_0"), null, null])

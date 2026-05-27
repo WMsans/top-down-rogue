@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://cardscene"]
+
+[ext_resource type="Script" uid="uid://hqowupdmhpoy" path="res://src/ui/card.gd" id="1_card_script"]
+[ext_resource type="Shader" uid="uid://cy1l6f2ejtvgo" path="res://shaders/ui/fake_3d.gdshader" id="2_shader"]
+[ext_resource type="StyleBox" path="res://resources/ui/styles/panel_frame.tres" id="3_panel_frame"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fake3d"]
+resource_local_to_scene = true
+shader = ExtResource("2_shader")
+shader_parameter/rect_size = Vector2(160, 240)
+shader_parameter/fov = 90.0
+shader_parameter/cull_back = true
+shader_parameter/y_rot = 0.0
+shader_parameter/x_rot = 0.0
+shader_parameter/inset = 0.0
+shader_parameter/shine_intensity = 0.0
+shader_parameter/shine_color = Color(1, 0.95, 0.75, 1)
+shader_parameter/rim_strength = 0.0
+shader_parameter/rim_color = Color(1, 0.55, 0.25, 1)
+shader_parameter/selected = 0.0
+shader_parameter/selected_color = Color(1, 0.85, 0.15, 1)
+
+
+[node name="Card" type="Control" unique_id=665513293]
+custom_minimum_size = Vector2(160, 240)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_card_script")
+
+[node name="Shadow" type="Control" parent="." unique_id=303309682]
+anchors_preset = 0
+offset_right = 160.0
+offset_bottom = 240.0
+mouse_filter = 2
+
+[node name="ShadowRect" type="ColorRect" parent="Shadow" unique_id=897680023]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.12)
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=1523394829]
+texture_filter = 1
+material = SubResource("ShaderMaterial_fake3d")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1279150593]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(160, 240)
+render_target_update_mode = 4
+
+[node name="CardPanel" type="PanelContainer" parent="SubViewportContainer/SubViewport" unique_id=1833257590]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("3_panel_frame")
+
+[node name="ContentVBox" type="VBoxContainer" parent="SubViewportContainer/SubViewport/CardPanel" unique_id=298166104]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="SubViewportContainer/SubViewport/CardPanel/ContentVBox" unique_id=1935878983]
+texture_filter = 1
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+size_flags_horizontal = 4
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="SubViewportContainer/SubViewport/CardPanel/ContentVBox" unique_id=823092170]
+layout_mode = 2
+text = "Name"
+horizontal_alignment = 1
+
+[node name="StatsContainer" type="VBoxContainer" parent="SubViewportContainer/SubViewport/CardPanel/ContentVBox" unique_id=1446907081]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="ModifierSlots" type="HBoxContainer" parent="SubViewportContainer/SubViewport/CardPanel/ContentVBox" unique_id=299681329]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1

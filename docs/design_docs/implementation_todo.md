@@ -55,17 +55,17 @@ Based on gameplay.md design document.
 ### Shops
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Medium | Shop UI | Buy/sell interface |
-| | P1 | Medium | Currency system | Gold/credits dropped by enemies |
-| | P1 | Medium | Shop spawning | Generate shops in levels |
-| | P1 | Low | Modifier inventory | Track owned but unequipped modifiers |
+| x | P1 | Medium | Shop UI | Buy/sell interface |
+| x | P1 | Medium | Currency system | Gold/credits dropped by enemies |
+| x | P1 | Medium | Shop spawning | Generate shops in levels |
+| x | P1 | Low | Modifier inventory | Track owned but unequipped modifiers |
 
 ### Loot
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Medium | Enemy drop tables | Define what enemies can drop |
-| | P1 | Medium | Chest system | Random weapon drops from chests |
-| | P1 | Low | Pickup interaction | Player collects dropped items |
+| x | P1 | Medium | Enemy drop tables | Define what enemies can drop |
+| x | P1 | Medium | Chest system | Random weapon drops from chests |
+| x | P1 | Low | Pickup interaction | Player collects dropped items |
 
 ---
 
@@ -74,18 +74,18 @@ Based on gameplay.md design document.
 ### Enemy Foundation
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Medium | Enemy base class | Shared behavior for all enemies |
-| | P1 | Medium | Basic melee enemies | Simple AI for melee attackers |
-| | P1 | Medium | Enemy spawning | Place enemies in procedural levels |
-| | P2 | Medium | Ranged enemies | Projectile-based enemies |
-| | P2 | High | Elite enemies | Stronger variants with special abilities |
+| x | P1 | Medium | Enemy base class | Shared behavior for all enemies |
+| x | P1 | Medium | Basic melee enemies | Simple AI for melee attackers |
+| x | P1 | Medium | Enemy spawning | Place enemies in procedural levels |
+| x | P2 | Medium | Ranged enemies | Projectile-based enemies |
+| x | P2 | High | Elite enemies | Stronger variants with special abilities |
 
 ### Bosses
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P2 | High | Boss generation | Spawn boss in each level |
-| | P2 | High | Boss defeat logic | Trigger portal on boss death |
-| | P2 | Medium | Boss abilities | Unique attack patterns per boss type |
+| x | P2 | High | Boss generation | Spawn boss in each level |
+| x | P2 | High | Boss defeat logic | Trigger portal on boss death |
+| x | P2 | Medium | Boss abilities | Unique attack patterns per boss type |
 
 ---
 
@@ -94,17 +94,17 @@ Based on gameplay.md design document.
 ### Procedural Generation
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | High | Cave generation algorithm | Procedural cave layouts |
-| | P1 | Medium | Room placement | Shops, secrets, boss arenas |
-| | P1 | Medium | Enemy population | Distribute enemies appropriately |
-| | P2 | Medium | Secret areas | Hidden rooms requiring terrain carving |
+| x | P1 | High | Cave generation algorithm | Procedural cave layouts |
+| x | P1 | Medium | Room placement | Shops, secrets, boss arenas |
+| x | P1 | Medium | Enemy population | Distribute enemies appropriately |
+| x | P2 | Medium | Secret areas | Hidden rooms requiring terrain carving |
 
 ### Progression
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Low | Portal system | Transition to next level after boss |
-| | P2 | Low | Level tracking | Current depth/floor counter |
-| | P2 | Medium | Difficulty scaling | Enemies scale with depth |
+| x | P1 | Low | Portal system | Transition to next level after boss |
+| x | P2 | Low | Level tracking | Current depth/floor counter |
+| x | P2 | Medium | Difficulty scaling | Enemies scale with depth |
 
 ---
 
@@ -114,7 +114,7 @@ Based on gameplay.md design document.
 |------|----------|------------|------|-------------|
 | | P2 | Medium | Visual feedback | Swing effects, material particles |
 | | P2 | Medium | Sound design | Swing sounds, material interactions |
-| | P2 | Medium | UI/UX | HUD, inventory, modifier display |
+| x | P2 | Medium | UI/UX | HUD, inventory, modifier display |
 | | P2 | Low | Save/Run persistence | Track run state for meta-progression |
 | | P3 | Medium | Meta-progression | Persistent unlocks (if applicable) |
 
