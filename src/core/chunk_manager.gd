@@ -346,8 +346,10 @@ func _build_cavern_bytes(new_chunks: Array[Vector2i]) -> PackedByteArray:
 				var comp: Resource = slot.composition
 				if comp == null:
 					continue
-				if not slot.is_boss and not (slot.template_index >= 0 and (grid.get_template_for_slot(slot) as RoomTemplate).cavern_carve):
-					continue
+				if not slot.is_boss:
+					var tmpl := grid.get_template_for_slot(slot) as RoomTemplate
+					if tmpl == null or not tmpl.cavern_carve:
+						continue
 				anchors[sector] = comp
 
 	var bytes := PackedByteArray()

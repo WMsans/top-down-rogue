@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/props/lantern.gd" id="1_lantern_script"]
+
+[ext_resource type="Texture2D" path="res://textures/Guidance/lantern.png" id="2_lantern_tex"]
+
+[node name="Lantern" type="Node2D"]
+script = ExtResource("1_lantern_script")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_lantern_tex")
+centered = true
+
+[node name="Light" type="PointLight2D" parent="."]
+color = Color(1, 0.85, 0.6, 1)
+energy = 1.2
+texture_scale = 4.0
