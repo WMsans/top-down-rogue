@@ -32,13 +32,13 @@ Crucially, the implementation must be a **reusable authored-room capability**, n
 
 ### Room concept
 
-A small (~1200×1000 px, roughly 3–4 sectors of width) rectangular chamber centered on the world origin `(0, 0)`. The player spawns at the room's center. The room contains no enemies, no chests, no shops, no hazards — purely informational and safe.
+A small **circular chamber** (~500 px radius, with slight lobing for a natural-looking edge) centered on the world origin `(0, 0)`. The carve uses the existing `cavern_carve` system (`nominal_radius` + `lobing_amplitude`), so the room is a clean air pocket inside the surrounding procgen cave. The player spawns at the room's center. The room contains no enemies, no chests, no shops, no hazards — purely informational and safe.
 
-Visual style: lit safe-house. Wooden plaques on the walls, lantern lighting in all four corners, a wooden-plank floor visually distinct from the cave's biome floor. Aesthetically reads as "base camp."
+Visual style: lit safe-house. Four wooden sign plaques placed at compass points inside the chamber, four lantern props arranged near the chamber edge, and a circular wooden-plank floor overlay visually distinct from the cave's biome floor. Aesthetically reads as "base camp."
 
 ### Walls and exit
 
-Walls are normal cave-stone terrain — fully destructible like every other wall in the game. The intended exit is a single doorway on one side of the room (south), leading into the procgen cave. A curious player who swings at a wall discovers carving organically and ends up in cave terrain still inside the boss ring; no risk of escaping into the void beyond.
+The chamber is surrounded by normal procgen cave — fully destructible terrain like everywhere else in the game. There is no explicit doorway: the cave around the chamber has its own natural air pockets and connections, and the player can walk through any natural opening or carve through any wall. The boss ring (distance 10 sectors) bounds the world, so the player can't escape into the void.
 
 This destructibility-everywhere rule is a hard project invariant: never propose non-destructible walls, even for tutorial spaces.
 
@@ -46,16 +46,17 @@ This destructibility-everywhere rule is a hard project invariant: never propose 
 
 All four are wall-mounted Sprite2D plaques displaying PNG art (user-supplied). No text on the plaques.
 
-- **Goal sign** — largest, mounted on the wall opposite the doorway, so the player faces it on spawn. Pictogram: player icon at center → radial outward arrows → boss skull → portal swirl. Reads as "from here, go outward in any direction → boss → portal."
-- **Move sign** — left of spawn. WASD glyphs in physical layout.
-- **Attack sign** — right of spawn. Mouse icon with left button highlighted + swing arc.
-- **Interact sign** — near the doorway (or below the goal sign). `E` key glyph with a hand/pickup icon. Placed so the player sees it as they approach the cave, priming them to press E on drops, chests, and the portal.
+- **Goal sign** — largest, placed *north* of spawn so the player faces it as the camera orients on spawn. Pictogram: player icon at center → radial outward arrows → boss skull → portal swirl. Reads as "from here, go outward in any direction → boss → portal."
+- **Move sign** — *west* of spawn. WASD glyphs in physical layout.
+- **Attack sign** — *east* of spawn. Mouse icon with left button highlighted + swing arc.
+- **Interact sign** — *south* of spawn. `E` key glyph with a hand/pickup icon. Primes the player to press E on drops, chests, and the portal.
 
 ### Lighting and floor
 
-- **Lanterns:** four prop sprites mounted in the corners, each with a child `PointLight2D` (warm amber, energy ~1.2, radius covering ~half the room). Their overlap fully lights the chamber. A small random flicker on each light's energy sells live flame.
-- **Floor overlay:** a single Sprite2D child of the room scene, "wooden planks" texture, sized to the room's footprint, z-indexed above the biome floor (`z = -10`) and below terrain walls and props. The biome floor still tiles underneath but is hidden inside the room.
+- **Lanterns:** four prop sprites arranged near the chamber's edge (NE/NW/SE/SW), each with a child `PointLight2D` (warm amber, energy ~1.2, radius covering ~half the chamber). Their overlap fully lights the chamber. A small random flicker on each light's energy sells live flame.
+- **Floor overlay:** a single Sprite2D child of the room scene, "wooden planks" texture sized to cover the chamber's footprint (~1024×1024 px), z-indexed above the biome floor (`z = -10`) and below terrain walls and props. The biome floor still tiles underneath but is hidden inside the chamber.
 - **No simulated materials** spawn inside the room — no gas, lava, blood, fire. The room is a clean, controlled space.
+- **No audio** in this implementation (deferred to a future pass).
 
 ## Technical design — Authored Room System
 
