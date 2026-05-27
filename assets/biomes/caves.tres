@@ -13,6 +13,7 @@
 [ext_resource type="Resource" path="res://assets/arenas/elite/caves_a.tres" id="8_elitea"]
 [ext_resource type="Resource" path="res://assets/arenas/elite/caves_b.tres" id="9_eliteb"]
 [ext_resource type="Resource" path="res://assets/arenas/elite/caves_c.tres" id="10_elitec"]
+[ext_resource type="Resource" path="res://assets/rooms/guidance/guidance_room_template.tres" id="12_guidance"]
 
 [sub_resource type="Resource" id="Resource_xxuj2"]
 script = ExtResource("2_7cf3p")
@@ -62,8 +63,6 @@ weight = 1.0
 is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("10_elitec")
-
-[ext_resource type="Resource" path="res://assets/rooms/guidance/guidance_room_template.tres" id="12_guidance"]
 
 [resource]
 script = ExtResource("3_5ujno")
