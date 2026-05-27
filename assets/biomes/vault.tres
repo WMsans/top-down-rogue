@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://src/core/room_template.gd" id="1_ngues"]
 [ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_e61lu"]
 [ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_wsrpv"]
+[ext_resource type="Texture2D" uid="uid://d4ggrqpbrfqt7" path="res://textures/Environments/Floors/vault_floor.png" id="11_floor"]
 
 [ext_resource type="Resource" path="res://assets/arenas/boss/vault_a.tres" id="4_bossa"]
 [ext_resource type="Resource" path="res://assets/arenas/boss/vault_b.tres" id="5_bossb"]
@@ -68,3 +69,4 @@ pool_materials = [SubResource("Resource_0f0hf")]
 room_templates = [SubResource("Resource_xes3i"), SubResource("Resource_wmkmb"), SubResource("Resource_flwj0"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 tint = Color(1, 0.95, 0.85, 1)
+floor_texture = ExtResource("11_floor")
