@@ -130,6 +130,12 @@ func spawn_prop(world_pos: Vector2, prop_scene: PackedScene) -> void:
 	inst.global_position = world_pos
 	_spawn_parent.add_child(inst)
 
+func spawn_node(node: Node2D, world_pos: Vector2) -> void:
+	if node == null or _spawn_parent == null:
+		return
+	_spawn_parent.add_child(node)
+	node.global_position = world_pos
+
 func spawn_chest(world_pos: Vector2, rare: bool) -> void:
 	const CHEST_SCENE = preload("res://scenes/chest.tscn")
 	var chest := CHEST_SCENE.instantiate()
