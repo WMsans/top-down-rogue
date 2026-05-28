@@ -5,14 +5,16 @@ ivec2 unpack_velocity_sand(vec4 p) {
 	return ivec2(int(a >> 4) - 8, int(a & 15u) - 8);
 }
 
-vec4 pack_sand(int density, ivec2 vel) {
+int get_source_mat_sand(vec4 p) { return int(round(p.b * 255.0)); }
+
+vec4 pack_sand(int density, ivec2 vel, int source_mat) {
 	int vx = clamp(vel.x + 8, 0, 15);
 	int vy = clamp(vel.y + 8, 0, 15);
 	uint a = (uint(vx) << 4) | uint(vy);
 	return vec4(
 		float(MAT_SAND) / 255.0,
 		float(clamp(density, 0, 255)) / 255.0,
-		0.0,
+		float(clamp(source_mat, 0, 255)) / 255.0,
 		float(a) / 255.0
 	);
 }
@@ -129,7 +131,13 @@ void sand_advect_pull(
 				inflow_vel = inflow_vel / 2;
 				inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
 			}
-			imageStore(chunk_tex, pos, pack_sand(total_in, inflow_vel));
+			// Inherit source material from the neighbor contributing the most inflow.
+			int best_in = in_up;
+			int inflow_src = (n_mat_up == MAT_SAND) ? get_source_mat_sand(n_up) : 0;
+			if (in_down > best_in) { best_in = in_down; inflow_src = get_source_mat_sand(n_down); }
+			if (in_left > best_in) { best_in = in_left; inflow_src = get_source_mat_sand(n_left); }
+			if (in_right > best_in) { best_in = in_right; inflow_src = get_source_mat_sand(n_right); }
+			imageStore(chunk_tex, pos, pack_sand(total_in, inflow_vel, inflow_src));
 			return;
 		}
 		return;
@@ -139,7 +147,7 @@ void sand_advect_pull(
 		imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, 0));
 		return;
 	}
-	imageStore(chunk_tex, pos, pack_sand(new_density, new_vel));
+	imageStore(chunk_tex, pos, pack_sand(new_density, new_vel, get_source_mat_sand(pixel)));
 }
 
 bool simulate_sand(ivec2 pos, inout vec4 pixel, inout int material,

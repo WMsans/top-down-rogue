@@ -153,7 +153,7 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 					imageStore(chunk_tex, pos, vec4(
 						float(MAT_SAND) / 255.0,
 						1.0,
-						0.0,
+						float(material) / 255.0,
 						float(packed_vel) / 255.0
 					));
 				} else {
