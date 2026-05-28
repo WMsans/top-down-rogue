@@ -123,23 +123,8 @@ func _use_impl(user: Node) -> void:
 		MaterialRegistry.MAT_ICE,
 	]
 	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, 0.0, 0.0, solids, damage)
-	if _arc_has_terrain(user, pos, direction):
-		_burst_sand_from_carve(pos, direction)
+	_burst_sand_from_carve(pos, direction)
 	_hit_attackables_in_arc(user, pos, direction)
-
-
-func _arc_has_terrain(user: Node, origin: Vector2, direction: Vector2) -> bool:
-	var space_state: PhysicsDirectSpaceState2D = user.get_world_2d().direct_space_state
-	var half_arc: float = arc_angle / 2.0
-	var offsets: Array[float] = [-half_arc, -half_arc * 0.5, 0.0, half_arc * 0.5, half_arc]
-	for angle_offset in offsets:
-		var end: Vector2 = origin + direction.rotated(angle_offset) * weapon_reach
-		var q := PhysicsRayQueryParameters2D.create(origin, end)
-		q.collision_mask = 1
-		q.exclude = [user]
-		if not space_state.intersect_ray(q).is_empty():
-			return true
-	return false
 
 
 func _burst_sand_from_carve(origin: Vector2, direction: Vector2) -> void:
