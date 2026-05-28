@@ -125,12 +125,37 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 				uint wave_rng = hash(uint(pos.x) * 1973u + uint(pos.y) * 9241u + uint(material) * 4523u);
 				bool wave_spawn_sand = false;
 				if (material == MAT_STONE || material == MAT_DIRT) {
-					wave_spawn_sand = (wave_rng % 100u) < 40u;
+					wave_spawn_sand = (wave_rng % 100u) < 20u;
 				} else if (material == MAT_COAL) {
-					wave_spawn_sand = (wave_rng % 100u) < 30u;
+					wave_spawn_sand = (wave_rng % 100u) < 12u;
 				}
 				if (wave_spawn_sand) {
-					imageStore(chunk_tex, pos, vec4(float(MAT_SAND) / 255.0, 1.0, 0.0, 136.0 / 255.0));
+					// Burst sand outward from the blast: push direction is the
+					// negated weighted sum of wave-neighbor offsets, so cells
+					// kick away from whichever side the wavefront arrived from.
+					vec2 push = vec2(0.0);
+					if (is_wave(n_up))    push -= vec2( 0.0,-1.0) * float(wave_power(n_up));
+					if (is_wave(n_down))  push -= vec2( 0.0, 1.0) * float(wave_power(n_down));
+					if (is_wave(n_left))  push -= vec2(-1.0, 0.0) * float(wave_power(n_left));
+					if (is_wave(n_right)) push -= vec2( 1.0, 0.0) * float(wave_power(n_right));
+					if (is_wave(n_ul))    push -= vec2(-1.0,-1.0) * float(wave_power(n_ul));
+					if (is_wave(n_ur))    push -= vec2( 1.0,-1.0) * float(wave_power(n_ur));
+					if (is_wave(n_dl))    push -= vec2(-1.0, 1.0) * float(wave_power(n_dl));
+					if (is_wave(n_dr))    push -= vec2( 1.0, 1.0) * float(wave_power(n_dr));
+					float plen = length(push);
+					vec2 push_dir = (plen > 0.0001) ? push / plen : vec2(0.0, -1.0);
+					float speed = 420.0;
+					float vx_f = push_dir.x * speed / 60.0;
+					float vy_f = push_dir.y * speed / 60.0;
+					int vx = clamp(int(round(vx_f)) + 8, 0, 15);
+					int vy = clamp(int(round(vy_f)) + 8, 0, 15);
+					uint packed_vel = (uint(vx) << 4) | uint(vy);
+					imageStore(chunk_tex, pos, vec4(
+						float(MAT_SAND) / 255.0,
+						1.0,
+						0.0,
+						float(packed_vel) / 255.0
+					));
 				} else {
 					imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
 				}
