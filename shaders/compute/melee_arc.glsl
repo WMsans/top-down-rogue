@@ -50,6 +50,15 @@ float hardness_for(uint mat_id) {
 	return 0.0;
 }
 
+uint melee_hash(uint n) {
+	n = (n >> 16u) ^ n;
+	n *= 0xed5ad0bbu;
+	n = (n >> 16u) ^ n;
+	n *= 0xac4c1b51u;
+	n = (n >> 16u) ^ n;
+	return n;
+}
+
 void main() {
 	ivec2 local = ivec2(gl_GlobalInvocationID.xy);
 	if (local.x < 0 || local.x >= 256 || local.y < 0 || local.y >= 256) return;
@@ -79,7 +88,32 @@ void main() {
 		float effective_r = pc.radius * scale_clamped;
 		if (dist_sq > effective_r * effective_r) return;
 
-		imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
+		uint rng = melee_hash(uint(local.x) * 1973u + uint(local.y) * 9241u + mat * 4523u);
+		bool spawn_sand = false;
+		if (mat == uint(MAT_STONE) || mat == uint(MAT_DIRT)) {
+			spawn_sand = (rng % 100u) < 40u;
+		} else if (mat == uint(MAT_COAL)) {
+			spawn_sand = (rng % 100u) < 30u;
+		}
+
+		if (spawn_sand) {
+			float dist = sqrt(dist_sq);
+			vec2 push_dir = (dist > 0.0001) ? to_pixel / dist : pc.direction;
+			float speed = 200.0;
+			float vx_f = push_dir.x * speed / 60.0;
+			float vy_f = push_dir.y * speed / 60.0;
+			int vx = clamp(int(round(vx_f)) + 8, 0, 15);
+			int vy = clamp(int(round(vy_f)) + 8, 0, 15);
+			uint packed_vel = (uint(vx) << 4) | uint(vy);
+			imageStore(chunk_tex, local, vec4(
+				float(MAT_SAND) / 255.0,
+				1.0,
+				0.0,
+				float(packed_vel) / 255.0
+			));
+		} else {
+			imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
+		}
 
 		uint idx = atomicAdd(hit_list.count, 1u);
 		if (idx < pc.hit_capacity) {
