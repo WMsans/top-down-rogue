@@ -18,7 +18,7 @@ vec4 pack_gas(int density, ivec2 vel) {
 }
 
 bool is_solid_for_gas(int mat) {
-	return mat != MAT_AIR && mat != MAT_GAS;
+	return mat != MAT_AIR && mat != MAT_GAS && mat != MAT_SAND;
 }
 
 void gas_advect_pull(

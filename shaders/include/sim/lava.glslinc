@@ -19,7 +19,7 @@ vec4 pack_lava(int density, int temperature, ivec2 vel) {
 }
 
 bool is_solid_for_lava(int mat) {
-	return mat != MAT_AIR && mat != MAT_LAVA;
+	return mat != MAT_AIR && mat != MAT_LAVA && mat != MAT_SAND;
 }
 
 bool is_hot_lava(vec4 p, int target_material) {
