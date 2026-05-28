@@ -15,6 +15,7 @@ class RoomSlot:
 	var rotation: int = 0
 	var template_size: int = 0
 	var composition: Resource = null
+	var template_override: RoomTemplate = null
 
 var _seed: int
 var _biome: BiomeDef
@@ -67,6 +68,15 @@ func _find_claiming_anchor(coord: Vector2i) -> Vector2i:
 
 func resolve_sector(coord: Vector2i) -> RoomSlot:
 	var slot := RoomSlot.new()
+
+	if _biome != null and _biome.fixed_anchors.has(coord):
+		var tmpl: RoomTemplate = _biome.fixed_anchors[coord]
+		slot.template_override = tmpl
+		slot.template_size = tmpl.size_class
+		if tmpl.cavern_carve:
+			slot.composition = tmpl.composition
+		return slot
+
 	var dist := chebyshev_distance(coord, Vector2i.ZERO)
 
 	if dist > BOSS_RING_DISTANCE:
@@ -122,4 +132,6 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 func get_template_for_slot(slot: RoomSlot) -> RoomTemplate:
 	if slot.is_empty or slot.is_boss:
 		return null
+	if slot.template_override != null:
+		return slot.template_override
 	return _biome.room_templates[slot.template_index]

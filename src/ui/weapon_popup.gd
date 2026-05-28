@@ -149,6 +149,19 @@ func _do_close_cleanup() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if ConsoleManager.is_open():
+		return
+	if event.is_action_pressed("inventory"):
+		if visible:
+			close()
+		elif not get_tree().paused:
+			var player := get_tree().get_first_node_in_group("player")
+			if player:
+				var wm: WeaponManager = player.get_node_or_null("WeaponManager")
+				if wm != null:
+					open(wm)
+		get_viewport().set_input_as_handled()
+		return
 	if not visible:
 		return
 	if event.is_action_pressed("pause"):

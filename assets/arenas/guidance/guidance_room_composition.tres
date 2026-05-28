@@ -1,0 +1,83 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3 uid="uid://xpgqtx5elmfd"]
+
+[ext_resource type="Script" uid="uid://tf853rhnmxly" path="res://src/core/arena_composition.gd" id="1_comp"]
+[ext_resource type="Script" uid="uid://dffk5nfn75fsl" path="res://src/core/features/feature_floor_overlay.gd" id="2_floor"]
+[ext_resource type="Script" uid="uid://xi2558c6813q" path="res://src/core/features/feature_lantern_cluster.gd" id="3_lantern"]
+[ext_resource type="Script" uid="uid://dtb8h1em0ic6g" path="res://src/core/features/feature_plaque_set.gd" id="4_plaque"]
+[ext_resource type="Script" uid="uid://d1j532jmecmtw" path="res://src/core/features/lantern_spec.gd" id="5_lspec"]
+[ext_resource type="Script" uid="uid://35ossxxud55m" path="res://src/core/features/plaque_spec.gd" id="6_pspec"]
+[ext_resource type="Texture2D" uid="uid://dttmswrdg1exj" path="res://textures/Guidance/wooden_planks.png" id="7_planks"]
+[ext_resource type="PackedScene" uid="uid://dqe8c14jyynbw" path="res://scenes/props/lantern.tscn" id="8_lantern_scene"]
+[ext_resource type="Texture2D" uid="uid://bdi5vjx56ijkw" path="res://textures/Guidance/sign_goal.png" id="9_goal"]
+[ext_resource type="Texture2D" uid="uid://bf1xaqxvfxlkj" path="res://textures/Guidance/sign_move.png" id="10_move"]
+[ext_resource type="Texture2D" uid="uid://c174jxlvvlmx1" path="res://textures/Guidance/sign_attack.png" id="11_attack"]
+[ext_resource type="Script" uid="uid://cuk1124yjtbav" path="res://src/core/features/feature_wood_wall.gd" id="12_wall"]
+
+[sub_resource type="Resource" id="Resource_floor"]
+script = ExtResource("2_floor")
+texture = ExtResource("7_planks")
+radius = 200.0
+
+[sub_resource type="Resource" id="Resource_lantern_nw"]
+script = ExtResource("5_lspec")
+offset = Vector2(-70, -70)
+prop_scene = ExtResource("8_lantern_scene")
+light_radius = 200.0
+
+[sub_resource type="Resource" id="Resource_lantern_ne"]
+script = ExtResource("5_lspec")
+offset = Vector2(70, -70)
+prop_scene = ExtResource("8_lantern_scene")
+light_radius = 200.0
+
+[sub_resource type="Resource" id="Resource_lantern_sw"]
+script = ExtResource("5_lspec")
+offset = Vector2(-70, 70)
+prop_scene = ExtResource("8_lantern_scene")
+light_radius = 200.0
+
+[sub_resource type="Resource" id="Resource_lantern_se"]
+script = ExtResource("5_lspec")
+offset = Vector2(70, 70)
+prop_scene = ExtResource("8_lantern_scene")
+light_radius = 200.0
+
+[sub_resource type="Resource" id="Resource_lantern_cluster"]
+script = ExtResource("3_lantern")
+lanterns = Array[ExtResource("5_lspec")]([SubResource("Resource_lantern_nw"), SubResource("Resource_lantern_ne"), SubResource("Resource_lantern_sw"), SubResource("Resource_lantern_se")])
+
+[sub_resource type="Resource" id="Resource_plaque_goal"]
+script = ExtResource("6_pspec")
+offset = Vector2(0, -100)
+texture = ExtResource("9_goal")
+size = Vector2(100, 100)
+
+[sub_resource type="Resource" id="Resource_plaque_move"]
+script = ExtResource("6_pspec")
+offset = Vector2(-100, 0)
+texture = ExtResource("10_move")
+size = Vector2(100, 100)
+
+[sub_resource type="Resource" id="Resource_plaque_attack"]
+script = ExtResource("6_pspec")
+offset = Vector2(100, 0)
+texture = ExtResource("11_attack")
+size = Vector2(100, 100)
+
+[sub_resource type="Resource" id="Resource_plaque_set"]
+script = ExtResource("4_plaque")
+plaques = Array[ExtResource("6_pspec")]([SubResource("Resource_plaque_goal"), SubResource("Resource_plaque_move"), SubResource("Resource_plaque_attack")])
+
+[sub_resource type="Resource" id="Resource_wood_wall"]
+script = ExtResource("12_wall")
+inner_radius = 192.0
+outer_radius = 200.0
+
+[resource]
+script = ExtResource("1_comp")
+arena_kind = &"guidance"
+biome = &"caves"
+nominal_radius = 200
+lobing_amplitude = 0
+inner_disc_radius = 200
+features = [SubResource("Resource_floor"), SubResource("Resource_lantern_cluster"), SubResource("Resource_plaque_set"), SubResource("Resource_wood_wall")]

@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://dqe8c14jyynbw"]
+
+[ext_resource type="Script" uid="uid://cla6jqqd446qj" path="res://src/props/lantern.gd" id="1_lantern_script"]
+[ext_resource type="Texture2D" uid="uid://byl1pvvqkl6dv" path="res://textures/Guidance/lantern.png" id="2_lantern_tex"]
+
+[sub_resource type="Gradient" id="Gradient_2avt4"]
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_sxhwi"]
+gradient = SubResource("Gradient_2avt4")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="Lantern" type="Node2D" unique_id=861508164]
+script = ExtResource("1_lantern_script")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=864959311]
+texture = ExtResource("2_lantern_tex")
+
+[node name="Light" type="PointLight2D" parent="." unique_id=543209445]
+color = Color(1, 0.85, 0.6, 1)
+energy = 1.2
+texture = SubResource("GradientTexture2D_sxhwi")
+texture_scale = 4.0
