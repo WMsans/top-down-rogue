@@ -112,7 +112,18 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 			int temperature = get_temperature(pixel);
 			int new_health = health - max_neighbor_power;
 			if (new_health <= 0) {
-				imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
+				uint wave_rng = hash(uint(pos.x) * 1973u + uint(pos.y) * 9241u + uint(material) * 4523u);
+				bool wave_spawn_sand = false;
+				if (material == MAT_STONE || material == MAT_DIRT) {
+					wave_spawn_sand = (wave_rng % 100u) < 40u;
+				} else if (material == MAT_COAL) {
+					wave_spawn_sand = (wave_rng % 100u) < 30u;
+				}
+				if (wave_spawn_sand) {
+					imageStore(chunk_tex, pos, vec4(float(MAT_SAND) / 255.0, 1.0, 0.0, 136.0 / 255.0));
+				} else {
+					imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
+				}
 			} else {
 				imageStore(chunk_tex, pos, make_pixel(material, new_health, temperature));
 			}
