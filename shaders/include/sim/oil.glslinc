@@ -19,7 +19,7 @@ vec4 pack_oil(int density, int temperature, ivec2 vel) {
 }
 
 bool is_solid_for_oil(int mat) {
-	return mat != MAT_AIR && mat != MAT_OIL;
+	return mat != MAT_AIR && mat != MAT_OIL && mat != MAT_SAND;
 }
 
 void oil_advect_pull(

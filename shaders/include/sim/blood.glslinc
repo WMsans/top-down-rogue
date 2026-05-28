@@ -18,7 +18,7 @@ vec4 pack_blood(int density, ivec2 vel) {
 }
 
 bool is_solid_for_blood(int mat) {
-	return mat != MAT_AIR && mat != MAT_BLOOD;
+	return mat != MAT_AIR && mat != MAT_BLOOD && mat != MAT_SAND;
 }
 
 void blood_advect_pull(
