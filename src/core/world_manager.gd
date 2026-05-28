@@ -216,6 +216,10 @@ func place_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 	terrain_modifier.place_material_blob(world_pos, radius, material_id, noise_seed, edge_jitter)
 
 
+func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int) -> void:
+	terrain_modifier.place_material_ring(world_pos, inner_radius, outer_radius, material_id)
+
+
 func place_fire(world_pos: Vector2, radius: float) -> void:
 	terrain_modifier.place_fire(world_pos, radius)
 

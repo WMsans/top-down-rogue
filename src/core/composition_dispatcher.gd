@@ -130,6 +130,12 @@ func spawn_prop(world_pos: Vector2, prop_scene: PackedScene) -> void:
 	inst.global_position = world_pos
 	_spawn_parent.add_child(inst)
 
+func spawn_node(node: Node2D, world_pos: Vector2) -> void:
+	if node == null or _spawn_parent == null:
+		return
+	_spawn_parent.add_child(node)
+	node.global_position = world_pos
+
 func spawn_chest(world_pos: Vector2, rare: bool) -> void:
 	const CHEST_SCENE = preload("res://scenes/chest.tscn")
 	var chest := CHEST_SCENE.instantiate()
@@ -146,6 +152,7 @@ func stamp_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 	if _world_manager == null or material_id <= 0:
 		return
 	_stamps.append({
+		"kind": "blob",
 		"pos": world_pos,
 		"radius": radius,
 		"mat": material_id,
@@ -155,6 +162,19 @@ func stamp_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 	_world_manager.place_material_blob(world_pos, radius, material_id, noise_seed, edge_jitter)
 
 
+func stamp_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int) -> void:
+	if _world_manager == null or material_id <= 0:
+		return
+	_stamps.append({
+		"kind": "ring",
+		"pos": world_pos,
+		"inner": inner_radius,
+		"outer": outer_radius,
+		"mat": material_id,
+	})
+	_world_manager.place_material_ring(world_pos, inner_radius, outer_radius, material_id)
+
+
 func _replay_stamps_for_chunks(new_coords: Array[Vector2i]) -> void:
 	if _world_manager == null or _stamps.is_empty() or new_coords.is_empty():
 		return
@@ -162,7 +182,12 @@ func _replay_stamps_for_chunks(new_coords: Array[Vector2i]) -> void:
 	for c in new_coords:
 		new_chunks[c] = true
 	for stamp in _stamps:
-		var radius: float = stamp["radius"] * (1.0 + max(float(stamp["jitter"]), 0.0))
+		var kind: String = stamp.get("kind", "blob")
+		var radius: float = 0.0
+		if kind == "ring":
+			radius = float(stamp["outer"])
+		else:
+			radius = float(stamp["radius"]) * (1.0 + max(float(stamp.get("jitter", 0.0)), 0.0))
 		var min_x := int(floor(stamp["pos"].x - radius))
 		var max_x := int(ceil(stamp["pos"].x + radius))
 		var min_y := int(floor(stamp["pos"].y - radius))
@@ -179,5 +204,9 @@ func _replay_stamps_for_chunks(new_coords: Array[Vector2i]) -> void:
 					break
 			if intersects:
 				break
-		if intersects:
+		if not intersects:
+			continue
+		if kind == "ring":
+			_world_manager.place_material_ring(stamp["pos"], stamp["inner"], stamp["outer"], stamp["mat"])
+		else:
 			_world_manager.place_material_blob(stamp["pos"], stamp["radius"], stamp["mat"], stamp["seed"], stamp["jitter"])

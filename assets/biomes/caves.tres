@@ -13,6 +13,7 @@
 [ext_resource type="Resource" path="res://assets/arenas/elite/caves_a.tres" id="8_elitea"]
 [ext_resource type="Resource" path="res://assets/arenas/elite/caves_b.tres" id="9_eliteb"]
 [ext_resource type="Resource" path="res://assets/arenas/elite/caves_c.tres" id="10_elitec"]
+[ext_resource type="Resource" path="res://assets/rooms/guidance/guidance_room_template.tres" id="12_guidance"]
 
 [sub_resource type="Resource" id="Resource_xxuj2"]
 script = ExtResource("2_7cf3p")
@@ -71,3 +72,6 @@ pool_materials = [SubResource("Resource_xxuj2")]
 room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 floor_texture = ExtResource("11_floor")
+fixed_anchors = {
+Vector2i(0, 0): ExtResource("12_guidance")
+}

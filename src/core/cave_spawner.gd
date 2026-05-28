@@ -156,7 +156,22 @@ func _validate_position(world_pos: Vector2) -> bool:
 	if not _is_clear_of_walls(world_pos):
 		return false
 
+	if _is_in_no_spawn_arena(world_pos):
+		return false
+
 	return true
+
+
+func _is_in_no_spawn_arena(world_pos: Vector2) -> bool:
+	var grid: SectorGrid = LevelManager.get_grid()
+	if grid == null:
+		return false
+	var sector := grid.world_to_sector(world_pos)
+	var slot := grid.resolve_sector(sector)
+	var comp: ArenaComposition = slot.composition as ArenaComposition
+	if comp == null:
+		return false
+	return comp.arena_kind == &"guidance"
 
 
 # Ensure the spawn position's footprint contains only air. Reads
