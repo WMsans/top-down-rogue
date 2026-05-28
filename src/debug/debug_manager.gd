@@ -28,9 +28,11 @@ func _build_hud() -> void:
 	canvas = CanvasLayer.new()
 	canvas.layer = 100
 
+	var scale_factor := get_tree().root.get_visible_rect().size.x / get_viewport().get_visible_rect().size.x
+
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 4)
-	margin.add_theme_constant_override("margin_top", 4)
+	margin.add_theme_constant_override("margin_left", int(4 * scale_factor))
+	margin.add_theme_constant_override("margin_top", int(4 * scale_factor))
 	canvas.add_child(margin)
 
 	var bg := PanelContainer.new()
@@ -39,14 +41,14 @@ func _build_hud() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0, 0, 0, 0.7)
 	style.border_color = Color(1, 1, 1, 0.3)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(4)
+	style.set_border_width_all(int(1 * scale_factor))
+	style.set_corner_radius_all(int(4 * scale_factor))
+	style.set_content_margin_all(int(4 * scale_factor))
 	bg.add_theme_stylebox_override("panel", style)
 
 	_debug_label = Label.new()
 	_debug_label.add_theme_color_override("font_color", Color.LIME_GREEN)
-	_debug_label.add_theme_font_size_override("font_size", 10)
+	_debug_label.add_theme_font_size_override("font_size", int(10 * scale_factor))
 	_debug_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	bg.add_child(_debug_label)
 
@@ -54,6 +56,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_F3:
 		visible = !visible
 		if visible: 
-			add_child(canvas)
+			get_tree().root.add_child(canvas)
 		else:
-			remove_child(canvas)
+			get_tree().root.remove_child(canvas)
+
+func _exit_tree() -> void:
+	if canvas:
+		if canvas.is_inside_tree():
+			canvas.get_parent().remove_child(canvas)
+		canvas.queue_free()
