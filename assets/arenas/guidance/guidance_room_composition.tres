@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" path="res://textures/Guidance/sign_goal.png" id="9_goal"]
 [ext_resource type="Texture2D" path="res://textures/Guidance/sign_move.png" id="10_move"]
 [ext_resource type="Texture2D" path="res://textures/Guidance/sign_attack.png" id="11_attack"]
+[ext_resource type="Script" path="res://src/core/features/feature_wood_wall.gd" id="12_wall"]
 
 [sub_resource type="Resource" id="Resource_floor"]
 script = ExtResource("2_floor")
@@ -84,12 +85,17 @@ z_index_value = 5
 script = ExtResource("4_plaque")
 plaques = Array[ExtResource("6_pspec")]([SubResource("Resource_plaque_goal"), SubResource("Resource_plaque_move"), SubResource("Resource_plaque_attack")])
 
+[sub_resource type="Resource" id="Resource_wood_wall"]
+script = ExtResource("12_wall")
+inner_radius = 120.0
+outer_radius = 128.0
+
 [resource]
 script = ExtResource("1_comp")
 arena_kind = &"guidance"
 biome = &"caves"
 variant_id = &"a"
 nominal_radius = 128
-lobing_amplitude = 8
-inner_disc_radius = 60
-features = [SubResource("Resource_floor"), SubResource("Resource_lantern_cluster"), SubResource("Resource_plaque_set")]
+lobing_amplitude = 0
+inner_disc_radius = 128
+features = [SubResource("Resource_floor"), SubResource("Resource_lantern_cluster"), SubResource("Resource_plaque_set"), SubResource("Resource_wood_wall")]

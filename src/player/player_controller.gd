@@ -58,7 +58,8 @@ func _ready() -> void:
 	add_child(delivery)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(Vector2i.ZERO, Vector2i(BODY_WIDTH, BODY_HEIGHT))
+	var guidance_center := _find_guidance_room_center()
+	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(guidance_center, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
 	_last_safe_position = position
 
@@ -103,6 +104,22 @@ func _physics_process(delta: float) -> void:
 	var wm := get_parent().get_node_or_null("WorldManager")
 	if wm:
 		wm.tracking_position = global_position
+
+
+func _find_guidance_room_center() -> Vector2i:
+	var grid: SectorGrid = LevelManager.get_grid()
+	if grid == null:
+		return Vector2i.ZERO
+	var biome: BiomeDef = LevelManager.current_biome
+	if biome != null:
+		for sector in biome.fixed_anchors.keys():
+			var tmpl: RoomTemplate = biome.fixed_anchors[sector]
+			if tmpl == null:
+				continue
+			var comp: ArenaComposition = tmpl.composition as ArenaComposition
+			if comp != null and comp.arena_kind == &"guidance":
+				return grid.sector_to_world_center(sector)
+	return grid.sector_to_world_center(Vector2i.ZERO)
 
 
 func _get_input_direction() -> Vector2:
