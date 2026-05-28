@@ -25,6 +25,10 @@ func _ready() -> void:
 			"particle_color": Color(0.5, 0.5, 0.5),
 			"particle_count": 6,
 		},
+		MaterialRegistry.MAT_SAND: {
+			"particle_color": Color(0.6, 0.55, 0.45),
+			"particle_count": 6,
+		},
 	}
 
 

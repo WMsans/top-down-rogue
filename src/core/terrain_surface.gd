@@ -22,6 +22,11 @@ func place_blood(world_pos: Vector2, radius: float, outward_speed: float, bias_d
 		adapter.place_blood(world_pos, radius, outward_speed, bias_dir)
 
 
+func place_sand(world_pos: Vector2, radius: float, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	if adapter:
+		adapter.place_sand(world_pos, radius, outward_speed, bias_dir)
+
+
 func place_fire(world_pos: Vector2, radius: float) -> void:
 	if adapter:
 		adapter.place_fire(world_pos, radius)
