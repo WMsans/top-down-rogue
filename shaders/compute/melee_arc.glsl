@@ -41,6 +41,19 @@ bool is_target(uint mat_id) {
 	return (pc.target_mask_low & (1u << mat_id)) != 0u;
 }
 
+const int DUST_SPAWN_PERCENT = 35;   // % of destroyed wall pixels that become dust
+const float DUST_BURST_SPEED = 120.0; // outward burst speed (world units/sec)
+const int DUST_BURST_DENSITY = 200;   // initial density of spawned dust
+
+uint dust_hash(uint n) {
+	n = (n >> 16) ^ n;
+	n *= 0xed5ad0bbu;
+	n = (n >> 16) ^ n;
+	n *= 0xac4c1b51u;
+	n = (n >> 16) ^ n;
+	return n;
+}
+
 float hardness_for(uint mat_id) {
 	if (mat_id == uint(MAT_DIRT)) return 0.5;
 	if (mat_id == uint(MAT_WOOD)) return 2.0;
@@ -79,14 +92,31 @@ void main() {
 		float effective_r = pc.radius * scale_clamped;
 		if (dist_sq > effective_r * effective_r) return;
 
-		imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
-
 		uint idx = atomicAdd(hit_list.count, 1u);
 		if (idx < pc.hit_capacity) {
 			hit_list.entries[idx].world_x = int(world_pos.x);
 			hit_list.entries[idx].world_y = int(world_pos.y);
 			hit_list.entries[idx].mat_id = mat;
 			hit_list.entries[idx].scale = scale_clamped;
+		}
+
+		uint h = dust_hash(uint(int(world_pos.x)) ^ dust_hash(uint(int(world_pos.y))));
+		if (int(h % 100u) < DUST_SPAWN_PERCENT) {
+			float len = length(to_pixel);
+			vec2 outward = (len > 0.0001) ? to_pixel / len : pc.direction;
+			float vx_f = outward.x * DUST_BURST_SPEED / 60.0;
+			float vy_f = outward.y * DUST_BURST_SPEED / 60.0;
+			int vx_enc = clamp(int(round(vx_f)) + 8, 0, 15);
+			int vy_enc = clamp(int(round(vy_f)) + 8, 0, 15);
+			float packed = float((vx_enc << 4) | vy_enc) / 255.0;
+			imageStore(chunk_tex, local, vec4(
+				float(MAT_DUST) / 255.0,
+				float(DUST_BURST_DENSITY) / 255.0,
+				float(mat) / 255.0,
+				packed
+			));
+		} else {
+			imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
 		}
 	} else if (do_clear) {
 		imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
