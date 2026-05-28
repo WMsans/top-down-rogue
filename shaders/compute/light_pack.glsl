@@ -37,6 +37,16 @@ int get_material(vec4 pixel) {
 	return int(pixel.r * 255.0 + 0.5);
 }
 
+float effective_glow(int mat, float temperature) {
+	float base_glow = MATERIAL_GLOW[mat];
+	if (IS_FLAMMABLE[mat] && temperature > float(IGNITION_TEMP[mat]) / 255.0) {
+		float ignition = float(IGNITION_TEMP[mat]) / 255.0;
+		float burn_intensity = (temperature - ignition) / (1.0 - ignition);
+		return max(base_glow, mix(1.0, 10.0, burn_intensity));
+	}
+	return base_glow;
+}
+
 void main() {
 	uint thread_idx = gl_LocalInvocationIndex;
 	uint cell_x = gl_WorkGroupID.x;
@@ -69,11 +79,12 @@ void main() {
 				}
 			}
 
-			if (mat >= 0 && mat < MAT_COUNT && MATERIAL_GLOW[mat] > 1.0) {
+			float glow = effective_glow(mat, pixel.b);
+			if (mat >= 0 && mat < MAT_COUNT && glow > 1.0) {
 				local_count += 1u;
 				local_sum_x += px;
 				local_sum_y += py;
-				local_sum_glow += uint(MATERIAL_GLOW[mat] * 1000.0 + 0.5);
+				local_sum_glow += uint(glow * 1000.0 + 0.5);
 			}
 		}
 	}
