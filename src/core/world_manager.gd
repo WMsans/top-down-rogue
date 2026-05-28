@@ -421,7 +421,7 @@ func _drain_terrain_impacts() -> void:
 	var to_play: int = mini(hits.size(), MAX_IMPACTS_PER_FRAME)
 	for i in range(to_play):
 		var hit = hits[i]
-		TerrainImpact.play_impact(hit["world_pos"], hit["material_id"], hit["scale"])
+		TerrainImpact.play_impact(hit["world_pos"], hit["material_id"], hit["scale"], chunk_container)
 
 
 func reset() -> void:

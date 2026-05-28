@@ -395,6 +395,12 @@ func drain_melee_hits() -> Array:
 			"material_id": int(raw.decode_u32(off + 8)),
 			"scale": raw.decode_float(off + 12),
 		})
+	# Clear the count so this buffer isn't replayed when the ring wraps back to it.
+	if count > 0:
+		var zero_header := PackedByteArray()
+		zero_header.resize(MELEE_HIT_HEADER_BYTES)
+		zero_header.fill(0)
+		rd.buffer_update(melee_hit_buffers[read_index], 0, MELEE_HIT_HEADER_BYTES, zero_header)
 	melee_hit_write_index = (melee_hit_write_index + 1) % MELEE_HIT_RING
 	return result
 

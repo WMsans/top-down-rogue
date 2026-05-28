@@ -28,7 +28,14 @@ func _ready() -> void:
 	}
 
 
-func play_impact(world_pos: Vector2, material_id: int, intensity: float) -> void:
+var _PARTICLE_POLY := PackedVector2Array([
+	Vector2(-1.5, -1.5), Vector2(1.5, -1.5), Vector2(1.5, 1.5), Vector2(-1.5, 1.5)
+])
+
+
+func play_impact(world_pos: Vector2, material_id: int, intensity: float, parent: Node2D) -> void:
+	if parent == null or not is_instance_valid(parent):
+		return
 	var data: Dictionary = impact_data.get(material_id, {})
 	if data.is_empty():
 		return
@@ -38,14 +45,17 @@ func play_impact(world_pos: Vector2, material_id: int, intensity: float) -> void
 	# allocating N Tween objects when bursting many impacts in a frame.
 	var tween := create_tween().set_parallel(true)
 	for _i in range(count):
-		var particle := ColorRect.new()
+		# Node2D (not Control) so the particle lives in the world's canvas
+		# transform and is moved by the Camera2D, instead of screen space.
+		var particle := Polygon2D.new()
+		particle.polygon = _PARTICLE_POLY
 		particle.color = color
-		particle.size = Vector2(2, 2)
-		particle.position = world_pos + Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))
 		particle.z_index = 100
-		add_child(particle)
-		var target_pos := particle.position + Vector2(randf_range(-20.0, 20.0), randf_range(-20.0, 20.0))
-		var dur := randf_range(0.15, 0.35)
-		tween.tween_property(particle, "position", target_pos, dur)
+		particle.global_position = world_pos + Vector2(randf_range(-6.0, 6.0), randf_range(-6.0, 6.0))
+		parent.add_child(particle)
+		var dir := Vector2.from_angle(randf() * TAU)
+		var target_pos := particle.global_position + dir * randf_range(12.0, 28.0)
+		var dur := randf_range(0.2, 0.45)
+		tween.tween_property(particle, "global_position", target_pos, dur).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 		tween.tween_property(particle, "modulate:a", 0.0, dur)
 		tween.tween_callback(particle.queue_free).set_delay(dur)
