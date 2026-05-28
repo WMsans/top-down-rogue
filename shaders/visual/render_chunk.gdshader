@@ -91,6 +91,16 @@ vec3 ember_color(float temp_norm) {
 	}
 }
 
+float effective_glow(int mat, float temperature) {
+	float base_glow = MATERIAL_GLOW[mat];
+	if (IS_FLAMMABLE[mat] && temperature > float(IGNITION_TEMP[mat]) / 255.0) {
+		float ignition = float(IGNITION_TEMP[mat]) / 255.0;
+		float burn_intensity = (temperature - ignition) / (1.0 - ignition);
+		return max(base_glow, mix(1.0, 10.0, burn_intensity));
+	}
+	return base_glow;
+}
+
 vec3 get_material_top_color(int material, int src_x) {
 	vec2 tex_size = vec2(textureSize(material_textures, 0).xy);
 	float u = (float(src_x % int(tex_size.x)) + 0.5) / tex_size.x;
@@ -122,7 +132,7 @@ vec3 material_color(vec4 data, ivec2 pixel_pos) {
 		return vec3(1.0, 0.0, 1.0);
 	}
 	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
-	return apply_temperature_tint(base_color, data.b) * MATERIAL_GLOW[mat];
+	return apply_temperature_tint(base_color, data.b) * effective_glow(mat, data.b);
 }
 
 vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, ivec2 pixel_pos) {
@@ -132,7 +142,7 @@ vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, 
 	vec3 srgb = texture(material_textures, vec3(u, v, float(material))).rgb;
 	vec3 tex_color = srgb_to_linear(srgb);
 	vec3 tint = get_temperature_tint(src_data.b);
-	return tex_color * tint * MATERIAL_GLOW[material];
+	return tex_color * tint * effective_glow(material, src_data.b);
 }
 
 // Check if any air pixel exists within euclidean distance 3 of pos.
