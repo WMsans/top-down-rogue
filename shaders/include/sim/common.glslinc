@@ -16,6 +16,7 @@ const int WAVE_DEFAULT_POWER = 100;
 const int WAVE_DECAY = 2;
 const int WAVE_DIAGONAL_DECAY = 3;
 const int SCORCH_TEMP = 100;
+const int WAVE_DAMAGE_MULT = 3;
 
 uint hash(uint n) {
 	n = (n >> 16) ^ n;
