@@ -91,15 +91,15 @@ void main() {
 		uint rng = melee_hash(uint(local.x) * 1973u + uint(local.y) * 9241u + mat * 4523u);
 		bool spawn_sand = false;
 		if (mat == uint(MAT_STONE) || mat == uint(MAT_DIRT)) {
-			spawn_sand = (rng % 100u) < 40u;
+			spawn_sand = (rng % 100u) < 20u;
 		} else if (mat == uint(MAT_COAL)) {
-			spawn_sand = (rng % 100u) < 30u;
+			spawn_sand = (rng % 100u) < 12u;
 		}
 
 		if (spawn_sand) {
 			float dist = sqrt(dist_sq);
 			vec2 push_dir = (dist > 0.0001) ? to_pixel / dist : pc.direction;
-			float speed = 200.0;
+			float speed = 420.0;
 			float vx_f = push_dir.x * speed / 60.0;
 			float vy_f = push_dir.y * speed / 60.0;
 			int vx = clamp(int(round(vx_f)) + 8, 0, 15);
