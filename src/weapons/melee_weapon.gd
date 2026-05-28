@@ -123,7 +123,22 @@ func _use_impl(user: Node) -> void:
 		MaterialRegistry.MAT_ICE,
 	]
 	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, 0.0, 0.0, solids, damage)
+	_burst_sand_from_carve(pos, direction)
 	_hit_attackables_in_arc(user, pos, direction)
+
+
+func _burst_sand_from_carve(origin: Vector2, direction: Vector2) -> void:
+	var burst_origin := origin + direction * (weapon_reach * 0.55)
+	var base_radius := weapon_reach * 0.4
+	var base_speed := 340.0
+	TerrainSurface.place_sand(burst_origin, base_radius, base_speed, direction)
+	for i in range(3):
+		var spread_angle := randf_range(-0.7, 0.7)
+		var dir := direction.rotated(spread_angle)
+		var offset := dir * randf_range(4.0, 12.0)
+		var radius := base_radius * randf_range(0.4, 0.8)
+		var speed := base_speed * randf_range(0.7, 1.4)
+		TerrainSurface.place_sand(burst_origin + offset, radius, speed, dir)
 
 
 func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) -> void:
