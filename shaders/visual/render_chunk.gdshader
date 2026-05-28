@@ -131,6 +131,15 @@ vec3 material_color(vec4 data, ivec2 pixel_pos) {
 	if (mat == MAT_AIR) {
 		return vec3(1.0, 0.0, 1.0);
 	}
+	// Sand stores its source material in data.b instead of temperature, so it
+	// tints to the rock/dirt/coal it was burst from. Skip temperature effects.
+	if (mat == MAT_SAND) {
+		int src = int(round(data.b * 255.0));
+		if (src == 0 || src == MAT_SAND) {
+			return get_material_top_color(MAT_SAND, pixel_pos.x);
+		}
+		return get_material_top_color(src, pixel_pos.x);
+	}
 	vec3 base_color = get_material_top_color(mat, pixel_pos.x);
 	return apply_temperature_tint(base_color, data.b) * effective_glow(mat, data.b);
 }

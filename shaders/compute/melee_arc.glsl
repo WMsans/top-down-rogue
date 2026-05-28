@@ -108,7 +108,7 @@ void main() {
 			imageStore(chunk_tex, local, vec4(
 				float(MAT_SAND) / 255.0,
 				1.0,
-				0.0,
+				float(mat) / 255.0,
 				float(packed_vel) / 255.0
 			));
 		} else {
