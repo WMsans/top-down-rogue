@@ -118,7 +118,7 @@ void main() {
 		} else {
 			imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
 		}
-	} else if (do_clear) {
+	} else if (do_clear && mat != uint(MAT_DUST)) {
 		imageStore(chunk_tex, local, vec4(0.0, 0.0, 0.0, 0.0));
 	} else {
 		float dist = sqrt(dist_sq);
