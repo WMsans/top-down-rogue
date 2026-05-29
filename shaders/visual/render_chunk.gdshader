@@ -247,7 +247,13 @@ void fragment() {
 				ivec2 check_pos = ivec2(px.x, px.y + d);
 				vec4 src_data = read_pixel_extended(check_pos);
 				if (is_solid_extended(check_pos)) {
-					base_color = vec4(sample_material_texture(get_material(src_data), px.x, d, src_data, px), 1.0);
+					vec3 face_rgb = sample_material_texture(get_material(src_data), px.x, d, src_data, px);
+					if (ao_enabled) {
+						float face_factor = mix(1.0, 1.0 - face_ao_intensity,
+							float(d) / float(wall_height));
+						face_rgb *= face_factor;
+					}
+					base_color = vec4(face_rgb, 1.0);
 					found_wall = true;
 				}
 			}
