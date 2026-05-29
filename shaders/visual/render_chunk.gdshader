@@ -178,6 +178,15 @@ void fragment() {
 		mat = MAT_AIR;
 	}
 
+	if (mat == MAT_DUST) {
+		int dust_src = int(round(data.b * 255.0));
+		vec3 dust_rgb = get_material_top_color(dust_src, px.x);
+		dust_rgb = mix(dust_rgb, vec3(1.0), 0.25);
+		fluid_tint = vec4(dust_rgb, 1.0);
+		fluid_alpha = mix(0.4, 0.95, data.g);
+		mat = MAT_AIR;
+	}
+
 	// Explode wave: fiery flash that fades from white-hot core to orange edge as
 	// wave power decays. data.b carries the wave's remaining power (0..1).
 	if (mat == MAT_EXPLODE_WAVE) {
