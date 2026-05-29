@@ -38,6 +38,7 @@ layout(set = 0, binding = 5, std430) readonly buffer InjectionBuffer {
 #include "res://shaders/include/sim/oil.glslinc"
 #include "res://shaders/include/sim/explode_wave.glslinc"
 #include "res://shaders/include/sim/blood.glslinc"
+#include "res://shaders/include/sim/dust.glslinc"
 #include "res://shaders/include/sim/injection.glslinc"
 #include "res://shaders/include/sim/burning.glslinc"
 
@@ -67,7 +68,8 @@ void main() {
 	if (simulate_lava(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 	if (simulate_oil(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
 	if (simulate_blood(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
-	if (simulate_gas(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
+	if (simulate_dust(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
+	if (simulate_gas(pos, pixel, material, n_up, n_down, n_left, n_right))   return;
 
 	simulate_burning(pos, pixel, n_up, n_down, n_left, n_right);
 }
