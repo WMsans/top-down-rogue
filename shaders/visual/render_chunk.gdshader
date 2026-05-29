@@ -73,6 +73,26 @@ float ao_occlusion(ivec2 pos) {
 	return total > 0.0 ? occ / total : 0.0;
 }
 
+bool ao_has_nearby_solid(ivec2 pos) {
+	int r = int(ceil(ao_radius));
+	if (is_solid_ao(pos + ivec2(1, 0))) return true;
+	if (is_solid_ao(pos + ivec2(-1, 0))) return true;
+	if (is_solid_ao(pos + ivec2(0, 1))) return true;
+	if (is_solid_ao(pos + ivec2(0, -1))) return true;
+	if (is_solid_ao(pos + ivec2(r, r))) return true;
+	if (is_solid_ao(pos + ivec2(-r, r))) return true;
+	if (is_solid_ao(pos + ivec2(r, -r))) return true;
+	if (is_solid_ao(pos + ivec2(-r, -r))) return true;
+	return false;
+}
+
+bool ao_covered_by_face(ivec2 pos) {
+	for (int d = 1; d <= wall_height; d++) {
+		if (is_solid_extended(ivec2(pos.x, pos.y + d))) return true;
+	}
+	return false;
+}
+
 // Read from neighboring chunk texture (for wall face scan overflow).
 // neighbor_pos is in the neighbor's local px coordinate space.
 vec4 read_neighbor(ivec2 neighbor_pos) {
@@ -240,6 +260,10 @@ void fragment() {
 	if (mat == MAT_AIR) {
 		if (layer_mode == 0) {
 			base_color = vec4(0.0);
+			if (ao_enabled && !ao_covered_by_face(px) && ao_has_nearby_solid(px)) {
+				float ao_alpha = ao_occlusion(px) * ao_intensity;
+				base_color = vec4(0.0, 0.0, 0.0, ao_alpha);
+			}
 		} else {
 			bool found_wall = false;
 			for (int d = 1; d <= wall_height; d++) {
