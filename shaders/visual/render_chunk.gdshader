@@ -7,8 +7,13 @@ uniform bool has_neighbor = false;
 uniform int wall_height = 16;
 uniform sampler2DArray material_textures : filter_nearest;
 uniform int layer_mode = 0;
+uniform bool ao_enabled = true;
+uniform float ao_radius = 3.5;          // reach of floor/corner shadow, in px
+uniform float ao_intensity = 0.4;       // max floor/corner darkening (0..1)
+uniform float face_ao_intensity = 0.4;  // max darkening at bottom of wall face
 
 const int CHUNK_SIZE = 256;
+const int AO_MAX_RADIUS = 6;            // compile-time loop bound for ao_occlusion
 
 vec3 srgb_to_linear(vec3 srgb) {
 	return mix(
@@ -38,6 +43,34 @@ bool is_solid(ivec2 pos) {
 	}
 	int m = get_material(read_pixel(pos));
 	return HAS_COLLIDER[m];
+}
+
+// Like is_solid, but treats out-of-bounds as AIR. Used only for AO so that
+// chunk borders do not self-shadow (the accepted seam: edges lose a little
+// shadow rather than gaining a false dark grid line).
+bool is_solid_ao(ivec2 pos) {
+	if (pos.x < 0 || pos.x >= CHUNK_SIZE || pos.y < 0 || pos.y >= CHUNK_SIZE) {
+		return false;
+	}
+	return HAS_COLLIDER[get_material(read_pixel(pos))];
+}
+
+// Distance-weighted disk occlusion of a cell by nearby solids.
+// 0 in open floor, ~0.5 beside a flat wall, ~0.75 in a concave corner.
+float ao_occlusion(ivec2 pos) {
+	float occ = 0.0;
+	float total = 0.0;
+	for (int dy = -AO_MAX_RADIUS; dy <= AO_MAX_RADIUS; dy++) {
+		for (int dx = -AO_MAX_RADIUS; dx <= AO_MAX_RADIUS; dx++) {
+			if (dx == 0 && dy == 0) continue;
+			float dist = sqrt(float(dx * dx + dy * dy));
+			if (dist > ao_radius) continue;
+			float w = 1.0 - dist / ao_radius;  // closer cells weigh more
+			total += w;
+			if (is_solid_ao(pos + ivec2(dx, dy))) occ += w;
+		}
+	}
+	return total > 0.0 ? occ / total : 0.0;
 }
 
 // Read from neighboring chunk texture (for wall face scan overflow).
