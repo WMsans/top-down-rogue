@@ -7,6 +7,8 @@ uniform bool has_neighbor = false;
 uniform int wall_height = 16;
 uniform sampler2DArray material_textures : filter_nearest;
 uniform int layer_mode = 0;
+uniform float ao_strength = 0.6;
+uniform float ao_reach = 3.0;
 
 const int CHUNK_SIZE = 256;
 
@@ -38,6 +40,32 @@ bool is_solid(ivec2 pos) {
 	}
 	int m = get_material(read_pixel(pos));
 	return HAS_COLLIDER[m];
+}
+
+bool is_solid_ao(ivec2 pos) {
+	if (pos.x < 0 || pos.x >= CHUNK_SIZE || pos.y < 0 || pos.y >= CHUNK_SIZE) {
+		return false;
+	}
+	int m = get_material(read_pixel(pos));
+	return HAS_COLLIDER[m];
+}
+
+float ring_occlusion(ivec2 center) {
+	int r = int(round(ao_reach));
+	float s = 0.0;
+	s += is_solid_ao(center + ivec2(r, 0)) ? 1.0 : 0.0;
+	s += is_solid_ao(center + ivec2(-r, 0)) ? 1.0 : 0.0;
+	s += is_solid_ao(center + ivec2(0, r)) ? 1.0 : 0.0;
+	s += is_solid_ao(center + ivec2(0, -r)) ? 1.0 : 0.0;
+	if (s == 0.0) {
+		return 0.0;
+	}
+	int d = int(round(ao_reach * 0.7071));
+	s += is_solid_ao(center + ivec2(d, d)) ? 1.0 : 0.0;
+	s += is_solid_ao(center + ivec2(-d, d)) ? 1.0 : 0.0;
+	s += is_solid_ao(center + ivec2(d, -d)) ? 1.0 : 0.0;
+	s += is_solid_ao(center + ivec2(-d, -d)) ? 1.0 : 0.0;
+	return s / 8.0;
 }
 
 // Read from neighboring chunk texture (for wall face scan overflow).
@@ -219,7 +247,8 @@ void fragment() {
 				}
 			}
 			if (!found_wall) {
-				base_color = vec4(0.0);
+				float occ = ring_occlusion(px);
+				base_color = vec4(0.0, 0.0, 0.0, occ * ao_strength);
 			}
 		}
 	} else {
