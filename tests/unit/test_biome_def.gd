@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 const _BiomeDef = preload("res://src/core/biome_def.gd")
 const _PoolDef = preload("res://src/core/pool_def.gd")
 const _RoomTemplate = preload("res://src/core/room_template.gd")
+const _DecorDef = preload("res://src/core/decor_def.gd")
 
 func test_biome_def_has_defaults() -> void:
 	var b := _BiomeDef.new()
@@ -29,5 +30,5 @@ func test_room_template_defaults() -> void:
 func test_biome_def_floor_defaults() -> void:
 	var b := _BiomeDef.new()
 	assert_that(b.floor_texture).is_null()
-	assert_that(b.decor_textures).is_equal([] as Array[Texture2D])
+	assert_that(b.decor_defs).is_equal([] as Array[DecorDef])
 	assert_that(b.decor_chance).is_equal(0.02)

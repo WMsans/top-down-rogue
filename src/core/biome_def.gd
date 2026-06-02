@@ -15,7 +15,7 @@ extends Resource
 @export var tint: Color = Color.WHITE
 @export var ui_accent: Color = Color(0.85, 0.46, 0.26, 1)  # default = caves orange
 @export var floor_texture: Texture2D = null
-@export var decor_textures: Array[Texture2D] = []
+@export var decor_defs: Array[DecorDef] = []
 @export var decor_chance: float = 0.02
 @export var cave_spawn_rate: float = 1.0
 @export var enemy_pool: Array[PackedScene] = []
