@@ -256,7 +256,7 @@ void fragment() {
 				vec4 src_data = read_pixel_extended(check_pos);
 				if (is_solid_extended(check_pos)) {
 					vec3 face_rgb = sample_material_texture(get_material(src_data), px.x, d, src_data, px);
-					float occ = ring_occlusion(check_pos);
+					float occ = ring_occlusion(px);
 					face_rgb *= (1.0 - occ * ao_strength);
 					base_color = vec4(face_rgb, 1.0);
 					found_wall = true;
