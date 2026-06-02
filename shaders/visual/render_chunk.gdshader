@@ -173,19 +173,32 @@ vec3 sample_material_texture(int material, int src_x, int depth, vec4 src_data, 
 	return tex_color * tint * effective_glow(material, src_data.b);
 }
 
-// Check if any air pixel exists within euclidean distance 3 of pos.
-bool near_air(ivec2 pos) {
+// Scan the radius-3 disc around pos. Returns:
+//   x = 1.0 if any air cell exists in the disc (else 0.0) — surface-visibility cull.
+//   y = fraction of in-bounds disc cells that are solid — drives concave-corner AO.
+// Tallying in-bounds cells only keeps chunk borders seam-free (matches is_solid_ao policy).
+vec2 disc_ao(ivec2 pos) {
+	bool any_air = false;
+	int total = 0;
+	int solid = 0;
 	for (int dy = -3; dy <= 3; dy++) {
 		for (int dx = -3; dx <= 3; dx++) {
 			if (dx == 0 && dy == 0) continue;
 			if (dx * dx + dy * dy > 9) continue;
 			ivec2 check = pos + ivec2(dx, dy);
-			if (!is_solid(check)) {
-				return true;
+			if (check.x < 0 || check.x >= CHUNK_SIZE || check.y < 0 || check.y >= CHUNK_SIZE) {
+				continue;
+			}
+			total++;
+			if (is_solid_ao(check)) {
+				solid++;
+			} else {
+				any_air = true;
 			}
 		}
 	}
-	return false;
+	float frac = total > 0 ? float(solid) / float(total) : 0.0;
+	return vec2(any_air ? 1.0 : 0.0, frac);
 }
 
 void fragment() {
@@ -258,8 +271,12 @@ void fragment() {
 		if (layer_mode == 1) {
 			base_color = vec4(0.0);
 		} else {
-			if (near_air(px)) {
-				base_color = vec4(material_color(data, px), 1.0);
+			vec2 ao = disc_ao(px);
+			if (ao.x > 0.0) {
+				vec3 top_rgb = material_color(data, px);
+				float occ = smoothstep(0.5, 0.85, ao.y) * ao_strength;
+				top_rgb *= (1.0 - occ);
+				base_color = vec4(top_rgb, 1.0);
 			} else {
 				base_color = vec4(0.0, 0.0, 0.0, 1.0);
 			}
