@@ -15,6 +15,11 @@
 [ext_resource type="Resource" path="res://assets/arenas/elite/caves_c.tres" id="10_elitec"]
 [ext_resource type="Resource" path="res://assets/rooms/guidance/guidance_room_template.tres" id="12_guidance"]
 
+[ext_resource type="Script" path="res://src/core/decor_def.gd" id="20_decordef"]
+[ext_resource type="Texture2D" path="res://textures/Environments/Decors/grass1.png" id="21_grass1"]
+[ext_resource type="Texture2D" path="res://textures/Environments/Decors/grass2.png" id="22_grass2"]
+[ext_resource type="Texture2D" path="res://textures/Environments/Decors/small_tree.png" id="23_tree"]
+
 [sub_resource type="Resource" id="Resource_xxuj2"]
 script = ExtResource("2_7cf3p")
 material_id = 5
@@ -64,6 +69,36 @@ is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("10_elitec")
 
+[sub_resource type="Resource" id="Resource_decor_grass1"]
+script = ExtResource("20_decordef")
+texture = ExtResource("21_grass1")
+weight = 3.0
+emits_light = true
+light_color = Color(0.5, 0.9, 1.0, 1)
+light_energy = 1.0
+light_radius = 52.0
+flicker_amplitude = 0.08
+
+[sub_resource type="Resource" id="Resource_decor_grass2"]
+script = ExtResource("20_decordef")
+texture = ExtResource("22_grass2")
+weight = 3.0
+emits_light = true
+light_color = Color(0.45, 1.0, 0.8, 1)
+light_energy = 1.0
+light_radius = 52.0
+flicker_amplitude = 0.08
+
+[sub_resource type="Resource" id="Resource_decor_tree"]
+script = ExtResource("20_decordef")
+texture = ExtResource("23_tree")
+weight = 1.0
+emits_light = true
+light_color = Color(0.55, 0.95, 0.7, 1)
+light_energy = 1.2
+light_radius = 64.0
+flicker_amplitude = 0.06
+
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
@@ -72,6 +107,8 @@ pool_materials = [SubResource("Resource_xxuj2")]
 room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 floor_texture = ExtResource("11_floor")
+decor_defs = [SubResource("Resource_decor_grass1"), SubResource("Resource_decor_grass2"), SubResource("Resource_decor_tree")]
+decor_chance = 0.05
 fixed_anchors = {
 Vector2i(0, 0): ExtResource("12_guidance")
 }
