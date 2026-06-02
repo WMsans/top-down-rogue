@@ -256,7 +256,13 @@ void fragment() {
 				vec4 src_data = read_pixel_extended(check_pos);
 				if (is_solid_extended(check_pos)) {
 					vec3 face_rgb = sample_material_texture(get_material(src_data), px.x, d, src_data, px);
-					float occ = ring_occlusion(px);
+					// Wall faces extrude downward: d=1 is the slice under the cap (top of
+					// wall), d=wall_height is the floor connection (bottom). Drive the
+					// contact shadow off depth alone (a thin cap has ~no enclosure, which
+					// would zero the face) and square it so darkness concentrates in the
+					// crease at the base and fades up the face toward the cap.
+					float depth_grad = float(d) / float(wall_height);
+					float occ = depth_grad * depth_grad;
 					face_rgb *= (1.0 - occ * ao_strength);
 					base_color = vec4(face_rgb, 1.0);
 					found_wall = true;
