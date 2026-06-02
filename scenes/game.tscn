@@ -25,6 +25,8 @@ stretch_shrink = 6
 
 [node name="SubViewport" type="SubViewport" parent="GameViewport" unique_id=300000002]
 handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
 use_hdr_2d = true
 canvas_item_default_texture_filter = 0
 size = Vector2i(320, 180)
