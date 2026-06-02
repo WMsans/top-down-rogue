@@ -88,6 +88,7 @@ func create_chunk(coord: Vector2i) -> void:
 	mat.set_shader_parameter("layer_mode", 1)
 	mat.set_shader_parameter("ao_strength", 0.6)
 	mat.set_shader_parameter("ao_reach", 3.0)
+	mat.set_shader_parameter("ao_floor_reach", 4)
 	chunk.mesh_instance.material = mat
 
 	world_manager.chunk_container.add_child(chunk.mesh_instance)
@@ -107,6 +108,7 @@ func create_chunk(coord: Vector2i) -> void:
 	wall_mat.set_shader_parameter("layer_mode", 0)
 	wall_mat.set_shader_parameter("ao_strength", 0.6)
 	wall_mat.set_shader_parameter("ao_reach", 3.0)
+	wall_mat.set_shader_parameter("ao_floor_reach", 4)
 	chunk.wall_mesh_instance.material = wall_mat
 
 	world_manager.chunk_container.add_child(chunk.wall_mesh_instance)

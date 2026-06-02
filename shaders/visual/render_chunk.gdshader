@@ -9,6 +9,7 @@ uniform sampler2DArray material_textures : filter_nearest;
 uniform int layer_mode = 0;
 uniform float ao_strength = 0.6;
 uniform float ao_reach = 3.0;
+uniform int ao_floor_reach = 4;
 
 const int CHUNK_SIZE = 256;
 
@@ -250,26 +251,36 @@ void fragment() {
 			base_color = vec4(0.0);
 		} else {
 			bool found_wall = false;
-			for (int d = 1; d <= wall_height; d++) {
-				if (found_wall) break;
+			float base_shadow = 0.0;
+			int floor_reach = wall_height + ao_floor_reach;
+			for (int d = 1; d <= floor_reach; d++) {
 				ivec2 check_pos = ivec2(px.x, px.y + d);
-				vec4 src_data = read_pixel_extended(check_pos);
 				if (is_solid_extended(check_pos)) {
-					vec3 face_rgb = sample_material_texture(get_material(src_data), px.x, d, src_data, px);
-					// Wall faces extrude downward: d=1 is the slice under the cap (top of
-					// wall), d=wall_height is the floor connection (bottom). Drive the
-					// contact shadow off depth alone (a thin cap has ~no enclosure, which
-					// would zero the face) and square it so darkness concentrates in the
-					// crease at the base and fades up the face toward the cap.
-					float depth_grad = float(d) / float(wall_height);
-					float occ = depth_grad * depth_grad;
-					face_rgb *= (1.0 - occ * ao_strength);
-					base_color = vec4(face_rgb, 1.0);
-					found_wall = true;
+					if (d <= wall_height) {
+						vec4 src_data = read_pixel_extended(check_pos);
+						vec3 face_rgb = sample_material_texture(get_material(src_data), px.x, d, src_data, px);
+						// Wall faces extrude downward: d=1 is the slice under the cap (top of
+						// wall), d=wall_height is the floor connection (bottom). Drive the
+						// contact shadow off depth alone (a thin cap has ~no enclosure, which
+						// would zero the face) and square it so darkness concentrates in the
+						// crease at the base and fades up the face toward the cap.
+						float depth_grad = float(d) / float(wall_height);
+						float occ = depth_grad * depth_grad;
+						face_rgb *= (1.0 - occ * ao_strength);
+						base_color = vec4(face_rgb, 1.0);
+						found_wall = true;
+					} else {
+						// First solid sits just past the wall's base: this pixel is open
+						// floor a few px below a wall, where the cap is too far for the ring
+						// to catch. Cast a fading black shadow into the wall-meets-floor
+						// crease, darkest right at the base and tapering with distance.
+						base_shadow = 1.0 - float(d - wall_height - 1) / float(ao_floor_reach);
+					}
+					break;
 				}
 			}
 			if (!found_wall) {
-				float occ = ring_occlusion(px);
+				float occ = max(ring_occlusion(px), base_shadow);
 				base_color = vec4(0.0, 0.0, 0.0, occ * ao_strength);
 			}
 		}
