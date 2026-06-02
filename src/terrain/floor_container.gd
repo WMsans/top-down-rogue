@@ -22,7 +22,9 @@ func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
 		fc.name = "FloorChunk_%d_%d" % [coord.x, coord.y]
 		fc.position = Vector2(coord.x * CHUNK_SIZE, coord.y * CHUNK_SIZE)
 		add_child(fc)
-		fc.populate(coord, biome, world_seed)
+		var rect := Rect2i(coord.x * CHUNK_SIZE, coord.y * CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
+		var material_bytes: PackedByteArray = _world_manager.read_region(rect)
+		fc.populate(coord, biome, world_seed, material_bytes)
 		_chunks[coord] = fc
 
 func _on_chunk_unloaded(coord: Vector2i) -> void:
