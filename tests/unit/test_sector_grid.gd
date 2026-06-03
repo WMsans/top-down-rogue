@@ -44,12 +44,12 @@ func test_chebyshev_symmetric() -> void:
 
 func test_boss_ring_returns_boss_slot() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
-	var slot := grid.resolve_sector(Vector2i(10, -10))
+	var slot := grid.resolve_sector(Vector2i(10, -7))  # d=10 anchor
 	assert_that(slot.is_boss).is_true()
 
 func test_outside_boss_ring_is_empty() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
-	var slot := grid.resolve_sector(Vector2i(11, 0))
+	var slot := grid.resolve_sector(Vector2i(13, 0))  # dist 13 > edge 12
 	assert_that(slot.is_empty).is_true()
 
 func test_inside_ring_not_boss() -> void:
@@ -76,7 +76,7 @@ func test_resolve_sector_seed_changes() -> void:
 	for x in range(-5, 5):
 		for y in range(-5, 5):
 			var c := Vector2i(x, y)
-			if g1.chebyshev_distance(c, Vector2i.ZERO) >= _SectorGrid.BOSS_RING_DISTANCE:
+			if g1.chebyshev_distance(c, Vector2i.ZERO) >= _SectorGrid.BOSS_WORLD_EDGE:
 				continue
 			var s1 := g1.resolve_sector(c)
 			var s2 := g2.resolve_sector(c)
@@ -86,5 +86,5 @@ func test_resolve_sector_seed_changes() -> void:
 
 func test_rotation_is_zero_for_non_rotatable() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
-	var slot := grid.resolve_sector(Vector2i(10, 0))  # boss, rotatable=false
+	var slot := grid.resolve_sector(Vector2i(10, -7))  # boss anchor, rotatable=false
 	assert_that(slot.rotation).is_equal(0)

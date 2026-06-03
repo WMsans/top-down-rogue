@@ -1,8 +1,10 @@
 class_name SectorGrid
 
 const SECTOR_SIZE_PX := 384
-const BOSS_RING_DISTANCE := 10
-const BOSS_RING_STRIDE := 8
+const BOSS_RING_DISTANCES := [8, 10, 12]
+const BOSS_WORLD_EDGE := 12
+const BOSS_RING_ANCHOR_COUNT := 8
+const BOSS_RING_PHASES := [0.0, 1.0 / 3.0, 2.0 / 3.0]
 const BOSS_CLAIM_RADIUS := 3
 const ELITE_CLAIM_RADIUS := 1
 const EMPTY_WEIGHT := 1.5
@@ -44,17 +46,26 @@ func chebyshev_distance(a: Vector2i, b: Vector2i) -> int:
 	return max(abs(a.x - b.x), abs(a.y - b.y))
 
 
-static func _ring_index(coord: Vector2i) -> int:
-	if coord.x == BOSS_RING_DISTANCE:  return coord.y + BOSS_RING_DISTANCE
-	if coord.y == BOSS_RING_DISTANCE:  return 20 + (BOSS_RING_DISTANCE - coord.x)
-	if coord.x == -BOSS_RING_DISTANCE: return 40 + (BOSS_RING_DISTANCE - coord.y)
-	return 60 + (coord.x + BOSS_RING_DISTANCE)
+static func _ring_index(coord: Vector2i, d: int) -> int:
+	if coord.x == d:  return coord.y + d
+	if coord.y == d:  return 2 * d + (d - coord.x)
+	if coord.x == -d: return 4 * d + (d - coord.y)
+	return 6 * d + (coord.x + d)
 
 
 static func is_boss_anchor(coord: Vector2i) -> bool:
-	if max(abs(coord.x), abs(coord.y)) != BOSS_RING_DISTANCE:
+	var d: int = max(abs(coord.x), abs(coord.y))
+	var k := BOSS_RING_DISTANCES.find(d)
+	if k == -1:
 		return false
-	return (_ring_index(coord) % BOSS_RING_STRIDE) == 0
+	var perim := 8 * d
+	var r := _ring_index(coord, d)
+	var phase: float = BOSS_RING_PHASES[k]
+	for j in range(BOSS_RING_ANCHOR_COUNT):
+		var t := int(round((float(j) + phase) * float(perim) / float(BOSS_RING_ANCHOR_COUNT))) % perim
+		if t == r:
+			return true
+	return false
 
 
 func _find_claiming_anchor(coord: Vector2i) -> Vector2i:
@@ -79,11 +90,11 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 
 	var dist := chebyshev_distance(coord, Vector2i.ZERO)
 
-	if dist > BOSS_RING_DISTANCE:
+	if dist > BOSS_WORLD_EDGE:
 		slot.is_empty = true
 		return slot
 
-	if dist == BOSS_RING_DISTANCE and is_boss_anchor(coord):
+	if is_boss_anchor(coord):
 		if _biome.boss_compositions.is_empty():
 			slot.is_empty = true
 			return slot

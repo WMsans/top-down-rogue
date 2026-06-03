@@ -13,9 +13,9 @@ func _biome_with_one_boss_comp() -> Resource:
 
 func test_boss_anchor_at_spaced_offset_only() -> void:
 	var grid := _SectorGrid.new(0, _biome_with_one_boss_comp())
-	var s0 := grid.resolve_sector(Vector2i(10, -10))
+	var s0 := grid.resolve_sector(Vector2i(10, -7))  # d=10 anchor
 	assert_that(s0.is_boss).is_true()
-	var s1 := grid.resolve_sector(Vector2i(10, -9))
+	var s1 := grid.resolve_sector(Vector2i(10, -6))  # neighbor, within claim radius
 	assert_that(s1.is_boss).is_false()
 	assert_that(s1.is_claimed).is_true()
 
@@ -25,7 +25,7 @@ func test_boss_anchor_count_per_floor() -> void:
 	for coord in _ring10_coords():
 		if grid.resolve_sector(coord).is_boss:
 			count += 1
-	assert_that(count).is_equal(10)
+	assert_that(count).is_equal(8)
 
 func test_non_anchor_ring10_sectors_empty_or_claimed() -> void:
 	var grid := _SectorGrid.new(0, _biome_with_one_boss_comp())
