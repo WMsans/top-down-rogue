@@ -60,6 +60,7 @@ var MAT_BLOOD: int
 var MAT_OIL: int
 var MAT_EXPLODE_WAVE: int
 var MAT_DUST: int
+var MAT_BEDROCK: int
 
 const HAZARD_LAVA := 1
 const HAZARD_FIRE := 2  # MAT_EXPLODE_WAVE acts as the fire/heat hazard
@@ -220,6 +221,18 @@ func _init_materials():
 	mat_dust.id = materials.size()
 	materials.append(mat_dust)
 	MAT_DUST = mat_dust.id
+
+	var mat_bedrock := MaterialDef.new(
+		"BEDROCK", "res://textures/Environments/Walls/bedrock.png",
+		false, 0, 0,
+		true, true,
+		Color(0, 0, 0, 0),
+		false, 0, 1.0,
+		999.0
+	)
+	mat_bedrock.id = materials.size()
+	materials.append(mat_bedrock)
+	MAT_BEDROCK = mat_bedrock.id
 
 func get_hazard_bit(material_id: int) -> int:
 	if material_id < 0 or material_id >= materials.size():
