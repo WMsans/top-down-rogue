@@ -213,7 +213,7 @@ region = SubResource("Resource_ihi36")
 [resource]
 script = ExtResource("12_663hi")
 biome = &"caves"
-nominal_radius = 300
-lobing_amplitude = 50
-inner_disc_radius = 80
+nominal_radius = 600
+lobing_amplitude = 100
+inner_disc_radius = 200
 features = [SubResource("Resource_7fxhl"), SubResource("Resource_qiqwt"), SubResource("Resource_5y3df"), SubResource("Resource_mqsi4"), SubResource("Resource_8ymvb"), SubResource("Resource_r76iq"), SubResource("Resource_d0fp6"), SubResource("Resource_v1la7"), SubResource("Resource_enyrn"), SubResource("Resource_1obpn"), SubResource("Resource_esaky"), SubResource("Resource_55a6h"), SubResource("Resource_4nd2f"), SubResource("Resource_t8yb6"), SubResource("Resource_otmvh"), SubResource("Resource_mcy4y"), SubResource("Resource_f54n1")]
