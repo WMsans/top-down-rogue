@@ -145,7 +145,7 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 				enemy = RANGED_ENEMY_SCENE.instantiate()
 				enemy.weapon_resource = _pick_ranged_weapon()
 
-	var tier_index: int = clampi(int(floor(float(sector_dist) / float(SectorGrid.BOSS_RING_DISTANCE) * 2.0)), 0, 2)
+	var tier_index: int = SectorGrid.enemy_tier_for_distance(sector_dist)
 	if "enemy_tier" in enemy:
 		enemy.enemy_tier = tier_index
 

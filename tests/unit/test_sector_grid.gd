@@ -20,6 +20,15 @@ func _make_biome() -> Resource:
 	b.boss_compositions = [comp]
 	return b
 
+
+func _first_boss_anchor() -> Vector2i:
+	for x in range(-_SectorGrid.WALL_INNER_SECTORS, _SectorGrid.WALL_INNER_SECTORS + 1):
+		for y in range(-_SectorGrid.WALL_INNER_SECTORS, _SectorGrid.WALL_INNER_SECTORS + 1):
+			if _SectorGrid.is_boss_anchor(Vector2i(x, y)):
+				return Vector2i(x, y)
+	return Vector2i.MAX
+
+
 func test_world_to_sector_origin() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
 	assert_that(grid.world_to_sector(Vector2.ZERO)).is_equal(Vector2i.ZERO)
@@ -44,12 +53,15 @@ func test_chebyshev_symmetric() -> void:
 
 func test_boss_ring_returns_boss_slot() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
-	var slot := grid.resolve_sector(Vector2i(10, -10))
+	var anchor := _first_boss_anchor()
+	assert_that(anchor).is_not_equal(Vector2i.MAX)
+	var slot := grid.resolve_sector(anchor)
 	assert_that(slot.is_boss).is_true()
 
 func test_outside_boss_ring_is_empty() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
-	var slot := grid.resolve_sector(Vector2i(11, 0))
+	# A non-anchor sector at/after the wall radius is empty (becomes bedrock).
+	var slot := grid.resolve_sector(Vector2i(9, 1))  # dist 9 >= wall radius 8, not an anchor
 	assert_that(slot.is_empty).is_true()
 
 func test_inside_ring_not_boss() -> void:
@@ -76,7 +88,7 @@ func test_resolve_sector_seed_changes() -> void:
 	for x in range(-5, 5):
 		for y in range(-5, 5):
 			var c := Vector2i(x, y)
-			if g1.chebyshev_distance(c, Vector2i.ZERO) >= _SectorGrid.BOSS_RING_DISTANCE:
+			if g1.chebyshev_distance(c, Vector2i.ZERO) >= _SectorGrid.WALL_INNER_SECTORS:
 				continue
 			var s1 := g1.resolve_sector(c)
 			var s2 := g2.resolve_sector(c)
@@ -86,5 +98,6 @@ func test_resolve_sector_seed_changes() -> void:
 
 func test_rotation_is_zero_for_non_rotatable() -> void:
 	var grid := _SectorGrid.new(12345, _make_biome())
-	var slot := grid.resolve_sector(Vector2i(10, 0))  # boss, rotatable=false
+	var anchor := _first_boss_anchor()
+	var slot := grid.resolve_sector(anchor)  # boss anchor, rotatable=false
 	assert_that(slot.rotation).is_equal(0)

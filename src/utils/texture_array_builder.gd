@@ -12,8 +12,14 @@ static func build_from_images(images: Array[Image]) -> Texture2DArray:
 		push_error("TextureArrayBuilder: No images provided")
 		return null
 
-	var ref_size := images[0].get_size()
-	var ref_format := images[0].get_format()
+	var ref_size: Vector2i
+	var ref_format: Image.Format
+	for i in images.size():
+		if images[i] == null:
+			push_error("TextureArrayBuilder: Image %d is null" % i)
+			return null
+	ref_size = images[0].get_size()
+	ref_format = images[0].get_format()
 
 	for i in images.size():
 		var img := images[i]

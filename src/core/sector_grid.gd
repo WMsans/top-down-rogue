@@ -1,8 +1,12 @@
 class_name SectorGrid
 
 const SECTOR_SIZE_PX := 384
-const BOSS_RING_DISTANCE := 10
-const BOSS_RING_STRIDE := 8
+# Single boss ring at the inner face of the bedrock wall (Chebyshev sector dist).
+const BOSS_RING_DISTANCES := [8]
+const WALL_INNER_SECTORS := 8        # dist >= this is the indestructible bedrock wall
+const BOSS_RING_ANCHOR_COUNT := 12   # boss chambers spread around the wall face
+# Per-ring phase (fraction of anchor spacing). One ring => single zero phase.
+const BOSS_RING_PHASES := [0.0]
 const BOSS_CLAIM_RADIUS := 3
 const ELITE_CLAIM_RADIUS := 1
 const EMPTY_WEIGHT := 1.5
@@ -44,17 +48,27 @@ func chebyshev_distance(a: Vector2i, b: Vector2i) -> int:
 	return max(abs(a.x - b.x), abs(a.y - b.y))
 
 
-static func _ring_index(coord: Vector2i) -> int:
-	if coord.x == BOSS_RING_DISTANCE:  return coord.y + BOSS_RING_DISTANCE
-	if coord.y == BOSS_RING_DISTANCE:  return 20 + (BOSS_RING_DISTANCE - coord.x)
-	if coord.x == -BOSS_RING_DISTANCE: return 40 + (BOSS_RING_DISTANCE - coord.y)
-	return 60 + (coord.x + BOSS_RING_DISTANCE)
+# Index of a sector walking the perimeter of the square ring of radius d: 0 .. 8d-1.
+static func _ring_index(coord: Vector2i, d: int) -> int:
+	if coord.x == d:  return coord.y + d
+	if coord.y == d:  return 2 * d + (d - coord.x)
+	if coord.x == -d: return 4 * d + (d - coord.y)
+	return 6 * d + (coord.x + d)
 
 
 static func is_boss_anchor(coord: Vector2i) -> bool:
-	if max(abs(coord.x), abs(coord.y)) != BOSS_RING_DISTANCE:
-		return false
-	return (_ring_index(coord) % BOSS_RING_STRIDE) == 0
+	var d: int = max(abs(coord.x), abs(coord.y))
+	var k := BOSS_RING_DISTANCES.find(d)
+	if k == -1:
+		return false  # not on any boss ring
+	var perim := 8 * d
+	var r := _ring_index(coord, d)
+	var phase: float = BOSS_RING_PHASES[k]
+	for j in range(BOSS_RING_ANCHOR_COUNT):
+		var t := int(round((float(j) + phase) * float(perim) / float(BOSS_RING_ANCHOR_COUNT))) % perim
+		if t == r:
+			return true
+	return false
 
 
 func _find_claiming_anchor(coord: Vector2i) -> Vector2i:
@@ -79,11 +93,9 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 
 	var dist := chebyshev_distance(coord, Vector2i.ZERO)
 
-	if dist > BOSS_RING_DISTANCE:
-		slot.is_empty = true
-		return slot
-
-	if dist == BOSS_RING_DISTANCE and is_boss_anchor(coord):
+	# Boss anchors sit exactly on the wall face (dist == WALL_INNER_SECTORS),
+	# so they must be detected before the wall cutoff below.
+	if is_boss_anchor(coord):
 		if _biome.boss_compositions.is_empty():
 			slot.is_empty = true
 			return slot
@@ -92,6 +104,10 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 		slot.is_boss = true
 		slot.template_index = rng.randi() % _biome.boss_compositions.size()
 		slot.composition = _biome.boss_compositions[slot.template_index]
+		return slot
+
+	if dist >= WALL_INNER_SECTORS:
+		slot.is_empty = true  # bedrock wall region (shader fills it); no rooms here
 		return slot
 
 	var anchor := _find_claiming_anchor(coord)
@@ -135,3 +151,9 @@ func get_template_for_slot(slot: RoomSlot) -> RoomTemplate:
 	if slot.template_override != null:
 		return slot.template_override
 	return _biome.room_templates[slot.template_index]
+
+
+# Maps a sector's Chebyshev distance from origin (0 .. WALL_INNER_SECTORS) to one of
+# three enemy tiers, spread evenly across the central play area.
+static func enemy_tier_for_distance(sector_dist: int) -> int:
+	return clampi(int(floor(float(sector_dist) / float(WALL_INNER_SECTORS) * 3.0)), 0, 2)
