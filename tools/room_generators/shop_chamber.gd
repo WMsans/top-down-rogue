@@ -28,4 +28,7 @@ static func generate(size: int, _gen_seed: int) -> Image:
 	# Shop marker (G=4) at center, on an AIR cell (R=0)
 	img.set_pixel(size / 2, size / 2, Color8(0, 4, 0, 255))
 
+	# Lantern marker (G=8) above center
+	img.set_pixel(size / 2, size / 2 - 48, Color8(0, 8, 0, 255))
+
 	return img

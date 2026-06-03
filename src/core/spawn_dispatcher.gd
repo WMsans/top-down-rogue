@@ -6,6 +6,7 @@ const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const SHOP_STALL_SCENE := preload("res://scenes/economy/shop_stall.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
+const LANTERN_SCENE := preload("res://scenes/props/lantern.tscn")
 
 const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
 const BONE_DAGGER := preload("res://resources/weapons/bone_dagger.tres")
@@ -124,6 +125,7 @@ func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num:
 		5: _spawn_chest(world_pos, true)
 		6: _spawn_enemy(world_pos, sector_dist, floor_num, true, false)
 		7: pass
+		8: _spawn_lantern(world_pos)
 
 
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
@@ -192,6 +194,12 @@ func _spawn_shop(world_pos: Vector2) -> void:
 	var stall := SHOP_STALL_SCENE.instantiate()
 	stall.global_position = world_pos
 	_spawn_parent.add_child(stall)
+
+
+func _spawn_lantern(world_pos: Vector2) -> void:
+	var lantern := LANTERN_SCENE.instantiate()
+	lantern.global_position = world_pos
+	_spawn_parent.add_child(lantern)
 
 
 func _on_boss_died(arena_center: Vector2) -> void:
