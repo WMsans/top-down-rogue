@@ -106,6 +106,7 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 
 	// Branch D: this cell is non-flammable solid touching a wave: chew terrain.
 	if (HAS_COLLIDER[material]) {
+		if (material == MAT_BEDROCK) return false;
 		int max_neighbor_power = 0;
 		if (is_wave(n_up))    max_neighbor_power = max(max_neighbor_power, wave_power(n_up));
 		if (is_wave(n_down))  max_neighbor_power = max(max_neighbor_power, wave_power(n_down));

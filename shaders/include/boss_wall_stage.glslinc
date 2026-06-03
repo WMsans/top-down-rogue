@@ -1,0 +1,20 @@
+// Fills indestructible BEDROCK everywhere at Chebyshev distance >= the boss-wall
+// inner radius, turning the world into a walled arena whose only openings are the
+// boss chambers. Runs AFTER room stamping / secret rings and BEFORE cavern carve,
+// so boss-chamber carving punches the gaps back out of the wall.
+//
+// BOSS_WALL_INNER_PX must mirror SectorGrid: WALL_INNER_SECTORS (8) * SECTOR_SIZE_PX (384).
+
+const float BOSS_WALL_INNER_PX = 3072.0;
+
+void stage_boss_wall(Context ctx) {
+    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+    if (pos.x >= 256 || pos.y >= 256) return;
+
+    vec2 world_pos = vec2(ctx.chunk_coord * 256) + vec2(pos);
+    float cheb = max(abs(world_pos.x), abs(world_pos.y));
+    if (cheb >= BOSS_WALL_INNER_PX) {
+        float r = float(MAT_BEDROCK) / 255.0;
+        imageStore(chunk_tex, pos, vec4(r, 0.0, 0.0, 0.0));
+    }
+}
