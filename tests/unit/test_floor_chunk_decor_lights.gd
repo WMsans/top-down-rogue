@@ -60,3 +60,32 @@ func test_dense_decor_bakes_single_light() -> void:
 	var light := chunk.get_node_or_null("DecorLights") as PointLight2D
 	assert_object(light).is_not_null()
 	assert_bool(_has_lit_pixel(light.texture.get_image())).is_true()
+
+
+func test_non_emitting_decor_has_no_light() -> void:
+	var chunk := FloorChunk.new()
+	add_child(chunk)
+	auto_free(chunk)
+	chunk.populate(Vector2i(0, 0), _make_biome(false), 12345, _air_bytes())
+
+	assert_object(chunk.get_node_or_null("DecorLights")).is_null()
+	assert_int(_count_point_lights(chunk)).is_equal(0)
+
+
+func test_same_seed_bakes_identical_texture() -> void:
+	var biome := _make_biome(true)
+	var bytes := _air_bytes()
+
+	var chunk_a := FloorChunk.new()
+	add_child(chunk_a)
+	auto_free(chunk_a)
+	chunk_a.populate(Vector2i(3, 7), biome, 999, bytes)
+
+	var chunk_b := FloorChunk.new()
+	add_child(chunk_b)
+	auto_free(chunk_b)
+	chunk_b.populate(Vector2i(3, 7), biome, 999, bytes)
+
+	var img_a := (chunk_a.get_node("DecorLights") as PointLight2D).texture.get_image()
+	var img_b := (chunk_b.get_node("DecorLights") as PointLight2D).texture.get_image()
+	assert_bool(img_a.get_data() == img_b.get_data()).is_true()
