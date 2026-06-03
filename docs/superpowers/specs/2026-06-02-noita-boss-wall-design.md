@@ -72,7 +72,8 @@ reach the r=8 ≈ 3072px inner face). Collapsing to a single ring at the wall fa
 ### 1. New `BEDROCK` material (indestructible)
 
 - Add to `MaterialRegistry`: non-flammable, `has_collider = true`,
-  `has_wall_extension = true`, dark tint, reuse `stone.png` texture for now.
+  `has_wall_extension = true`, no tint, texture
+  `res://textures/Environments/Walls/bedrock.png`.
   Hardness value is irrelevant (it is never a dig target) — set high (e.g. 999).
 - Regenerate `shaders/generated/materials.glslinc` (and `.gdshaderinc`) via
   `tools/generate_material_glsl.gd`.
@@ -138,7 +139,7 @@ reach the r=8 ≈ 3072px inner face). Collapsing to a single ring at the wall fa
 
 ## Out of scope (YAGNI)
 
-- Dedicated bedrock art/texture (reuse stone with a dark tint).
+- Custom bedrock art beyond the existing `bedrock.png`.
 - Multi-ring / tiered boss progression (explicitly collapsed to one ring).
 - Corridors to buried chambers (the rejected 3-ring variant).
 - Anything beyond the wall — it is solid to the world edge; there is no outer area.
