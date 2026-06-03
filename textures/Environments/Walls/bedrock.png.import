@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://chojqtvxy2fmg"
-valid=false
+uid="uid://dkp32qegunyhe"
+path="res://.godot/imported/bedrock.png-90f56a0b92c1ddcd3427e988aa4758f0.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://textures/Environments/Walls/bedrock.png"
+dest_files=["res://.godot/imported/bedrock.png-90f56a0b92c1ddcd3427e988aa4758f0.ctex"]
 
 [params]
 
