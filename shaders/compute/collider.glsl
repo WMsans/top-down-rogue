@@ -26,6 +26,21 @@ const uint MAX_SEGMENTS = 4096u;
 // data[] is shared across slots; each slot starts at slot_base.
 const uint SLOT_STRIDE_U32 = 1u + MAX_SEGMENTS * 4u;
 
+// Push contour vertices that land in the outermost cell out to the true chunk
+// edge (0 or CHUNK_SIZE). The grid forces the chunk border to air, so a solid
+// pixel touching the edge produces a face inset by half a cell; un-snapped, two
+// adjacent solid chunks leave a CELL_SIZE-wide collision seam at their shared
+// border (most visible on the long, chunk-aligned bedrock wall). Snapping makes
+// solid chunks tile edge-to-edge with no gap. Must mirror TerrainCollider._snap_to_chunk_edge.
+uvec2 snap_to_chunk_edge(uvec2 p) {
+	uint half_cell = CELL_SIZE / 2u;
+	if (p.x <= half_cell) p.x = 0u;
+	else if (p.x >= CHUNK_SIZE - half_cell) p.x = CHUNK_SIZE;
+	if (p.y <= half_cell) p.y = 0u;
+	else if (p.y >= CHUNK_SIZE - half_cell) p.y = CHUNK_SIZE;
+	return p;
+}
+
 void main() {
 	uint cell_x = gl_GlobalInvocationID.x;
 	uint cell_y = gl_GlobalInvocationID.y;
@@ -70,10 +85,10 @@ void main() {
 
 	// Edge midpoints in cell coordinates
 	uint half_cell = CELL_SIZE / 2u;
-	uvec2 top_edge = uvec2(gx + half_cell, gy);
-	uvec2 right_edge = uvec2(gx + CELL_SIZE, gy + half_cell);
-	uvec2 bottom_edge = uvec2(gx + half_cell, gy + CELL_SIZE);
-	uvec2 left_edge = uvec2(gx, gy + half_cell);
+	uvec2 top_edge = snap_to_chunk_edge(uvec2(gx + half_cell, gy));
+	uvec2 right_edge = snap_to_chunk_edge(uvec2(gx + CELL_SIZE, gy + half_cell));
+	uvec2 bottom_edge = snap_to_chunk_edge(uvec2(gx + half_cell, gy + CELL_SIZE));
+	uvec2 left_edge = snap_to_chunk_edge(uvec2(gx, gy + half_cell));
 
 	// Get segments for this case
 	// Each segment is [p1, p2] encoded as 4 uints

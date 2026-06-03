@@ -50,6 +50,7 @@ func _generate_caves() -> void:
 	_save(_Corridor.generate(96, 32, true, 1003), "caves", "corridor_a")
 	_save(_SecretVault.generate(32, 1004), "caves", "secret_a")
 	_save(_Arena.generate(128, 0, true, 1005), "caves", "boss_arena")
+	_save(_ShopChamber.generate(256, 1006), "caves", "shop_a")
 
 func _generate_mines() -> void:
 	_save(_Corridor.generate(96, 32, false, 2001), "mines", "corridor_a")
@@ -57,21 +58,24 @@ func _generate_mines() -> void:
 	_save(_Arena.generate(64, 5, false, 2003), "mines", "arena_a")
 	_save(_SecretVault.generate(32, 2004), "mines", "secret_a")
 	_save(_Arena.generate(128, 0, true, 2005), "mines", "boss_arena")
+	_save(_ShopChamber.generate(256, 2006), "mines", "shop_a")
 
 func _generate_magma() -> void:
 	_save(_Blob.generate(64, MAT_LAVA, 3, 3001), "magma", "blob_lava_a")
 	_save(_Blob.generate(64, MAT_LAVA, 4, 3002), "magma", "blob_lava_b")
 	_save(_Arena.generate(64, 4, false, 3003), "magma", "arena_a")
 	_save(_Arena.generate(128, 0, true, 3005), "magma", "boss_arena")
+	_save(_ShopChamber.generate(256, 3006), "magma", "shop_a")
 
 func _generate_frozen() -> void:
 	_save(_Blob.generate(64, MAT_WATER, 3, 4001), "frozen", "blob_water_a")
 	_save(_Blob.generate(64, MAT_WATER, 4, 4002), "frozen", "blob_water_b")
 	_save(_Corridor.generate(96, 32, true, 4003), "frozen", "corridor_a")
 	_save(_Arena.generate(128, 0, true, 4005), "frozen", "boss_arena")
+	_save(_ShopChamber.generate(256, 4006), "frozen", "shop_a")
 
 func _generate_vault() -> void:
 	_save(_Arena.generate(64, 5, false, 5001), "vault", "arena_a")
 	_save(_Arena.generate(64, 5, false, 5002), "vault", "arena_b")
-	_save(_ShopChamber.generate(32, 5003), "vault", "shop_a")
+	_save(_ShopChamber.generate(256, 5003), "vault", "shop_a")
 	_save(_Arena.generate(128, 0, true, 5005), "vault", "boss_arena")
