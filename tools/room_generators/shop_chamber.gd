@@ -4,7 +4,7 @@ class_name ShopChamberGenerator
 # Sealed shop room: thick wood wall ring (R=MAT_WOOD), AIR interior,
 # a single shop marker (G=4) at the center. Biome-independent (wood, not native).
 const MAT_WOOD := 1
-const WALL_THICKNESS := 4
+const WALL_THICKNESS := 6
 
 static func generate(size: int, _gen_seed: int) -> Image:
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
