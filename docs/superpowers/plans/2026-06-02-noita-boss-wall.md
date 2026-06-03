@@ -82,10 +82,10 @@ Then in `_init_materials()`, after the `mat_dust` block (after the line `MAT_DUS
 
 ```gdscript
 	var mat_bedrock := MaterialDef.new(
-		"BEDROCK", "res://textures/Environments/Walls/stone.png",
+		"BEDROCK", "res://textures/Environments/Walls/bedrock.png",
 		false, 0, 0,
 		true, true,
-		Color(0.06, 0.06, 0.09, 1.0),  # dark slate tint to read as world-edge wall
+		Color(0, 0, 0, 0),  # no tint; bedrock.png already reads as world-edge wall
 		false, 0, 1.0,
 		999.0  # hardness irrelevant (never a dig target); high for clarity
 	)
