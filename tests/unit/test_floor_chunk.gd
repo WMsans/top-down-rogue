@@ -96,23 +96,26 @@ func test_empty_decor_defs_skips_decor_pass() -> void:
 	chunk.populate(Vector2i(0, 0), _make_biome(1.0, 0), 42, _all_air_bytes())
 	assert_that(_decor_sprites(chunk).size()).is_equal(0)
 
-func test_glowing_decor_gets_flicker_light_child() -> void:
+func test_glowing_decor_bakes_decor_lights_node() -> void:
 	var chunk := _FloorChunk.new()
 	add_child(chunk)
 	chunk.populate(Vector2i(0, 0), _make_biome(1.0, 1, true), 42, _all_air_bytes())
 	var sprites := _decor_sprites(chunk)
 	assert_that(sprites.size()).is_equal(256)
-	var light := sprites[0].get_node_or_null("Light") as FlickerLight
-	assert_that(light).is_not_null()
-	assert_that(light.shadow_enabled).is_false()
-	assert_that(light.blend_mode).is_equal(Light2D.BLEND_MODE_ADD)
+	# With baked lighting, each decor sprite no longer carries a FlickerLight child.
+	assert_that(sprites[0].get_node_or_null("Light")).is_null()
+	var decor_light := chunk.get_node_or_null("DecorLights") as PointLight2D
+	assert_that(decor_light).is_not_null()
+	assert_that(decor_light.shadow_enabled).is_false()
+	assert_that(decor_light.blend_mode).is_equal(Light2D.BLEND_MODE_ADD)
 
-func test_non_glowing_decor_has_no_light_child() -> void:
+func test_non_glowing_decor_has_no_decor_lights() -> void:
 	var chunk := _FloorChunk.new()
 	add_child(chunk)
 	chunk.populate(Vector2i(0, 0), _make_biome(1.0, 1, false), 42, _all_air_bytes())
 	var sprites := _decor_sprites(chunk)
 	assert_that(sprites[0].get_node_or_null("Light")).is_null()
+	assert_that(chunk.get_node_or_null("DecorLights")).is_null()
 
 func test_decor_placement_is_deterministic_for_same_seed_and_coord() -> void:
 	var biome := _make_biome(0.5, 3)
