@@ -4,7 +4,7 @@ const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
 const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
-const SHOP_SCENE := preload("res://scenes/economy/shop_ui.tscn")
+const SHOP_STALL_SCENE := preload("res://scenes/economy/shop_stall.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
 
 const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
@@ -189,8 +189,9 @@ func _spawn_chest(world_pos: Vector2, is_secret_loot: bool) -> void:
 
 
 func _spawn_shop(world_pos: Vector2) -> void:
-	var shop := SHOP_SCENE.instantiate()
-	_spawn_parent.get_parent().add_child(shop)
+	var stall := SHOP_STALL_SCENE.instantiate()
+	stall.global_position = world_pos
+	_spawn_parent.add_child(stall)
 
 
 func _on_boss_died(arena_center: Vector2) -> void:
