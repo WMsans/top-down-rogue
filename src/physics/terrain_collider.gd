@@ -45,8 +45,8 @@ static func build_collision(data: PackedByteArray, size: int, static_body: Stati
 			var case_idx: int = (tl << 3) | (tr << 2) | (br << 1) | bl
 
 			for seg in _get_segments(case_idx):
-				var p1: Vector2i = _edge_point(cx, cy, seg[0])
-				var p2: Vector2i = _edge_point(cx, cy, seg[1])
+				var p1: Vector2i = _snap_to_chunk_edge(_edge_point(cx, cy, seg[0]), size)
+				var p2: Vector2i = _snap_to_chunk_edge(_edge_point(cx, cy, seg[1]), size)
 				if not adj.has(p1):
 					adj[p1] = []
 				if not adj.has(p2):
@@ -127,6 +127,25 @@ static func _get_segments(case_idx: int) -> Array:
 		13: return [[1, 2]]
 		14: return [[2, 3]]
 		_: return []
+
+
+## Push contour vertices that land in the outermost cell out to the true chunk
+## edge (0 or size). The marching-squares grid forces the chunk border to air, so
+## a solid pixel touching the edge produces a face inset by half a cell. Left
+## un-snapped, two adjacent solid chunks leave a CELL_SIZE-wide collision seam at
+## their shared border (most visible on the long, chunk-aligned bedrock wall).
+## Snapping makes solid chunks tile edge-to-edge with no gap.
+static func _snap_to_chunk_edge(p: Vector2i, size: int) -> Vector2i:
+	var half: int = CELL_SIZE / 2
+	if p.x <= half:
+		p.x = 0
+	elif p.x >= size - half:
+		p.x = size
+	if p.y <= half:
+		p.y = 0
+	elif p.y >= size - half:
+		p.y = size
+	return p
 
 
 static func _edge_point(cx: int, cy: int, edge: int) -> Vector2i:
