@@ -213,7 +213,7 @@ region = SubResource("Resource_rcn3c")
 [resource]
 script = ExtResource("12_dlmtv")
 biome = &"mines"
-nominal_radius = 300
-lobing_amplitude = 50
-inner_disc_radius = 80
+nominal_radius = 600
+lobing_amplitude = 100
+inner_disc_radius = 200
 features = [SubResource("Resource_pd5uj"), SubResource("Resource_2oo5e"), SubResource("Resource_0jvap"), SubResource("Resource_521ui"), SubResource("Resource_b43ub"), SubResource("Resource_i7tpg"), SubResource("Resource_e6uwx"), SubResource("Resource_dy0tk"), SubResource("Resource_8jrgw"), SubResource("Resource_em61h"), SubResource("Resource_vulkn"), SubResource("Resource_t6ox5"), SubResource("Resource_yhgl4"), SubResource("Resource_uibti"), SubResource("Resource_fwhyi"), SubResource("Resource_blwqc"), SubResource("Resource_sujp2")]

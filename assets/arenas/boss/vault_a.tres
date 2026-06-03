@@ -184,7 +184,7 @@ region = SubResource("Resource_fkyre")
 [resource]
 script = ExtResource("11_thvm4")
 biome = &"vault"
-nominal_radius = 300
-lobing_amplitude = 50
-inner_disc_radius = 80
+nominal_radius = 600
+lobing_amplitude = 100
+inner_disc_radius = 200
 features = [SubResource("Resource_ef0ap"), SubResource("Resource_rylee"), SubResource("Resource_7ty4k"), SubResource("Resource_53t7f"), SubResource("Resource_0mce2"), SubResource("Resource_qg7lc"), SubResource("Resource_ckr20"), SubResource("Resource_obkt7"), SubResource("Resource_k0h2y"), SubResource("Resource_gnhw7"), SubResource("Resource_m1ha3"), SubResource("Resource_sfav3"), SubResource("Resource_aat20"), SubResource("Resource_bnm4o"), SubResource("Resource_muhyx")]
