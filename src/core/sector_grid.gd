@@ -1,12 +1,12 @@
 class_name SectorGrid
 
 const SECTOR_SIZE_PX := 384
-# Three interspersed concentric square boss rings (Chebyshev sectors), inner -> outer.
-const BOSS_RING_DISTANCES := [8, 10, 12]
-const BOSS_WORLD_EDGE := 12          # dist > this is empty void (world edge)
-const BOSS_RING_ANCHOR_COUNT := 8    # anchors per ring
-# Per-ring phase (fraction of anchor spacing) so anchors interleave in angle.
-const BOSS_RING_PHASES := [0.0, 1.0 / 3.0, 2.0 / 3.0]
+# Single boss ring at the inner face of the bedrock wall (Chebyshev sector dist).
+const BOSS_RING_DISTANCES := [8]
+const WALL_INNER_SECTORS := 8        # dist >= this is the indestructible bedrock wall
+const BOSS_RING_ANCHOR_COUNT := 12   # boss chambers spread around the wall face
+# Per-ring phase (fraction of anchor spacing). One ring => single zero phase.
+const BOSS_RING_PHASES := [0.0]
 const BOSS_CLAIM_RADIUS := 3
 const ELITE_CLAIM_RADIUS := 1
 const EMPTY_WEIGHT := 1.5
@@ -93,10 +93,8 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 
 	var dist := chebyshev_distance(coord, Vector2i.ZERO)
 
-	if dist > BOSS_WORLD_EDGE:
-		slot.is_empty = true
-		return slot
-
+	# Boss anchors sit exactly on the wall face (dist == WALL_INNER_SECTORS),
+	# so they must be detected before the wall cutoff below.
 	if is_boss_anchor(coord):
 		if _biome.boss_compositions.is_empty():
 			slot.is_empty = true
@@ -106,6 +104,10 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 		slot.is_boss = true
 		slot.template_index = rng.randi() % _biome.boss_compositions.size()
 		slot.composition = _biome.boss_compositions[slot.template_index]
+		return slot
+
+	if dist >= WALL_INNER_SECTORS:
+		slot.is_empty = true  # bedrock wall region (shader fills it); no rooms here
 		return slot
 
 	var anchor := _find_claiming_anchor(coord)
@@ -149,3 +151,9 @@ func get_template_for_slot(slot: RoomSlot) -> RoomTemplate:
 	if slot.template_override != null:
 		return slot.template_override
 	return _biome.room_templates[slot.template_index]
+
+
+# Maps a sector's Chebyshev distance from origin (0 .. WALL_INNER_SECTORS) to one of
+# three enemy tiers, spread evenly across the central play area.
+static func enemy_tier_for_distance(sector_dist: int) -> int:
+	return clampi(int(floor(float(sector_dist) / float(WALL_INNER_SECTORS) * 3.0)), 0, 2)
