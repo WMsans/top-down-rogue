@@ -1,9 +1,11 @@
 class_name SectorGrid
 
 const SECTOR_SIZE_PX := 384
+# Three interspersed concentric square boss rings (Chebyshev sectors), inner -> outer.
 const BOSS_RING_DISTANCES := [8, 10, 12]
-const BOSS_WORLD_EDGE := 12
-const BOSS_RING_ANCHOR_COUNT := 8
+const BOSS_WORLD_EDGE := 12          # dist > this is empty void (world edge)
+const BOSS_RING_ANCHOR_COUNT := 8    # anchors per ring
+# Per-ring phase (fraction of anchor spacing) so anchors interleave in angle.
 const BOSS_RING_PHASES := [0.0, 1.0 / 3.0, 2.0 / 3.0]
 const BOSS_CLAIM_RADIUS := 3
 const ELITE_CLAIM_RADIUS := 1
@@ -46,6 +48,7 @@ func chebyshev_distance(a: Vector2i, b: Vector2i) -> int:
 	return max(abs(a.x - b.x), abs(a.y - b.y))
 
 
+# Index of a sector walking the perimeter of the square ring of radius d: 0 .. 8d-1.
 static func _ring_index(coord: Vector2i, d: int) -> int:
 	if coord.x == d:  return coord.y + d
 	if coord.y == d:  return 2 * d + (d - coord.x)
@@ -57,7 +60,7 @@ static func is_boss_anchor(coord: Vector2i) -> bool:
 	var d: int = max(abs(coord.x), abs(coord.y))
 	var k := BOSS_RING_DISTANCES.find(d)
 	if k == -1:
-		return false
+		return false  # not on any boss ring
 	var perim := 8 * d
 	var r := _ring_index(coord, d)
 	var phase: float = BOSS_RING_PHASES[k]
