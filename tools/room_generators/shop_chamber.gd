@@ -1,28 +1,31 @@
 @tool
 class_name ShopChamberGenerator
 
-# Small room with central shop marker (G=4).
-static func generate(size: int, gen_seed: int) -> Image:
+# Sealed shop room: thick wood wall ring (R=MAT_WOOD), AIR interior,
+# a single shop marker (G=4) at the center. Biome-independent (wood, not native).
+const MAT_WOOD := 1
+const WALL_THICKNESS := 4
+
+static func generate(size: int, _gen_seed: int) -> Image:
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 
-	var inset := 2
-	for y in range(inset, size - inset):
-		for x in range(inset, size - inset):
+	# Interior: AIR (R=0), mask=255
+	for y in range(size):
+		for x in range(size):
 			img.set_pixel(x, y, Color8(0, 0, 0, 255))
 
-	# Border of biome native
-	for y in range(inset - 1, size - inset + 1):
-		for x in range(inset - 1, size - inset + 1):
-			var on_edge := (
-				x == inset - 1 or x == size - inset
-				or y == inset - 1 or y == size - inset
+	# Sealed wood wall ring, WALL_THICKNESS cells thick on every edge
+	for y in range(size):
+		for x in range(size):
+			var on_wall := (
+				x < WALL_THICKNESS or x >= size - WALL_THICKNESS
+				or y < WALL_THICKNESS or y >= size - WALL_THICKNESS
 			)
-			if on_edge:
-				img.set_pixel(x, y, Color8(255, 0, 0, 255))
+			if on_wall:
+				img.set_pixel(x, y, Color8(MAT_WOOD, 0, 0, 255))
 
-	var cx := size / 2
-	var cy := size / 2
-	img.set_pixel(cx, cy, Color8(0, 4, 0, 255))
+	# Shop marker (G=4) at center, on an AIR cell (R=0)
+	img.set_pixel(size / 2, size / 2, Color8(0, 4, 0, 255))
 
 	return img
