@@ -1,21 +1,19 @@
 @tool
 class_name ShopChamberGenerator
 
-# Sealed shop room: thick wood wall ring (R=MAT_WOOD), floor interior,
+# Sealed shop room: thick wood wall ring (R=MAT_WOOD), AIR interior,
 # a single shop marker (G=4) at the center. Biome-independent (wood, not native).
-# Interior uses a non-AIR material (R=14) so decors do not spawn.
 const MAT_WOOD := 1
-const MAT_SHOP_FLOOR := 14
 const WALL_THICKNESS := 6
 
 static func generate(size: int, _gen_seed: int) -> Image:
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 
-	# Interior: shop floor (R=MAT_SHOP_FLOOR), mask=255
+	# Interior: AIR (R=0), mask=255
 	for y in range(size):
 		for x in range(size):
-			img.set_pixel(x, y, Color8(MAT_SHOP_FLOOR, 0, 0, 255))
+			img.set_pixel(x, y, Color8(0, 0, 0, 255))
 
 	# Sealed wood wall ring, WALL_THICKNESS cells thick on every edge
 	for y in range(size):
@@ -27,10 +25,10 @@ static func generate(size: int, _gen_seed: int) -> Image:
 			if on_wall:
 				img.set_pixel(x, y, Color8(MAT_WOOD, 0, 0, 255))
 
-	# Shop marker (G=4) at center
-	img.set_pixel(size / 2, size / 2, Color8(MAT_SHOP_FLOOR, 4, 0, 255))
+	# Shop marker (G=4) at center, on an AIR cell (R=0)
+	img.set_pixel(size / 2, size / 2, Color8(0, 4, 0, 255))
 
 	# Lantern marker (G=8) above center
-	img.set_pixel(size / 2, size / 2 - 48, Color8(MAT_SHOP_FLOOR, 8, 0, 255))
+	img.set_pixel(size / 2, size / 2 - 48, Color8(0, 8, 0, 255))
 
 	return img
