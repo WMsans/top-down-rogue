@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://d1y7ifmwsckf" path="res://scenes/drop.tscn" id="1"]
+[ext_resource type="Script" path="res://src/drops/shop_modifier_drop.gd" id="2"]
+[ext_resource type="Shader" uid="uid://bgkst7g0qd22q" path="res://shaders/visual/outline.gdshader" id="3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("3")
+shader_parameter/outline_width = 0.0
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+
+[node name="ShopModifierDrop" instance=ExtResource("1")]
+script = ExtResource("2")
+
+[node name="Sprite2D" parent="." index="0"]
+material = SubResource("ShaderMaterial_1")
