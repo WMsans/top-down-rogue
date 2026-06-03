@@ -213,7 +213,7 @@ region = SubResource("Resource_l72gt")
 [resource]
 script = ExtResource("12_dw6yy")
 biome = &"magma"
-nominal_radius = 300
-lobing_amplitude = 50
-inner_disc_radius = 80
+nominal_radius = 600
+lobing_amplitude = 100
+inner_disc_radius = 200
 features = [SubResource("Resource_g3a1s"), SubResource("Resource_7vw6m"), SubResource("Resource_lbk1t"), SubResource("Resource_7qljl"), SubResource("Resource_lqu7r"), SubResource("Resource_wrlje"), SubResource("Resource_m06kk"), SubResource("Resource_mb1ev"), SubResource("Resource_gey6j"), SubResource("Resource_iys0w"), SubResource("Resource_eetek"), SubResource("Resource_dn02f"), SubResource("Resource_6jbw7"), SubResource("Resource_r56hy"), SubResource("Resource_41wxx"), SubResource("Resource_ap02p"), SubResource("Resource_fusrw")]
