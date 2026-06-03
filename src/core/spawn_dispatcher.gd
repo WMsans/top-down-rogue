@@ -4,8 +4,13 @@ const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
 const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
-const SHOP_SCENE := preload("res://scenes/economy/shop_ui.tscn")
+const SHOP_STALL_SCENE := preload("res://scenes/economy/shop_stall.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
+const LANTERN_SCENE := preload("res://scenes/props/lantern.tscn")
+const SHOP_FLOOR_TEXTURE := preload("res://textures/Guidance/wooden_planks.png")
+
+# Wood wall thickness around the sealed shop room (matches ShopChamberGenerator).
+const SHOP_WALL_THICKNESS := 6
 
 const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
 const BONE_DAGGER := preload("res://resources/weapons/bone_dagger.tres")
@@ -93,16 +98,22 @@ func _spawn_for_slot(grid: SectorGrid, slot, sector: Vector2i, world_center: Vec
 	var size_f: int = slot.template_size
 	var floor_num: int = LevelManager.floor_number
 	var dist: int = grid.chebyshev_distance(sector, Vector2i.ZERO)
+	var has_shop := false
 
 	for m in markers:
 		var local_pos: Vector2i = m["pos"]
 		var marker_type: int = m["type"]
+		if marker_type == 4:
+			has_shop = true
 		var rotated := _apply_rotation(local_pos, slot.rotation, size_f)
 		var world_pos := Vector2(
 			world_center.x - size_f / 2 + rotated.x,
 			world_center.y - size_f / 2 + rotated.y,
 		)
 		_spawn_entity(marker_type, world_pos, dist, floor_num, slot.is_boss)
+
+	if has_shop:
+		_spawn_shop_floor(world_center, size_f)
 
 
 static func _apply_rotation(local: Vector2i, rotation_deg: int, size: int) -> Vector2i:
@@ -124,6 +135,7 @@ func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num:
 		5: _spawn_chest(world_pos, true)
 		6: _spawn_enemy(world_pos, sector_dist, floor_num, true, false)
 		7: pass
+		8: _spawn_lantern(world_pos)
 
 
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
@@ -189,8 +201,35 @@ func _spawn_chest(world_pos: Vector2, is_secret_loot: bool) -> void:
 
 
 func _spawn_shop(world_pos: Vector2) -> void:
-	var shop := SHOP_SCENE.instantiate()
-	_spawn_parent.get_parent().add_child(shop)
+	var stall := SHOP_STALL_SCENE.instantiate()
+	stall.global_position = world_pos
+	_spawn_parent.add_child(stall)
+
+
+# Lays a wooden-plank floor over the sealed shop interior, mirroring the
+# guidance room's floor overlay. The room is square, so the floor is a square
+# inset by the wall thickness rather than the circular guidance disc.
+func _spawn_shop_floor(world_center: Vector2i, room_size: int) -> void:
+	var half := float(room_size) / 2.0 - float(SHOP_WALL_THICKNESS)
+	var poly := Polygon2D.new()
+	poly.name = "ShopFloor"
+	poly.texture = SHOP_FLOOR_TEXTURE
+	poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	poly.z_index = -5
+	poly.polygon = PackedVector2Array([
+		Vector2(-half, -half),
+		Vector2(half, -half),
+		Vector2(half, half),
+		Vector2(-half, half),
+	])
+	poly.global_position = Vector2(world_center)
+	_spawn_parent.add_child(poly)
+
+
+func _spawn_lantern(world_pos: Vector2) -> void:
+	var lantern := LANTERN_SCENE.instantiate()
+	lantern.global_position = world_pos
+	_spawn_parent.add_child(lantern)
 
 
 func _on_boss_died(arena_center: Vector2) -> void:
