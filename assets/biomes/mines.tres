@@ -72,6 +72,13 @@ is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("10_elitec")
 
+[sub_resource type="Resource" id="Resource_shop"]
+script = ExtResource("1_2liv1")
+png_path = "res://assets/rooms/mines/shop_a.png"
+size_class = 96
+rotatable = false
+weight = 4.0
+
 [resource]
 script = ExtResource("3_53h6i")
 display_name = "Mines"
@@ -80,7 +87,7 @@ cave_noise_scale = 0.01
 cave_threshold = 0.45
 ridge_weight = 0.4
 pool_materials = [SubResource("Resource_o2tgn"), SubResource("Resource_ogj5k")]
-room_templates = [SubResource("Resource_x6yix"), SubResource("Resource_iria1"), SubResource("Resource_1rrex"), SubResource("Resource_7f5de"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
+room_templates = [SubResource("Resource_x6yix"), SubResource("Resource_iria1"), SubResource("Resource_1rrex"), SubResource("Resource_7f5de"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 tint = Color(0.9, 0.85, 0.75, 1)
 floor_texture = ExtResource("11_floor")

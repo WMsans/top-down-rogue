@@ -99,12 +99,19 @@ light_energy = 1.2
 light_radius = 64.0
 flicker_amplitude = 0.06
 
+[sub_resource type="Resource" id="Resource_shop"]
+script = ExtResource("1_iq0d2")
+png_path = "res://assets/rooms/caves/shop_a.png"
+size_class = 96
+rotatable = false
+weight = 4.0
+
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
 ui_accent = Color(0.851, 0.467, 0.259, 1)
 pool_materials = [SubResource("Resource_xxuj2")]
-room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
+room_templates = [SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 floor_texture = ExtResource("11_floor")
 decor_defs = [SubResource("Resource_decor_grass1"), SubResource("Resource_decor_grass2"), SubResource("Resource_decor_tree")]
