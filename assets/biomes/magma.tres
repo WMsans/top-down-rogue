@@ -1,18 +1,17 @@
-[gd_resource type="Resource" script_class="BiomeDef" format=3]
+[gd_resource type="Resource" script_class="BiomeDef" format=3 uid="uid://btkcxr7lhp7ix"]
 
-[ext_resource type="Script" path="res://src/core/room_template.gd" id="1_8divj"]
-[ext_resource type="Script" path="res://src/core/pool_def.gd" id="2_0amv1"]
-[ext_resource type="Script" path="res://src/core/biome_def.gd" id="3_silhp"]
+[ext_resource type="Script" uid="uid://cetps8m4lvmyc" path="res://src/core/room_template.gd" id="1_8divj"]
+[ext_resource type="Script" uid="uid://dgin04hwba447" path="res://src/core/pool_def.gd" id="2_0amv1"]
+[ext_resource type="Script" uid="uid://diaea1cf226l0" path="res://src/core/biome_def.gd" id="3_silhp"]
+[ext_resource type="Resource" uid="uid://rkpff3pljgtp" path="res://assets/arenas/boss/magma_a.tres" id="4_bossa"]
+[ext_resource type="Resource" uid="uid://ix5savwa6urt" path="res://assets/arenas/boss/magma_b.tres" id="5_bossb"]
+[ext_resource type="Script" uid="uid://dbv0e06omogho" path="res://src/core/decor_def.gd" id="5_q3ipi"]
+[ext_resource type="Resource" uid="uid://w77q64ew2xxh" path="res://assets/arenas/boss/magma_c.tres" id="6_bossc"]
+[ext_resource type="Resource" uid="uid://2gdpoy38t0n8" path="res://assets/arenas/boss/magma_d.tres" id="7_bossd"]
+[ext_resource type="Resource" uid="uid://b6lmln1daplpk" path="res://assets/arenas/elite/magma_a.tres" id="8_elitea"]
+[ext_resource type="Resource" uid="uid://c1nlw4u4fxq02" path="res://assets/arenas/elite/magma_b.tres" id="9_eliteb"]
+[ext_resource type="Resource" uid="uid://l45132x0anv3" path="res://assets/arenas/elite/magma_c.tres" id="10_elitec"]
 [ext_resource type="Texture2D" uid="uid://dn3ytgb51cvqo" path="res://textures/Environments/Floors/magma_floor.png" id="11_floor"]
-
-[ext_resource type="Resource" path="res://assets/arenas/boss/magma_a.tres" id="4_bossa"]
-[ext_resource type="Resource" path="res://assets/arenas/boss/magma_b.tres" id="5_bossb"]
-[ext_resource type="Resource" path="res://assets/arenas/boss/magma_c.tres" id="6_bossc"]
-[ext_resource type="Resource" path="res://assets/arenas/boss/magma_d.tres" id="7_bossd"]
-
-[ext_resource type="Resource" path="res://assets/arenas/elite/magma_a.tres" id="8_elitea"]
-[ext_resource type="Resource" path="res://assets/arenas/elite/magma_b.tres" id="9_eliteb"]
-[ext_resource type="Resource" path="res://assets/arenas/elite/magma_c.tres" id="10_elitec"]
 
 [sub_resource type="Resource" id="Resource_sajre"]
 script = ExtResource("2_0amv1")
@@ -45,21 +44,18 @@ weight = 2.0
 
 [sub_resource type="Resource" id="Resource_elite_a"]
 script = ExtResource("1_8divj")
-weight = 1.0
 is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("8_elitea")
 
 [sub_resource type="Resource" id="Resource_elite_b"]
 script = ExtResource("1_8divj")
-weight = 1.0
 is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("9_eliteb")
 
 [sub_resource type="Resource" id="Resource_elite_c"]
 script = ExtResource("1_8divj")
-weight = 1.0
 is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("10_elitec")
@@ -67,20 +63,20 @@ composition = ExtResource("10_elitec")
 [sub_resource type="Resource" id="Resource_shop"]
 script = ExtResource("1_8divj")
 png_path = "res://assets/rooms/magma/shop_a.png"
+weight = 6.0
 size_class = 256
 rotatable = false
 no_spawn = true
-weight = 12.0
 
 [resource]
 script = ExtResource("3_silhp")
 display_name = "Magma Caverns"
-ui_accent = Color(1.0, 0.314, 0.188, 1)
 cave_noise_scale = 0.012
 cave_threshold = 0.5
 ridge_weight = 0.5
-pool_materials = [SubResource("Resource_sajre"), SubResource("Resource_hi480")]
-room_templates = [SubResource("Resource_bp58i"), SubResource("Resource_t5id5"), SubResource("Resource_opoei"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop")]
+pool_materials = Array[ExtResource("2_0amv1")]([SubResource("Resource_sajre"), SubResource("Resource_hi480")])
+room_templates = Array[ExtResource("1_8divj")]([SubResource("Resource_bp58i"), SubResource("Resource_t5id5"), SubResource("Resource_opoei"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop")])
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 tint = Color(1, 0.7, 0.5, 1)
+ui_accent = Color(1, 0.314, 0.188, 1)
 floor_texture = ExtResource("11_floor")
