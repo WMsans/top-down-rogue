@@ -58,6 +58,13 @@ is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("10_elitec")
 
+[sub_resource type="Resource" id="Resource_shop"]
+script = ExtResource("1_6wibb")
+png_path = "res://assets/rooms/frozen/shop_a.png"
+size_class = 96
+rotatable = false
+weight = 4.0
+
 [resource]
 script = ExtResource("3_i6yci")
 display_name = "Frozen Depths"
@@ -68,7 +75,7 @@ ridge_weight = 0.2
 octaves = 4
 background_material = 7
 pool_materials = [SubResource("Resource_40u6d")]
-room_templates = [SubResource("Resource_bwax5"), SubResource("Resource_oment"), SubResource("Resource_2nk8f"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
+room_templates = [SubResource("Resource_bwax5"), SubResource("Resource_oment"), SubResource("Resource_2nk8f"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 tint = Color(0.7, 0.85, 1, 1)
 floor_texture = ExtResource("11_floor")

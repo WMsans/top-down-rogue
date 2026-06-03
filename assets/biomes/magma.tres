@@ -64,6 +64,13 @@ is_elite_chest = true
 cavern_carve = true
 composition = ExtResource("10_elitec")
 
+[sub_resource type="Resource" id="Resource_shop"]
+script = ExtResource("1_8divj")
+png_path = "res://assets/rooms/magma/shop_a.png"
+size_class = 96
+rotatable = false
+weight = 4.0
+
 [resource]
 script = ExtResource("3_silhp")
 display_name = "Magma Caverns"
@@ -72,7 +79,7 @@ cave_noise_scale = 0.012
 cave_threshold = 0.5
 ridge_weight = 0.5
 pool_materials = [SubResource("Resource_sajre"), SubResource("Resource_hi480")]
-room_templates = [SubResource("Resource_bp58i"), SubResource("Resource_t5id5"), SubResource("Resource_opoei"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c")]
+room_templates = [SubResource("Resource_bp58i"), SubResource("Resource_t5id5"), SubResource("Resource_opoei"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop")]
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 tint = Color(1, 0.7, 0.5, 1)
 floor_texture = ExtResource("11_floor")
