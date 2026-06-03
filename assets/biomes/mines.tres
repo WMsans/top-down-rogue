@@ -75,8 +75,9 @@ composition = ExtResource("10_elitec")
 [sub_resource type="Resource" id="Resource_shop"]
 script = ExtResource("1_2liv1")
 png_path = "res://assets/rooms/mines/shop_a.png"
-size_class = 96
+size_class = 256
 rotatable = false
+no_spawn = true
 weight = 12.0
 
 [resource]

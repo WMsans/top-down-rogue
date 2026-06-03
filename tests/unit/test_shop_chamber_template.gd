@@ -2,12 +2,12 @@ extends GdUnitTestSuite
 
 const BIOMES := ["caves", "mines", "magma", "frozen", "vault"]
 
-func test_each_shop_png_is_96_with_single_shop_marker() -> void:
+func test_each_shop_png_is_256_with_single_shop_marker() -> void:
 	for biome in BIOMES:
 		var img := Image.load_from_file("res://assets/rooms/%s/shop_a.png" % biome)
 		assert_that(img).is_not_null()
-		assert_that(img.get_width()).is_equal(96)
-		assert_that(img.get_height()).is_equal(96)
+		assert_that(img.get_width()).is_equal(256)
+		assert_that(img.get_height()).is_equal(256)
 		var shop_markers := 0
 		for y in range(img.get_height()):
 			for x in range(img.get_width()):
@@ -23,6 +23,6 @@ func test_shop_png_has_wood_wall_border() -> void:
 	assert_that(int(corner.r8)).is_equal(1)
 	assert_that(int(corner.a8)).is_equal(255)
 	# Center is the marker cell on AIR (R=0)
-	var center := img.get_pixel(48, 48)
+	var center := img.get_pixel(128, 128)
 	assert_that(int(center.r8)).is_equal(0)
 	assert_that(int(center.g8)).is_equal(4)
