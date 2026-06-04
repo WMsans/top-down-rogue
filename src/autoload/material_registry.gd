@@ -163,8 +163,9 @@ func _init_materials():
 	var mat_water := MaterialDef.new(
 		"WATER", "",
 		false, 0, 0,
-		true, true,
-		Color(0.2, 0.45, 0.75, 1.0)
+		false, false,
+		Color(0.2, 0.45, 0.75, 1.0),
+		true
 	)
 	mat_water.id = materials.size()
 	materials.append(mat_water)
