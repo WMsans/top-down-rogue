@@ -19,8 +19,6 @@ var _current_weapon: Weapon
 var _flash_tween: Tween = null
 var _bounce_tween: Tween = null
 var _outline_panel: Panel = null
-var _status: StatusComponent = null
-var _status_strip: HBoxContainer = null
 
 func _ready() -> void:
 	_weapon_icon.pressed.connect(_on_weapon_button_pressed)
@@ -42,11 +40,6 @@ func _ready() -> void:
 		if _weapon_manager:
 			_weapon_manager.weapon_activated.connect(_on_weapon_activated)
 			_update_weapon_display(_inventory.active_weapon_slot if _inventory else 0)
-		_status = player.get_node_or_null("StatusComponent")
-		_build_status_strip()
-		if _status:
-			_status.changed.connect(_refresh_status_strip)
-			_refresh_status_strip()
 	_outline_panel = _create_outline_panel()
 
 func set_health(current: int, max_value: int) -> void:
@@ -150,23 +143,3 @@ func _create_outline_panel() -> Panel:
 	return p
 
 
-func _build_status_strip() -> void:
-	_status_strip = HBoxContainer.new()
-	_status_strip.add_theme_constant_override("separation", 2)
-	# BarFill -> HealthBar -> VBox: add the strip under the health bar.
-	var vbox := _health_bar_fill.get_parent().get_parent()
-	vbox.add_child(_status_strip)
-
-
-func _refresh_status_strip() -> void:
-	if _status_strip == null:
-		return
-	for child in _status_strip.get_children():
-		child.queue_free()
-	if _status == null:
-		return
-	for id in _status.get_active_ids():
-		var chip := ColorRect.new()
-		chip.custom_minimum_size = Vector2(10, 10)
-		chip.color = StatusRegistry.get_tint(id)
-		_status_strip.add_child(chip)
