@@ -2,6 +2,7 @@ class_name Weapon
 extends Resource
 
 @export var name: String = "Weapon"
+@export var description: String = ""
 @export var rarity: int = DropTable.ItemTier.COMMON
 var cooldown: float = 0.8
 var damage: float = 0.0
