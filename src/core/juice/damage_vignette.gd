@@ -9,11 +9,17 @@ const LOW_HEALTH_RATIO := 0.25
 const LOW_HEALTH_PULSE_SPEED := 1.2
 const LOW_HEALTH_TRANSITION := 0.4
 
+const EMBER_COLOR := Color(1.0, 0.4, 0.05, 1.0)
+const EMBER_MAX_STRENGTH := 0.5
+const EMBER_SMOOTH := 6.0
+
 var _shader_material: ShaderMaterial
 var _color_rect: ColorRect
 var _current_baseline: float = 0.0
 var _is_low_health: bool = false
 var _pulse_tween: Tween
+var _ember_material: ShaderMaterial
+var _ember_target: float = 0.0
 
 @onready var _viewport := get_viewport()
 
@@ -34,6 +40,18 @@ func _ready() -> void:
 	_color_rect.material = _shader_material
 
 	call_deferred("_connect_to_player")
+
+	var ember_rect := ColorRect.new()
+	ember_rect.anchor_right = 1.0
+	ember_rect.anchor_bottom = 1.0
+	ember_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(ember_rect)
+
+	_ember_material = ShaderMaterial.new()
+	_ember_material.shader = preload("res://shaders/ui/damage_vignette.gdshader")
+	_ember_material.set_shader_parameter("intensity", 0.0)
+	_ember_material.set_shader_parameter("vignette_color", EMBER_COLOR)
+	ember_rect.material = _ember_material
 
 
 func pulse(damage: float) -> void:
@@ -64,6 +82,14 @@ func _connect_to_player() -> void:
 	inventory.health_changed.connect(_on_health_changed)
 
 
+func set_burn_intensity(t: float) -> void:
+	_ember_target = clampf(t, 0.0, 1.0) * EMBER_MAX_STRENGTH
+
+
+func get_ember_intensity() -> float:
+	return _ember_material.get_shader_parameter("intensity") if _ember_material else 0.0
+
+
 func _on_health_changed(current: int, maximum: int) -> void:
 	if current <= 0 or maximum <= 0:
 		_is_low_health = false
@@ -90,6 +116,11 @@ func _interpolate_to_baseline(duration: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	if _ember_material:
+		var cur: float = _ember_material.get_shader_parameter("intensity")
+		var step := clampf(_delta * EMBER_SMOOTH, 0.0, 1.0)
+		_ember_material.set_shader_parameter("intensity", lerpf(cur, _ember_target, step))
+
 	if not _is_low_health:
 		return
 	if _pulse_tween and _pulse_tween.is_valid():
