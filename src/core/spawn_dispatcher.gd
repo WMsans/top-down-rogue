@@ -12,12 +12,6 @@ const SHOP_FLOOR_TEXTURE := preload("res://textures/Guidance/wooden_planks.png")
 # Wood wall thickness around the sealed shop room (matches ShopChamberGenerator).
 const SHOP_WALL_THICKNESS := 6
 
-const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
-const BONE_DAGGER := preload("res://resources/weapons/bone_dagger.tres")
-const THROWING_KNIFE := preload("res://resources/weapons/throwing_knife.tres")
-const FIRE_ORB := preload("res://resources/weapons/fire_orb.tres")
-const BOSS_STAFF := preload("res://resources/weapons/boss_staff.tres")
-
 const CHUNK_SIZE := 256
 
 var _spawned_sectors: Dictionary = {}
@@ -142,7 +136,7 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 	var enemy: Enemy
 	if is_boss:
 		enemy = BOSS_ENEMY_SCENE.instantiate()
-		enemy.weapon_resource = BOSS_STAFF
+		enemy.weapon_resource = WeaponRegistry.get_weapon_by_id("boss_staff")
 	else:
 		if is_elite:
 			enemy = MELEE_ENEMY_SCENE.instantiate()
@@ -181,16 +175,16 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 	_spawn_parent.add_child(enemy)
 
 
-func _pick_melee_weapon() -> MeleeWeapon:
+func _pick_melee_weapon() -> Weapon:
 	if randf() < 0.5:
-		return RUSTY_SWORD
-	return BONE_DAGGER
+		return WeaponRegistry.get_weapon_by_id("rusty_sword")
+	return WeaponRegistry.get_weapon_by_id("bone_dagger")
 
 
-func _pick_ranged_weapon() -> RangedWeapon:
+func _pick_ranged_weapon() -> Weapon:
 	if randf() < 0.7:
-		return THROWING_KNIFE
-	return FIRE_ORB
+		return WeaponRegistry.get_weapon_by_id("throwing_knife")
+	return WeaponRegistry.get_weapon_by_id("fire_orb")
 
 
 func _spawn_chest(world_pos: Vector2, is_secret_loot: bool) -> void:
