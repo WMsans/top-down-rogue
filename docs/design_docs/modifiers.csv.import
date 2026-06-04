@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cuo0p86tl88qr"
+
+[deps]
+
+files=["res://docs/design_docs/modifiers.name.translation", "res://docs/design_docs/modifiers.description.translation", "res://docs/design_docs/modifiers.suppresses.translation"]
+
+source_file="res://docs/design_docs/modifiers.csv"
+dest_files=["res://docs/design_docs/modifiers.name.translation", "res://docs/design_docs/modifiers.description.translation", "res://docs/design_docs/modifiers.suppresses.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
