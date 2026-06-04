@@ -63,6 +63,10 @@ func _ready() -> void:
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
 	_last_safe_position = position
 
+	var status := StatusComponent.new()
+	status.name = "StatusComponent"
+	add_child(status)
+
 
 func _physics_process(delta: float) -> void:
 	var inventory := get_node_or_null("PlayerInventory")
@@ -96,6 +100,12 @@ func _physics_process(delta: float) -> void:
 		_facing_left = false
 	if _color_rect != null:
 		_color_rect.scale.x = -1.0 if _facing_left else 1.0
+	var status := get_node_or_null("StatusComponent")
+	if status and status.is_movement_blocked():
+		input_dir = Vector2.ZERO
+		velocity = Vector2.ZERO
+	elif status:
+		input_dir *= status.get_move_speed_multiplier()
 	_apply_movement(input_dir, delta)
 	velocity += _knockback_velocity
 	move_and_slide()
@@ -278,6 +288,12 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 	var inventory := get_node_or_null("PlayerInventory")
 	if inventory:
 		inventory.take_damage(damage, hit_dir)
+
+
+func apply_status_damage(amount: int) -> void:
+	var inventory := get_node_or_null("PlayerInventory")
+	if inventory:
+		inventory.take_status_damage(amount)
 
 
 func _play_hit_flash() -> void:
