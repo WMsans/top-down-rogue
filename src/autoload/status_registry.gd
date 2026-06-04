@@ -88,3 +88,46 @@ func stain_for_material(material_id: int) -> String:
 	if material_id == MaterialRegistry.MAT_BLOOD:
 		return "bloody"
 	return ""
+
+
+# --- Reaction tuning constants ---
+const WET_EXTINGUISH_RATE := 4.0   # fire stain drained/sec while wet
+const WET_EVAP_BONUS := 1.0        # extra wet evaporation/sec while extinguishing
+const BLOODY_DAMPEN_RATE := 1.5    # fire stain drained/sec while bloody
+const OIL_FEED_RATE := 2.0         # oiled stain consumed/sec while burning
+const OIL_FIRE_GAIN := 1.5         # fire gained per oiled consumed
+const WET_FREEZE_RATE := 2.0       # wet+chilly converted to frozen/sec
+const FIRE_MELT_RATE := 3.0        # chilly/frozen drained/sec while on fire
+const CHILLY_FREEZE_THRESHOLD := 4.0
+const CHILLY_RAMP_RATE := 1.0      # chilly->frozen conversion/sec past threshold
+
+
+func apply_reactions(c: StatusComponent, delta: float) -> void:
+	# 1. Wet extinguishes Fire.
+	if c.get_stain("wet") > 0.0 and c.get_stain("on_fire") > 0.0:
+		c.reduce_stain("on_fire", WET_EXTINGUISH_RATE * delta)
+		c.reduce_stain("wet", WET_EVAP_BONUS * delta)
+	# 2. Bloody dampens Fire (weaker than wet).
+	if c.get_stain("bloody") > 0.0 and c.get_stain("on_fire") > 0.0:
+		c.reduce_stain("on_fire", BLOODY_DAMPEN_RATE * delta)
+	# 3. Oiled feeds Fire (only when not wet).
+	if c.get_stain("oiled") > 0.0 and c.get_stain("on_fire") > 0.0 and c.get_stain("wet") <= 0.0:
+		var conv: float = OIL_FEED_RATE * delta
+		c.reduce_stain("oiled", conv)
+		c.add_stain("on_fire", conv * OIL_FIRE_GAIN)
+	# 4. Wet + Chilly -> Frozen.
+	if c.get_stain("wet") > 0.0 and c.get_stain("chilly") > 0.0:
+		var fconv: float = minf(minf(c.get_stain("wet"), c.get_stain("chilly")), WET_FREEZE_RATE * delta)
+		if fconv > 0.0:
+			c.reduce_stain("wet", fconv)
+			c.reduce_stain("chilly", fconv)
+			c.add_stain("frozen", fconv)
+	# 5. Fire melts cold.
+	if c.get_stain("on_fire") > 0.0:
+		c.reduce_stain("chilly", FIRE_MELT_RATE * delta)
+		c.reduce_stain("frozen", FIRE_MELT_RATE * delta)
+	# 6. Sustained Chilly ramps into Frozen.
+	if c.get_stain("chilly") >= CHILLY_FREEZE_THRESHOLD:
+		var rconv: float = CHILLY_RAMP_RATE * delta
+		c.reduce_stain("chilly", rconv)
+		c.add_stain("frozen", rconv)
