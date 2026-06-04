@@ -17,28 +17,6 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if _terrain_physical == null:
-		return
-	var player := get_parent()
-	var inventory: PlayerInventory = player.get_node_or_null("PlayerInventory")
-	if inventory and inventory.is_dead():
-		return
-
-	var hazard_mask := MaterialRegistry.HAZARD_LAVA | MaterialRegistry.HAZARD_FIRE
-	if not _terrain_physical.hazard_at(player.position, hazard_mask):
-		return
-
-	var total_damage := 0
-	var pos: Vector2 = player.position
-	var half_w := BODY_WIDTH / 2.0
-	var half_h := BODY_HEIGHT / 2.0
-
-	for ix in range(SAMPLE_POINTS_X):
-		for iy in range(SAMPLE_POINTS_Y):
-			var sample_x := int(round(pos.x - half_w + float(ix) * BODY_WIDTH / float(SAMPLE_POINTS_X - 1)))
-			var sample_y := int(round(pos.y - half_h + float(iy) * BODY_HEIGHT / float(SAMPLE_POINTS_Y - 1)))
-			var cell: TerrainCell = _terrain_physical.query(Vector2(sample_x, sample_y))
-			total_damage = max(total_damage, int(cell.damage))
-
-	if total_damage > 0 and inventory:
-		inventory.take_damage(total_damage, Vector2.ZERO)
+	# Lava/fire damage is now handled as the On Fire status via StatusComponent.
+	# This checker is retained as a no-op for any future non-fire terrain hazards.
+	pass

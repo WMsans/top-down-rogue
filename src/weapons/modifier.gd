@@ -19,5 +19,9 @@ func on_tick(_weapon: Weapon, _delta: float) -> void:
 	pass
 
 
+func modify_crit_chance(_weapon: Weapon, base: float) -> float:
+	return base
+
+
 func get_description() -> String:
 	return description

@@ -5,6 +5,11 @@ extends Area2D
 @export var speed: float = 120.0
 @export var lifetime: float = 3.0
 @export var is_enemy_projectile: bool = false
+@export var crit_chance: float = 0.0
+@export var crit_multiplier: float = 2.0
+@export var crit_status: String = ""
+
+const CRIT_STATUS_STAIN := 2.0
 var direction: Vector2 = Vector2.RIGHT
 var source_node: Node2D = null
 
@@ -48,7 +53,13 @@ func _handle_hit(target: Node) -> void:
 	else:
 		if target.is_in_group("attackable"):
 			if target != source_node and target.has_method("on_hit_impact"):
-				target.on_hit_impact(global_position, direction, int(damage))
+				var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
+				var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
+				target.on_hit_impact(global_position, direction, dmg)
+				if is_crit and crit_status != "":
+					var sc = target.get_node_or_null("StatusComponent")
+					if sc != null:
+						sc.add_stain(crit_status, CRIT_STATUS_STAIN)
 				queue_free()
 		elif target is StaticBody2D:
 			_carve_terrain()
