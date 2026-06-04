@@ -5,14 +5,6 @@ const CHUNK_SIZE := 256
 const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
 const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 
-const RUSTY_SWORD := preload("res://resources/weapons/rusty_sword.tres")
-const BONE_DAGGER := preload("res://resources/weapons/bone_dagger.tres")
-const THROWING_KNIFE := preload("res://resources/weapons/throwing_knife.tres")
-const FIRE_ORB := preload("res://resources/weapons/fire_orb.tres")
-const BROAD_AXE := preload("res://resources/weapons/broad_axe.tres")
-const FLAME_BLADE := preload("res://resources/weapons/flame_blade.tres")
-const SPREAD_SHOT := preload("res://resources/weapons/spread_shot.tres")
-
 @export var spawn_interval: float = 1.0
 @export var attempts_per_cycle: int = 2
 @export var spawn_min_dist: float = 600.0
@@ -79,22 +71,22 @@ func _pick_enemy_scene() -> PackedScene:
 	return RANGED_ENEMY_SCENE
 
 
-func _pick_melee_weapon() -> MeleeWeapon:
+func _pick_melee_weapon() -> Weapon:
 	if randf() < 0.5:
-		return RUSTY_SWORD
-	return BONE_DAGGER
+		return WeaponRegistry.get_weapon_by_id("rusty_sword")
+	return WeaponRegistry.get_weapon_by_id("bone_dagger")
 
 
-func _pick_ranged_weapon() -> RangedWeapon:
+func _pick_ranged_weapon() -> Weapon:
 	if randf() < 0.7:
-		return THROWING_KNIFE
-	return FIRE_ORB
+		return WeaponRegistry.get_weapon_by_id("throwing_knife")
+	return WeaponRegistry.get_weapon_by_id("fire_orb")
 
 
-func _pick_elite_melee_weapon() -> MeleeWeapon:
+func _pick_elite_melee_weapon() -> Weapon:
 	if randf() < 0.5:
-		return BROAD_AXE
-	return FLAME_BLADE
+		return WeaponRegistry.get_weapon_by_id("broad_axe")
+	return WeaponRegistry.get_weapon_by_id("flame_blade")
 
 
 func _on_spawn_tick() -> void:
