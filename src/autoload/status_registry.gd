@@ -8,7 +8,13 @@ const StatusDefScript = preload("res://src/status/status_def.gd")
 # Terrain top-up: stain added per second while standing in a source material.
 const TERRAIN_STAIN_RATE := 6.0
 
+# Above-head icon intensity mapping: alpha ramps from ICON_MIN_ALPHA (at the
+# active threshold) to 1.0 once stain reaches threshold + ICON_ALPHA_RAMP.
+const ICON_MIN_ALPHA := 0.45
+const ICON_ALPHA_RAMP := 4.0
+
 var _defs: Dictionary = {}  # id -> StatusDef
+var _icon_cache: Dictionary = {}  # id -> Texture2D (lazy)
 
 
 func _ready() -> void:
@@ -18,22 +24,28 @@ func _ready() -> void:
 func _register_defs() -> void:
 	_add(StatusDefScript.new(
 		"on_fire", "On Fire", Color(1.0, 0.45, 0.1, 1.0),
-		1.0, 1.0, StatusDef.Category.HARMFUL, 4.0))
+		1.0, 1.0, StatusDef.Category.HARMFUL, 4.0, false, 1.0,
+		"res://textures/ui/status/Effect_on_fire.png"))
 	_add(StatusDefScript.new(
 		"wet", "Wet", Color(0.35, 0.55, 0.95, 1.0),
-		0.5, 1.0, StatusDef.Category.NEUTRAL))
+		0.5, 1.0, StatusDef.Category.NEUTRAL, 0.0, false, 1.0,
+		"res://textures/ui/status/Effect_wet.png"))
 	_add(StatusDefScript.new(
 		"oiled", "Oiled", Color(0.25, 0.18, 0.1, 1.0),
-		0.3, 1.0, StatusDef.Category.NEUTRAL))
+		0.3, 1.0, StatusDef.Category.NEUTRAL, 0.0, false, 1.0,
+		"res://textures/ui/status/Effect_oiled.png"))
 	_add(StatusDefScript.new(
 		"chilly", "Chilly", Color(0.6, 0.8, 0.95, 1.0),
-		0.8, 1.0, StatusDef.Category.HARMFUL, 0.0, false, 0.6))
+		0.8, 1.0, StatusDef.Category.HARMFUL, 0.0, false, 0.6,
+		"res://textures/ui/status/Effect_ingestion_freezing.png"))
 	_add(StatusDefScript.new(
 		"frozen", "Frozen", Color(0.7, 0.9, 1.0, 1.0),
-		0.4, 3.0, StatusDef.Category.HARMFUL, 0.0, true, 0.0))
+		0.4, 3.0, StatusDef.Category.HARMFUL, 0.0, true, 0.0,
+		"res://textures/ui/status/Effect_frozen.png"))
 	_add(StatusDefScript.new(
 		"bloody", "Bloody", Color(0.75, 0.08, 0.08, 1.0),
-		0.4, 1.0, StatusDef.Category.NEUTRAL))
+		0.4, 1.0, StatusDef.Category.NEUTRAL, 0.0, false, 1.0,
+		"res://textures/ui/status/Effect_bloody.png"))
 
 
 func _add(def: StatusDef) -> void:
@@ -56,6 +68,25 @@ func get_threshold(id: String) -> float:
 func get_decay_rate(id: String) -> float:
 	var d: StatusDef = _defs.get(id, null)
 	return d.decay_rate if d != null else 1.0
+
+
+func get_icon(id: String) -> Texture2D:
+	if _icon_cache.has(id):
+		return _icon_cache[id]
+	var d: StatusDef = _defs.get(id, null)
+	var tex: Texture2D = null
+	if d != null and d.icon_path != "":
+		tex = load(d.icon_path) as Texture2D
+	_icon_cache[id] = tex
+	return tex
+
+
+func get_icon_alpha(id: String, stain: float) -> float:
+	var threshold := get_threshold(id)
+	if stain < threshold:
+		return 0.0
+	var t: float = clampf((stain - threshold) / ICON_ALPHA_RAMP, 0.0, 1.0)
+	return lerpf(ICON_MIN_ALPHA, 1.0, t)
 
 
 func get_tint(id: String) -> Color:

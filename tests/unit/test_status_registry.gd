@@ -23,3 +23,32 @@ func test_material_mapping() -> void:
 	assert_that(StatusRegistry.stain_for_material(MaterialRegistry.MAT_OIL)).is_equal("oiled")
 	assert_that(StatusRegistry.stain_for_material(MaterialRegistry.MAT_BLOOD)).is_equal("bloody")
 	assert_that(StatusRegistry.stain_for_material(MaterialRegistry.MAT_STONE)).is_equal("")
+
+
+func test_get_icon_alpha_below_threshold_is_zero() -> void:
+	assert_float(StatusRegistry.get_icon_alpha("on_fire", 0.5)).is_equal_approx(0.0, 0.001)
+
+func test_get_icon_alpha_at_threshold_is_min() -> void:
+	assert_float(StatusRegistry.get_icon_alpha("on_fire", 1.0)).is_equal_approx(StatusRegistry.ICON_MIN_ALPHA, 0.001)
+
+func test_get_icon_alpha_saturates_at_one() -> void:
+	var stain := 1.0 + StatusRegistry.ICON_ALPHA_RAMP
+	assert_float(StatusRegistry.get_icon_alpha("on_fire", stain)).is_equal_approx(1.0, 0.001)
+	assert_float(StatusRegistry.get_icon_alpha("on_fire", stain + 10.0)).is_equal_approx(1.0, 0.001)
+
+func test_get_icon_alpha_midpoint_between_min_and_one() -> void:
+	var mid := StatusRegistry.get_icon_alpha("on_fire", 1.0 + StatusRegistry.ICON_ALPHA_RAMP * 0.5)
+	assert_float(mid).is_greater(StatusRegistry.ICON_MIN_ALPHA)
+	assert_float(mid).is_less(1.0)
+
+func test_get_icon_uses_per_status_threshold() -> void:
+	# frozen threshold is 3.0; at 3.0 it should read min alpha, not saturated.
+	assert_float(StatusRegistry.get_icon_alpha("frozen", 3.0)).is_equal_approx(StatusRegistry.ICON_MIN_ALPHA, 0.001)
+	assert_float(StatusRegistry.get_icon_alpha("frozen", 2.0)).is_equal_approx(0.0, 0.001)
+
+func test_get_icon_returns_texture_for_each_status() -> void:
+	for id in ["on_fire", "wet", "oiled", "chilly", "frozen", "bloody"]:
+		assert_object(StatusRegistry.get_icon(id)).is_not_null()
+
+func test_get_icon_unknown_is_null() -> void:
+	assert_object(StatusRegistry.get_icon("nope")).is_null()

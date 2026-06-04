@@ -12,6 +12,7 @@ var category: int
 var burn_dps: float         # > 0 means deals burn damage while active
 var blocks_movement: bool   # true => immobile while active
 var slow_multiplier: float  # movement speed multiplier while active (1.0 = none)
+var icon_path: String       # res:// path to the above-head status icon (or "")
 
 
 func _init(
@@ -24,6 +25,7 @@ func _init(
 	p_burn_dps: float = 0.0,
 	p_blocks_movement: bool = false,
 	p_slow_multiplier: float = 1.0,
+	p_icon_path: String = "",
 ) -> void:
 	id = p_id
 	display_name = p_display_name
@@ -34,3 +36,4 @@ func _init(
 	burn_dps = p_burn_dps
 	blocks_movement = p_blocks_movement
 	slow_multiplier = p_slow_multiplier
+	icon_path = p_icon_path
