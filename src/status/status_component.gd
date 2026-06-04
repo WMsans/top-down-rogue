@@ -64,6 +64,16 @@ func clear(id: String) -> void:
 		changed.emit()
 
 
+func get_blended_tint() -> Color:
+	var ids: Array = get_active_ids()
+	if ids.is_empty():
+		return Color.WHITE
+	var c: Color = Color.WHITE
+	for id in ids:
+		c = c.lerp(StatusRegistry.get_tint(id), 0.5)
+	return c
+
+
 # --- Movement ---
 
 func get_move_speed_multiplier() -> float:

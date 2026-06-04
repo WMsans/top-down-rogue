@@ -57,3 +57,16 @@ func test_active_ids_lists_active_only() -> void:
 	var ids: Array = c.get_active_ids()
 	assert_that(ids.has("wet")).is_true()
 	assert_that(ids.has("on_fire")).is_false()
+
+
+func test_blended_tint_white_when_none() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	assert_that(c.get_blended_tint()).is_equal(Color.WHITE)
+
+
+func test_blended_tint_shifts_with_status() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_stain("on_fire", 5.0)  # active, orange tint
+	var tint: Color = c.get_blended_tint()
+	assert_that(tint).is_not_equal(Color.WHITE)
+	assert_bool(tint.r > tint.b).is_true()  # warm tint

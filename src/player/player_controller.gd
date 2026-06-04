@@ -31,6 +31,7 @@ var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
 var _last_safe_position: Vector2 = Vector2.ZERO
+var _status_tint: Color = Color.WHITE
 
 
 func _enter_tree() -> void:
@@ -108,6 +109,11 @@ func _physics_process(delta: float) -> void:
 		input_dir *= status.get_move_speed_multiplier()
 	_apply_movement(input_dir, delta)
 	velocity += _knockback_velocity
+	var tint_status := get_node_or_null("StatusComponent")
+	if tint_status and _color_rect:
+		_status_tint = tint_status.get_blended_tint()
+		if not (_flash_tween and _flash_tween.is_valid()):
+			_color_rect.modulate = _status_tint
 	move_and_slide()
 	_resolve_terrain_overlap()
 
@@ -301,7 +307,7 @@ func _play_hit_flash() -> void:
 		_flash_tween.kill()
 	_color_rect.modulate = HIT_FLASH_COLOR
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(_color_rect, "modulate", Color.WHITE, 0.12)
+	_flash_tween.tween_property(_color_rect, "modulate", _status_tint, 0.12)
 
 
 func _play_squash() -> void:
