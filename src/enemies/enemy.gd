@@ -107,6 +107,10 @@ func _ready() -> void:
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
 
+	var status := StatusComponent.new()
+	status.name = "StatusComponent"
+	add_child(status)
+
 
 func _apply_elite_scaling() -> void:
 	max_health = int(float(max_health) * 3.0)
@@ -393,6 +397,20 @@ func hit(damage: int) -> void:
 	_state_timer = hurt_duration
 
 
+func apply_status_damage(amount: int) -> void:
+	# Quiet DoT path: drains health without forcing HURT state.
+	if amount <= 0 or _state == State.DEATH:
+		return
+	if GameModeManager.is_creative():
+		amount = max_health
+	health -= amount
+	health_changed.emit(health, max_health)
+	_play_hit_flash()
+	if health <= 0:
+		_change_state(State.DEATH)
+		die()
+
+
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
 	if hit_dir.length_squared() > 0.0001:
 		_knockback_velocity += hit_dir.normalized() * KNOCKBACK_SPEED
@@ -523,6 +541,14 @@ func _is_targeted() -> bool:
 
 
 func _get_effective_speed() -> float:
+	var base := _base_effective_speed()
+	var status := get_node_or_null("StatusComponent")
+	if status:
+		base *= status.get_move_speed_multiplier()
+	return base
+
+
+func _base_effective_speed() -> float:
 	var player = get_tree().get_first_node_in_group("player")
 	if player == null:
 		return speed
