@@ -188,14 +188,14 @@ func _process(delta: float) -> void:
 			weapon.update_visual(delta, self)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if _state == State.DEATH:
 		return
 	var tint_status := get_node_or_null("StatusComponent")
 	if tint_status:
 		_base_modulate = tint_status.get_blended_tint()
 		if _burn_flash > 0.0:
-			_burn_flash = maxf(0.0, _burn_flash - _delta * BURN_FLASH_DECAY)
+			_burn_flash = maxf(0.0, _burn_flash - delta * BURN_FLASH_DECAY)
 		if not (_flash_tween and _flash_tween.is_valid()):
 			var sprite := get_node_or_null("Sprite2D")
 			if sprite:
