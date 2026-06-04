@@ -20,8 +20,7 @@ var shadow_grid: Node = null
 
 var _gen_uniform_sets_to_free: Array[RID] = []
 
-var _light_frame_counter := 0
-var _light_dispatch_buckets: Array[Array] = []   # 5 slots, each = Array[Vector2i]
+var _light_dispatch_cursor := 0                  # stable round-robin cursor for >cap visible chunks
 signal chunks_generated(new_coords: Array[Vector2i])
 signal chunk_unloaded(coord: Vector2i)
 
@@ -72,10 +71,6 @@ func _ready() -> void:
 	lights_container = Node2D.new()
 	lights_container.name = "LightsContainer"
 	add_child(lights_container)
-
-	_light_dispatch_buckets.resize(5)
-	for i in range(5):
-		_light_dispatch_buckets[i] = []
 
 	TerrainSurface.register_adapter(self)
 
@@ -393,24 +388,40 @@ func _update_lights() -> void:
 			for j in range(min(decoded.size(), 16)):
 				chunk.hazard_cells[j] = int(decoded[j].get("hazard", 0))
 
-	# --- Dispatch: 1/5 of visible chunks each frame ---
-	_light_frame_counter = (_light_frame_counter + 1) % 5
-
+	# --- Dispatch: refresh every visible chunk each frame. ---
+	# Previously this dispatched only 1/5 of chunks per frame, bucketed by each chunk's
+	# index in the per-frame-rebuilt `active_coords` array. Under movement, chunks
+	# load/unload so the array reorders and its size changes, shifting every chunk's
+	# index and the bucket size each frame — a chunk near the player could miss its
+	# bucket window for dozens of frames, the 1-5 s movement-only light latency.
+	# Dispatch is cheap (a few tiny compute jobs + the single coalesced readback), so
+	# refresh all active chunks every frame: low latency, independent of movement.
 	var active_coords: Array[Vector2i] = []
 	for coord in chunks:
 		active_coords.append(coord)
 
-	var bucket_idx := _light_frame_counter
-	_light_dispatch_buckets[bucket_idx].clear()
+	var dispatch_coords := active_coords
+	if active_coords.size() > ComputeDevice.LIGHT_MAX_ACTIVE_CHUNKS:
+		dispatch_coords = _select_light_dispatch_window(active_coords)
 
-	var bucket_size := maxi(1, ceili(float(active_coords.size()) / 5.0))
-	var start := bucket_idx * bucket_size
-	if start < active_coords.size():
-		var end := mini(start + bucket_size, active_coords.size())
-		for i in range(start, end):
-			_light_dispatch_buckets[bucket_idx].append(active_coords[i])
+	compute_device.dispatch_light_pack(chunks, dispatch_coords)
 
-	compute_device.dispatch_light_pack(chunks, _light_dispatch_buckets[bucket_idx])
+
+## When more chunks are visible than the coalesced light buffer can hold in one
+## frame, walk them in a stable sorted order with a persistent cursor so every chunk
+## is still covered within ceil(N / cap) frames — regardless of load/unload churn.
+func _select_light_dispatch_window(active_coords: Array[Vector2i]) -> Array[Vector2i]:
+	var cap: int = ComputeDevice.LIGHT_MAX_ACTIVE_CHUNKS
+	var sorted := active_coords.duplicate()
+	sorted.sort()
+	var n := sorted.size()
+	if _light_dispatch_cursor >= n:
+		_light_dispatch_cursor = 0
+	var window: Array[Vector2i] = []
+	for i in range(cap):
+		window.append(sorted[(_light_dispatch_cursor + i) % n])
+	_light_dispatch_cursor = (_light_dispatch_cursor + cap) % n
+	return window
 
 const MAX_IMPACTS_PER_FRAME := 16
 
@@ -433,11 +444,7 @@ func reset() -> void:
 		child.queue_free()
 	for child in lights_container.get_children():
 		child.queue_free()
-	_light_dispatch_buckets.clear()
-	_light_dispatch_buckets.resize(5)
-	for i in range(5):
-		_light_dispatch_buckets[i] = []
-	_light_frame_counter = 0
+	_light_dispatch_cursor = 0
 	compute_device.light_first_frame = true
 	compute_device.light_write_index = 0
 	compute_device.light_dispatch_manifests[0] = PackedInt32Array()
