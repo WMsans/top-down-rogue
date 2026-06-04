@@ -181,6 +181,13 @@ func _process(delta: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if _state == State.DEATH:
 		return
+	var tint_status := get_node_or_null("StatusComponent")
+	if tint_status:
+		_base_modulate = tint_status.get_blended_tint()
+		if not (_flash_tween and _flash_tween.is_valid()):
+			var sprite := get_node_or_null("Sprite2D")
+			if sprite:
+				sprite.modulate = _base_modulate
 	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
 		move_and_slide()
 
