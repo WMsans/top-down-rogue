@@ -1,9 +1,9 @@
-id,name,description,type,rarity,cooldown,damage,modifier_slots,pre_attached_modifier1,pre_attached_modifier2,pre_attached_modifier3
-rusty_sword,Rusty Sword,To be written,Melee,Common,0.5,3.0,3,,,
-bone_dagger,Bone Dagger,To be written,Melee,Common,0.25,2.0,3,,,
-broad_axe,Broad Axe,To be written,Melee,Common,0.7,6.0,3,,,
-flame_blade,Flame Blade,To be written,Melee,Common,0.4,5.0,3,lava_emitter,,
-throwing_knife,Throwing Knife,To be written,Ranged,Uncommon,1.0,3.0,3,,,
-fire_orb,Fire Orb,To be written,Ranged,Uncommon,1.5,4.0,3,,,
-spread_shot,Spread Shot,To be written,Ranged,Uncommon,1.2,2.0,3,,,
-boss_staff,Boss Staff,To be written,Ranged,Rare,1.0,3.0,3,,,
+id,name,description,type,rarity,cooldown,damage,weapon_texture,modifier_slots,pre_attached_modifier1,pre_attached_modifier2,pre_attached_modifier3
+rusty_sword,Rusty Sword,To be written,Melee,Common,0.5,3.0,res://textures/Weapons/sword_01c.png,3,,,
+bone_dagger,Bone Dagger,To be written,Melee,Common,0.25,2.0,res://textures/Weapons/sword_01c.png,3,,,
+broad_axe,Broad Axe,To be written,Melee,Common,0.7,6.0,res://textures/Weapons/sword_01c.png,3,,,
+flame_blade,Flame Blade,To be written,Melee,Common,0.4,5.0,res://textures/Weapons/sword_01c.png,3,lava_emitter,,
+throwing_knife,Throwing Knife,To be written,Ranged,Uncommon,1.0,3.0,res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/bow_01a.png,3,,,
+fire_orb,Fire Orb,To be written,Ranged,Uncommon,1.5,4.0,res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/bow_01e.png,3,,,
+spread_shot,Spread Shot,To be written,Ranged,Uncommon,1.2,2.0,res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/bow_02a.png,3,,,
+boss_staff,Boss Staff,To be written,Ranged,Rare,1.0,3.0,res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/bow_03a.png,3,,,
