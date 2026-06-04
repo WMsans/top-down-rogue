@@ -61,6 +61,9 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	var proj := PROJECTILE_SCENE.instantiate()
 	proj.global_position = user.global_position
 	proj.damage = damage
+	proj.crit_chance = get_effective_crit_chance()
+	proj.crit_multiplier = crit_multiplier
+	proj.crit_status = crit_status
 	proj.speed = projectile_speed
 	proj.lifetime = projectile_lifetime
 	proj.direction = direction.normalized()
