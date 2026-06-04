@@ -1,2 +1,12 @@
 id,name,description,suppresses_base_use
 lava_emitter,Lava Emitter,Spawns lava around the user when the weapon is used.,No
+green_crescent,Green Crescent,Spin slash hurls a crescent of green energy that cuts through enemies in its path.,No
+fireball_fan,Fireball Fan,Every swing looses a fan of five fireballs.,No
+icicle_volley,Icicle Volley,Every strike fires five icicles.,No
+gleaming_projectile,Gleaming Projectile,Every swing releases a gleaming projectile that shatters incoming enemy bullets clearing a path through gunfire.,No
+lightning_bolt,Lightning Bolt,Calls a bolt of lightning down onto a marked target with a chance to stun. Not triggered every attack.,No
+arc_volley,Arc Volley,First two hits of a three-hit combo each fire seven projectiles.,No
+triangular_volley,Triangular Volley,Third hit of a three-hit combo sprays thirteen bolts in a triangular volley.,No
+bouncing_bullets,Bouncing Bullets,Forward spin summons a skyward shockwave that looses four bouncing bullets.,No
+splitting_rounds,Splitting Rounds,Follow-up thrust scatters three rounds that split into four shards on impact.,No
+penetrating_shockwave,Penetrating Shockwave,Full charge fires a massive penetrating shockwave that deletes enemy projectiles as it travels.,No
