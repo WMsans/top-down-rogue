@@ -1,9 +1,9 @@
-id,name,type,rarity,cooldown,damage,modifier_slots,pre_attached_modifier1,pre_attached_modifier2,pre_attached_modifier3
-rusty_sword,Rusty Sword,Melee,Common,0.5,3.0,3,,,
-bone_dagger,Bone Dagger,Melee,Common,0.25,2.0,3,,,
-broad_axe,Broad Axe,Melee,Common,0.7,6.0,3,,,
-flame_blade,Flame Blade,Melee,Common,0.4,5.0,3,lava_emitter,,
-throwing_knife,Throwing Knife,Ranged,Uncommon,1.0,3.0,3,,,
-fire_orb,Fire Orb,Ranged,Uncommon,1.5,4.0,3,,,
-spread_shot,Spread Shot,Ranged,Uncommon,1.2,2.0,3,,,
-boss_staff,Boss Staff,Ranged,Rare,1.0,3.0,3,,,
+id,name,description,type,rarity,cooldown,damage,modifier_slots,pre_attached_modifier1,pre_attached_modifier2,pre_attached_modifier3
+rusty_sword,Rusty Sword,To be written,Melee,Common,0.5,3.0,3,,,
+bone_dagger,Bone Dagger,To be written,Melee,Common,0.25,2.0,3,,,
+broad_axe,Broad Axe,To be written,Melee,Common,0.7,6.0,3,,,
+flame_blade,Flame Blade,To be written,Melee,Common,0.4,5.0,3,lava_emitter,,
+throwing_knife,Throwing Knife,To be written,Ranged,Uncommon,1.0,3.0,3,,,
+fire_orb,Fire Orb,To be written,Ranged,Uncommon,1.5,4.0,3,,,
+spread_shot,Spread Shot,To be written,Ranged,Uncommon,1.2,2.0,3,,,
+boss_staff,Boss Staff,To be written,Ranged,Rare,1.0,3.0,3,,,
