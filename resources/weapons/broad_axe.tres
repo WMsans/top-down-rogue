@@ -4,8 +4,5 @@
 
 [resource]
 script = ExtResource("1")
-name = "Broad Axe"
-cooldown = 0.7
-damage = 6.0
 weapon_reach = 36.0
 arc_angle = 2.0943951024

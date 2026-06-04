@@ -25,8 +25,18 @@ var weapon_tiers: Dictionary = {}
 var modifier_tiers: Dictionary = {}
 
 const WEAPON_RESOURCE_DIR := "res://resources/weapons"
+const WEAPON_CSV_PATH := "res://docs/design_docs/weapons.csv"
+const MODIFIER_CSV_PATH := "res://docs/design_docs/modifiers.csv"
 
 var _all_weapons: Array = []
+var _modifier_data: Dictionary = {}  # id -> { name, description, suppresses_base_use }
+var _weapons_by_id: Dictionary = {}  # id -> overlaid Weapon (canonical copy)
+
+const _RARITY_WORDS := {
+	"Common": DropTable.ItemTier.COMMON,
+	"Uncommon": DropTable.ItemTier.UNCOMMON,
+	"Rare": DropTable.ItemTier.RARE,
+}
 
 
 func _ready() -> void:
@@ -34,6 +44,7 @@ func _ready() -> void:
 	weapon_scripts["test"] = preload("res://src/weapons/test_weapon.gd")
 	weapon_scripts["ranged"] = preload("res://src/weapons/ranged_weapon.gd")
 	modifier_scripts["lava_emitter"] = preload("res://src/weapons/lava_emitter_modifier.gd")
+	_load_modifier_data()
 
 	_load_weapon_resources()
 	_build_tier_buckets()
@@ -42,20 +53,70 @@ func _ready() -> void:
 
 func _load_weapon_resources() -> void:
 	_all_weapons.clear()
-	var dir := DirAccess.open(WEAPON_RESOURCE_DIR)
-	if dir == null:
-		push_warning("WeaponRegistry: could not open %s" % WEAPON_RESOURCE_DIR)
-		return
-	for filename in dir.get_files():
-		if not (filename.ends_with(".tres") or filename.ends_with(".res")):
+	_weapons_by_id.clear()
+	for row in CsvTable.parse(WEAPON_CSV_PATH):
+		var id: String = row.get("id", "")
+		if id == "":
 			continue
-		var path := "%s/%s" % [WEAPON_RESOURCE_DIR, filename]
+		var path := "%s/%s.tres" % [WEAPON_RESOURCE_DIR, id]
 		var res := load(path)
-		if res is Weapon:
-			var id := filename.get_basename()
-			_all_weapons.append({ "id": id, "resource": res, "weight": 1.0 })
-		else:
-			push_warning("WeaponRegistry: %s is not a Weapon resource" % path)
+		if not (res is Weapon):
+			push_warning("WeaponRegistry: missing or invalid .tres for '%s' (%s)" % [id, path])
+			continue
+		var weapon: Weapon = res.duplicate(true)
+		_apply_csv_fields(weapon, row)
+		_weapons_by_id[id] = weapon
+		_all_weapons.append({ "id": id, "resource": weapon, "weight": 1.0 })
+
+
+func _apply_csv_fields(weapon: Weapon, row: Dictionary) -> void:
+	weapon.name = row.get("name", weapon.name)
+	weapon.description = row.get("description", "")
+	weapon.cooldown = float(row.get("cooldown", weapon.cooldown))
+	weapon.damage = float(row.get("damage", weapon.damage))
+	weapon.modifier_slot_count = int(row.get("modifier_slots", weapon.modifier_slot_count))
+	weapon.rarity = _map_rarity(row.get("rarity", ""))
+	_validate_type(weapon, row.get("type", ""))
+	_apply_weapon_texture(weapon, row.get("weapon_texture", ""))
+	_apply_pre_attached_modifiers(weapon, row)
+
+
+func _map_rarity(word: String) -> int:
+	if _RARITY_WORDS.has(word):
+		return _RARITY_WORDS[word]
+	push_warning("WeaponRegistry: unknown rarity '%s', defaulting to COMMON" % word)
+	return DropTable.ItemTier.COMMON
+
+
+func _validate_type(weapon: Weapon, type_word: String) -> void:
+	var is_ranged: bool = weapon is RangedWeapon
+	if type_word == "Ranged" and not is_ranged:
+		push_warning("WeaponRegistry: '%s' CSV type Ranged but script is not RangedWeapon" % weapon.name)
+	elif type_word == "Melee" and is_ranged:
+		push_warning("WeaponRegistry: '%s' CSV type Melee but script is RangedWeapon" % weapon.name)
+
+
+func _apply_weapon_texture(weapon: Weapon, tex_path: String) -> void:
+	if tex_path == "":
+		return
+	var tex := load(tex_path)
+	if tex is Texture2D:
+		weapon.weapon_texture = tex
+	else:
+		push_warning("WeaponRegistry: could not load texture '%s'" % tex_path)
+
+
+func _apply_pre_attached_modifiers(weapon: Weapon, row: Dictionary) -> void:
+	for i in range(1, 4):
+		var mod_id: String = row.get("pre_attached_modifier%d" % i, "")
+		if mod_id == "":
+			continue
+		var mod := _make_modifier(mod_id)
+		if mod == null:
+			continue
+		var slot := weapon.find_empty_modifier_slot()
+		if slot >= 0:
+			weapon.add_modifier(slot, mod)
 
 
 func _build_tier_buckets() -> void:
@@ -94,6 +155,14 @@ func get_random_weapon(tier: int) -> _Weapon:
 	return entries[0].weapon_resource.duplicate(true)
 
 
+func get_weapon_by_id(id: String) -> _Weapon:
+	var weapon: Weapon = _weapons_by_id.get(id)
+	if weapon == null:
+		push_warning("WeaponRegistry: unknown weapon id '%s'" % id)
+		return null
+	return weapon.duplicate(true)
+
+
 func get_random_modifier(tier: int) -> _Modifier:
 	var entries: Array = modifier_tiers.get(tier, [])
 	if entries.is_empty():
@@ -110,3 +179,32 @@ func get_random_modifier(tier: int) -> _Modifier:
 		if roll <= cumulative:
 			return entry.modifier_script.new()
 	return entries[0].modifier_script.new()
+
+
+func _load_modifier_data() -> void:
+	_modifier_data.clear()
+	for row in CsvTable.parse(MODIFIER_CSV_PATH):
+		var id: String = row.get("id", "")
+		if id == "":
+			continue
+		_modifier_data[id] = {
+			"name": row.get("name", ""),
+			"description": row.get("description", ""),
+			"suppresses_base_use": row.get("suppresses_base_use", "No").strip_edges() == "Yes",
+		}
+
+
+func _make_modifier(id: String) -> _Modifier:
+	var script: GDScript = modifier_scripts.get(id)
+	if script == null:
+		push_warning("WeaponRegistry: unknown modifier id '%s'" % id)
+		return null
+	var mod: _Modifier = script.new()
+	var data: Dictionary = _modifier_data.get(id, {})
+	if data.has("name"):
+		mod.name = data["name"]
+	if data.has("description"):
+		mod.description = data["description"]
+	if data.has("suppresses_base_use"):
+		mod.suppresses_base_use = data["suppresses_base_use"]
+	return mod
