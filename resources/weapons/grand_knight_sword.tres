@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MeleeWeapon" load_steps=2 format=3 uid="uid://wgrandknightsword"]
+[gd_resource type="Resource" script_class="MeleeWeapon" format=3 uid="uid://cx3h6t1xpkqh6"]
 
 [ext_resource type="Script" path="res://src/weapons/melee_weapon.gd" id="1"]
 
