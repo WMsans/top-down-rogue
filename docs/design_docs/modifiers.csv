@@ -1,0 +1,2 @@
+id,name,description,suppresses_base_use
+lava_emitter,Lava Emitter,Spawns lava around the user when the weapon is used.,No

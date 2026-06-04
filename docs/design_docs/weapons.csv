@@ -1,0 +1,9 @@
+id,name,type,rarity,cooldown,damage,arc_angle,arc_angle_symbol,reach,spread_angle,projectile_count,projectile_speed,projectile_lifetime,modifier_slots,has_pre_attached_modifier
+rusty_sword,Rusty Sword,Melee,Common,0.5,3.0,1.5708,π/2,28.0,,,,,3,No
+bone_dagger,Bone Dagger,Melee,Common,0.25,2.0,1.0472,π/3,20.0,,,,,3,No
+broad_axe,Broad Axe,Melee,Common,0.7,6.0,2.0944,2π/3,36.0,,,,,3,No
+flame_blade,Flame Blade,Melee,Common,0.4,5.0,1.5708,π/2,32.0,,,,,3,Yes (Lava Emitter)
+throwing_knife,Throwing Knife,Ranged,Uncommon,1.0,3.0,,,,0.0,1,180.0,2.0,3,No
+fire_orb,Fire Orb,Ranged,Uncommon,1.5,4.0,,,,0.0,1,90.0,1.5,3,No
+spread_shot,Spread Shot,Ranged,Uncommon,1.2,2.0,,,,30.0,3,150.0,2.0,3,No
+boss_staff,Boss Staff,Ranged,Rare,1.0,3.0,,,,10.0,1,120.0,3.0,3,No
