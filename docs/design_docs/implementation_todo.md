@@ -120,6 +120,48 @@ Based on gameplay.md design document.
 
 ---
 
+## Phase 7: Weapon & Modifier Content Expansion
+
+Implementing all weapons in `weapons.csv` and modifiers in `modifiers.csv`. CSV data and
+`.tres` files already exist; this phase builds the *behavior* the descriptions promise.
+Approach: **foundations first** — build each shared combat system, folding in the
+stat-dependent weapons so every cycle is independently playable. Each sub-project gets its
+own design → plan → build cycle.
+
+Already functional (pure stat variants, no new code): rusty_sword, bone_dagger, broad_axe,
+tao_sword, broadsword, throwing_knife, fire_orb, spread_shot, boss_staff, lava_emitter.
+
+### Sub-project 1: Crit + Status Effects
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P1 | Medium | Crit system | Per-weapon crit chance/damage + on-crit hook |
+| | P1 | High | Status effects: burn & freeze | Burn DoT and freeze/immobilize on enemies |
+| | P1 | Medium | Wire crit weapons | caliburn, flame_sword, frost_sword, heavenly_sword |
+
+### Sub-project 2: Charge + Combos
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P1 | High | Charge input | Hold-to-charge attack input + Weapon charge API |
+| | P1 | High | Combo sequencing | Sequential multi-step attacks (slashes/thrusts/spins) |
+| | P1 | High | Wire charge/combo weapons | willowblade, blood_blade, executioner, void_sword, dragon_fang, grand_knight, deep_dark, phantom_blade, qinggang |
+
+### Sub-project 3: Projectile Behaviors
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P2 | Medium | Bouncing projectiles | Projectiles that ricochet off terrain |
+| | P2 | Medium | Splitting projectiles | Projectiles that split into shards on impact |
+| | P2 | Medium | Penetrating projectiles | Pass-through shockwaves that delete enemy bullets |
+| | P2 | Medium | Bullet-clearing projectiles | Shatter incoming enemy projectiles |
+
+### Sub-project 4: Modifiers
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P2 | Medium | Swing-triggered projectile modifiers | fireball_fan, icicle_volley, gleaming_projectile, green_crescent |
+| | P2 | Medium | Combo-step modifiers | arc_volley, triangular_volley, splitting_rounds, bouncing_bullets |
+| | P2 | Medium | Charge & chance modifiers | penetrating_shockwave, lightning_bolt |
+
+---
+
 ## Difficulty Legend
 
 - **Low**: Straightforward implementation, well-documented patterns
