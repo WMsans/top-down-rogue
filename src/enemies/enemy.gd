@@ -24,6 +24,9 @@ const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
 const FLASH_COLOR: Color = Color(3.0, 3.0, 3.0)
 const FLASH_DECAY: float = 0.12
+const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
+const BURN_FLASH_MAX := 0.7
+const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
 
@@ -37,6 +40,7 @@ var drop_table: DropTable = null
 var weapon: Weapon = null
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _base_modulate: Color = Color.WHITE
+var _burn_flash: float = 0.0
 var _flash_tween: Tween = null
 var _squash_tween: Tween = null
 var _death_tween: Tween = null
@@ -111,6 +115,12 @@ func _ready() -> void:
 	status.name = "StatusComponent"
 	add_child(status)
 
+	var visuals := StatusVisuals.new()
+	visuals.name = "StatusVisuals"
+	add_child(visuals)
+	visuals.setup(status, Vector2(0.0, -14.0))
+	status.burn_tick.connect(_on_burn_tick)
+
 
 func _apply_elite_scaling() -> void:
 	max_health = int(float(max_health) * 3.0)
@@ -184,10 +194,15 @@ func _physics_process(_delta: float) -> void:
 	var tint_status := get_node_or_null("StatusComponent")
 	if tint_status:
 		_base_modulate = tint_status.get_blended_tint()
+		if _burn_flash > 0.0:
+			_burn_flash = maxf(0.0, _burn_flash - _delta * BURN_FLASH_DECAY)
 		if not (_flash_tween and _flash_tween.is_valid()):
 			var sprite := get_node_or_null("Sprite2D")
 			if sprite:
-				sprite.modulate = _base_modulate
+				var m := _base_modulate
+				if _burn_flash > 0.0:
+					m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
+				sprite.modulate = m
 	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
 		move_and_slide()
 
@@ -481,6 +496,10 @@ func _set_base_modulate(c: Color) -> void:
 	var sprite := get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.modulate = c
+
+
+func _on_burn_tick() -> void:
+	_burn_flash = 1.0
 
 
 func _play_hit_flash() -> void:
