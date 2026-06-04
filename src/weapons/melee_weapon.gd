@@ -127,8 +127,7 @@ func _use_impl(user: Node) -> void:
 
 
 func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) -> void:
-	var dmg: int = int(damage)
-	if dmg <= 0:
+	if int(damage) <= 0:
 		return
 	var dir_angle: float = direction.angle()
 	var half_arc_angle: float = arc_angle / 2.0
@@ -161,7 +160,11 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 				var tint: Color = trail_color if "trail_color" in self else Color(1, 1, 1, 1)
 				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
+		var is_crit: bool = roll_crit()
+		var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
 		node.on_hit_impact(node2d.global_position, hit_dir, dmg)
+		if is_crit:
+			_on_crit(node)
 
 
 func _tick_impl(_delta: float) -> void:

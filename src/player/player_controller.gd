@@ -31,6 +31,7 @@ var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
 var _last_safe_position: Vector2 = Vector2.ZERO
+var _status_tint: Color = Color.WHITE
 
 
 func _enter_tree() -> void:
@@ -62,6 +63,10 @@ func _ready() -> void:
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(guidance_center, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
 	_last_safe_position = position
+
+	var status := StatusComponent.new()
+	status.name = "StatusComponent"
+	add_child(status)
 
 
 func _physics_process(delta: float) -> void:
@@ -96,8 +101,19 @@ func _physics_process(delta: float) -> void:
 		_facing_left = false
 	if _color_rect != null:
 		_color_rect.scale.x = -1.0 if _facing_left else 1.0
+	var status := get_node_or_null("StatusComponent")
+	if status and status.is_movement_blocked():
+		input_dir = Vector2.ZERO
+		velocity = Vector2.ZERO
+	elif status:
+		input_dir *= status.get_move_speed_multiplier()
 	_apply_movement(input_dir, delta)
 	velocity += _knockback_velocity
+	var tint_status := get_node_or_null("StatusComponent")
+	if tint_status and _color_rect:
+		_status_tint = tint_status.get_blended_tint()
+		if not (_flash_tween and _flash_tween.is_valid()):
+			_color_rect.modulate = _status_tint
 	move_and_slide()
 	_resolve_terrain_overlap()
 
@@ -280,12 +296,18 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 		inventory.take_damage(damage, hit_dir)
 
 
+func apply_status_damage(amount: int) -> void:
+	var inventory := get_node_or_null("PlayerInventory")
+	if inventory:
+		inventory.take_status_damage(amount)
+
+
 func _play_hit_flash() -> void:
 	if _flash_tween and _flash_tween.is_valid():
 		_flash_tween.kill()
 	_color_rect.modulate = HIT_FLASH_COLOR
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(_color_rect, "modulate", Color.WHITE, 0.12)
+	_flash_tween.tween_property(_color_rect, "modulate", _status_tint, 0.12)
 
 
 func _play_squash() -> void:
