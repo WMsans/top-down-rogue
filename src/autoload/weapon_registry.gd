@@ -25,8 +25,11 @@ var weapon_tiers: Dictionary = {}
 var modifier_tiers: Dictionary = {}
 
 const WEAPON_RESOURCE_DIR := "res://resources/weapons"
+const WEAPON_CSV_PATH := "res://docs/design_docs/weapons.csv"
+const MODIFIER_CSV_PATH := "res://docs/design_docs/modifiers.csv"
 
 var _all_weapons: Array = []
+var _modifier_data: Dictionary = {}  # id -> { name, description, suppresses_base_use }
 
 
 func _ready() -> void:
@@ -34,6 +37,7 @@ func _ready() -> void:
 	weapon_scripts["test"] = preload("res://src/weapons/test_weapon.gd")
 	weapon_scripts["ranged"] = preload("res://src/weapons/ranged_weapon.gd")
 	modifier_scripts["lava_emitter"] = preload("res://src/weapons/lava_emitter_modifier.gd")
+	_load_modifier_data()
 
 	_load_weapon_resources()
 	_build_tier_buckets()
@@ -110,3 +114,32 @@ func get_random_modifier(tier: int) -> _Modifier:
 		if roll <= cumulative:
 			return entry.modifier_script.new()
 	return entries[0].modifier_script.new()
+
+
+func _load_modifier_data() -> void:
+	_modifier_data.clear()
+	for row in CsvTable.parse(MODIFIER_CSV_PATH):
+		var id: String = row.get("id", "")
+		if id == "":
+			continue
+		_modifier_data[id] = {
+			"name": row.get("name", ""),
+			"description": row.get("description", ""),
+			"suppresses_base_use": row.get("suppresses_base_use", "No").strip_edges() == "Yes",
+		}
+
+
+func _make_modifier(id: String) -> _Modifier:
+	var script: GDScript = modifier_scripts.get(id)
+	if script == null:
+		push_warning("WeaponRegistry: unknown modifier id '%s'" % id)
+		return null
+	var mod: _Modifier = script.new()
+	var data: Dictionary = _modifier_data.get(id, {})
+	if data.has("name"):
+		mod.name = data["name"]
+	if data.has("description"):
+		mod.description = data["description"]
+	if data.has("suppresses_base_use"):
+		mod.suppresses_base_use = data["suppresses_base_use"]
+	return mod
