@@ -131,6 +131,28 @@ Numbers above are starting values and may be tuned during implementation/playtes
 - **Emergent:** taking damage and dying enemies already spawn BLOOD terrain → Bloody arises
   naturally from terrain polling.
 
+### Replacing direct lava/fire damage
+
+Standing in lava or fire **no longer deals direct contact damage**. Instead, lava/fire
+contact applies **On Fire** stain, and the burn DoT becomes the only damage from lava/fire.
+This applies to both the player and enemies:
+
+- `LavaDamageChecker` (player) and `TerrainDamageReceiver` (enemy) currently poll the
+  `HAZARD_LAVA | HAZARD_FIRE` mask and call `take_damage` with the cell's `damage`. That
+  direct-damage path for lava/fire is **removed**.
+- The `StatusComponent` terrain poll replaces it: LAVA/EXPLODE_WAVE (fire) under the entity
+  adds On Fire stain instead. Health loss then comes from the burn effect via
+  `apply_status_damage`.
+- Consequence: brief lava contact no longer instantly chips health; it builds On Fire, which
+  keeps burning after you leave — and can be extinguished by Wet/Bloody. This is the intended
+  Noita-style behavior.
+
+Other hazard materials retain their existing handling unless they map to a status here
+(OIL → Oiled, BLOOD → Bloody). If `LavaDamageChecker` / `TerrainDamageReceiver` handle no
+remaining hazards after lava/fire is removed, they are deleted and their per-frame terrain
+poll is subsumed by `StatusComponent`; otherwise their lava/fire branch is stripped and the
+rest left intact.
+
 ### Reactions
 
 Evaluated each frame in order; each rule is a few lines in `StatusRegistry`:
