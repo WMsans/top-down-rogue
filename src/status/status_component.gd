@@ -25,12 +25,20 @@ const _SAMPLE_STEPS := 3
 # are warm now — so terrain just walked over still applies. Must exceed the probe
 # read-back latency in frames for a moving owner to ever get a warm hit.
 const _HISTORY_FRAMES := 3
+# Terrain polling is the dominant per-entity cost. Run it every POLL_INTERVAL
+# render frames (not physics steps), spread across entities by a per-instance
+# phase, accumulating delta so stain rates are unchanged. See the design doc
+# 2026-06-05-status-performance-spiral-design.md.
+const POLL_INTERVAL := 4
 
 var _stains: Dictionary = {}      # id -> float amount
 var _burn_accum: float = 0.0
 var _owner_node: Node = null
 var _terrain_physical: Node = null
 var _origin_history: Array[Vector2] = []  # recent poll positions, oldest first
+var _frame_counter: int = 0
+var _poll_phase: int = 0           # which frame-in-interval this component polls on
+var _accum_poll_delta: float = 0.0  # delta accumulated since the last terrain poll
 
 
 func _ready() -> void:
@@ -38,6 +46,7 @@ func _ready() -> void:
 	var wm: Node = get_tree().get_first_node_in_group("world_manager")
 	if wm != null:
 		_terrain_physical = wm.get_node_or_null("TerrainPhysical")
+	_poll_phase = int(get_instance_id() % POLL_INTERVAL)
 
 
 # --- Stain access ---
@@ -117,8 +126,19 @@ func tick(delta: float) -> void:
 	changed.emit()
 
 
-func _physics_process(delta: float) -> void:
-	_poll_terrain(delta)
+func _process(delta: float) -> void:
+	update(delta)
+
+
+# Per-frame entry. tick() (decay/reactions/burn) runs every frame; the heavy
+# terrain poll runs once per POLL_INTERVAL frames and is handed the accumulated
+# delta so accumulation totals match an every-frame poll.
+func update(delta: float) -> void:
+	_accum_poll_delta += delta
+	_frame_counter += 1
+	if (_frame_counter % POLL_INTERVAL) == _poll_phase:
+		_poll_terrain(_accum_poll_delta)
+		_accum_poll_delta = 0.0
 	tick(delta)
 
 
