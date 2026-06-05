@@ -23,6 +23,9 @@ const KNOCKBACK_DECAY := 12.0
 const ZOOM_PUNCH_THRESHOLD := 10.0
 const ZOOM_PUNCH_AMOUNT := 0.92
 const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
+const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
+const BURN_FLASH_MAX := 0.7
+const BURN_FLASH_DECAY := 6.0
 const MAX_RECOVERY_STEPS := 8
 const RECOVERY_STEP := 2.0
 
@@ -32,8 +35,7 @@ var _squash_tween: Tween
 var _zoom_tween: Tween
 var _last_safe_position: Vector2 = Vector2.ZERO
 var _status_tint: Color = Color.WHITE
-
-
+var _burn_flash: float = 0.0
 func _enter_tree() -> void:
 	var inventory := PlayerInventory.new()
 	inventory.name = "PlayerInventory"
@@ -67,6 +69,12 @@ func _ready() -> void:
 	var status := StatusComponent.new()
 	status.name = "StatusComponent"
 	add_child(status)
+
+	var visuals := StatusVisuals.new()
+	visuals.name = "StatusVisuals"
+	add_child(visuals)
+	visuals.setup(status, Vector2(BODY_WIDTH / 2.0, -10.0))
+	status.burn_tick.connect(_on_burn_tick)
 
 
 func _physics_process(delta: float) -> void:
@@ -112,8 +120,16 @@ func _physics_process(delta: float) -> void:
 	var tint_status := get_node_or_null("StatusComponent")
 	if tint_status and _color_rect:
 		_status_tint = tint_status.get_blended_tint()
+		if _burn_flash > 0.0:
+			_burn_flash = maxf(0.0, _burn_flash - delta * BURN_FLASH_DECAY)
 		if not (_flash_tween and _flash_tween.is_valid()):
-			_color_rect.modulate = _status_tint
+			var m := _status_tint
+			if _burn_flash > 0.0:
+				m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
+			_color_rect.modulate = m
+		if HitReaction.vignette:
+			HitReaction.vignette.set_burn_intensity(
+				StatusRegistry.get_icon_alpha("on_fire", tint_status.get_stain("on_fire")))
 	move_and_slide()
 	_resolve_terrain_overlap()
 
@@ -300,6 +316,10 @@ func apply_status_damage(amount: int) -> void:
 	var inventory := get_node_or_null("PlayerInventory")
 	if inventory:
 		inventory.take_status_damage(amount)
+
+
+func _on_burn_tick() -> void:
+	_burn_flash = 1.0
 
 
 func _play_hit_flash() -> void:

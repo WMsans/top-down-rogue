@@ -70,3 +70,23 @@ func test_blended_tint_shifts_with_status() -> void:
 	var tint: Color = c.get_blended_tint()
 	assert_that(tint).is_not_equal(Color.WHITE)
 	assert_bool(tint.r > tint.b).is_true()  # warm tint
+
+func test_burn_tick_emitted_on_whole_damage() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	var flag := [false]
+	c.burn_tick.connect(func() -> void: flag[0] = true)
+	c.add_stain("on_fire", 5.0)  # burn_dps 4
+	c.tick(1.0)
+	assert_bool(flag[0]).is_true()
+
+func test_burn_tick_not_emitted_without_fire() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	var flag := [false]
+	c.burn_tick.connect(func() -> void: flag[0] = true)
+	c.add_stain("wet", 5.0)
+	c.tick(1.0)
+	assert_bool(flag[0]).is_false()
