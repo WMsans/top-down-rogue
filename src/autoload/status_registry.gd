@@ -121,26 +121,6 @@ func stain_for_material(material_id: int) -> String:
 	return ""
 
 
-# --- Icon helpers (used by StatusVisuals) ---
-const ICON_MIN_ALPHA := 0.25
-
-func get_icon(id: String) -> Texture2D:
-	match id:
-		"on_fire": return load("res://textures/ui/status/Effect_on_fire.png")
-		"wet": return load("res://textures/ui/status/Effect_wet.png")
-		"oiled": return load("res://textures/ui/status/Effect_oiled.png")
-		"bloody": return load("res://textures/ui/status/Effect_bloody.png")
-		"frozen": return load("res://textures/ui/status/Effect_frozen.png")
-		"chilly": return load("res://textures/ui/status/Effect_ingestion_freezing.png")
-	return null
-
-func get_icon_alpha(id: String, stain: float) -> float:
-	var threshold: float = get_threshold(id)
-	if stain < threshold:
-		return 0.0
-	var excess: float = stain - threshold
-	return lerpf(ICON_MIN_ALPHA, 1.0, clampf(excess / 3.0, 0.0, 1.0))
-
 # --- Reaction tuning constants ---
 const WET_EXTINGUISH_RATE := 4.0   # fire stain drained/sec while wet
 const WET_EVAP_BONUS := 1.0        # extra wet evaporation/sec while extinguishing
