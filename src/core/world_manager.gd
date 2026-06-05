@@ -24,6 +24,11 @@ var _light_dispatch_cursor := 0                  # stable round-robin cursor for
 signal chunks_generated(new_coords: Array[Vector2i])
 signal chunk_unloaded(coord: Vector2i)
 
+# Max new chunks to create+generate per frame; the rest stay "desired but not
+# loaded" and are picked up on following frames, spreading the populate/decor/
+# light-bake cost instead of spiking it in one frame.
+const MAX_NEW_CHUNKS_PER_FRAME := 2
+
 func _ready() -> void:
 	add_to_group("world_manager")
 
@@ -96,6 +101,18 @@ func _process(delta: float) -> void:
 	terrain_physical.set_center(Vector2i(tracking_position))
 
 
+# Pure selection of which desired chunks to create this frame: skip already-loaded
+# coords, take at most `cap` in desired order. Static + side-effect-free for testing.
+static func _select_new_chunks(desired: Array, loaded: Dictionary, cap: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for coord in desired:
+		if loaded.has(coord):
+			continue
+		if out.size() >= cap:
+			break
+		out.append(coord)
+	return out
+
 func _update_chunks() -> void:
 	for us in _gen_uniform_sets_to_free:
 		rd.free_rid(us)
@@ -113,11 +130,9 @@ func _update_chunks() -> void:
 	for coord in to_remove:
 		chunk_manager.unload_chunk(coord)
 
-	var new_chunks: Array[Vector2i] = []
-	for coord in desired:
-		if not chunks.has(coord):
-			chunk_manager.create_chunk(coord)
-			new_chunks.append(coord)
+	var new_chunks: Array[Vector2i] = _select_new_chunks(desired, chunks, MAX_NEW_CHUNKS_PER_FRAME)
+	for coord in new_chunks:
+		chunk_manager.create_chunk(coord)
 
 	if not new_chunks.is_empty():
 		var stamp_bytes := LevelManager.build_stamp_bytes(new_chunks)
