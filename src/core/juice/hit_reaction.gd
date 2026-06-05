@@ -74,8 +74,15 @@ func play(spec: HitSpec) -> void:
 
 # ---- HitSpark adapter ----
 
+func _find_game_viewport() -> Node:
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		return player.get_parent()
+	return null
+
+
 func _spawn_sparks(point: Vector2, dir: Vector2, color: Color) -> void:
-	var scene_root := get_tree().current_scene
+	var scene_root := _find_game_viewport()
 	if scene_root == null:
 		return
 	var base_angle: float = dir.angle() if dir.length_squared() > 0.0001 else 0.0
@@ -103,12 +110,12 @@ func _spawn_sparks(point: Vector2, dir: Vector2, color: Color) -> void:
 # ---- DamageNumber adapter ----
 
 func _spawn_damage_number(pos: Vector2, amount: int) -> void:
-	var scene_root := get_tree().current_scene
+	var scene_root := _find_game_viewport()
 	if scene_root == null:
 		return
 	var label: Label = DAMAGE_NUMBER_SCENE.instantiate()
 	label.text = str(amount)
-	label.global_position = pos + SPAWN_OFFSET
+	label.position = pos + SPAWN_OFFSET
 	label.scale = Vector2(0.5, 0.5)
 	label.z_index = 100
 	label.z_as_relative = false
