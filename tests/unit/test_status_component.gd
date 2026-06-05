@@ -15,6 +15,15 @@ class FakeWM extends Node2D:
 class FakeBody extends Node2D:
 	var velocity: Vector2 = Vector2.ZERO
 
+# Counts/records _poll_terrain calls so we can assert the throttle schedule
+# without driving the real GPU probe pipeline.
+class CountingStatus extends StatusComponent:
+	var poll_count: int = 0
+	var last_poll_delta: float = 0.0
+	func _poll_terrain(delta: float) -> void:
+		poll_count += 1
+		last_poll_delta = delta
+
 # Drives the REAL TerrainPhysical probe pipeline (no GPU) with the exact ordering
 # of world_manager: physics polls (queues probes), then _process reads back the
 # PREVIOUS dispatch and dispatches the current pending set. Probe results are
@@ -182,3 +191,21 @@ func test_walking_diagonally_through_lava_accumulates_fire() -> void:
 	var c: StatusComponent = s[0]
 	_drive(c, s[1], s[2], 12)
 	assert_float(c.get_stain("on_fire")).is_greater(0.0)
+
+
+func test_update_throttles_terrain_poll() -> void:
+	var owner: Node = auto_free(Node.new())
+	add_child(owner)
+	var c: CountingStatus = CountingStatus.new()
+	owner.add_child(c)          # _ready runs here
+	c._poll_phase = 0           # deterministic phase for the test
+	c._frame_counter = 0
+	var dt: float = 1.0 / 60.0
+	var frames: int = StatusComponent.POLL_INTERVAL * 3
+	for _i in frames:
+		c.update(dt)
+	# One poll per POLL_INTERVAL frames -> exactly 3 over 3 intervals.
+	assert_int(c.poll_count).is_equal(3)
+	# Each poll receives the delta accumulated across the whole interval,
+	# so stain rates stay identical to the unthrottled version.
+	assert_float(c.last_poll_delta).is_equal_approx(dt * StatusComponent.POLL_INTERVAL, 0.0001)
