@@ -7,6 +7,7 @@ extends Node
 # terrain the owner stands on. Owner must implement apply_status_damage(int).
 
 signal changed
+signal burn_tick  # emitted each time a whole point of burn damage lands
 
 const _EPSILON := 0.01
 
@@ -124,6 +125,7 @@ func _apply_effects(delta: float) -> void:
 		var whole: int = int(_burn_accum)
 		if whole >= 1:
 			_burn_accum -= float(whole)
+			burn_tick.emit()
 			if _owner_node != null and _owner_node.has_method("apply_status_damage"):
 				_owner_node.apply_status_damage(whole)
 
