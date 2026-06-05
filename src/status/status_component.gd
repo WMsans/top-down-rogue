@@ -15,7 +15,7 @@ const _EPSILON := 0.01
 # owner picks up stains from any source cell its body overlaps (not just its
 # centre). See _HISTORY_FRAMES for how the latent probe is handled while moving.
 const _FOOTPRINT_HALF := Vector2(4.0, 6.0)
-const _SAMPLE_STEPS := 3
+const _SAMPLE_STEPS := 2
 # The terrain probe is several frames latent: a cell queried this frame reads back
 # AIR and only returns its real material once a later frame's GPU read-back lands.
 # A standing owner re-samples the same cells until they warm, so it accumulates
