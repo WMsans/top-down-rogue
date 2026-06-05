@@ -11,18 +11,26 @@ signal burn_tick  # emitted each time a whole point of burn damage lands
 
 const _EPSILON := 0.01
 
-# Body footprint half-extents (px) sampled when polling terrain. The probe
-# pipeline is one frame delayed, so a single point under a moving owner is
-# always a cache miss (returns air). Sampling a grid wider than the per-frame
-# travel distance means the cell the owner stands on was warmed by a previous
-# frame's query and reads back correctly.
+# Body footprint half-extents (px) sampled as a grid when polling terrain, so the
+# owner picks up stains from any source cell its body overlaps (not just its
+# centre). See _HISTORY_FRAMES for how the latent probe is handled while moving.
 const _FOOTPRINT_HALF := Vector2(4.0, 6.0)
 const _SAMPLE_STEPS := 3
+# The terrain probe is several frames latent: a cell queried this frame reads back
+# AIR and only returns its real material once a later frame's GPU read-back lands.
+# A standing owner re-samples the same cells until they warm, so it accumulates
+# stain; a moving owner steps onto a fresh (cold) cell every frame and, sampling
+# only its current footprint, would never read terrain back. We also re-sample the
+# footprints of the last few frames' positions — those cells were primed then and
+# are warm now — so terrain just walked over still applies. Must exceed the probe
+# read-back latency in frames for a moving owner to ever get a warm hit.
+const _HISTORY_FRAMES := 3
 
 var _stains: Dictionary = {}      # id -> float amount
 var _burn_accum: float = 0.0
 var _owner_node: Node = null
 var _terrain_physical: Node = null
+var _origin_history: Array[Vector2] = []  # recent poll positions, oldest first
 
 
 func _ready() -> void:
@@ -136,25 +144,48 @@ func _poll_terrain(delta: float) -> void:
 	if not (_owner_node is Node2D):
 		return
 	var origin: Vector2 = (_owner_node as Node2D).global_position
-	# Look ahead along movement so fast movers warm cells before arriving.
+	# Look ahead along movement so the cells we're about to enter get primed.
 	var look_ahead := Vector2.ZERO
 	if "velocity" in _owner_node:
 		look_ahead = (_owner_node.velocity as Vector2) * delta
 
-	# Sample a grid over the footprint; collect each distinct stain once so the
-	# rate is independent of sample count. A moving owner's current cell is warm
-	# in the cache because it fell inside a previous frame's footprint query.
+	# Sample the footprint at the current position (primes cells, reads any already
+	# warm), one step ahead (primes the approach), and at recent positions (warm now
+	# from earlier frames). Dedupe sample origins by cell so a stationary owner
+	# collapses to a single footprint and the probe budget isn't wasted.
+	var origins: Array[Vector2] = []
+	var seen_cells := {}
+	for past in _origin_history:
+		_add_sample_origin(origins, seen_cells, past)
+	_add_sample_origin(origins, seen_cells, origin)
+	_add_sample_origin(origins, seen_cells, origin + look_ahead)
+
+	# Collect each distinct stain once so the rate is independent of sample count.
 	var ids := {}
-	for iy in _SAMPLE_STEPS:
-		var fy: float = lerpf(-_FOOTPRINT_HALF.y, _FOOTPRINT_HALF.y, float(iy) / (_SAMPLE_STEPS - 1))
-		for ix in _SAMPLE_STEPS:
-			var fx: float = lerpf(-_FOOTPRINT_HALF.x, _FOOTPRINT_HALF.x, float(ix) / (_SAMPLE_STEPS - 1))
-			var cell = _terrain_physical.query(origin + Vector2(fx, fy) + look_ahead)
-			if cell == null:
-				continue
-			var id: String = StatusRegistry.stain_for_material(cell.material_id)
-			if id != "":
-				ids[id] = true
+	for so in origins:
+		for iy in _SAMPLE_STEPS:
+			var fy: float = lerpf(-_FOOTPRINT_HALF.y, _FOOTPRINT_HALF.y, float(iy) / (_SAMPLE_STEPS - 1))
+			for ix in _SAMPLE_STEPS:
+				var fx: float = lerpf(-_FOOTPRINT_HALF.x, _FOOTPRINT_HALF.x, float(ix) / (_SAMPLE_STEPS - 1))
+				var cell = _terrain_physical.query(so + Vector2(fx, fy))
+				if cell == null:
+					continue
+				var id: String = StatusRegistry.stain_for_material(cell.material_id)
+				if id != "":
+					ids[id] = true
+
+	# Remember this position so the next few frames can re-sample its (now warm) cells.
+	_origin_history.append(origin)
+	while _origin_history.size() > _HISTORY_FRAMES:
+		_origin_history.pop_front()
 
 	for id in ids:
 		add_stain(id, StatusRegistry.TERRAIN_STAIN_RATE * delta)
+
+
+func _add_sample_origin(origins: Array[Vector2], seen_cells: Dictionary, pos: Vector2) -> void:
+	var key := Vector2i(floori(pos.x), floori(pos.y))
+	if seen_cells.has(key):
+		return
+	seen_cells[key] = true
+	origins.append(pos)
