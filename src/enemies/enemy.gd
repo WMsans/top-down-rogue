@@ -19,6 +19,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var elite_ability: int = EliteAbility.NONE
 @export var separation_radius: float = 16.0
 @export var min_attack_settle_time: float = 0.5
+@export var leash_radius: float = 280.0
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
@@ -54,6 +55,7 @@ var _world_manager: Node = null
 var _status_component: Node = null
 var _attack_range: float = 32.0
 var _player_in_range: bool = false
+var _aggroed: bool = false
 var _speed_base: float = 0.0
 var _teleport_cooldown: float = 0.0
 var _parry_stun_remaining: float = 0.0
@@ -197,7 +199,7 @@ func _physics_process(delta: float) -> void:
 					m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
 				sprite.modulate = m
 	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
-		move_and_slide()
+		_move_with_clamp(delta)
 
 
 func _apply_enrage_if_needed() -> void:
@@ -240,25 +242,42 @@ func _process_idle(delta: float) -> void:
 
 func _process_chase(_delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
-		_change_state(State.WANDER)
-		return
-	if not _player_in_range:
-		_change_state(State.WANDER)
-		return
-	if not _can_see_player():
+		_aggroed = false
 		_change_state(State.WANDER)
 		return
 
 	var to_player := _player_ref.global_position - global_position
-	if to_player.length() < 1.0:
+	var dist := to_player.length()
+	var sees := _can_see_player()
+
+	if sees:
+		_aggroed = true
+	elif not _aggroed:
+		# Sight-to-acquire: never seen the player and currently blocked — don't commit.
+		_change_state(State.WANDER)
+		return
+
+	# Sticky pursuit: give up only once the player escapes the leash radius.
+	if dist > leash_radius:
+		_aggroed = false
+		_change_state(State.WANDER)
+		return
+
+	if dist < 1.0:
 		velocity = Vector2.ZERO
 		return
 
-	var move_dir := to_player.normalized()
+	var move_dir: Vector2
+	if sees:
+		move_dir = to_player.normalized()
+	else:
+		var fd := _nav_field_dir()
+		move_dir = fd if fd != Vector2.ZERO else to_player.normalized()
+
 	move_dir = _apply_separation(move_dir)
 	velocity = move_dir * _get_effective_speed()
 
-	if to_player.length() <= _attack_range and _settle_timer >= min_attack_settle_time:
+	if sees and dist <= _attack_range and _settle_timer >= min_attack_settle_time:
 		velocity = Vector2.ZERO
 		_change_state(State.WINDUP)
 
@@ -341,6 +360,33 @@ func _apply_separation(move_dir: Vector2) -> Vector2:
 	return (move_dir + sep * 0.5).normalized()
 
 
+func _nav_field_dir() -> Vector2:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return Vector2.ZERO
+	var nf = _world_manager.get("nav_field")
+	if nf == null:
+		return Vector2.ZERO
+	return nf.sample_direction(global_position)
+
+
+func _is_blocked(pos: Vector2) -> bool:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return false
+	var nf = _world_manager.get("nav_field")
+	if nf == null:
+		return false
+	return nf.is_solid_world(pos)
+
+
+func _move_with_clamp(delta: float) -> void:
+	var target := global_position + velocity * delta
+	if _is_blocked(Vector2(target.x, global_position.y)):
+		target.x = global_position.x
+	if _is_blocked(Vector2(global_position.x, target.y)):
+		target.y = global_position.y
+	global_position = target
+
+
 func _change_state(new_state: int) -> void:
 	if new_state == State.HURT:
 		_prev_state = _state
@@ -390,7 +436,12 @@ func _execute_attack() -> void:
 func _can_see_player() -> bool:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
-	var space_state := get_world_2d().direct_space_state
+	if not is_inside_tree():
+		return false
+	var world := get_world_2d()
+	if world == null:
+		return false
+	var space_state := world.direct_space_state
 	var query := PhysicsRayQueryParameters2D.create(global_position, _player_ref.global_position)
 	query.collision_mask = 1
 	query.exclude = [self, _player_ref]
