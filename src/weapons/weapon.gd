@@ -35,6 +35,18 @@ func use(user: Node) -> void:
 	_cooldown_timer = cooldown
 
 
+func on_press(user: Node) -> void:
+	use(user)
+
+
+func on_release(_user: Node) -> void:
+	pass
+
+
+func get_charge_ratio() -> float:
+	return 0.0
+
+
 func _use_impl(_user: Node) -> void:
 	pass
 
