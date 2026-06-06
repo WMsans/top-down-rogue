@@ -22,3 +22,13 @@ func test_on_release_default_is_noop() -> void:
 func test_get_charge_ratio_default_zero() -> void:
 	var w := WeaponScript.new()
 	assert_float(w.get_charge_ratio()).is_equal_approx(0.0, 0.001)
+
+
+func test_is_chargeable_default_false() -> void:
+	var w := WeaponScript.new()
+	assert_bool(w.is_chargeable()).is_false()
+
+
+func test_is_charging_default_false() -> void:
+	var w := WeaponScript.new()
+	assert_bool(w.is_charging()).is_false()
