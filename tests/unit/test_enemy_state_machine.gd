@@ -23,7 +23,7 @@ func test_transitions_to_wander_when_player_leaves() -> void:
 	e._player_in_range = false
 	e._player_ref = Node2D.new()
 	add_child(e._player_ref)
-	e._player_ref.global_position = Vector2(10, 0)
+	e._player_ref.global_position = Vector2(200, 0)
 	e._state = Enemy.State.CHASE
 	e._process(0.1)
 	assert_that(e._state).is_equal(Enemy.State.WANDER)
@@ -167,3 +167,30 @@ func test_separation_without_world_returns_input() -> void:
 	e._world_manager = null
 	var result: Vector2 = e._apply_separation(Vector2.RIGHT)
 	assert_vector(result).is_equal(Vector2.RIGHT)
+
+
+func test_player_in_range_true_when_close() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.detection_radius = 100.0
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e.global_position = Vector2.ZERO
+	e._player_ref.global_position = Vector2(50, 0)
+	e._update_player_in_range()
+	assert_bool(e._player_in_range).is_true()
+
+func test_player_in_range_false_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.detection_radius = 100.0
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e.global_position = Vector2.ZERO
+	e._player_ref.global_position = Vector2(200, 0)
+	e._update_player_in_range()
+	assert_bool(e._player_in_range).is_false()
+
+func test_player_in_range_false_when_no_player() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e._player_ref = null
+	e._update_player_in_range()
+	assert_bool(e._player_in_range).is_false()

@@ -87,19 +87,6 @@ func _ready() -> void:
 	_weapon_visual.add_child(_weapon_sprite)
 	add_child(_weapon_visual)
 
-	var detection_area := Area2D.new()
-	detection_area.name = "DetectionArea"
-	detection_area.collision_layer = 0
-	detection_area.collision_mask = 1
-	var shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = detection_radius
-	shape.shape = circle
-	detection_area.add_child(shape)
-	detection_area.body_entered.connect(_on_detection_body_entered)
-	detection_area.body_exited.connect(_on_detection_body_exited)
-	add_child(detection_area)
-
 	_exclaim_label = Label.new()
 	_exclaim_label.name = "ExclaimLabel"
 	_exclaim_label.text = "!"
@@ -155,6 +142,8 @@ func _process(delta: float) -> void:
 
 	if _teleport_cooldown > 0.0:
 		_teleport_cooldown -= delta
+
+	_update_player_in_range()
 
 	if _state == State.DEATH:
 		_process_death(delta)
@@ -481,14 +470,12 @@ func die() -> void:
 	_on_death()
 
 
-func _on_detection_body_entered(body: Node) -> void:
-	if body.is_in_group("player"):
-		_player_in_range = true
-
-
-func _on_detection_body_exited(body: Node) -> void:
-	if body.is_in_group("player"):
+func _update_player_in_range() -> void:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		_player_in_range = false
+		return
+	var r: float = detection_radius
+	_player_in_range = global_position.distance_squared_to(_player_ref.global_position) <= r * r
 
 
 func _tick_knockback(delta: float) -> void:
