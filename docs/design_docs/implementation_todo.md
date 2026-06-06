@@ -141,9 +141,9 @@ tao_sword, broadsword, throwing_knife, fire_orb, spread_shot, boss_staff, lava_e
 ### Sub-project 2: Charge + Combos
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | High | Charge input | Hold-to-charge attack input + Weapon charge API |
-| | P1 | High | Combo sequencing | Sequential multi-step attacks (slashes/thrusts/spins) |
-| | P1 | High | Wire charge/combo weapons | willowblade, blood_blade, executioner, void_sword, dragon_fang, grand_knight, deep_dark, phantom_blade, qinggang |
+| x | P1 | High | Charge input | Hold-to-charge attack input + Weapon charge API |
+| x | P1 | High | Combo sequencing | Sequential multi-step attacks (slashes/thrusts/spins) |
+| x | P1 | High | Wire charge/combo weapons | willowblade, blood_blade, executioner, void_sword, dragon_fang, grand_knight, deep_dark, phantom_blade, qinggang |
 
 ### Sub-project 3: Projectile Behaviors
 | Done | Priority | Difficulty | Task | Description |
