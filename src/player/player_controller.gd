@@ -75,7 +75,7 @@ func _ready() -> void:
 	var visuals := StatusVisuals.new()
 	visuals.name = "StatusVisuals"
 	add_child(visuals)
-	visuals.setup(status, Vector2(BODY_WIDTH / 2.0, -10.0))
+	visuals.setup(status, Vector2(BODY_WIDTH / 2.0, -20.0))   # above the charge bar
 	status.burn_tick.connect(_on_burn_tick)
 
 

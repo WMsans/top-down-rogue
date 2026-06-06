@@ -47,6 +47,14 @@ func get_charge_ratio() -> float:
 	return 0.0
 
 
+func is_chargeable() -> bool:
+	return false
+
+
+func is_charging() -> bool:
+	return false
+
+
 func _use_impl(_user: Node) -> void:
 	pass
 
