@@ -90,6 +90,15 @@ func get_charge_ratio() -> float:
 	return clampf(_charge_time / charge_time_full, 0.0, 1.0)
 
 
+func is_chargeable() -> bool:
+	_ensure_moves()
+	return not charged_moves.is_empty()
+
+
+func is_charging() -> bool:
+	return _charging
+
+
 func on_press(user: Node) -> void:
 	_ensure_moves()
 	if _flurry_active:
@@ -109,10 +118,10 @@ func on_release(user: Node) -> void:
 		return
 	_charging = false
 	_current_user = user
-	if _charge_time < tap_threshold:
-		use(user)            # tap: reuse base wrapper (modifiers + cooldown + _use_impl)
+	if get_charge_ratio() >= 1.0:
+		_fire_charged(user, get_charge_ratio())   # full charge: charged attack
 	else:
-		_fire_charged(user, get_charge_ratio())
+		use(user)                                 # early release: light attack (slash)
 
 
 func _fire_charged(user: Node, ratio: float) -> void:
