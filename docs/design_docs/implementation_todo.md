@@ -162,6 +162,42 @@ tao_sword, broadsword, throwing_knife, fire_orb, spread_shot, boss_staff, lava_e
 
 ---
 
+## Phase 8: Steady-State Performance (Nav + Collision Readback)
+
+After the enemy navigation system landed, frame time regressed to ~47–83 ms (12–21 fps).
+Profiling shows the cost is **not** chunk-gen spikes but a steady-state floor: NavField
+(~24 ms/frame) and TerrainCollisionHelper (~25 ms/frame) together consume the entire frame.
+
+**Shared root cause:** `terrain_modifier` calls `mark_terrain_dirty` for terrain changes
+that don't affect solidity (gas/lava/blood/fire placed into air). Both systems then rebuild
+every frame. NavField additionally has no change-detection and does a full 262 KB GPU
+texture readback + two 65 K-px GDScript loops per dirty chunk. Each sub-project gets its own
+design → plan → build cycle; **measure after sub-project 1 before committing to 2 and 3.**
+
+(Noted, deferred: `terrain_modifier` itself does a full `texture_get_data` readback per
+placement — same anti-pattern, out of current scope.)
+
+### Sub-project 1: Solid-aware dirtying + NavField change-detection
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P0 | Low | Solid-aware dirty filtering | Only dirty nav/collision when a change adds/removes a *solid* material |
+| | P0 | Low | NavField tile change-detection | Hash the downsampled tile; skip rebuild when solidity unchanged (mirrors collision helper) |
+| | P0 | Low | Measure & verify | Confirm steady-state NavField + collision drop to ~0 ms for non-solid effects |
+
+### Sub-project 2: GPU passability buffer (NavField structural)
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P1 | High | GPU 32×32 solidity grid | Collider compute pass emits per-chunk passability grid; read back ~1 KB not 262 KB |
+| | P1 | Medium | NavField consumes GPU grid | Drop `read_region` + GDScript downsample from nav entirely |
+
+### Sub-project 3: Collision-helper readback reduction
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P1 | High | GPU-side segment hash | Read back a small per-chunk hash first; only fetch full segments when changed |
+| | P1 | Medium | Skip coalesced readback when idle | Avoid the ~10 ms `buffer_get_data` when no dispatched chunk changed |
+
+---
+
 ## Difficulty Legend
 
 - **Low**: Straightforward implementation, well-documented patterns
