@@ -1,6 +1,6 @@
 @tool
 class_name GdUnitRichTextMessageWriter
-extends GdUnitMessageWritter
+extends GdUnitMessageWriter
 ## A message writer implementation using [RichTextLabel] for the test report UI.[br]
 ## [br]
 ## This writer implementation writes formatted messages to a [RichTextLabel] using BBCode.[br]
@@ -16,6 +16,7 @@ extends GdUnitMessageWritter
 
 ## The [RichTextLabel] instance to write formatted messages
 var _output: RichTextLabel
+var _report_formatter: GdUnitReportPanel
 
 ## Tracks current position in characters from line start
 var _current_pos := 0
@@ -26,6 +27,7 @@ var _current_pos := 0
 ## [param output] The [RichTextLabel] used for output.
 func _init(output: RichTextLabel) -> void:
 	_output = output
+	_report_formatter = GdUnitReportPanel.new()
 
 
 ## Applies text style flags by wrapping text in BBCode tags.[br]
@@ -45,6 +47,18 @@ func _apply_flags(message: String, flags: int) -> String:
 	if flags & UNDERLINE:
 		message = "[u]%s[/u]" % message
 	return message
+
+
+## Internal implementation of print_stack_trace.[br]
+## [br]
+## [param stack_trace] The stack trace to print.[br]
+## [param _indent] The indentation level.
+func _print_stack_trace(stack_trace: GdUnitStackTrace, _indent: int) -> void:
+	for i in _indent:
+		_output.push_indent(1)
+	_report_formatter.add_stack_trace(_output, stack_trace)
+	for i in _indent:
+		_output.pop()
 
 
 ## Writes a message with formatting.[br]
@@ -85,7 +99,7 @@ func _println_message(message: String, _color: Color, _indent: int, flags: int) 
 ## [param _effect] The text effect to apply (e.g. wave).[br]
 ## [param _align] The text alignment (left or right).[br]
 ## [param flags] The text style flags to apply.
-func _print_at(message: String, cursor_pos: int, _color: Color, _effect: Effect, _align: Align, flags: int) -> void:
+func _print_at(message: String, cursor_pos: int, _color: Color, _effect: GdUnitMessageWriter.Effect, _align: Align, flags: int) -> void:
 	if _align == Align.RIGHT:
 		cursor_pos = cursor_pos - message.length()
 
