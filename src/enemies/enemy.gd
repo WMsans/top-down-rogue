@@ -50,6 +50,8 @@ var _state_timer: float = 0.0
 var _settle_timer: float = 0.0
 var _prev_state: int = State.WANDER
 var _player_ref: Node2D = null
+var _world_manager: Node = null
+var _status_component: Node = null
 var _attack_range: float = 32.0
 var _player_in_range: bool = false
 var _speed_base: float = 0.0
@@ -75,8 +77,9 @@ func _ready() -> void:
 
 	if is_elite:
 		_apply_elite_scaling()
-
-	_player_ref = get_tree().get_first_node_in_group("player")
+	if is_inside_tree():
+		_player_ref = get_tree().get_first_node_in_group("player")
+		_world_manager = get_tree().get_first_node_in_group("world_manager")
 
 	_weapon_visual = Node2D.new()
 	_weapon_visual.name = "WeaponVisual"
@@ -84,19 +87,6 @@ func _ready() -> void:
 	_weapon_sprite.name = "Sprite2D"
 	_weapon_visual.add_child(_weapon_sprite)
 	add_child(_weapon_visual)
-
-	var detection_area := Area2D.new()
-	detection_area.name = "DetectionArea"
-	detection_area.collision_layer = 0
-	detection_area.collision_mask = 1
-	var shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = detection_radius
-	shape.shape = circle
-	detection_area.add_child(shape)
-	detection_area.body_entered.connect(_on_detection_body_entered)
-	detection_area.body_exited.connect(_on_detection_body_exited)
-	add_child(detection_area)
 
 	_exclaim_label = Label.new()
 	_exclaim_label.name = "ExclaimLabel"
@@ -114,6 +104,7 @@ func _ready() -> void:
 	var status := StatusComponent.new()
 	status.name = "StatusComponent"
 	add_child(status)
+	_status_component = status
 
 	var visuals := StatusVisuals.new()
 	visuals.name = "StatusVisuals"
@@ -154,6 +145,8 @@ func _process(delta: float) -> void:
 	if _teleport_cooldown > 0.0:
 		_teleport_cooldown -= delta
 
+	_update_player_in_range()
+
 	if _state == State.DEATH:
 		_process_death(delta)
 		return
@@ -191,7 +184,7 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if _state == State.DEATH:
 		return
-	var tint_status := get_node_or_null("StatusComponent")
+	var tint_status := _status_component
 	if tint_status:
 		_base_modulate = tint_status.get_blended_tint()
 		if _burn_flash > 0.0:
@@ -332,8 +325,13 @@ func _spawn_weapon_drop() -> void:
 
 
 func _apply_separation(move_dir: Vector2) -> Vector2:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return move_dir
+	var grid = _world_manager.swarm_grid
+	if grid == null:
+		return move_dir
 	var sep := Vector2.ZERO
-	for enemy in get_tree().get_nodes_in_group("attackable"):
+	for enemy in grid.query_neighbors(global_position):
 		if enemy == self or not is_instance_valid(enemy):
 			continue
 		var to_other: Vector2 = global_position - enemy.global_position
@@ -474,14 +472,12 @@ func die() -> void:
 	_on_death()
 
 
-func _on_detection_body_entered(body: Node) -> void:
-	if body.is_in_group("player"):
-		_player_in_range = true
-
-
-func _on_detection_body_exited(body: Node) -> void:
-	if body.is_in_group("player"):
+func _update_player_in_range() -> void:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		_player_in_range = false
+		return
+	var r: float = detection_radius
+	_player_in_range = global_position.distance_squared_to(_player_ref.global_position) <= r * r
 
 
 func _tick_knockback(delta: float) -> void:
@@ -560,25 +556,22 @@ func get_facing_direction() -> Vector2:
 
 
 func _is_targeted() -> bool:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
-	return player.get("targeted_enemy") == self
+	return _player_ref.get("targeted_enemy") == self
 
 
 func _get_effective_speed() -> float:
 	var base := _base_effective_speed()
-	var status := get_node_or_null("StatusComponent")
-	if status:
-		base *= status.get_move_speed_multiplier()
+	if _status_component != null and is_instance_valid(_status_component):
+		base *= _status_component.get_move_speed_multiplier()
 	return base
 
 
 func _base_effective_speed() -> float:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return speed
-	var target = player.get("targeted_enemy")
+	var target = _player_ref.get("targeted_enemy")
 	if target == null:
 		return speed
 	if target == self:
@@ -587,10 +580,9 @@ func _base_effective_speed() -> float:
 
 
 func _get_cooldown_multiplier() -> float:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return 1.0
-	var target = player.get("targeted_enemy")
+	var target = _player_ref.get("targeted_enemy")
 	if target == null:
 		return 1.0
 	if target == self:
