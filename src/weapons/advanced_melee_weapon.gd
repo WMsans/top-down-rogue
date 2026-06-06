@@ -35,6 +35,8 @@ var _flurry_active: bool = false
 var _active_move: Move = null
 var _move_phase_time: float = 0.0
 var _spin_from_angle: float = 0.0
+var _spin_trail_angle: float = 0.0
+var _thrust_trail_pos: Vector2 = Vector2.ZERO
 
 
 # ---- Move construction (lazy: runs after .tres stats are applied) ----
@@ -226,6 +228,8 @@ func _start_move_anim(move: Move, direction: Vector2) -> void:
 			if absf(direction.x) > 0.01:
 				_facing_sign = signf(direction.x)
 			_spin_from_angle = _facing_angle
+			_spin_trail_angle = _facing_angle
+			_thrust_trail_pos = _pose_pos
 			_is_swinging = true                      # block idle pose; we drive it below
 
 
@@ -262,6 +266,7 @@ func _animate_thrust(facing: Vector2) -> void:
 	_pose_rot = _blade_to_sprite_rot(_facing_angle)
 	_pose_scale = Vector2(1.0 + 0.25 * out, 1.0 - 0.15 * out)
 	_apply_pose()
+	_spawn_thrust_trails()
 	if _active_move != null and t >= 1.0:
 		_end_special_move()
 
@@ -276,6 +281,7 @@ func _animate_spin() -> void:
 	_pose_rot = _blade_to_sprite_rot(blade)
 	_pose_scale = Vector2(1.1, 0.95)
 	_apply_pose()
+	_spawn_spin_trails(blade)
 	if t >= 1.0:
 		_end_special_move()
 
@@ -284,6 +290,32 @@ func _end_special_move() -> void:
 	_active_move = null
 	_is_swinging = false
 	_process_idle()
+
+
+func _spawn_thrust_trails() -> void:
+	var to_current := _pose_pos - _thrust_trail_pos
+	var dist := to_current.length()
+	var step := weapon_reach * 0.08
+	if dist < step:
+		return
+	var dir := to_current / dist
+	var max_spawns := 16
+	while dist >= step and max_spawns > 0:
+		_thrust_trail_pos += dir * step
+		dist -= step
+		max_spawns -= 1
+		_spawn_trail(_thrust_trail_pos, _facing_angle, _pose_scale)
+	_thrust_trail_pos = _pose_pos
+
+
+func _spawn_spin_trails(blade: float) -> void:
+	var diff := blade - _spin_trail_angle
+	var max_spawns := 32
+	while diff >= trail_angle_step and max_spawns > 0:
+		_spin_trail_angle += trail_angle_step
+		diff -= trail_angle_step
+		max_spawns -= 1
+		_spawn_trail(_pose_pos, _spin_trail_angle, _pose_scale)
 
 
 # ---- Seam for subclasses ----
