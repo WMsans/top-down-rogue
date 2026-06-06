@@ -26,6 +26,8 @@ var collider_write_index: int = 0
 var collider_first_frame: bool = true
 # Manifest entries are [coord.x, coord.y, slot_index] triples; one per dispatched chunk.
 var collider_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
+var solidity_flag_buffer: RID = RID()
+var solidity_dispatch_manifest: PackedInt32Array = PackedInt32Array()
 var dummy_texture: RID
 var render_shader: Shader
 var material_textures: Texture2DArray
@@ -148,6 +150,15 @@ func init_collider_storage_buffer() -> void:
 	collider_dispatch_manifests[1] = PackedInt32Array()
 	# Legacy single buffer retained for any in-flight CPU fallback path; keep as zero RID.
 	collider_storage_buffer = RID()
+
+
+func init_solidity_flag_buffer() -> void:
+	var zero := PackedByteArray()
+	zero.resize(SIM_FLAG_BUFFER_SIZE)
+	zero.fill(0)
+	solidity_flag_buffer = rd.storage_buffer_create(SIM_FLAG_BUFFER_SIZE)
+	rd.buffer_update(solidity_flag_buffer, 0, SIM_FLAG_BUFFER_SIZE, zero)
+	solidity_dispatch_manifest = PackedInt32Array()
 
 
 func init_material_textures() -> void:
@@ -445,6 +456,9 @@ func free_resources() -> void:
 		if collider_output_buffers[i].is_valid():
 			rd.free_rid(collider_output_buffers[i])
 			collider_output_buffers[i] = RID()
+	if solidity_flag_buffer.is_valid():
+		rd.free_rid(solidity_flag_buffer)
+		solidity_flag_buffer = RID()
 	if gen_pipeline.is_valid():
 		rd.free_rid(gen_pipeline)
 		gen_pipeline = RID()
@@ -571,6 +585,25 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 	if chunks.is_empty():
 		return
 
+	var zero := PackedByteArray()
+	zero.resize(SIM_FLAG_BUFFER_SIZE)
+	zero.fill(0)
+	rd.buffer_update(solidity_flag_buffer, 0, SIM_FLAG_BUFFER_SIZE, zero)
+
+	var flag_manifest := PackedInt32Array()
+	var slot_of: Dictionary = {}
+	var next_slot := 0
+	for coord in chunks:
+		if next_slot >= SIM_MAX_CHUNKS:
+			push_warning("dispatch_simulation: loaded chunks exceed SIM_MAX_CHUNKS; solidity flags dropped for extras")
+			break
+		slot_of[coord] = next_slot
+		flag_manifest.append(coord.x)
+		flag_manifest.append(coord.y)
+		flag_manifest.append(next_slot)
+		next_slot += 1
+	solidity_dispatch_manifest = flag_manifest
+
 	var push_even := PackedByteArray()
 	push_even.resize(16)
 	push_even.encode_s32(0, 0)
@@ -588,6 +621,7 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 		var chunk: Chunk = chunks[coord]
 		if not chunk.sim_uniform_set.is_valid():
 			continue
+		push_even.encode_s32(8, slot_of.get(coord, 0))
 		rd.compute_list_bind_uniform_set(compute_list, chunk.sim_uniform_set, 0)
 		rd.compute_list_set_push_constant(compute_list, push_even, push_even.size())
 		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
@@ -599,15 +633,12 @@ func dispatch_simulation(chunks: Dictionary, shadow_grid: Node) -> void:
 		var chunk: Chunk = chunks[coord]
 		if not chunk.sim_uniform_set.is_valid():
 			continue
+		push_odd.encode_s32(8, slot_of.get(coord, 0))
 		rd.compute_list_bind_uniform_set(compute_list, chunk.sim_uniform_set, 0)
 		rd.compute_list_set_push_constant(compute_list, push_odd, push_odd.size())
 		rd.compute_list_dispatch(compute_list, NUM_WORKGROUPS, NUM_WORKGROUPS, 1)
 
 	rd.compute_list_end()
-
-	if world_manager:
-		for coord in chunks:
-			world_manager.mark_terrain_dirty(coord)
 
 	if shadow_grid:
 		var grid_rect: Rect2i = shadow_grid.get_world_rect()
@@ -781,6 +812,13 @@ static func decode_solidity_flags(data: PackedByteArray, manifest: PackedInt32Ar
 			continue
 		changed.append(coord)
 	return changed
+
+
+func read_solidity_flags(chunks: Dictionary) -> Array[Vector2i]:
+	if solidity_dispatch_manifest.is_empty():
+		return []
+	var data := rd.buffer_get_data(solidity_flag_buffer, 0, SIM_FLAG_BUFFER_SIZE)
+	return decode_solidity_flags(data, solidity_dispatch_manifest, chunks)
 
 
 func read_light_buffer_coalesced() -> Dictionary:
