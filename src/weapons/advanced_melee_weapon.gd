@@ -32,6 +32,9 @@ var _combo_reset_timer: float = 0.0
 var _flurry_queue: Array = []
 var _flurry_timer: float = 0.0
 var _flurry_active: bool = false
+var _active_move: Move = null
+var _move_phase_time: float = 0.0
+var _spin_from_angle: float = 0.0
 
 
 # ---- Move construction (lazy: runs after .tres stats are applied) ----
@@ -191,11 +194,99 @@ func _tick_impl(delta: float) -> void:
 			_combo_index = 0
 
 
-# ---- Seams overridden by subclasses / replaced in Task 6 ----
+# ---- Move runner (hits + animations) ----
 
-func _play_move(_move, _user) -> void:
-	pass
+func _play_move(move: Move, user: Node) -> void:
+	if user == null:
+		return
+	var pos: Vector2 = user.global_position
+	var direction := _get_facing_direction(user)
+	_apply_move_hit(move, user, pos, direction)
+	if move.dash_distance > 0.0 and user.has_method("request_dash"):
+		user.request_dash(direction, move.dash_distance * 6.0)
+	_start_move_anim(move, direction)
 
+
+func _apply_move_hit(move: Move, user: Node, pos: Vector2, direction: Vector2) -> void:
+	_carve_and_push(pos, direction, move.reach, move.arc, damage * move.damage_mult)
+	_hit_attackables(user, pos, direction, move.reach, move.arc, move.damage_mult, move.force_crit, move.ignore_parry)
+
+
+func _start_move_anim(move: Move, direction: Vector2) -> void:
+	_active_move = move
+	_move_phase_time = 0.0
+	match move.shape:
+		MoveShape.SLASH:
+			if move.swing_dir != 0.0:
+				_swing_toggle = -move.swing_dir      # _start_swing negates, so pre-invert to force up/down
+			_start_swing(direction)                  # inherited cosmetic swing
+			_active_move = null                      # slash uses the parent state machine
+		MoveShape.THRUST, MoveShape.SPIN:
+			_facing_angle = direction.angle()
+			if absf(direction.x) > 0.01:
+				_facing_sign = signf(direction.x)
+			_spin_from_angle = _facing_angle
+			_is_swinging = true                      # block idle pose; we drive it below
+
+
+func update_visual(delta: float, user: Node) -> void:
+	# Bespoke thrust/spin run here; everything else defers to MeleeWeapon's swing.
+	if _active_move != null and (_active_move.shape == MoveShape.THRUST or _active_move.shape == MoveShape.SPIN):
+		_process_special_move(delta, user)
+		return
+	super.update_visual(delta, user)
+
+
+func _process_special_move(delta: float, user: Node) -> void:
+	if visual == null:
+		return
+	_current_user = user
+	var dir := _get_facing_direction(user)
+	_facing_angle = dir.angle()
+	_move_phase_time += delta
+	var facing := _facing_unit()
+	match _active_move.shape:
+		MoveShape.THRUST:
+			_animate_thrust(facing)
+		MoveShape.SPIN:
+			_animate_spin()
+
+
+func _animate_thrust(facing: Vector2) -> void:
+	# Fast stab out then snap back over ~0.18s.
+	var dur := 0.18
+	var t := clampf(_move_phase_time / dur, 0.0, 1.0)
+	var out := sin(t * PI)                                   # 0 -> 1 -> 0
+	var lunge := weapon_reach * 0.6
+	_pose_pos = _rest_pos() + facing * (rest_forward + lunge * out)
+	_pose_rot = _blade_to_sprite_rot(_facing_angle)
+	_pose_scale = Vector2(1.0 + 0.25 * out, 1.0 - 0.15 * out)
+	_apply_pose()
+	if _active_move != null and t >= 1.0:
+		_end_special_move()
+
+
+func _animate_spin() -> void:
+	# One full blade revolution around the player over ~0.3s, with a body lean.
+	var dur := 0.3
+	var t := clampf(_move_phase_time / dur, 0.0, 1.0)
+	var eased := _ease_out_cubic(t)
+	var blade := _spin_from_angle + TAU * eased
+	_pose_pos = _rest_pos() + Vector2(cos(blade), sin(blade)) * (weapon_reach * 0.35)
+	_pose_rot = _blade_to_sprite_rot(blade)
+	_pose_scale = Vector2(1.1, 0.95)
+	_apply_pose()
+	if t >= 1.0:
+		_end_special_move()
+
+
+func _end_special_move() -> void:
+	_active_move = null
+	_is_swinging = false
+	_process_idle()
+
+
+# ---- Seam for subclasses ----
 
 func _on_charge_tick(_user, _delta: float, _ratio: float) -> void:
 	pass
