@@ -87,6 +87,7 @@ inventory={
 
 [layer_names]
 
+2d_physics/layer_3="enemy_body"
 2d_physics/layer_8="attackable_hit"
 
 [physics]
