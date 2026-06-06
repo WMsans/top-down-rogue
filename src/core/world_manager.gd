@@ -24,7 +24,7 @@ var _light_dispatch_cursor := 0                  # stable round-robin cursor for
 signal chunks_generated(new_coords: Array[Vector2i])
 signal chunk_unloaded(coord: Vector2i)
 
-var swarm_grid: SwarmGrid = SwarmGrid.new(32.0)
+var swarm_grid: RefCounted = preload("res://src/core/swarm_grid.gd").new(32.0)
 
 # Max new chunks to create+generate per frame; the rest stay "desired but not
 # loaded" and are picked up on following frames, spreading the populate/decor/
