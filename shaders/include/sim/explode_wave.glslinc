@@ -95,6 +95,9 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 			int new_health = health - damage;
 			if (new_health <= 0) {
 				imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
+				if (HAS_COLLIDER[material]) {
+					atomicOr(solidity.flags[pc.chunk_slot], 1u);
+				}
 			} else {
 				int new_temp = min(255, temperature + max_neighbor_power);
 				imageStore(chunk_tex, pos, make_pixel(material, new_health, new_temp));
@@ -124,6 +127,9 @@ bool simulate_explode_wave(ivec2 pos, inout vec4 pixel, inout int material,
 			int new_health = health - damage;
 			if (new_health <= 0) {
 				imageStore(chunk_tex, pos, make_pixel(MAT_AIR, 0, SCORCH_TEMP));
+				if (HAS_COLLIDER[material]) {
+					atomicOr(solidity.flags[pc.chunk_slot], 1u);
+				}
 			} else {
 				imageStore(chunk_tex, pos, make_pixel(material, new_health, temperature));
 			}

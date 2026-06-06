@@ -48,6 +48,7 @@ func _ready() -> void:
 	compute_device.init_shaders()
 	compute_device.init_dummy_texture()
 	compute_device.init_collider_storage_buffer()
+	compute_device.init_solidity_flag_buffer()
 	compute_device.render_shader = preload("res://shaders/visual/render_chunk.gdshader")
 	compute_device.init_material_textures()
 	compute_device.init_gen_stamp_buffer()
@@ -100,6 +101,8 @@ func _process(delta: float) -> void:
 		return
 	swarm_grid.rebuild(get_tree().get_nodes_in_group("attackable"))
 	_update_chunks()
+	for coord in compute_device.read_solidity_flags(chunks):
+		mark_terrain_dirty(coord)
 	_run_simulation()
 	_collision_helper.rebuild_dirty(chunks, delta)
 	if nav_field != null:

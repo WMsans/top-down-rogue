@@ -81,5 +81,9 @@ void simulate_burning(
 		}
 	}
 
+	int orig_mat = get_material(pixel);
 	imageStore(chunk_tex, pos, make_pixel(material, health, temperature));
+	if (HAS_COLLIDER[orig_mat] && !HAS_COLLIDER[material]) {
+		atomicOr(solidity.flags[pc.chunk_slot], 1u);
+	}
 }
