@@ -290,3 +290,12 @@ func _end_special_move() -> void:
 
 func _on_charge_tick(_user, _delta: float, _ratio: float) -> void:
 	pass
+
+
+func _process_idle() -> void:
+	super._process_idle()
+	if _charging and _sprite != null:
+		var r := get_charge_ratio()
+		_sprite.modulate = Color(1.0, 1.0, 1.0).lerp(Color(2.0, 1.6, 0.6), r)
+	elif _sprite != null:
+		_sprite.modulate = Color(1.0, 1.0, 1.0)
