@@ -57,6 +57,10 @@ const COLLIDER_MAX_SEGMENTS_PER_SLOT := 4096
 const COLLIDER_SLOT_STRIDE_BYTES := 4 + COLLIDER_MAX_SEGMENTS_PER_SLOT * 4 * 4
 const COLLIDER_COALESCED_BUFFER_SIZE := COLLIDER_MAX_DISPATCH_PER_FRAME * COLLIDER_SLOT_STRIDE_BYTES
 
+const SIM_MAX_CHUNKS := 64
+const SIM_FLAG_SLOT_BYTES := 4
+const SIM_FLAG_BUFFER_SIZE := SIM_MAX_CHUNKS * SIM_FLAG_SLOT_BYTES
+
 const PROBE_BUDGET := 256
 const PROBE_INPUT_BUFFER_SIZE := PROBE_BUDGET * 8
 const PROBE_OUTPUT_BUFFER_SIZE := PROBE_BUDGET * 4
@@ -760,6 +764,23 @@ func decode_collider_slice(data: PackedByteArray, slot: int) -> PackedVector2Arr
 		segments.append(Vector2(x1, y1))
 		segments.append(Vector2(x2, y2))
 	return segments
+
+
+static func decode_solidity_flags(data: PackedByteArray, manifest: PackedInt32Array, loaded: Dictionary) -> Array[Vector2i]:
+	var changed: Array[Vector2i] = []
+	var entry_count := manifest.size() / 3
+	for i in range(entry_count):
+		var slot: int = manifest[i * 3 + 2]
+		var off := slot * SIM_FLAG_SLOT_BYTES
+		if off + 4 > data.size():
+			continue
+		if data.decode_u32(off) == 0:
+			continue
+		var coord := Vector2i(manifest[i * 3], manifest[i * 3 + 1])
+		if not loaded.has(coord):
+			continue
+		changed.append(coord)
+	return changed
 
 
 func read_light_buffer_coalesced() -> Dictionary:
