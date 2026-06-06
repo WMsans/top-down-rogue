@@ -47,29 +47,30 @@ func test_death_on_zero_health() -> void:
 
 func test_elite_stat_scaling() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.max_health = 20
+	e.health = e.max_health
 	e.speed = 100.0
 	e.is_elite = true
-	e._ready()
+	e._apply_elite_scaling()
 	assert_that(e.max_health).is_equal(60)
 	assert_that(e.speed).is_greater(100.0)
 
 func test_elite_tank_speed() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.max_health = 20
+	e.health = e.max_health
 	e.speed = 100.0
 	e._speed_base = 100.0
 	e.is_elite = true
 	e.elite_ability = Enemy.EliteAbility.TANK
-	e._ready()
+	e._apply_elite_scaling()
 	assert_that(e.speed).is_equal(70.0)
 
 func test_elite_fast_windup_floor() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.health = e.max_health
 	e.windup_duration = 0.3
 	e.is_elite = true
 	e.elite_ability = Enemy.EliteAbility.FAST
-	e._ready()
+	e._apply_elite_scaling()
 	assert_that(e.windup_duration).is_equal(0.2)
 
 func test_wander_enters_pause_after_move() -> void:
@@ -83,6 +84,8 @@ func test_wander_enters_pause_after_move() -> void:
 
 func test_wander_stays_wander_without_player() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	await get_tree().process_frame
 	e._state = Enemy.State.WANDER
 	e._player_in_range = false
 	e._player_ref = null
@@ -132,3 +135,35 @@ func test_parry_stun_extends_cooldown() -> void:
 	e._process(0.05)
 	# After 0.05s, normal cooldown would be ~0.05 remaining; stun should keep it >= 0.4.
 	assert_that(e._state_timer).is_greater(0.3)
+
+# Minimal stand-in for WorldManager exposing a swarm_grid for separation tests.
+class FakeWorld extends Node:
+	var swarm_grid = preload("res://src/core/swarm_grid.gd").new(32.0)
+
+func test_separation_uses_grid_neighbors_only() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e.global_position = Vector2(0, 0)
+	e.separation_radius = 16.0
+
+	# A crowding neighbour up-right from self.
+	var other: MockEnemy = auto_free(MockEnemy.new())
+	add_child(other)
+	other.global_position = Vector2(8, 4)
+
+	var world: FakeWorld = auto_free(FakeWorld.new())
+	add_child(world)
+	world.swarm_grid.rebuild([e, other])
+	e._world_manager = world
+
+	# Moving right; separation should bend the vector away from +X
+	# (its x-component drops below the raw 1.0).
+	var result: Vector2 = e._apply_separation(Vector2.RIGHT)
+	assert_bool(result.x < 1.0).is_true()
+
+func test_separation_without_world_returns_input() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e._world_manager = null
+	var result: Vector2 = e._apply_separation(Vector2.RIGHT)
+	assert_vector(result).is_equal(Vector2.RIGHT)

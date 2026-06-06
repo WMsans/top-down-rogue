@@ -50,6 +50,7 @@ var _state_timer: float = 0.0
 var _settle_timer: float = 0.0
 var _prev_state: int = State.WANDER
 var _player_ref: Node2D = null
+var _world_manager: Node = null
 var _attack_range: float = 32.0
 var _player_in_range: bool = false
 var _speed_base: float = 0.0
@@ -75,8 +76,9 @@ func _ready() -> void:
 
 	if is_elite:
 		_apply_elite_scaling()
-
-	_player_ref = get_tree().get_first_node_in_group("player")
+	if is_inside_tree():
+		_player_ref = get_tree().get_first_node_in_group("player")
+		_world_manager = get_tree().get_first_node_in_group("world_manager")
 
 	_weapon_visual = Node2D.new()
 	_weapon_visual.name = "WeaponVisual"
@@ -332,8 +334,13 @@ func _spawn_weapon_drop() -> void:
 
 
 func _apply_separation(move_dir: Vector2) -> Vector2:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return move_dir
+	var grid = _world_manager.swarm_grid
+	if grid == null:
+		return move_dir
 	var sep := Vector2.ZERO
-	for enemy in get_tree().get_nodes_in_group("attackable"):
+	for enemy in grid.query_neighbors(global_position):
 		if enemy == self or not is_instance_valid(enemy):
 			continue
 		var to_other: Vector2 = global_position - enemy.global_position
