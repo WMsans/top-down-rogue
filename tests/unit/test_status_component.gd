@@ -209,3 +209,26 @@ func test_update_throttles_terrain_poll() -> void:
 	# Each poll receives the delta accumulated across the whole interval,
 	# so stain rates stay identical to the unthrottled version.
 	assert_float(c.last_poll_delta).is_equal_approx(dt * StatusComponent.POLL_INTERVAL, 0.0001)
+
+
+func test_tick_does_not_emit_when_idle() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	var count := [0]
+	c.changed.connect(func() -> void: count[0] += 1)
+	c.tick(1.0)  # no stains, no burn
+	assert_int(count[0]).is_equal(0)
+
+
+func test_tick_emits_when_decaying_stain() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_stain("wet", 5.0)
+	var count := [0]
+	c.changed.connect(func() -> void: count[0] += 1)
+	c.tick(1.0)  # decay changes the stain -> should emit
+	assert_int(count[0]).is_equal(1)
+
+
+func test_idle_tick_keeps_stains_empty() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.tick(1.0)
+	assert_int(c._stains.size()).is_equal(0)

@@ -120,6 +120,11 @@ func is_movement_blocked() -> bool:
 # --- Per-frame update ---
 
 func tick(delta: float) -> void:
+	# Idle fast path: nothing to decay, no burn in flight -> no work, no signal.
+	# Reactions only matter when at least one stain is present, so an empty
+	# component with no pending burn can safely do nothing this frame.
+	if _stains.is_empty() and _burn_accum == 0.0:
+		return
 	_decay(delta)
 	StatusRegistry.apply_reactions(self, delta)
 	_apply_effects(delta)

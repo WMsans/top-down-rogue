@@ -24,6 +24,8 @@ var _light_dispatch_cursor := 0                  # stable round-robin cursor for
 signal chunks_generated(new_coords: Array[Vector2i])
 signal chunk_unloaded(coord: Vector2i)
 
+var swarm_grid: RefCounted = preload("res://src/core/swarm_grid.gd").new(32.0)
+
 # Max new chunks to create+generate per frame; the rest stay "desired but not
 # loaded" and are picked up on following frames, spreading the populate/decor/
 # light-bake cost instead of spiking it in one frame.
@@ -92,6 +94,7 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	swarm_grid.rebuild(get_tree().get_nodes_in_group("attackable"))
 	_update_chunks()
 	_run_simulation()
 	_collision_helper.rebuild_dirty(chunks, delta)
