@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="MeleeWeapon" format=3 uid="uid://wexecutioner"]
+[gd_resource type="Resource" script_class="ExecutionerWeapon" format=3 uid="uid://wexecutioner"]
 
-[ext_resource type="Script" path="res://src/weapons/melee_weapon.gd" id="1"]
+[ext_resource type="Script" path="res://src/weapons/executioner_weapon.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
