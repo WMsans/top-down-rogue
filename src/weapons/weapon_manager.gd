@@ -12,6 +12,7 @@ var _player: Node = null
 var _visual: Node2D = null
 var _sprite: Sprite2D = null
 var _active_weapon: Weapon = null
+var _pressed_slot: int = -1
 
 
 func _ready() -> void:
@@ -42,21 +43,34 @@ func _setup_visual() -> void:
 func _input(event: InputEvent) -> void:
 	if ConsoleManager.is_open():
 		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		var slot := -1
-		match event.keycode:
-			KEY_Z: slot = 0
-			KEY_X: slot = 1
-			KEY_C: slot = 2
-		if _inventory == null:
-			return
+	if not (event is InputEventKey) or event.echo:
+		return
+	var slot := _slot_for_keycode(event.keycode)
+	if slot < 0 or _inventory == null:
+		return
+	if event.pressed:
 		var weapon = _inventory.get_weapon(slot)
-		if slot >= 0 and slot < PlayerInventory.MAX_WEAPON_SLOTS and weapon != null:
-			if weapon.is_ready():
-				_activate_weapon(weapon)
-				weapon.use(_player)
-				_inventory.active_weapon_slot = slot
-				weapon_activated.emit(slot)
+		if slot < PlayerInventory.MAX_WEAPON_SLOTS and weapon != null:
+			_activate_weapon(weapon)
+			_inventory.active_weapon_slot = slot
+			_pressed_slot = slot
+			weapon.on_press(_player)
+			weapon_activated.emit(slot)
+	else:
+		# Route the release to whatever weapon received the press for this slot.
+		if slot == _pressed_slot:
+			var weapon = _inventory.get_weapon(slot)
+			if weapon != null:
+				weapon.on_release(_player)
+			_pressed_slot = -1
+
+
+func _slot_for_keycode(keycode: int) -> int:
+	match keycode:
+		KEY_Z: return 0
+		KEY_X: return 1
+		KEY_C: return 2
+	return -1
 
 
 func _activate_weapon(weapon: Weapon) -> void:

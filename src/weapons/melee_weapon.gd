@@ -113,8 +113,13 @@ func _use_impl(user: Node) -> void:
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
+	_carve_and_push(pos, direction, weapon_reach, arc_angle, damage)
+	_hit_attackables(user, pos, direction, weapon_reach, arc_angle, 1.0, false, false)
+
+
+func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float, dmg: float) -> void:
 	var fluids: Array[int] = MaterialRegistry.get_fluids()
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, push_speed, 0.25, fluids)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, push_speed, 0.25, fluids)
 	var solids: Array[int] = [
 		MaterialRegistry.MAT_DIRT,
 		MaterialRegistry.MAT_WOOD,
@@ -122,19 +127,19 @@ func _use_impl(user: Node) -> void:
 		MaterialRegistry.MAT_COAL,
 		MaterialRegistry.MAT_ICE,
 	]
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, 0.0, 0.0, solids, damage)
-	_hit_attackables_in_arc(user, pos, direction)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, 0.0, 0.0, 0.0, solids, dmg)
 
 
-func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) -> void:
-	if int(damage) <= 0:
+func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: float, arc: float, dmg_mult: float, force_crit: bool, ignore_parry: bool) -> void:
+	var base_dmg: float = damage * dmg_mult
+	if int(base_dmg) <= 0:
 		return
 	var dir_angle: float = direction.angle()
-	var half_arc_angle: float = arc_angle / 2.0
+	var half_arc_angle: float = arc / 2.0
 
 	var space_state: PhysicsDirectSpaceState2D = user.get_world_2d().direct_space_state
 	var circle: CircleShape2D = CircleShape2D.new()
-	circle.radius = weapon_reach
+	circle.radius = reach
 	var params: PhysicsShapeQueryParameters2D = PhysicsShapeQueryParameters2D.new()
 	params.shape = circle
 	params.transform = Transform2D(0.0, origin)
@@ -152,16 +157,16 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		if not node.has_method("on_hit_impact"):
 			continue
 		var node2d := node as Node2D
-		if not _is_inside_arc(origin, node2d.global_position, dir_angle, half_arc_angle, weapon_reach):
+		if not _is_inside_arc(origin, node2d.global_position, dir_angle, half_arc_angle, reach):
 			continue
 		var hit_dir: Vector2 = (node2d.global_position - origin).normalized()
-		if node.has_method("try_parry"):
+		if not ignore_parry and node.has_method("try_parry"):
 			if node.try_parry(user, node2d.global_position, hit_dir):
 				var tint: Color = trail_color if "trail_color" in self else Color(1, 1, 1, 1)
 				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
-		var is_crit: bool = roll_crit()
-		var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
+		var is_crit: bool = force_crit or roll_crit()
+		var dmg: int = int(base_dmg * crit_multiplier) if is_crit else int(base_dmg)
 		node.on_hit_impact(node2d.global_position, hit_dir, dmg)
 		if is_crit:
 			_on_crit(node)

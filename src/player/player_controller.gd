@@ -20,6 +20,7 @@ var targeted_enemy: Node2D = null
 
 const KNOCKBACK_SPEED := 20.0
 const KNOCKBACK_DECAY := 12.0
+const DASH_DECAY := 9.0
 const ZOOM_PUNCH_THRESHOLD := 10.0
 const ZOOM_PUNCH_AMOUNT := 0.92
 const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
@@ -30,6 +31,7 @@ const MAX_RECOVERY_STEPS := 8
 const RECOVERY_STEP := 2.0
 
 var _knockback_velocity: Vector2 = Vector2.ZERO
+var _dash_velocity: Vector2 = Vector2.ZERO
 var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
@@ -94,6 +96,7 @@ func _physics_process(delta: float) -> void:
 	var input_dir := _get_input_direction()
 	if _knockback_velocity.length_squared() > 0.01:
 		_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
+	_decay_dash(delta)
 	_update_target()
 	var enemy_dir := _find_closest_enemy_direction()
 	var is_pushing_wall := input_dir != Vector2.ZERO and _is_blocked_by_terrain(input_dir)
@@ -116,7 +119,7 @@ func _physics_process(delta: float) -> void:
 	elif status:
 		input_dir *= status.get_move_speed_multiplier()
 	_apply_movement(input_dir, delta)
-	velocity += _knockback_velocity
+	velocity += _knockback_velocity + _dash_velocity
 	var tint_status := get_node_or_null("StatusComponent")
 	if tint_status and _color_rect:
 		_status_tint = tint_status.get_blended_tint()
@@ -297,6 +300,19 @@ func get_facing_direction() -> Vector2:
 
 func is_facing_left() -> bool:
 	return _facing_left
+
+
+func request_dash(direction: Vector2, speed: float) -> void:
+	if direction.length_squared() < 0.0001:
+		return
+	_dash_velocity = direction.normalized() * speed
+
+
+func _decay_dash(delta: float) -> void:
+	if _dash_velocity.length_squared() > 0.01:
+		_dash_velocity *= exp(-DASH_DECAY * delta)
+	else:
+		_dash_velocity = Vector2.ZERO
 
 
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
