@@ -4,6 +4,7 @@ extends Node
 const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
 const LavaEmitterModifierScript := preload("res://src/weapons/lava_emitter_modifier.gd")
+const ChargeBarScript := preload("res://src/ui/charge_bar.gd")
 
 signal weapon_activated(slot_index: int)
 
@@ -13,6 +14,7 @@ var _visual: Node2D = null
 var _sprite: Sprite2D = null
 var _active_weapon: Weapon = null
 var _pressed_slot: int = -1
+var _charge_bar: ChargeBar = null
 
 
 func _ready() -> void:
@@ -38,6 +40,10 @@ func _setup_visual() -> void:
 	_visual.add_child(_sprite)
 	_player.add_child(_visual)
 	_visual.visible = false
+
+	_charge_bar = ChargeBarScript.new()
+	_charge_bar.name = "ChargeBar"
+	_player.add_child(_charge_bar)
 
 
 func _input(event: InputEvent) -> void:
@@ -85,6 +91,17 @@ func _activate_weapon(weapon: Weapon) -> void:
 func _process(delta: float) -> void:
 	if _active_weapon != null and _active_weapon.has_visual():
 		_active_weapon.update_visual(delta, _player)
+	_update_charge_bar()
+
+
+func _update_charge_bar() -> void:
+	if _charge_bar == null:
+		return
+	if _active_weapon != null and _active_weapon.is_charging():
+		_charge_bar.set_active(true)
+		_charge_bar.set_ratio(_active_weapon.get_charge_ratio())
+	else:
+		_charge_bar.set_active(false)
 
 
 func _physics_process(delta: float) -> void:
