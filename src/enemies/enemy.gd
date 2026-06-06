@@ -51,6 +51,7 @@ var _settle_timer: float = 0.0
 var _prev_state: int = State.WANDER
 var _player_ref: Node2D = null
 var _world_manager: Node = null
+var _status_component: Node = null
 var _attack_range: float = 32.0
 var _player_in_range: bool = false
 var _speed_base: float = 0.0
@@ -103,6 +104,7 @@ func _ready() -> void:
 	var status := StatusComponent.new()
 	status.name = "StatusComponent"
 	add_child(status)
+	_status_component = status
 
 	var visuals := StatusVisuals.new()
 	visuals.name = "StatusVisuals"
@@ -182,7 +184,7 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if _state == State.DEATH:
 		return
-	var tint_status := get_node_or_null("StatusComponent")
+	var tint_status := _status_component
 	if tint_status:
 		_base_modulate = tint_status.get_blended_tint()
 		if _burn_flash > 0.0:
@@ -554,25 +556,22 @@ func get_facing_direction() -> Vector2:
 
 
 func _is_targeted() -> bool:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
-	return player.get("targeted_enemy") == self
+	return _player_ref.get("targeted_enemy") == self
 
 
 func _get_effective_speed() -> float:
 	var base := _base_effective_speed()
-	var status := get_node_or_null("StatusComponent")
-	if status:
-		base *= status.get_move_speed_multiplier()
+	if _status_component != null and is_instance_valid(_status_component):
+		base *= _status_component.get_move_speed_multiplier()
 	return base
 
 
 func _base_effective_speed() -> float:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return speed
-	var target = player.get("targeted_enemy")
+	var target = _player_ref.get("targeted_enemy")
 	if target == null:
 		return speed
 	if target == self:
@@ -581,10 +580,9 @@ func _base_effective_speed() -> float:
 
 
 func _get_cooldown_multiplier() -> float:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return 1.0
-	var target = player.get("targeted_enemy")
+	var target = _player_ref.get("targeted_enemy")
 	if target == null:
 		return 1.0
 	if target == self:
