@@ -58,8 +58,13 @@ automatically, scales with the camera, and needs no projection math.
   - `is_chargeable()` → `not charged_moves.is_empty()`.
   - `is_charging()` → `_charging`.
 - **`ChargeBar` (new, `src/ui/charge_bar.gd`) — `Node2D`** positioned at
-  approximately `(0, -14)` above the body (body top edge is y = -6). Custom
-  `_draw`:
+  approximately `(0, -22)` — **above the status-icon row**, not on the body.
+  The player's `StatusVisuals` anchors icons at `y = -10` and they are ~14 px
+  tall (`ICON_DISPLAY_PX`), so they span roughly y = -17 to -3
+  (`src/player/player_controller.gd:78`, `src/status/status_visuals.gd`). The
+  bar must clear that: `y = -22` leaves a small gap above the icon row. Use a
+  fixed position (do not overlap the icons even when no statuses are active).
+  Custom `_draw`:
   - Background: ~18×3 px dark rounded/plain rect.
   - Fill: width = `ratio × bar_width`, drawn over the background.
   - Public setters, e.g. `set_ratio(r: float)` storing the ratio and calling
@@ -100,7 +105,8 @@ key released
 ## Visual defaults
 
 - Bar size: ~18×3 px.
-- Position: `(0, -14)` relative to the player (just above the 8×12 body).
+- Position: `(0, -22)` relative to the player — above the status-icon row (which
+  spans ~y = -17 to -3) so the two never overlap.
 - Colors: dark background; amber fill while charging; brighter gold when full.
 - Full vibration: ±1 px random jitter per frame.
 
