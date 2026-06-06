@@ -25,6 +25,7 @@ signal chunks_generated(new_coords: Array[Vector2i])
 signal chunk_unloaded(coord: Vector2i)
 
 var swarm_grid: RefCounted = preload("res://src/core/swarm_grid.gd").new(32.0)
+var nav_field  # NavField
 
 # Max new chunks to create+generate per frame; the rest stay "desired but not
 # loaded" and are picked up on following frames, spreading the populate/decor/
@@ -80,10 +81,13 @@ func _ready() -> void:
 	add_child(lights_container)
 
 	TerrainSurface.register_adapter(self)
+	nav_field = preload("res://src/core/nav/nav_field.gd").new(self)
 
 func mark_terrain_dirty(coord: Vector2i) -> void:
 	if _collision_helper != null:
 		_collision_helper.mark_dirty(coord)
+	if nav_field != null:
+		nav_field.mark_dirty(coord)
 
 
 func _exit_tree() -> void:
@@ -98,6 +102,8 @@ func _process(delta: float) -> void:
 	_update_chunks()
 	_run_simulation()
 	_collision_helper.rebuild_dirty(chunks, delta)
+	if nav_field != null:
+		nav_field.update(tracking_position, delta)
 	_run_terrain_probes()
 	_update_lights()
 	_drain_terrain_impacts()
