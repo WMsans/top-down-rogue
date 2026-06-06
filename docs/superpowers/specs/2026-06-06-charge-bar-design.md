@@ -58,18 +58,21 @@ automatically, scales with the camera, and needs no projection math.
   - `is_chargeable()` → `not charged_moves.is_empty()`.
   - `is_charging()` → `_charging`.
 - **`ChargeBar` (new, `src/ui/charge_bar.gd`) — `Node2D`** positioned at
-  approximately `(0, -22)` — **above the status-icon row**, not on the body.
-  The player's `StatusVisuals` anchors icons at `y = -10` and they are ~14 px
-  tall (`ICON_DISPLAY_PX`), so they span roughly y = -17 to -3
-  (`src/player/player_controller.gd:78`, `src/status/status_visuals.gd`). The
-  bar must clear that: `y = -22` leaves a small gap above the icon row. Use a
-  fixed position (do not overlap the icons even when no statuses are active).
-  Custom `_draw`:
+  approximately `(0, -9)` — just above the body (top edge at y = -6), **below
+  the status-icon row**. The player's status icons are raised to make room (see
+  next bullet) so the two never overlap. Use a fixed position. Custom `_draw`:
   - Background: ~18×3 px dark rounded/plain rect.
   - Fill: width = `ratio × bar_width`, drawn over the background.
   - Public setters, e.g. `set_ratio(r: float)` storing the ratio and calling
     `queue_redraw()`; `set_active(on: bool)` toggling `visible`.
   - Hidden by default.
+- **Player status-icon anchor (raised).** The player's `StatusVisuals` is
+  currently set up with head offset `Vector2(BODY_WIDTH / 2.0, -10.0)`
+  (`src/player/player_controller.gd:78`); icons are ~14 px tall
+  (`ICON_DISPLAY_PX`), spanning roughly y = -17 to -3. Raise the anchor to
+  ~`y = -20` so icons span ~ -27 to -13, clearing the charge bar's top (~ -10.5)
+  with a small gap. This only changes the player call; enemy status offsets are
+  unaffected.
 - **`WeaponManager`** creates one `ChargeBar` as a child of the player in
   `_setup_visual`. Each `_process(delta)` frame:
   - If `_active_weapon != null and _active_weapon.is_charging()`: show the bar and
@@ -105,8 +108,9 @@ key released
 ## Visual defaults
 
 - Bar size: ~18×3 px.
-- Position: `(0, -22)` relative to the player — above the status-icon row (which
-  spans ~y = -17 to -3) so the two never overlap.
+- Position: `(0, -9)` relative to the player — just above the body, below the
+  raised status-icon row (icons moved to anchor ~y = -20) so the two never
+  overlap.
 - Colors: dark background; amber fill while charging; brighter gold when full.
 - Full vibration: ±1 px random jitter per frame.
 
