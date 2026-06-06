@@ -48,10 +48,24 @@ func test_full_charge_plays_charged_flurry_scaled() -> void:
 	w._tick_impl(1.0)             # drain the second spin
 	assert_int(w.played.size()).is_equal(2)
 
-func test_half_charge_plays_single_spin() -> void:
+func test_half_charge_plays_light() -> void:
 	var w := _make()
 	w.on_press(null)
-	w._tick_impl(0.2)             # ratio 0.4 => round(0.4*1)=0 => count 1
+	w._tick_impl(0.2)             # ratio 0.4 => below full => light slash
 	w.on_release(null)
-	w._tick_impl(1.0)
 	assert_int(w.played.size()).is_equal(1)
+	assert_int(w.played[0].shape).is_equal(AdvancedMeleeWeapon.MoveShape.SLASH)
+
+
+func test_is_chargeable_true_when_charged_moves_exist() -> void:
+	var w := _make()
+	assert_bool(w.is_chargeable()).is_true()
+
+
+func test_is_charging_tracks_press_and_release() -> void:
+	var w := _make()
+	assert_bool(w.is_charging()).is_false()
+	w.on_press(null)
+	assert_bool(w.is_charging()).is_true()
+	w.on_release(null)
+	assert_bool(w.is_charging()).is_false()
