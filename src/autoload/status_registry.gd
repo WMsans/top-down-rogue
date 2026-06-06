@@ -10,7 +10,7 @@ const TERRAIN_STAIN_RATE := 6.0
 
 # Above-head icon intensity mapping: alpha ramps from ICON_MIN_ALPHA (at the
 # active threshold) to 1.0 once stain reaches threshold + ICON_ALPHA_RAMP.
-const ICON_MIN_ALPHA := 0.45
+const ICON_MIN_ALPHA := 0.15
 const ICON_ALPHA_RAMP := 4.0
 
 var _defs: Dictionary = {}  # id -> StatusDef
