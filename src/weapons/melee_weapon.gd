@@ -127,7 +127,7 @@ func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float,
 		MaterialRegistry.MAT_COAL,
 		MaterialRegistry.MAT_ICE,
 	]
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, 0.0, 0.0, 0.0, solids, dmg)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, 0.0, 0.0, solids, dmg)
 
 
 func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: float, arc: float, dmg_mult: float, force_crit: bool, ignore_parry: bool) -> void:
