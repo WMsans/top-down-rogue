@@ -250,6 +250,12 @@ func build_sim_uniform_set(chunk: Chunk) -> void:
 	u5.add_id(chunk.injection_buffer)
 	uniforms.append(u5)
 
+	var u6 := RDUniform.new()
+	u6.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	u6.binding = 6
+	u6.add_id(compute.solidity_flag_buffer)
+	uniforms.append(u6)
+
 	chunk.sim_uniform_set = world_manager.rd.uniform_set_create(uniforms, compute.sim_shader, 0)
 
 

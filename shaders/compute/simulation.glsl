@@ -14,7 +14,7 @@ layout(rgba8, set = 0, binding = 4) readonly uniform image2D neighbor_right;
 layout(push_constant, std430) uniform PushConstants {
 	int phase;
 	int frame_seed;
-	int _pad2;
+	int chunk_slot;
 	int _pad3;
 } pc;
 
@@ -31,6 +31,10 @@ layout(set = 0, binding = 5, std430) readonly buffer InjectionBuffer {
 	int _pad[3];
 	InjectionAABB bodies[];
 } injections;
+
+layout(set = 0, binding = 6, std430) buffer SolidityFlags {
+	uint flags[];
+} solidity;
 
 #include "res://shaders/include/sim/common.glslinc"
 #include "res://shaders/include/sim/gas.glslinc"
