@@ -124,8 +124,8 @@ static func _apply_rotation(local: Vector2i, rotation_deg: int, size: int) -> Ve
 
 func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num: int, is_boss_room: bool) -> void:
 	match marker:
-		1: _spawn_enemy(world_pos, sector_dist, floor_num, false, false)
-		2: _spawn_enemy(world_pos, sector_dist, floor_num, false, true)
+		1: _spawn_enemy_validated(world_pos, sector_dist, floor_num, false, false)
+		2: _spawn_enemy_validated(world_pos, sector_dist, floor_num, false, true)
 		3: _spawn_chest(world_pos, false)
 		4: _spawn_shop(world_pos)
 		5: _spawn_chest(world_pos, true)
@@ -148,6 +148,13 @@ func _resolve_clear_position(world_pos: Vector2) -> Variant:
 				if SpawnValidation.footprint_clear(_world_manager, cand):
 					return cand
 	return null
+
+
+func _spawn_enemy_validated(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
+	var resolved: Variant = _resolve_clear_position(world_pos)
+	if resolved == null:
+		return
+	_spawn_enemy(resolved, sector_dist, floor_num, is_boss, is_elite)
 
 
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
