@@ -168,26 +168,11 @@ func _is_in_no_spawn_arena(world_pos: Vector2) -> bool:
 	return tmpl != null and tmpl.no_spawn
 
 
-# Ensure the spawn position's footprint contains only air. Reads
-# the actual chunk material data (same source as player spawn
-# validation) rather than the asynchronous terrain_physical probe
-# cache, which is unreliable for newly considered positions.
+# Ensure the spawn position's footprint contains only air. Delegates to the
+# shared SpawnValidation helper so the room path (spawn_dispatcher) and the
+# cave path cannot drift apart.
 func _is_clear_of_walls(world_pos: Vector2) -> bool:
-	if not is_instance_valid(_world_manager):
-		return false
-	var origin := Vector2i(int(floor(world_pos.x)) - SPAWN_CLEAR_HALF, int(floor(world_pos.y)) - SPAWN_CLEAR_HALF)
-	var side := SPAWN_CLEAR_HALF * 2 + 1
-	var rect := Rect2i(origin, Vector2i(side, side))
-	var data: PackedByteArray = _world_manager.read_region(rect)
-	if data.size() != side * side:
-		return false
-	var air := MaterialRegistry.MAT_AIR
-	for i in range(data.size()):
-		# 255 marks cells outside any active chunk; treat as not-clear
-		# so we don't spawn into unloaded terrain.
-		if data[i] != air:
-			return false
-	return true
+	return SpawnValidation.footprint_clear(_world_manager, world_pos, SPAWN_CLEAR_HALF)
 
 
 func _spawn_enemy(world_pos: Vector2) -> void:
