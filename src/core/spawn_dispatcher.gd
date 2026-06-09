@@ -13,6 +13,8 @@ const SHOP_FLOOR_TEXTURE := preload("res://textures/Guidance/wooden_planks.png")
 const SHOP_WALL_THICKNESS := 6
 
 const CHUNK_SIZE := 256
+const NUDGE_CELL: int = 8       # search step, one passability cell
+const NUDGE_MAX_RINGS: int = 3  # outward search radius ~= 24px
 
 var _spawned_sectors: Dictionary = {}
 var _world_manager: Node = null
@@ -130,6 +132,22 @@ func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num:
 		6: _spawn_enemy(world_pos, sector_dist, floor_num, true, false)
 		7: pass
 		8: _spawn_lantern(world_pos)
+
+
+# Returns world_pos unchanged when its footprint is clear; otherwise the nearest
+# clear position within NUDGE_MAX_RINGS rings; otherwise null (caller skips).
+func _resolve_clear_position(world_pos: Vector2) -> Variant:
+	if SpawnValidation.footprint_clear(_world_manager, world_pos):
+		return world_pos
+	for ring in range(1, NUDGE_MAX_RINGS + 1):
+		for dy in range(-ring, ring + 1):
+			for dx in range(-ring, ring + 1):
+				if abs(dx) != ring and abs(dy) != ring:
+					continue  # interior cells were covered by smaller rings
+				var cand := world_pos + Vector2(dx * NUDGE_CELL, dy * NUDGE_CELL)
+				if SpawnValidation.footprint_clear(_world_manager, cand):
+					return cand
+	return null
 
 
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
