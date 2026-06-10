@@ -10,6 +10,8 @@ extends Area2D
 @export var crit_status: String = ""
 
 const CRIT_STATUS_STAIN := 2.0
+const ATTACKABLE_HIT_LAYER := 1 << 7  # layer 8, zero-indexed bit 7
+
 var direction: Vector2 = Vector2.RIGHT
 var source_node: Node2D = null
 var behaviors: Array = []  # of ProjectileBehavior
@@ -20,6 +22,7 @@ var _age: float = 0.0
 
 func _ready() -> void:
 	add_to_group("projectile")
+	collision_mask = ATTACKABLE_HIT_LAYER | 1 | 8  # attackable_hit + terrain + projectile area overlap
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 	for b in behaviors:
