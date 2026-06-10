@@ -8,6 +8,8 @@ var damage_factor: float = 0.5
 var spread_deg: float = 60.0
 var shard_speed: float = 140.0
 var shard_lifetime: float = 0.6
+var shard_collisionless_time: float = 0.08
+var spawn_offset: float = 12.0
 
 
 func on_enemy_hit(proj, _target) -> bool:
@@ -36,7 +38,8 @@ func _split(proj) -> void:
 		shard.lifetime = shard_lifetime
 		shard.is_enemy_projectile = proj.is_enemy_projectile
 		shard.source_node = proj.source_node
-		shard.global_position = proj.global_position
+		shard.collisionless_time = shard_collisionless_time
+		shard.global_position = proj.global_position + shard.direction * spawn_offset
 		var src_sprite = proj.get_node_or_null("Sprite2D")
 		var shard_sprite = shard.get_node_or_null("Sprite2D")
 		if src_sprite != null and shard_sprite != null:
