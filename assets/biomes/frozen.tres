@@ -57,7 +57,7 @@ composition = ExtResource("10_elitec")
 [sub_resource type="Resource" id="Resource_shop"]
 script = ExtResource("1_6wibb")
 png_path = "res://assets/rooms/frozen/shop_a.png"
-weight = 6.0
+weight = 2.5
 size_class = 256
 rotatable = false
 no_spawn = true

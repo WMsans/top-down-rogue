@@ -63,7 +63,7 @@ composition = ExtResource("10_elitec")
 [sub_resource type="Resource" id="Resource_shop"]
 script = ExtResource("1_8divj")
 png_path = "res://assets/rooms/magma/shop_a.png"
-weight = 6.0
+weight = 2.5
 size_class = 256
 rotatable = false
 no_spawn = true
