@@ -61,3 +61,40 @@ static func should_aggro_from_neighbors(me: Node2D, neighbors: Array) -> bool:
 		if my_pos.distance_to(n.global_position) <= CONTAGION_RADIUS:
 			return true
 	return false
+
+
+func update(player_pos: Vector2, attackable: Array) -> void:
+	var still: Array = []
+	for e in _active:
+		if is_instance_valid(e) and e.has_method("is_pursuing") and e.is_pursuing():
+			still.append(e)
+		else:
+			_drop_bookkeeping(e)
+	_active = still
+
+	for e in attackable:
+		if _active.size() >= HORDE_SOFT_CAP:
+			break
+		if not is_instance_valid(e):
+			continue
+		if not e.has_method("is_pursuing") or not e.is_pursuing():
+			continue
+		if not _active.has(e):
+			_active.append(e)
+
+	_assign_slots(player_pos)
+
+
+func unregister(enemy) -> void:
+	_active.erase(enemy)
+	_drop_bookkeeping(enemy)
+
+
+func _drop_bookkeeping(enemy) -> void:
+	_melee_claims.erase(enemy)
+	_ranged_claims.erase(enemy)
+	_slots.erase(enemy)
+
+
+func _assign_slots(_player_pos: Vector2) -> void:
+	pass

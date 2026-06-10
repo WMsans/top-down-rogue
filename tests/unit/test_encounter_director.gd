@@ -103,3 +103,45 @@ func test_contagion_false_for_close_idle_neighbor() -> void:
 	var idle := _stub_at(self, Vector2(20, 0), false)
 	var spread := Director.should_aggro_from_neighbors(me, [me, idle])
 	assert_bool(spread).is_false()
+
+func test_update_admits_only_pursuing_enemies() -> void:
+	var d = Director.new()
+	var a := _stub_at(self, Vector2(40, 0), true)
+	var b := _stub_at(self, Vector2(0, 40), false)
+	d.update(Vector2.ZERO, [a, b])
+	assert_bool(d.is_active(a)).is_true()
+	assert_bool(d.is_active(b)).is_false()
+
+func test_update_enforces_soft_cap() -> void:
+	var d = Director.new()
+	var list: Array = []
+	for i in range(Director.HORDE_SOFT_CAP + 5):
+		list.append(_stub_at(self, Vector2(i * 20, 0), true))
+	d.update(Vector2.ZERO, list)
+	assert_int(d._active.size()).is_equal(Director.HORDE_SOFT_CAP)
+
+func test_update_prunes_dead_holder_and_frees_token() -> void:
+	var d = Director.new()
+	d.melee_token_count = 1
+	var a := _PursuerStub.new()
+	add_child(a)
+	a.global_position = Vector2(40, 0)
+	a.pursuing = true
+	var b := _stub_at(self, Vector2(0, 40), true)
+	d.update(Vector2.ZERO, [a, b])
+	assert_bool(d.try_claim_attack(a, false)).is_true()
+	assert_bool(d.try_claim_attack(b, false)).is_false()
+	a.free()
+	d.update(Vector2.ZERO, [b])
+	assert_bool(d.try_claim_attack(b, false)).is_true()
+
+func test_unregister_releases_membership_and_token() -> void:
+	var d = Director.new()
+	d.melee_token_count = 1
+	var a := _stub_at(self, Vector2(40, 0), true)
+	var b := _stub_at(self, Vector2(0, 40), true)
+	d.update(Vector2.ZERO, [a, b])
+	assert_bool(d.try_claim_attack(a, false)).is_true()
+	d.unregister(a)
+	assert_bool(d.is_active(a)).is_false()
+	assert_bool(d.try_claim_attack(b, false)).is_true()
