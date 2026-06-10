@@ -222,3 +222,51 @@ func test_green_crescent_has_penetrate_behavior() -> void:
 	for c in pu[0].get_children():
 		if c is Projectile:
 			assert_that(c.behaviors[0] is PenetrateBehavior).is_true()
+
+
+func test_arc_volley_fires_seven_on_first_two_of_three() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := ArcVolleyModifier.new()
+	m.on_attack(null, pu[1], _ctx())  # pos 0 -> fire 7
+	assert_int(_count_projectiles(pu[0])).is_equal(7)
+	m.on_attack(null, pu[1], _ctx())  # pos 1 -> fire 7
+	assert_int(_count_projectiles(pu[0])).is_equal(14)
+	m.on_attack(null, pu[1], _ctx())  # pos 2 -> none
+	assert_int(_count_projectiles(pu[0])).is_equal(14)
+	m.on_attack(null, pu[1], _ctx())  # pos 0 -> fire 7
+	assert_int(_count_projectiles(pu[0])).is_equal(21)
+
+
+func test_triangular_volley_fires_thirteen_on_third() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := TriangularVolleyModifier.new()
+	m.on_attack(null, pu[1], _ctx())  # pos 0 -> none
+	m.on_attack(null, pu[1], _ctx())  # pos 1 -> none
+	assert_int(_count_projectiles(pu[0])).is_equal(0)
+	m.on_attack(null, pu[1], _ctx())  # pos 2 -> fire 13
+	assert_int(_count_projectiles(pu[0])).is_equal(13)
+
+
+func test_splitting_rounds_fires_three_with_split_on_second() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := SplittingRoundsModifier.new()
+	m.on_attack(null, pu[1], _ctx())  # pos 0 -> none
+	assert_int(_count_projectiles(pu[0])).is_equal(0)
+	m.on_attack(null, pu[1], _ctx())  # pos 1 -> fire 3
+	assert_int(_count_projectiles(pu[0])).is_equal(3)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is SplitBehavior).is_true()
+
+
+func test_bouncing_bullets_fires_four_with_bounce_on_third() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := BouncingBulletsModifier.new()
+	m.on_attack(null, pu[1], _ctx())  # pos 0
+	m.on_attack(null, pu[1], _ctx())  # pos 1
+	assert_int(_count_projectiles(pu[0])).is_equal(0)
+	m.on_attack(null, pu[1], _ctx())  # pos 2 -> fire 4
+	assert_int(_count_projectiles(pu[0])).is_equal(4)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is BounceBehavior).is_true()
