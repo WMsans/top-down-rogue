@@ -226,6 +226,15 @@ func _process_idle(delta: float) -> void:
 		_change_state(State.CHASE)
 		return
 
+	if _get_director() != null and _world_manager != null and is_instance_valid(_world_manager):
+		var grid = _world_manager.swarm_grid
+		if grid != null:
+			var neighbors: Array = grid.query_neighbors(global_position)
+			if EncounterDirector.should_aggro_from_neighbors(self, neighbors):
+				_aggroed = true
+				_change_state(State.CHASE)
+				return
+
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
 		if _wander_is_paused:
