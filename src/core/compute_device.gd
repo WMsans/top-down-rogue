@@ -26,6 +26,8 @@ var collider_write_index: int = 0
 var collider_first_frame: bool = true
 # Manifest entries are [coord.x, coord.y, slot_index] triples; one per dispatched chunk.
 var collider_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
+# Passability grid output, written by the same collider dispatch. Shares the
+# collider write-index / manifest / double-buffer; one 32x32 byte-grid per slot.
 var passability_output_buffers: Array[RID] = [RID(), RID()]
 var solidity_flag_buffer: RID = RID()
 var solidity_dispatch_manifest: PackedInt32Array = PackedInt32Array()
