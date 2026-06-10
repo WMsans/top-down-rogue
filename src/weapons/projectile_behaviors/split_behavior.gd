@@ -8,25 +8,27 @@ var damage_factor: float = 0.5
 var spread_deg: float = 60.0
 var shard_speed: float = 140.0
 var shard_lifetime: float = 0.6
-var shard_collisionless_time: float = 0.08
+var shard_collisionless_time: float = 0.3
 var spawn_offset: float = 12.0
 
 
 func on_enemy_hit(proj, _target) -> bool:
-	_split(proj)
+	_split(proj, false)
 	return false  # let the projectile die normally
 
 
 func on_terrain_hit(proj) -> bool:
-	_split(proj)
+	_split(proj, true)
 	return false  # let the projectile carve + die normally
 
 
-func _split(proj) -> void:
+func _split(proj, reverse_dir: bool = false) -> void:
 	var parent: Node = proj.get_parent()
 	if parent == null:
 		return
 	var base_angle: float = proj.direction.angle()
+	if reverse_dir:
+		base_angle += PI
 	var half: float = deg_to_rad(spread_deg) / 2.0
 	for i in range(shard_count):
 		var t: float = 0.0 if shard_count == 1 else float(i) / float(shard_count - 1)
