@@ -312,6 +312,14 @@ func test_chase_holds_when_no_token() -> void:
 	e._process_chase(0.1)
 	assert_that(e._state).is_equal(Enemy.State.CHASE)  # cannot commit, keeps circling
 
+func test_damage_scale_multiplies_weapon_damage_on_ready() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.weapon = MeleeWeapon.new()
+	e.weapon.damage = 5.0
+	e.damage_scale = 2.0
+	e._apply_damage_scale()
+	assert_float(e.weapon.damage).is_equal_approx(10.0, 0.001)
+
 func test_change_state_releases_token_on_return_to_chase() -> void:
 	var d = _Director.new()
 	d.melee_token_count = 1

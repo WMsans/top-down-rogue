@@ -20,6 +20,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var separation_radius: float = 16.0
 @export var min_attack_settle_time: float = 0.5
 @export var leash_radius: float = 280.0
+@export var damage_scale: float = 1.0
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
@@ -77,6 +78,7 @@ func _ready() -> void:
 	add_to_group("attackable")
 	health = max_health
 	_speed_base = speed
+	_apply_damage_scale()
 	motion_mode = MOTION_MODE_FLOATING
 
 	if is_elite:
@@ -135,6 +137,11 @@ func _apply_elite_scaling() -> void:
 			speed = _speed_base * 0.7
 		EliteAbility.ENRAGE:
 			pass  # dynamically applied in _process
+
+
+func _apply_damage_scale() -> void:
+	if weapon != null and damage_scale != 1.0:
+		weapon.damage *= damage_scale
 
 
 func _process(delta: float) -> void:
