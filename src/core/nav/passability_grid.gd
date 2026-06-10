@@ -39,6 +39,9 @@ func update_chunk(chunk_coord: Vector2i, material_bytes: PackedByteArray) -> voi
 			tile[cy * _cells_per_chunk + cx] = 1 if solid else 0
 	_tiles[chunk_coord] = tile
 
+func set_tile(chunk_coord: Vector2i, tile: PackedByteArray) -> void:
+	_tiles[chunk_coord] = tile
+
 func drop_chunk(chunk_coord: Vector2i) -> void:
 	_tiles.erase(chunk_coord)
 
