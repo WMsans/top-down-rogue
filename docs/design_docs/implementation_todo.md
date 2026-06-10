@@ -187,8 +187,8 @@ placement — same anti-pattern, out of current scope.)
 ### Sub-project 2: GPU passability buffer (NavField structural)
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | High | GPU 32×32 solidity grid | Collider compute pass emits per-chunk passability grid; read back ~1 KB not 262 KB |
-| | P1 | Medium | NavField consumes GPU grid | Drop `read_region` + GDScript downsample from nav entirely |
+| x | P1 | High | GPU 32×32 solidity grid | Collider compute pass emits per-chunk passability grid; read back ~1 KB not 262 KB |
+| x | P1 | Medium | NavField consumes GPU grid | Drop `read_region` + GDScript downsample from nav entirely |
 
 ### Sub-project 3: Collision-helper readback reduction
 | Done | Priority | Difficulty | Task | Description |
