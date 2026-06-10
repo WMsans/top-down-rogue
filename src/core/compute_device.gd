@@ -26,6 +26,7 @@ var collider_write_index: int = 0
 var collider_first_frame: bool = true
 # Manifest entries are [coord.x, coord.y, slot_index] triples; one per dispatched chunk.
 var collider_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
+var passability_output_buffers: Array[RID] = [RID(), RID()]
 var solidity_flag_buffer: RID = RID()
 var solidity_dispatch_manifest: PackedInt32Array = PackedInt32Array()
 var dummy_texture: RID
@@ -58,6 +59,11 @@ const COLLIDER_MAX_DISPATCH_PER_FRAME := 4
 const COLLIDER_MAX_SEGMENTS_PER_SLOT := 4096
 const COLLIDER_SLOT_STRIDE_BYTES := 4 + COLLIDER_MAX_SEGMENTS_PER_SLOT * 4 * 4
 const COLLIDER_COALESCED_BUFFER_SIZE := COLLIDER_MAX_DISPATCH_PER_FRAME * COLLIDER_SLOT_STRIDE_BYTES
+
+const PASSABILITY_CELLS_PER_SIDE := 32          # 256px chunk / 8px cell
+const PASSABILITY_SLOT_U32 := 1024              # 32 * 32, one uint per cell
+const PASSABILITY_SLOT_BYTES := 4096            # 1024 * 4
+const PASSABILITY_BUFFER_SIZE := COLLIDER_MAX_DISPATCH_PER_FRAME * PASSABILITY_SLOT_BYTES  # 16 KB
 
 const SIM_MAX_CHUNKS := 64
 const SIM_FLAG_SLOT_BYTES := 4
@@ -795,6 +801,18 @@ func decode_collider_slice(data: PackedByteArray, slot: int) -> PackedVector2Arr
 		segments.append(Vector2(x1, y1))
 		segments.append(Vector2(x2, y2))
 	return segments
+
+
+static func decode_passability_slice(data: PackedByteArray, slot: int) -> PackedByteArray:
+	var tile := PackedByteArray()
+	tile.resize(PASSABILITY_SLOT_U32)
+	tile.fill(0)
+	var slot_offset := slot * PASSABILITY_SLOT_BYTES
+	if slot_offset + PASSABILITY_SLOT_BYTES > data.size():
+		return tile
+	for i in range(PASSABILITY_SLOT_U32):
+		tile[i] = 1 if data.decode_u32(slot_offset + i * 4) != 0 else 0
+	return tile
 
 
 static func decode_solidity_flags(data: PackedByteArray, manifest: PackedInt32Array, loaded: Dictionary) -> Array[Vector2i]:
