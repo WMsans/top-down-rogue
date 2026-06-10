@@ -175,3 +175,50 @@ func test_cadence_period_three_fire_on_last_only() -> void:
 	for i in range(6):
 		m.on_attack(null, null, {})
 	assert_int(m.fires).is_equal(2)
+
+
+func _spawn_parent_and_user() -> Array:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var user: Node2D = Node2D.new()
+	parent.add_child(user)
+	return [parent, user]
+
+func _ctx(charged: bool = false, ratio: float = 0.0) -> Dictionary:
+	return { "direction": Vector2.RIGHT, "origin": Vector2.ZERO, "charged": charged, "charge_ratio": ratio }
+
+
+func test_fireball_fan_spawns_five_burning() -> void:
+	var pu := _spawn_parent_and_user()
+	FireballFanModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(5)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_str(c.hit_status).is_equal("on_fire")
+
+
+func test_icicle_volley_spawns_five_chilly() -> void:
+	var pu := _spawn_parent_and_user()
+	IcicleVolleyModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(5)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_str(c.hit_status).is_equal("chilly")
+
+
+func test_gleaming_projectile_has_clear_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	GleamingProjectileModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is ClearBulletsBehavior).is_true()
+
+
+func test_green_crescent_has_penetrate_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	GreenCrescentModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is PenetrateBehavior).is_true()
