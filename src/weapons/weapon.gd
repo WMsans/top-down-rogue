@@ -35,6 +35,12 @@ func use(user: Node) -> void:
 	_cooldown_timer = cooldown
 
 
+func notify_attack(user: Node, ctx: Dictionary) -> void:
+	for modifier in modifiers:
+		if modifier != null:
+			modifier.on_attack(self, user, ctx)
+
+
 func on_press(user: Node) -> void:
 	use(user)
 

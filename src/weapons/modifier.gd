@@ -15,6 +15,10 @@ func on_use(_weapon: Weapon, _user: Node) -> void:
 	pass
 
 
+func on_attack(_weapon: Weapon, _user: Node, _ctx: Dictionary) -> void:
+	pass
+
+
 func on_tick(_weapon: Weapon, _delta: float) -> void:
 	pass
 

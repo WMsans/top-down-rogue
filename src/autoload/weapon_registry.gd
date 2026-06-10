@@ -43,7 +43,17 @@ func _ready() -> void:
 	weapon_scripts["melee"] = preload("res://src/weapons/melee_weapon.gd")
 	weapon_scripts["test"] = preload("res://src/weapons/test_weapon.gd")
 	weapon_scripts["ranged"] = preload("res://src/weapons/ranged_weapon.gd")
-	modifier_scripts["lava_emitter"] = preload("res://src/weapons/lava_emitter_modifier.gd")
+	modifier_scripts["lava_emitter"] = preload("res://src/weapons/modifiers/lava_emitter_modifier.gd")
+	modifier_scripts["fireball_fan"] = preload("res://src/weapons/modifiers/fireball_fan_modifier.gd")
+	modifier_scripts["icicle_volley"] = preload("res://src/weapons/modifiers/icicle_volley_modifier.gd")
+	modifier_scripts["gleaming_projectile"] = preload("res://src/weapons/modifiers/gleaming_projectile_modifier.gd")
+	modifier_scripts["green_crescent"] = preload("res://src/weapons/modifiers/green_crescent_modifier.gd")
+	modifier_scripts["arc_volley"] = preload("res://src/weapons/modifiers/arc_volley_modifier.gd")
+	modifier_scripts["triangular_volley"] = preload("res://src/weapons/modifiers/triangular_volley_modifier.gd")
+	modifier_scripts["splitting_rounds"] = preload("res://src/weapons/modifiers/splitting_rounds_modifier.gd")
+	modifier_scripts["bouncing_bullets"] = preload("res://src/weapons/modifiers/bouncing_bullets_modifier.gd")
+	modifier_scripts["penetrating_shockwave"] = preload("res://src/weapons/modifiers/penetrating_shockwave_modifier.gd")
+	modifier_scripts["lightning_bolt"] = preload("res://src/weapons/modifiers/lightning_bolt_modifier.gd")
 	_load_modifier_data()
 
 	_load_weapon_resources()
@@ -138,10 +148,22 @@ func _build_tier_buckets() -> void:
 
 func _populate_modifier_tiers() -> void:
 	modifier_tiers[DropTable.ItemTier.COMMON] = [
-		ModifierDropEntry.new(preload("res://src/weapons/lava_emitter_modifier.gd"), 1.0),
+		ModifierDropEntry.new(modifier_scripts["lava_emitter"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["fireball_fan"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["icicle_volley"], 1.0),
 	]
-	modifier_tiers[DropTable.ItemTier.UNCOMMON] = []
-	modifier_tiers[DropTable.ItemTier.RARE] = []
+	modifier_tiers[DropTable.ItemTier.UNCOMMON] = [
+		ModifierDropEntry.new(modifier_scripts["gleaming_projectile"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["green_crescent"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["splitting_rounds"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["bouncing_bullets"], 1.0),
+	]
+	modifier_tiers[DropTable.ItemTier.RARE] = [
+		ModifierDropEntry.new(modifier_scripts["arc_volley"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["triangular_volley"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["penetrating_shockwave"], 1.0),
+		ModifierDropEntry.new(modifier_scripts["lightning_bolt"], 1.0),
+	]
 
 
 func get_random_weapon(tier: int) -> _Weapon:

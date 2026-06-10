@@ -3,7 +3,7 @@ extends Node
 
 const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
-const LavaEmitterModifierScript := preload("res://src/weapons/lava_emitter_modifier.gd")
+const LavaEmitterModifierScript := preload("res://src/weapons/modifiers/lava_emitter_modifier.gd")
 const ChargeBarScript := preload("res://src/ui/charge_bar.gd")
 
 signal weapon_activated(slot_index: int)

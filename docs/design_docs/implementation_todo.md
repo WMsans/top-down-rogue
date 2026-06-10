@@ -156,9 +156,9 @@ tao_sword, broadsword, throwing_knife, fire_orb, spread_shot, boss_staff, lava_e
 ### Sub-project 4: Modifiers
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P2 | Medium | Swing-triggered projectile modifiers | fireball_fan, icicle_volley, gleaming_projectile, green_crescent |
-| | P2 | Medium | Combo-step modifiers | arc_volley, triangular_volley, splitting_rounds, bouncing_bullets |
-| | P2 | Medium | Charge & chance modifiers | penetrating_shockwave, lightning_bolt |
+| x | P2 | Medium | Swing-triggered projectile modifiers | fireball_fan, icicle_volley, gleaming_projectile, green_crescent |
+| x | P2 | Medium | Combo-step modifiers | arc_volley, triangular_volley, splitting_rounds, bouncing_bullets |
+| x | P2 | Medium | Charge & chance modifiers | penetrating_shockwave, lightning_bolt |
 
 ---
 
