@@ -97,3 +97,50 @@ func test_advanced_play_move_notifies_per_step() -> void:
 	w.on_press(user)  # step 1
 	assert_int(m.attacks).is_equal(2)
 	assert_that(m.last_ctx["charged"]).is_false()
+
+
+func _count_projectiles(parent: Node) -> int:
+	var n := 0
+	for c in parent.get_children():
+		if c is Projectile:
+			n += 1
+	return n
+
+
+func test_modifier_projectile_spawn_one_under_user_parent() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var user: Node2D = Node2D.new()
+	parent.add_child(user)
+	var p: Projectile = ModifierProjectile.spawn_one(user, Vector2.ZERO, Vector2.RIGHT, 4.0,
+		{ "hit_status": "on_fire" })
+	assert_that(p).is_not_null()
+	assert_bool(p.get_parent() == parent).is_true()
+	assert_that(p.damage).is_equal(4.0)
+	assert_str(p.hit_status).is_equal("on_fire")
+	assert_that(p.is_enemy_projectile).is_false()
+
+
+func test_modifier_projectile_spawn_fan_count() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var user: Node2D = Node2D.new()
+	parent.add_child(user)
+	ModifierProjectile.spawn_fan(user, Vector2.ZERO, Vector2.RIGHT, 2.0, 5, 30.0, {})
+	assert_int(_count_projectiles(parent)).is_equal(5)
+
+
+func test_modifier_projectile_fan_makes_fresh_behaviors() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var user: Node2D = Node2D.new()
+	parent.add_child(user)
+	ModifierProjectile.spawn_fan(user, Vector2.ZERO, Vector2.RIGHT, 3.0, 3, 20.0,
+		{ "make_behaviors": func() -> Array: return [BounceBehavior.new()] })
+	var seen: Array = []
+	for c in parent.get_children():
+		if c is Projectile:
+			assert_int(c.behaviors.size()).is_equal(1)
+			assert_that(c.behaviors[0] is BounceBehavior).is_true()
+			assert_that(seen.has(c.behaviors[0])).is_false()
+			seen.append(c.behaviors[0])
