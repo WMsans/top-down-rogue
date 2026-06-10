@@ -172,7 +172,7 @@ func place_material(world_pos: Vector2, radius: float, material_id: int) -> void
 # Place a material blob with optional noisy edges. When edge_jitter > 0, the
 # disc's effective radius varies per-angle using a cheap layered-sine noise seeded
 # by `noise_seed`, producing rough natural shapes instead of perfect circles.
-func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0) -> void:
+func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0, only_chunks: Dictionary = {}) -> void:
 	var center_x := int(floor(world_pos.x))
 	var center_y := int(floor(world_pos.y))
 	var max_radius: float = radius * (1.0 + max(edge_jitter, 0.0))
@@ -199,6 +199,8 @@ func place_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 			var wy := center_y + dy
 			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
 			if not world_manager.chunks.has(chunk_coord):
+				continue
+			if not only_chunks.is_empty() and not only_chunks.has(chunk_coord):
 				continue
 			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
 			if not affected.has(chunk_coord):
@@ -229,7 +231,11 @@ func place_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 		terrain_physical.invalidate_rect(affected_rect)
 
 
-func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int) -> void:
+# `only_chunks`, when non-empty, restricts writes to those chunk coords. The
+# stamp-replay path (composition_dispatcher) uses it so re-issuing a cross-chunk
+# stamp for a newly loaded chunk never re-fills already-loaded, possibly
+# player-edited chunks (carved holes are MAT_AIR and would otherwise heal).
+func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int, only_chunks: Dictionary = {}) -> void:
 	if outer_radius <= 0.0 or outer_radius <= inner_radius:
 		return
 	var center_x := int(floor(world_pos.x))
@@ -247,6 +253,8 @@ func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: 
 			var wy := center_y + dy
 			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
 			if not world_manager.chunks.has(chunk_coord):
+				continue
+			if not only_chunks.is_empty() and not only_chunks.has(chunk_coord):
 				continue
 			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
 			if not affected.has(chunk_coord):
