@@ -11,6 +11,10 @@ var _strafe_direction: float = 1.0
 var _strafe_re_roll: float = 0.0
 
 
+func _uses_ranged_token() -> bool:
+	return true
+
+
 func _ready() -> void:
 	if weapon_resource:
 		weapon = weapon_resource.duplicate()
@@ -71,7 +75,14 @@ func _process_chase(delta: float) -> void:
 	velocity = _apply_separation(velocity)
 
 	if dist <= _attack_range and _settle_timer >= min_attack_settle_time:
-		_change_state(State.WINDUP)
+		if _try_claim_attack():
+			_change_state(State.WINDUP)
+			return
+
+	if not _holds_attack_token:
+		var slot_dir := _surround_dir(preferred_distance)
+		if slot_dir != Vector2.ZERO:
+			velocity = _apply_separation(slot_dir) * _get_effective_speed()
 
 
 func _execute_attack() -> void:
