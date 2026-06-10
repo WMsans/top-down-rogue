@@ -137,6 +137,8 @@ func unload_chunk(coord: Vector2i) -> void:
 	world_manager.chunk_unloaded.emit(coord)
 	if world_manager._collision_helper != null:
 		world_manager._collision_helper.on_chunk_unloaded(coord)
+	if world_manager.nav_field != null:
+		world_manager.nav_field.grid.drop_chunk(coord)
 	# Free our own uniform sets first, while our textures are still alive.
 	free_chunk_uniform_sets(chunk)
 	# Neighbors' sim_uniform_sets reference our rd_texture. Freeing the

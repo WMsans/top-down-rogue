@@ -2,31 +2,25 @@ extends GdUnitTestSuite
 
 const NavField = preload("res://src/core/nav/nav_field.gd")
 
-class StubWM extends Node:
-	var region: PackedByteArray
-	func read_region(_rect: Rect2i) -> PackedByteArray:
-		return region
+# 32x32 cells per chunk at 8px cells. value 1 = solid.
+func _tile(solid_cells: Array) -> PackedByteArray:
+	var t := PackedByteArray()
+	t.resize(32 * 32)
+	t.fill(0)
+	for c: Vector2i in solid_cells:
+		t[c.y * 32 + c.x] = 1
+	return t
 
-func _region_all(mat: int) -> PackedByteArray:
-	var b := PackedByteArray()
-	b.resize(256 * 256)
-	b.fill(mat)
-	return b
-
-func test_dirty_chunk_becomes_solid_after_update() -> void:
-	var wm = auto_free(StubWM.new())
-	add_child(wm)
-	wm.region = _region_all(MaterialRegistry.MAT_STONE)
-	var nav = NavField.new(wm)
-	nav.mark_dirty(Vector2i(0, 0))
-	nav.update(Vector2(0, 0), 0.0)
+func test_grid_tile_marks_world_solid() -> void:
+	var nav = NavField.new()
+	nav.grid.set_tile(Vector2i(0, 0), _tile([Vector2i(0, 0)]))
 	assert_bool(nav.is_solid_world(Vector2(4, 4))).is_true()
 
-func test_air_chunk_is_open() -> void:
-	var wm = auto_free(StubWM.new())
-	add_child(wm)
-	wm.region = _region_all(MaterialRegistry.MAT_AIR)
-	var nav = NavField.new(wm)
-	nav.mark_dirty(Vector2i(0, 0))
+func test_open_when_no_tile() -> void:
+	var nav = NavField.new()
+	assert_bool(nav.is_solid_world(Vector2(4, 4))).is_false()
+
+func test_update_does_not_crash_with_no_tiles() -> void:
+	var nav = NavField.new()
 	nav.update(Vector2(0, 0), 0.0)
 	assert_bool(nav.is_solid_world(Vector2(4, 4))).is_false()
