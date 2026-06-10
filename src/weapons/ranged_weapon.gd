@@ -55,6 +55,12 @@ func _use_impl(user: Node) -> void:
 			angle_offset = lerpf(-half_spread, half_spread, float(i) / float(projectile_count - 1))
 		var proj_dir := Vector2(cos(base_angle + angle_offset), sin(base_angle + angle_offset))
 		_spawn_projectile(user, proj_dir)
+	notify_attack(user, {
+		"direction": direction,
+		"origin": user.global_position,
+		"charged": false,
+		"charge_ratio": 0.0,
+	})
 
 
 func _spawn_projectile(user: Node, direction: Vector2) -> void:

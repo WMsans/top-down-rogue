@@ -33,6 +33,8 @@ var _flurry_queue: Array = []
 var _flurry_timer: float = 0.0
 var _flurry_active: bool = false
 var _active_move: Move = null
+var _attack_charged: bool = false
+var _attack_charge_ratio: float = 0.0
 var _move_phase_time: float = 0.0
 var _spin_from_angle: float = 0.0
 var _spin_trail_angle: float = 0.0
@@ -143,6 +145,8 @@ func _use_impl(user: Node) -> void:
 
 
 func _do_light_attack(user: Node) -> void:
+	_attack_charged = false
+	_attack_charge_ratio = 0.0
 	if combo_mode == ComboMode.AUTO_FLURRY:
 		_start_flurry(light_moves.duplicate(), user)
 		return
@@ -157,6 +161,8 @@ func _do_light_attack(user: Node) -> void:
 
 
 func _do_charged_attack(user: Node, ratio: float) -> void:
+	_attack_charged = true
+	_attack_charge_ratio = ratio
 	if charged_moves.is_empty():
 		return
 	if charged_flurry_max > 1:
@@ -216,6 +222,12 @@ func _play_move(move: Move, user: Node) -> void:
 	if move.dash_distance > 0.0 and user.has_method("request_dash"):
 		user.request_dash(direction, move.dash_distance * 6.0)
 	_start_move_anim(move, direction)
+	notify_attack(user, {
+		"direction": direction,
+		"origin": pos,
+		"charged": _attack_charged,
+		"charge_ratio": _attack_charge_ratio,
+	})
 
 
 func _apply_move_hit(move: Move, user: Node, pos: Vector2, direction: Vector2) -> void:
