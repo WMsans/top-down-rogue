@@ -145,3 +145,34 @@ func test_unregister_releases_membership_and_token() -> void:
 	d.unregister(a)
 	assert_bool(d.is_active(a)).is_false()
 	assert_bool(d.try_claim_attack(b, false)).is_true()
+
+func test_slots_are_distinct_for_each_active() -> void:
+	var d = Director.new()
+	var list: Array = []
+	for ang in [0.0, PI * 0.5, PI, PI * 1.5]:
+		list.append(_stub_at(self, Vector2.from_angle(ang) * 50.0, true))
+	d.update(Vector2.ZERO, list)
+	var seen: Dictionary = {}
+	for e in list:
+		var a: float = d.get_slot_angle(e)
+		seen[snappedf(a, 0.0001)] = true
+	assert_int(seen.size()).is_equal(4)
+
+func test_slots_spread_around_full_circle() -> void:
+	var d = Director.new()
+	var list: Array = []
+	for ang in [0.0, PI * 0.5, PI, PI * 1.5]:
+		list.append(_stub_at(self, Vector2.from_angle(ang) * 50.0, true))
+	d.update(Vector2.ZERO, list)
+	var angles: Array = []
+	for e in list:
+		angles.append(d.get_slot_angle(e))
+	angles.sort()
+	var span: float = angles[angles.size() - 1] - angles[0]
+	assert_float(span).is_greater(3.0)
+
+func test_get_slot_angle_falls_back_to_current_bearing() -> void:
+	var d = Director.new()
+	var e := _stub_at(self, Vector2(0, 50), true)
+	var a := d.get_slot_angle(e)
+	assert_float(a).is_equal_approx((Vector2(0, 50)).angle(), 0.01)

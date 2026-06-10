@@ -96,5 +96,26 @@ func _drop_bookkeeping(enemy) -> void:
 	_slots.erase(enemy)
 
 
-func _assign_slots(_player_pos: Vector2) -> void:
-	pass
+var _player_pos: Vector2 = Vector2.ZERO
+
+
+func _assign_slots(player_pos: Vector2) -> void:
+	_player_pos = player_pos
+	_slots.clear()
+	var n := _active.size()
+	if n == 0:
+		return
+	var ordered := _active.duplicate()
+	ordered.sort_custom(func(x, y):
+		return (x.global_position - player_pos).angle() < (y.global_position - player_pos).angle())
+	var start: float = (ordered[0].global_position - player_pos).angle()
+	for i in range(n):
+		_slots[ordered[i]] = start + TAU * float(i) / float(n)
+
+
+func get_slot_angle(enemy) -> float:
+	if _slots.has(enemy):
+		return _slots[enemy]
+	if is_instance_valid(enemy):
+		return (enemy.global_position - _player_pos).angle()
+	return 0.0
