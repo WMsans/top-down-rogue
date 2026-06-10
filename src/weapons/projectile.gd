@@ -12,6 +12,8 @@ extends Area2D
 const CRIT_STATUS_STAIN := 2.0
 var direction: Vector2 = Vector2.RIGHT
 var source_node: Node2D = null
+var behaviors: Array = []  # of ProjectileBehavior
+var solidity_oracle: Callable = Callable()  # injectable; tests supply a stub
 
 var _age: float = 0.0
 
@@ -20,6 +22,8 @@ func _ready() -> void:
 	add_to_group("projectile")
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
+	for b in behaviors:
+		b.on_spawn(self)
 
 
 func _process(delta: float) -> void:
@@ -31,6 +35,8 @@ func _process(delta: float) -> void:
 	var sprite := get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.rotation = direction.angle() + PI * 3.0 / 4.0
+	for b in behaviors:
+		b.on_process(self, delta)
 
 
 func _on_body_entered(body: Node) -> void:
@@ -50,20 +56,36 @@ func _handle_hit(target: Node) -> void:
 		elif target is StaticBody2D:
 			_carve_terrain()
 			queue_free()
-	else:
-		if target.is_in_group("attackable"):
-			if target != source_node and target.has_method("on_hit_impact"):
-				var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
-				var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
-				target.on_hit_impact(global_position, direction, dmg)
-				if is_crit and crit_status != "":
-					var sc = target.get_node_or_null("StatusComponent")
-					if sc != null:
-						sc.add_stain(crit_status, CRIT_STATUS_STAIN)
+		return
+
+	# Player projectile passing an enemy projectile: opt-in clear hook, no self death.
+	if target != self and target.is_in_group("projectile") and "is_enemy_projectile" in target and target.is_enemy_projectile:
+		for b in behaviors:
+			b.on_enemy_projectile_overlap(self, target)
+		return
+
+	if target.is_in_group("attackable"):
+		if target != source_node and target.has_method("on_hit_impact"):
+			var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
+			var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
+			target.on_hit_impact(global_position, direction, dmg)
+			if is_crit and crit_status != "":
+				var sc = target.get_node_or_null("StatusComponent")
+				if sc != null:
+					sc.add_stain(crit_status, CRIT_STATUS_STAIN)
+			var keep_enemy := false
+			for b in behaviors:
+				keep_enemy = b.on_enemy_hit(self, target) or keep_enemy
+			if not keep_enemy:
 				queue_free()
-		elif target is StaticBody2D:
-			_carve_terrain()
-			queue_free()
+	elif target is StaticBody2D:
+		var keep_terrain := false
+		for b in behaviors:
+			keep_terrain = b.on_terrain_hit(self) or keep_terrain
+		if keep_terrain:
+			return
+		_carve_terrain()
+		queue_free()
 
 
 func _carve_terrain() -> void:
@@ -77,3 +99,12 @@ func _carve_terrain() -> void:
 	TerrainSurface.clear_and_push_materials_in_arc(
 		global_position, direction, 3.0, TAU, 0.0, 0.0, solids, damage
 	)
+
+
+func is_solid_at(pos: Vector2) -> bool:
+	if solidity_oracle.is_valid():
+		return solidity_oracle.call(pos)
+	var wm := get_tree().get_first_node_in_group("world_manager")
+	if wm != null and wm.nav_field != null:
+		return wm.nav_field.is_solid_world(pos)
+	return false
