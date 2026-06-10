@@ -73,3 +73,33 @@ func test_catch_up_never_exceeds_player_cap() -> void:
 	for dist in [0.0, 90.0, 300.0, 5000.0]:
 		var s := Director.catch_up_speed(200.0, dist, 120.0)
 		assert_float(s).is_less_equal(114.0 + 0.001)
+
+class _PursuerStub extends Node2D:
+	var pursuing: bool = false
+	func is_pursuing() -> bool:
+		return pursuing
+
+func _stub_at(parent: Node, pos: Vector2, pursuing: bool) -> _PursuerStub:
+	var n: _PursuerStub = auto_free(_PursuerStub.new())
+	parent.add_child(n)
+	n.global_position = pos
+	n.pursuing = pursuing
+	return n
+
+func test_contagion_true_for_close_aggroed_neighbor() -> void:
+	var me := _stub_at(self, Vector2(0, 0), false)
+	var aggro := _stub_at(self, Vector2(30, 0), true)
+	var spread := Director.should_aggro_from_neighbors(me, [me, aggro])
+	assert_bool(spread).is_true()
+
+func test_contagion_false_for_far_aggroed_neighbor() -> void:
+	var me := _stub_at(self, Vector2(0, 0), false)
+	var aggro := _stub_at(self, Vector2(100, 0), true)
+	var spread := Director.should_aggro_from_neighbors(me, [me, aggro])
+	assert_bool(spread).is_false()
+
+func test_contagion_false_for_close_idle_neighbor() -> void:
+	var me := _stub_at(self, Vector2(0, 0), false)
+	var idle := _stub_at(self, Vector2(20, 0), false)
+	var spread := Director.should_aggro_from_neighbors(me, [me, idle])
+	assert_bool(spread).is_false()
