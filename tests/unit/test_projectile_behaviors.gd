@@ -84,6 +84,7 @@ func test_split_spawns_shards_on_enemy_hit_then_dies() -> void:
 	p.behaviors = [b]
 	parent.add_child(p)
 	var target: Enemy = auto_free(Enemy.new())
+	parent.add_child(target)
 	p._handle_hit(target)
 	await get_tree().process_frame  # let queue_free settle
 	# 4 shards added under the same parent; original removed.
@@ -104,7 +105,9 @@ func test_split_shards_have_no_behaviors_and_reduced_damage() -> void:
 	b.damage_factor = 0.5
 	p.behaviors = [b]
 	parent.add_child(p)
-	p._handle_hit(auto_free(Enemy.new()))
+	var target: Enemy = auto_free(Enemy.new())
+	parent.add_child(target)
+	p._handle_hit(target)
 	await get_tree().process_frame
 	for c in parent.get_children():
 		if c is Projectile:
@@ -148,3 +151,22 @@ func test_penetrate_dies_on_wall() -> void:
 	var b := PenetrateBehavior.new()
 	var p: Projectile = auto_free(Projectile.new())
 	assert_that(b.on_terrain_hit(p)).is_false()
+
+
+func test_clear_destroys_overlapping_enemy_projectile() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	# Player projectile with clear behavior.
+	var p: Projectile = auto_free(Projectile.new())
+	p.is_enemy_projectile = false
+	p.behaviors = [ClearBulletsBehavior.new()]
+	parent.add_child(p)
+	# Enemy projectile it overlaps.
+	var enemy_proj: Projectile = Projectile.new()
+	enemy_proj.is_enemy_projectile = true
+	enemy_proj.direction = Vector2.LEFT
+	parent.add_child(enemy_proj)
+	p._handle_hit(enemy_proj)
+	await get_tree().process_frame
+	assert_that(is_instance_valid(enemy_proj)).is_false()
+	assert_that(is_instance_valid(p)).is_true()
