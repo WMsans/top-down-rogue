@@ -62,6 +62,8 @@ var _parry_stun_remaining: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
+var _director = null
+var _holds_attack_token: bool = false
 
 var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
@@ -254,12 +256,6 @@ func _process_chase(_delta: float) -> void:
 		_aggroed = true
 	elif not _aggroed:
 		# Sight-to-acquire: never seen the player and currently blocked — don't commit.
-		_change_state(State.WANDER)
-		return
-
-	# Sticky pursuit: give up only once the player escapes the leash radius.
-	if dist > leash_radius:
-		_aggroed = false
 		_change_state(State.WANDER)
 		return
 
@@ -519,6 +515,9 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 
 
 func die() -> void:
+	var dir = _get_director()
+	if dir != null:
+		dir.unregister(self)
 	died.emit()
 	_on_death()
 
@@ -596,6 +595,18 @@ func _roll_weapon_modifier() -> void:
 
 func _on_death() -> void:
 	pass
+
+
+func is_pursuing() -> bool:
+	return _aggroed
+
+
+func _get_director():
+	if _director != null:
+		return _director
+	if _world_manager != null and is_instance_valid(_world_manager):
+		_director = _world_manager.get("encounter_director")
+	return _director
 
 
 func get_facing_direction() -> Vector2:

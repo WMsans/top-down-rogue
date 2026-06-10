@@ -194,3 +194,33 @@ func test_player_in_range_false_when_no_player() -> void:
 	e._player_ref = null
 	e._update_player_in_range()
 	assert_bool(e._player_in_range).is_false()
+
+
+const _Director = preload("res://src/core/encounter_director.gd")
+
+func test_is_pursuing_reflects_aggro() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	assert_bool(e.is_pursuing()).is_false()
+	e._aggroed = true
+	assert_bool(e.is_pursuing()).is_true()
+
+func test_aggroed_enemy_does_not_leash_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.global_position = Vector2(10000, 0)  # well beyond leash_radius
+	e.global_position = Vector2.ZERO
+	e._aggroed = true
+	e._state = Enemy.State.CHASE
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.CHASE)  # never gives up once aggroed
+
+func test_die_unregisters_from_director() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	var d = _Director.new()
+	e._director = d
+	e._aggroed = true
+	d._active = [e]
+	d.try_claim_attack(e, false)
+	e.die()
+	assert_bool(d.is_active(e)).is_false()
