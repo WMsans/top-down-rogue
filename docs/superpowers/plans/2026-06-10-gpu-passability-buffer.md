@@ -1,6 +1,8 @@
 # GPU Passability Buffer Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> **MANUAL STEPS — REQUIRED OUTPUT:** Some steps are tagged **[MANUAL — human]** because they need the Godot editor running and a human watching the game (a headless agent cannot observe enemy pathing or wall collision). Do NOT mark these complete yourself. The full list is in the "Manual Verification Steps" section below. **After you finish implementing the plan, your final message MUST reproduce every [MANUAL — human] step verbatim** (task number, what to run, and what the human should look for) as a single consolidated checklist, so the human knows exactly what is left to verify by hand.
 
 **Goal:** Eliminate NavField's per-dirty-chunk 262 KB GPU readback and 65,536-pixel GDScript downsample by having the existing collider compute pass emit a 32×32 solidity grid that the collision helper feeds straight into the nav grid.
 
@@ -34,7 +36,16 @@ gdUnit4 CLI. Each unit test runs headless:
 GODOT_BIN=$(command -v godot) addons/gdUnit4/runtest.sh -a tests/unit/<file>.gd
 ```
 
-If `godot` is not on `PATH`, set `GODOT_BIN` to the Godot 4 binary explicitly. GPU-path tasks (Tasks 3–4) can't be unit-tested without a `RenderingDevice`; they use a manual launch instead.
+If `godot` is not on `PATH`, set `GODOT_BIN` to the Godot 4 binary explicitly. GPU-path tasks can't be unit-tested without a `RenderingDevice`; they rely on the manual checks below.
+
+## Manual Verification Steps (human-only)
+
+These steps need the Godot editor running and a human watching the game — a headless agent cannot perform them and must NOT mark them complete. The implementer reproduces this list at the end of implementation. Each is also tagged **[MANUAL — human]** inline in its task.
+
+- **M1 — Task 3, Step 3 (launch sanity):** Run the project. Confirm it boots and the debug output shows no script/parse errors mentioning `compute_device.gd` or `passability`. The passability buffer is allocated but not yet written — this only checks nothing broke.
+- **M2 — Task 4, Step 4 (shader compiles, dispatch runs):** Run the project. Confirm the debug output shows no shader-compile or `uniform_set_create` errors, and that walls still block the player (collider still builds). A uniform-mismatch error means the shader's `binding = 2` and the uniform set are out of sync.
+- **M3 — Task 6, Step 7 (enemies path):** Run the project, spawn into a level, and confirm enemies move toward the player and route around walls rather than stopping at or clipping into terrain. Confirm no errors print.
+- **M4 — Task 7, Step 4 (live-edit smoke):** Run the project, play ~30 seconds, and carve/fill terrain near enemies. Confirm: walls still block the player, enemies re-path around freshly-carved and freshly-filled terrain, and no errors print. This exercises the GPU passability grid reacting to live edits.
 
 ---
 
@@ -236,7 +247,7 @@ In `free_resources()`, immediately after the `collider_output_buffers` free loop
 			passability_output_buffers[i] = RID()
 ```
 
-- [ ] **Step 3: Verify the project still launches (no automated test — GPU path)**
+- [ ] **Step 3: [MANUAL — human] Verify the project still launches (M1, GPU path)**
 
 Run: `godot --path . --quit-after 120 2>&1 | grep -iE "error|passability|script" | head`
 Expected: no script/parse errors mentioning `compute_device.gd` or `passability`. The buffer is allocated but not yet bound or written — harmless. (If using the Godot editor's MCP `run_project`, launch then stop, and check `get_debug_output` for the same.)
@@ -327,7 +338,7 @@ Then, immediately after the `u1` block appends the segment buffer (line 303 `uni
 		uniforms.append(u2)
 ```
 
-- [ ] **Step 4: Verify the shader compiles and the dispatch runs (manual — GPU path)**
+- [ ] **Step 4: [MANUAL — human] Verify the shader compiles and the dispatch runs (M2, GPU path)**
 
 Run: `godot --path . --quit-after 180 2>&1 | grep -iE "error|shader|uniform|collider" | head`
 Expected: no shader-compile or `uniform_set_create` errors. The collider should still build wall collision (player can't walk through walls). If a uniform-mismatch error appears, the shader binding and the uniform set are out of sync — re-check Steps 1–3.
@@ -609,7 +620,7 @@ add:
 		world_manager.nav_field.grid.drop_chunk(coord)
 ```
 
-- [ ] **Step 7: Verify in-engine that enemies still path (manual — GPU path)**
+- [ ] **Step 7: [MANUAL — human] Verify in-engine that enemies still path (M3, GPU path)**
 
 Run the project (`godot --path .` or MCP `run_project`), spawn into a level, and confirm enemies move toward the player and route around walls rather than stopping at or clipping into terrain. Check the debug output for errors:
 
@@ -649,7 +660,7 @@ Expected: no matches.
 Run: `grep -n "passability_output_buffers\|decode_passability_slice\|PASSABILITY" src/core/compute_device.gd && grep -n "binding = 2" src/core/chunk_manager.gd && grep -n "passability_buffer" shaders/compute/collider.glsl && grep -n "set_tile" src/core/terrain_collision_helper.gd`
 Expected: matches in every file — buffer/decoder in `compute_device`, binding in `chunk_manager`, write in the shader, and the `set_tile` feed in the helper.
 
-- [ ] **Step 4: Final manual smoke (GPU path)**
+- [ ] **Step 4: [MANUAL — human] Final live-edit smoke (M4, GPU path)**
 
 Run the project, play for ~30 seconds, carve terrain near enemies, and confirm: walls still block the player, enemies path around freshly-carved and freshly-filled terrain, and no errors print. This exercises the GPU passability grid reacting to live terrain edits.
 
