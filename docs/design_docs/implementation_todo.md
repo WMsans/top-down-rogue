@@ -198,6 +198,52 @@ placement — same anti-pattern, out of current scope.)
 
 ---
 
+## Phase 9: Enemy Combat & Crowd Tension
+
+Enemies are individually too weak — the player clears or simply *skips* everything with
+starting weapons and walks to the boss. Goal: keep each enemy **simple and readable**, but
+let **crowds** and **unavoidable pursuit** create natural tension (references: Enter the
+Gungeon split-shots, Hades attack-token choreography, Soul Knight melee/terrain emphasis).
+Bullets pressure positioning (dodgeable by default); melee + terrain carry the real threat.
+The open-world layout is fixed, so the anti-skip fix lives in **AI + spawning**, not level
+geometry. Each sub-project gets its own design → plan → build cycle.
+
+Build **SP1 first** — it's the foundation that makes combat unavoidable and choreographed;
+without it, nothing else is testable in real play. SP2/SP3 add threat variety on top and are
+independent of each other.
+
+Out of scope (future sub-project): **terrain hazard buffs** for Noita-like environmental
+tension.
+
+### Sub-project 1: Crowd AI & Pursuit Foundation
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P1 | Medium | Persistent aggro | Aggroed enemies path-follow via `nav_field` indefinitely — remove the leash give-up |
+| | P1 | Medium | Aggro contagion | An aggroed enemy wakes nearby idle enemies; the running player drags a growing horde |
+| | P1 | Medium | Rubber-band catch-up | Pursuer speed scales toward player speed when tethered behind, never exceeds ("keep pace, never exceed") |
+| | P1 | High | Surround / flank steering | Aggroed enemies distribute around the player at a preferred radius instead of clumping on one side |
+| | P1 | High | Attack-token budget | Shared pool of N tokens; an enemy must claim one to enter windup/attack and releases it on cooldown; untokened enemies circle |
+| | P2 | Medium | Gauntlet spawning | Density ramps toward the boss; modest reinforcement trickle when lingering |
+| | P2 | Low | Baseline tuning pass | Crowd sizes, damage, and pursuit-speed band so crowds threaten while individuals stay killable |
+
+### Sub-project 2: Ranged & Sniper Threat Patterns
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P2 | High | Burst attack support | `RangedWeapon`/enemy fires a timed shot sequence with re-aim between shots |
+| | P2 | Medium | Aimed 3-round burst (default) | Default ranged pattern; re-aims each shot, rewards constant movement |
+| | P2 | Medium | Split-shot variant | Two diverging bullets; a stationary player sits safely in the gap |
+| | P2 | Medium | Fan variant | Center bullet aimed + two spread shots |
+| | P2 | High | Sniper variant | Low fire rate, long telegraph (aim line/charge), high damage, heavy terrain destruction |
+
+### Sub-project 3: Melee Threat Variants
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+| | P2 | High | Lunge variant | Telegraphed charge: windup → dash/overshoot → recovery/punish window. Default melee stays today's walk-in-and-swing |
+| | P2 | Medium | Shield-front variant | Blocks frontal damage; must be flanked. Pairs with surround steering |
+| | P3 | Medium | Pounce variant (optional) | Marks a ring at the player's position and leaps in |
+
+---
+
 ## Difficulty Legend
 
 - **Low**: Straightforward implementation, well-documented patterns
