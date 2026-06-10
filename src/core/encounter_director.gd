@@ -49,3 +49,15 @@ static func catch_up_speed(base_speed: float, dist_to_player: float, player_spee
 	var t := clampf((dist_to_player - TETHER_DISTANCE) / RAMP_BAND, 0.0, 1.0)
 	var target := maxf(base_speed, cap)
 	return minf(lerpf(base_speed, target, t), cap)
+
+
+static func should_aggro_from_neighbors(me: Node2D, neighbors: Array) -> bool:
+	var my_pos := me.global_position
+	for n in neighbors:
+		if n == me or not is_instance_valid(n):
+			continue
+		if not n.has_method("is_pursuing") or not n.is_pursuing():
+			continue
+		if my_pos.distance_to(n.global_position) <= CONTAGION_RADIUS:
+			return true
+	return false
