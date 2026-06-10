@@ -144,3 +144,34 @@ func test_modifier_projectile_fan_makes_fresh_behaviors() -> void:
 			assert_that(c.behaviors[0] is BounceBehavior).is_true()
 			assert_that(seen.has(c.behaviors[0])).is_false()
 			seen.append(c.behaviors[0])
+
+
+class _CountingMod extends ProjectileModifier:
+	var fires: int = 0
+	func _fire(_weapon, _user, _ctx) -> void:
+		fires += 1
+
+
+func test_cadence_every_hit_by_default() -> void:
+	var m := _CountingMod.new()
+	for i in range(4):
+		m.on_attack(null, null, {})
+	assert_int(m.fires).is_equal(4)
+
+
+func test_cadence_period_three_fire_on_zero_and_one() -> void:
+	var m := _CountingMod.new()
+	m.period = 3
+	m.fire_on = [0, 1]
+	for i in range(5):
+		m.on_attack(null, null, {})
+	assert_int(m.fires).is_equal(4)
+
+
+func test_cadence_period_three_fire_on_last_only() -> void:
+	var m := _CountingMod.new()
+	m.period = 3
+	m.fire_on = [2]
+	for i in range(6):
+		m.on_attack(null, null, {})
+	assert_int(m.fires).is_equal(2)
