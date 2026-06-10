@@ -8,9 +8,11 @@ extends Area2D
 @export var crit_chance: float = 0.0
 @export var crit_multiplier: float = 2.0
 @export var crit_status: String = ""
+@export var hit_status: String = ""
 @export var collisionless_time: float = 0.0
 
 const CRIT_STATUS_STAIN := 2.0
+const HIT_STATUS_STAIN := 2.0
 const ATTACKABLE_HIT_LAYER := 1 << 7  # layer 8, zero-indexed bit 7
 
 var direction: Vector2 = Vector2.RIGHT
@@ -79,6 +81,10 @@ func _handle_hit(target: Node) -> void:
 				var sc = target.get_node_or_null("StatusComponent")
 				if sc != null:
 					sc.add_stain(crit_status, CRIT_STATUS_STAIN)
+			if hit_status != "":
+				var hs = target.get_node_or_null("StatusComponent")
+				if hs != null:
+					hs.add_stain(hit_status, HIT_STATUS_STAIN)
 			var keep_enemy := false
 			for b in behaviors:
 				keep_enemy = b.on_enemy_hit(self, target) or keep_enemy

@@ -115,6 +115,12 @@ func _use_impl(user: Node) -> void:
 	_start_swing(direction)
 	_carve_and_push(pos, direction, weapon_reach, arc_angle, damage)
 	_hit_attackables(user, pos, direction, weapon_reach, arc_angle, 1.0, false, false)
+	notify_attack(user, {
+		"direction": direction,
+		"origin": pos,
+		"charged": false,
+		"charge_ratio": 0.0,
+	})
 
 
 func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float, dmg: float) -> void:
