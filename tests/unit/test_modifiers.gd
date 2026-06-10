@@ -315,3 +315,19 @@ func test_lightning_no_proc_does_nothing() -> void:
 	m.proc_chance = 0.0  # never fire
 	m.on_attack(null, pu[1], _ctx())
 	assert_int(target.hits.size()).is_equal(0)
+
+
+func test_all_csv_modifiers_registered() -> void:
+	var ids := [
+		"lava_emitter", "fireball_fan", "icicle_volley", "gleaming_projectile",
+		"green_crescent", "arc_volley", "triangular_volley", "splitting_rounds",
+		"bouncing_bullets", "penetrating_shockwave", "lightning_bolt",
+	]
+	for id in ids:
+		assert_bool(WeaponRegistry.modifier_scripts.has(id)).is_true()
+
+
+func test_make_modifier_overlays_csv_data() -> void:
+	var m: Modifier = WeaponRegistry._make_modifier("fireball_fan")
+	assert_that(m).is_not_null()
+	assert_str(m.name).is_equal("Fireball Fan")
