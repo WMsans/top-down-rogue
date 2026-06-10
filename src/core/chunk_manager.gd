@@ -288,7 +288,7 @@ func build_collider_uniform_sets(chunk: Chunk) -> void:
 		if chunk.collider_uniform_sets[i].is_valid():
 			world_manager.rd.free_rid(chunk.collider_uniform_sets[i])
 			chunk.collider_uniform_sets[i] = RID()
-		if not compute.collider_output_buffers[i].is_valid():
+		if not compute.collider_output_buffers[i].is_valid() or not compute.passability_output_buffers[i].is_valid():
 			continue
 		var uniforms: Array[RDUniform] = []
 		var u0 := RDUniform.new()
@@ -301,6 +301,11 @@ func build_collider_uniform_sets(chunk: Chunk) -> void:
 		u1.binding = 1
 		u1.add_id(compute.collider_output_buffers[i])
 		uniforms.append(u1)
+		var u2 := RDUniform.new()
+		u2.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u2.binding = 2
+		u2.add_id(compute.passability_output_buffers[i])
+		uniforms.append(u2)
 		chunk.collider_uniform_sets[i] = world_manager.rd.uniform_set_create(uniforms, compute.collider_shader, 0)
 
 
