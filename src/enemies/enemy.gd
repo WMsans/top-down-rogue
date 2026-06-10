@@ -20,6 +20,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var separation_radius: float = 16.0
 @export var min_attack_settle_time: float = 0.5
 @export var leash_radius: float = 280.0
+@export var damage_scale: float = 1.0
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
@@ -62,6 +63,8 @@ var _parry_stun_remaining: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
+var _director = null
+var _holds_attack_token: bool = false
 
 var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
@@ -75,6 +78,7 @@ func _ready() -> void:
 	add_to_group("attackable")
 	health = max_health
 	_speed_base = speed
+	_apply_damage_scale()
 	motion_mode = MOTION_MODE_FLOATING
 
 	if is_elite:
@@ -133,6 +137,11 @@ func _apply_elite_scaling() -> void:
 			speed = _speed_base * 0.7
 		EliteAbility.ENRAGE:
 			pass  # dynamically applied in _process
+
+
+func _apply_damage_scale() -> void:
+	if weapon != null and damage_scale != 1.0:
+		weapon.damage *= damage_scale
 
 
 func _process(delta: float) -> void:
@@ -224,6 +233,15 @@ func _process_idle(delta: float) -> void:
 		_change_state(State.CHASE)
 		return
 
+	if _get_director() != null and _world_manager != null and is_instance_valid(_world_manager):
+		var grid = _world_manager.swarm_grid
+		if grid != null:
+			var neighbors: Array = grid.query_neighbors(global_position)
+			if EncounterDirector.should_aggro_from_neighbors(self, neighbors):
+				_aggroed = true
+				_change_state(State.CHASE)
+				return
+
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
 		if _wander_is_paused:
@@ -257,12 +275,6 @@ func _process_chase(_delta: float) -> void:
 		_change_state(State.WANDER)
 		return
 
-	# Sticky pursuit: give up only once the player escapes the leash radius.
-	if dist > leash_radius:
-		_aggroed = false
-		_change_state(State.WANDER)
-		return
-
 	if dist < 1.0:
 		velocity = Vector2.ZERO
 		return
@@ -274,12 +286,19 @@ func _process_chase(_delta: float) -> void:
 		var fd := _nav_field_dir()
 		move_dir = fd if fd != Vector2.ZERO else to_player.normalized()
 
+	if sees and dist <= _attack_range and _settle_timer >= min_attack_settle_time:
+		if _try_claim_attack():
+			velocity = Vector2.ZERO
+			_change_state(State.WINDUP)
+			return
+
+	if not _holds_attack_token:
+		var slot_dir := _surround_dir(_attack_range + 8.0)
+		if slot_dir != Vector2.ZERO:
+			move_dir = slot_dir
+
 	move_dir = _apply_separation(move_dir)
 	velocity = move_dir * _get_effective_speed()
-
-	if sees and dist <= _attack_range and _settle_timer >= min_attack_settle_time:
-		velocity = Vector2.ZERO
-		_change_state(State.WINDUP)
 
 
 func _process_windup(delta: float) -> void:
@@ -388,6 +407,9 @@ func _move_with_clamp(delta: float) -> void:
 
 
 func _change_state(new_state: int) -> void:
+	if new_state != State.WINDUP and new_state != State.ATTACK and new_state != State.COOLDOWN:
+		_release_attack()
+
 	if new_state == State.HURT:
 		_prev_state = _state
 		_state = new_state
@@ -519,6 +541,9 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 
 
 func die() -> void:
+	var dir = _get_director()
+	if dir != null:
+		dir.unregister(self)
 	died.emit()
 	_on_death()
 
@@ -598,6 +623,55 @@ func _on_death() -> void:
 	pass
 
 
+func is_pursuing() -> bool:
+	return _aggroed
+
+
+func _get_director():
+	if _director != null:
+		return _director
+	if _world_manager != null and is_instance_valid(_world_manager):
+		_director = _world_manager.get("encounter_director")
+	return _director
+
+
+func _uses_ranged_token() -> bool:
+	return false
+
+
+func _try_claim_attack() -> bool:
+	var dir = _get_director()
+	if dir == null:
+		return true
+	if dir.try_claim_attack(self, _uses_ranged_token()):
+		_holds_attack_token = true
+		return true
+	return false
+
+
+func _release_attack() -> void:
+	if not _holds_attack_token:
+		return
+	_holds_attack_token = false
+	var dir = _get_director()
+	if dir != null:
+		dir.release_attack(self)
+
+
+func _surround_dir(preferred_radius: float) -> Vector2:
+	var dir = _get_director()
+	if dir == null or not dir.is_active(self):
+		return Vector2.ZERO
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return Vector2.ZERO
+	var ang: float = dir.get_slot_angle(self)
+	var slot_pos: Vector2 = _player_ref.global_position + Vector2.from_angle(ang) * preferred_radius
+	var to_slot := slot_pos - global_position
+	if to_slot.length() < 6.0:
+		return Vector2.ZERO
+	return to_slot.normalized()
+
+
 func get_facing_direction() -> Vector2:
 	if _player_ref and is_instance_valid(_player_ref):
 		var d := _player_ref.global_position - global_position
@@ -616,7 +690,17 @@ func _get_effective_speed() -> float:
 	var base := _base_effective_speed()
 	if _status_component != null and is_instance_valid(_status_component):
 		base *= _status_component.get_move_speed_multiplier()
-	return base
+	return _apply_catch_up(base)
+
+
+func _apply_catch_up(base: float) -> float:
+	if not _aggroed or _player_ref == null or not is_instance_valid(_player_ref):
+		return base
+	var dist := global_position.distance_to(_player_ref.global_position)
+	var player_speed: float = 120.0
+	if "max_speed" in _player_ref:
+		player_speed = _player_ref.max_speed
+	return EncounterDirector.catch_up_speed(base, dist, player_speed)
 
 
 func _base_effective_speed() -> float:

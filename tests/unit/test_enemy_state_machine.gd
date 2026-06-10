@@ -194,3 +194,143 @@ func test_player_in_range_false_when_no_player() -> void:
 	e._player_ref = null
 	e._update_player_in_range()
 	assert_bool(e._player_in_range).is_false()
+
+
+const _Director = preload("res://src/core/encounter_director.gd")
+
+func test_is_pursuing_reflects_aggro() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	assert_bool(e.is_pursuing()).is_false()
+	e._aggroed = true
+	assert_bool(e.is_pursuing()).is_true()
+
+func test_aggroed_enemy_does_not_leash_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.global_position = Vector2(10000, 0)  # well beyond leash_radius
+	e.global_position = Vector2.ZERO
+	e._aggroed = true
+	e._state = Enemy.State.CHASE
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.CHASE)  # never gives up once aggroed
+
+func test_die_unregisters_from_director() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	var d = _Director.new()
+	e._director = d
+	e._aggroed = true
+	d._active = [e]
+	d.try_claim_attack(e, false)
+	e.die()
+	assert_bool(d.is_active(e)).is_false()
+
+
+func test_effective_speed_capped_below_player_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.speed = 60.0
+	e._speed_base = 60.0
+	e._aggroed = true
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.set("max_speed", 120.0)
+	e._player_ref.global_position = Vector2(2000, 0)  # far -> ramps to cap
+	e.global_position = Vector2.ZERO
+	var s := e._get_effective_speed()
+	assert_float(s).is_equal_approx(114.0, 0.001)  # 120 * 0.95
+
+func test_effective_speed_uses_base_when_not_aggroed() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.speed = 60.0
+	e._speed_base = 60.0
+	e._aggroed = false
+	e._player_ref = null
+	assert_float(e._get_effective_speed()).is_equal_approx(60.0, 0.001)
+
+
+class _FakeWorld extends Node:
+	var swarm_grid
+	var encounter_director
+
+func test_contagion_aggros_idle_enemy_near_pursuer() -> void:
+	var d = _Director.new()
+	var world: Node = auto_free(_FakeWorld.new())
+	add_child(world)
+	world.encounter_director = d
+	world.swarm_grid = preload("res://src/core/swarm_grid.gd").new(64.0)
+
+	var idle: MockEnemy = auto_free(MockEnemy.new())
+	idle.global_position = Vector2.ZERO
+	idle._world_manager = world
+	idle._director = d
+	idle._state = Enemy.State.WANDER
+	idle._player_ref = null
+
+	var pursuer: MockEnemy = auto_free(MockEnemy.new())
+	pursuer.global_position = Vector2(30, 0)  # within CONTAGION_RADIUS (48)
+	pursuer._aggroed = true
+
+	world.swarm_grid.rebuild([idle, pursuer])
+	idle._process_idle(0.1)
+	assert_bool(idle._aggroed).is_true()
+	assert_that(idle._state).is_equal(Enemy.State.CHASE)
+
+
+func test_chase_attacks_when_token_available() -> void:
+	var d = _Director.new()
+	d.melee_token_count = 1
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e._director = d
+	e._aggroed = true
+	e._state = Enemy.State.CHASE
+	d._active = [e]
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.global_position = Vector2(10, 0)
+	e.global_position = Vector2.ZERO
+	e._attack_range = 32.0
+	e._settle_timer = e.min_attack_settle_time + 1.0
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.WINDUP)
+
+func test_chase_holds_when_no_token() -> void:
+	var d = _Director.new()
+	d.melee_token_count = 0  # no tokens available
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e._director = d
+	e._aggroed = true
+	e._state = Enemy.State.CHASE
+	d._active = [e]
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.global_position = Vector2(10, 0)
+	e.global_position = Vector2.ZERO
+	e._attack_range = 32.0
+	e._settle_timer = e.min_attack_settle_time + 1.0
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.CHASE)  # cannot commit, keeps circling
+
+func test_damage_scale_multiplies_weapon_damage_on_ready() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.weapon = MeleeWeapon.new()
+	e.weapon.damage = 5.0
+	e.damage_scale = 2.0
+	e._apply_damage_scale()
+	assert_float(e.weapon.damage).is_equal_approx(10.0, 0.001)
+
+func test_change_state_releases_token_on_return_to_chase() -> void:
+	var d = _Director.new()
+	d.melee_token_count = 1
+	var holder: MockEnemy = auto_free(MockEnemy.new())
+	var waiter: MockEnemy = auto_free(MockEnemy.new())
+	add_child(holder)
+	add_child(waiter)
+	holder._director = d
+	waiter._director = d
+	d._active = [holder, waiter]
+	assert_bool(holder._try_claim_attack()).is_true()
+	assert_bool(waiter._try_claim_attack()).is_false()
+	holder._change_state(Enemy.State.CHASE)  # leaving the attack cycle
+	assert_bool(waiter._try_claim_attack()).is_true()  # token released

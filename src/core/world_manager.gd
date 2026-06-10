@@ -25,6 +25,7 @@ signal chunks_generated(new_coords: Array[Vector2i])
 signal chunk_unloaded(coord: Vector2i)
 
 var swarm_grid: RefCounted = preload("res://src/core/swarm_grid.gd").new(32.0)
+var encounter_director: EncounterDirector = EncounterDirector.new()
 var nav_field  # NavField
 
 # Max new chunks to create+generate per frame; the rest stay "desired but not
@@ -99,7 +100,11 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
-	swarm_grid.rebuild(get_tree().get_nodes_in_group("attackable"))
+	var attackable := get_tree().get_nodes_in_group("attackable")
+	swarm_grid.rebuild(attackable)
+	encounter_director.melee_token_count = EncounterDirector.tokens_for_floor(2, LevelManager.floor_number)
+	encounter_director.ranged_token_count = EncounterDirector.tokens_for_floor(2, LevelManager.floor_number)
+	encounter_director.update(tracking_position, attackable)
 	_update_chunks()
 	for coord in compute_device.read_solidity_flags(chunks):
 		mark_terrain_dirty(coord)

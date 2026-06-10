@@ -16,25 +16,57 @@ const CHUNK_SIZE := 256
 const NUDGE_CELL: int = 8       # search step, one passability cell
 const NUDGE_MAX_RINGS: int = 3  # outward search radius ~= 24px
 
+const GAUNTLET_EXTRA_PER_RING := 0.34
+const GAUNTLET_EXTRA_CAP := 4
+
+const REINFORCE_INTERVAL := 12.0
+const REINFORCE_SPAWN_DIST := 360.0
+
 var _spawned_sectors: Dictionary = {}
 var _world_manager: Node = null
 var _spawn_parent: Node = null
+var _reinforce_timer: float = 0.0
 
 
-func _process(_delta: float) -> void:
-	if _world_manager != null and is_instance_valid(_world_manager):
+static func gauntlet_extra_count(sector_dist: int) -> int:
+	return clampi(int(floor(float(sector_dist) * GAUNTLET_EXTRA_PER_RING)), 0, GAUNTLET_EXTRA_CAP)
+
+
+func _process(delta: float) -> void:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		var wm := get_tree().get_first_node_in_group("world_manager")
+		if wm == null:
+			return
+		_world_manager = wm
+		_spawn_parent = _world_manager.get_chunk_container()
+		_spawned_sectors.clear()
+		_world_manager.chunks_generated.connect(_on_chunks_generated)
 		return
-	var wm := get_tree().get_first_node_in_group("world_manager")
-	if wm == null:
-		return
-	_world_manager = wm
-	_spawn_parent = _world_manager.get_chunk_container()
-	_spawned_sectors.clear()
-	_world_manager.chunks_generated.connect(_on_chunks_generated)
+	_tick_reinforcement(delta)
 
 
 func clear() -> void:
 	_spawned_sectors.clear()
+
+
+func _tick_reinforcement(delta: float) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null or not is_instance_valid(player):
+		return
+	_reinforce_timer += delta
+	if _reinforce_timer < REINFORCE_INTERVAL:
+		return
+	_reinforce_timer = 0.0
+	var angle := randf() * TAU
+	var spawn_pos: Vector2 = player.global_position + Vector2.from_angle(angle) * REINFORCE_SPAWN_DIST
+	var resolved: Variant = _resolve_clear_position(spawn_pos)
+	if resolved == null:
+		return
+	var grid: SectorGrid = LevelManager.get_grid()
+	var sector_dist: int = 1
+	if grid != null:
+		sector_dist = grid.chebyshev_distance(grid.world_to_sector(spawn_pos), Vector2i.ZERO)
+	_spawn_enemy(resolved, sector_dist, LevelManager.floor_number, false, false)
 
 
 func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
@@ -124,7 +156,11 @@ static func _apply_rotation(local: Vector2i, rotation_deg: int, size: int) -> Ve
 
 func _spawn_entity(marker: int, world_pos: Vector2, sector_dist: int, floor_num: int, is_boss_room: bool) -> void:
 	match marker:
-		1: _spawn_enemy_validated(world_pos, sector_dist, floor_num, false, false)
+		1:
+			_spawn_enemy_validated(world_pos, sector_dist, floor_num, false, false)
+			for _i in range(gauntlet_extra_count(sector_dist)):
+				var jitter := Vector2(randf_range(-16, 16), randf_range(-16, 16))
+				_spawn_enemy_validated(world_pos + jitter, sector_dist, floor_num, false, false)
 		2: _spawn_enemy_validated(world_pos, sector_dist, floor_num, false, true)
 		3: _spawn_chest(world_pos, false)
 		4: _spawn_shop(world_pos)
@@ -186,6 +222,9 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 
 	enemy.max_health = int(float(enemy.max_health) * health_mult * (2.0 if is_elite else 1.0) * (5.0 if is_boss else 1.0))
 	enemy.speed = enemy.speed * speed_mult * (1.5 if is_boss else 1.0)
+
+	if not is_boss and "damage_scale" in enemy:
+		enemy.damage_scale = damage_mult
 
 	if is_boss:
 		if "weapon_resource" in enemy and enemy.weapon_resource:
