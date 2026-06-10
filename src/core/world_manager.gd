@@ -234,12 +234,12 @@ func place_material(world_pos: Vector2, radius: float, material_id: int) -> void
 	terrain_modifier.place_material(world_pos, radius, material_id)
 
 
-func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0) -> void:
-	terrain_modifier.place_material_blob(world_pos, radius, material_id, noise_seed, edge_jitter)
+func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0, only_chunks: Dictionary = {}) -> void:
+	terrain_modifier.place_material_blob(world_pos, radius, material_id, noise_seed, edge_jitter, only_chunks)
 
 
-func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int) -> void:
-	terrain_modifier.place_material_ring(world_pos, inner_radius, outer_radius, material_id)
+func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int, only_chunks: Dictionary = {}) -> void:
+	terrain_modifier.place_material_ring(world_pos, inner_radius, outer_radius, material_id, only_chunks)
 
 
 func place_fire(world_pos: Vector2, radius: float) -> void:
