@@ -148,10 +148,10 @@ tao_sword, broadsword, throwing_knife, fire_orb, spread_shot, boss_staff, lava_e
 ### Sub-project 3: Projectile Behaviors
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P2 | Medium | Bouncing projectiles | Projectiles that ricochet off terrain |
-| | P2 | Medium | Splitting projectiles | Projectiles that split into shards on impact |
-| | P2 | Medium | Penetrating projectiles | Pass-through shockwaves that delete enemy bullets |
-| | P2 | Medium | Bullet-clearing projectiles | Shatter incoming enemy projectiles |
+| x | P2 | Medium | Bouncing projectiles | Projectiles that ricochet off terrain |
+| x | P2 | Medium | Splitting projectiles | Projectiles that split into shards on impact |
+| x | P2 | Medium | Penetrating projectiles | Pass-through shockwaves that delete enemy bullets |
+| x | P2 | Medium | Bullet-clearing projectiles | Shatter incoming enemy projectiles |
 
 ### Sub-project 4: Modifiers
 | Done | Priority | Difficulty | Task | Description |
