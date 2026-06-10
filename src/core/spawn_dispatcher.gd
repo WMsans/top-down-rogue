@@ -223,6 +223,9 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 	enemy.max_health = int(float(enemy.max_health) * health_mult * (2.0 if is_elite else 1.0) * (5.0 if is_boss else 1.0))
 	enemy.speed = enemy.speed * speed_mult * (1.5 if is_boss else 1.0)
 
+	if not is_boss and "damage_scale" in enemy:
+		enemy.damage_scale = damage_mult
+
 	if is_boss:
 		if "weapon_resource" in enemy and enemy.weapon_resource:
 			enemy.weapon_resource.damage *= damage_mult
