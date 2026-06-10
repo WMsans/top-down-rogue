@@ -279,12 +279,19 @@ func _process_chase(_delta: float) -> void:
 		var fd := _nav_field_dir()
 		move_dir = fd if fd != Vector2.ZERO else to_player.normalized()
 
+	if sees and dist <= _attack_range and _settle_timer >= min_attack_settle_time:
+		if _try_claim_attack():
+			velocity = Vector2.ZERO
+			_change_state(State.WINDUP)
+			return
+
+	if not _holds_attack_token:
+		var slot_dir := _surround_dir(_attack_range + 8.0)
+		if slot_dir != Vector2.ZERO:
+			move_dir = slot_dir
+
 	move_dir = _apply_separation(move_dir)
 	velocity = move_dir * _get_effective_speed()
-
-	if sees and dist <= _attack_range and _settle_timer >= min_attack_settle_time:
-		velocity = Vector2.ZERO
-		_change_state(State.WINDUP)
 
 
 func _process_windup(delta: float) -> void:
@@ -393,6 +400,9 @@ func _move_with_clamp(delta: float) -> void:
 
 
 func _change_state(new_state: int) -> void:
+	if new_state != State.WINDUP and new_state != State.ATTACK and new_state != State.COOLDOWN:
+		_release_attack()
+
 	if new_state == State.HURT:
 		_prev_state = _state
 		_state = new_state
@@ -616,6 +626,43 @@ func _get_director():
 	if _world_manager != null and is_instance_valid(_world_manager):
 		_director = _world_manager.get("encounter_director")
 	return _director
+
+
+func _uses_ranged_token() -> bool:
+	return false
+
+
+func _try_claim_attack() -> bool:
+	var dir = _get_director()
+	if dir == null:
+		return true
+	if dir.try_claim_attack(self, _uses_ranged_token()):
+		_holds_attack_token = true
+		return true
+	return false
+
+
+func _release_attack() -> void:
+	if not _holds_attack_token:
+		return
+	_holds_attack_token = false
+	var dir = _get_director()
+	if dir != null:
+		dir.release_attack(self)
+
+
+func _surround_dir(preferred_radius: float) -> Vector2:
+	var dir = _get_director()
+	if dir == null or not dir.is_active(self):
+		return Vector2.ZERO
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return Vector2.ZERO
+	var ang: float = dir.get_slot_angle(self)
+	var slot_pos: Vector2 = _player_ref.global_position + Vector2.from_angle(ang) * preferred_radius
+	var to_slot := slot_pos - global_position
+	if to_slot.length() < 6.0:
+		return Vector2.ZERO
+	return to_slot.normalized()
 
 
 func get_facing_direction() -> Vector2:
