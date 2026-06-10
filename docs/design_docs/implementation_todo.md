@@ -134,9 +134,9 @@ tao_sword, broadsword, throwing_knife, fire_orb, spread_shot, boss_staff, lava_e
 ### Sub-project 1: Crit + Status Effects
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P1 | Medium | Crit system | Per-weapon crit chance/damage + on-crit hook |
-| | P1 | High | Status effects: burn & freeze | Burn DoT and freeze/immobilize on enemies |
-| | P1 | Medium | Wire crit weapons | caliburn, flame_sword, frost_sword, heavenly_sword |
+| x | P1 | Medium | Crit system | Per-weapon crit chance/damage + on-crit hook |
+| x | P1 | High | Status effects: burn & freeze | Burn DoT and freeze/immobilize on enemies |
+| x | P1 | Medium | Wire crit weapons | caliburn, flame_sword, frost_sword, heavenly_sword |
 
 ### Sub-project 2: Charge + Combos
 | Done | Priority | Difficulty | Task | Description |
@@ -180,9 +180,9 @@ placement — same anti-pattern, out of current scope.)
 ### Sub-project 1: Solid-aware dirtying + NavField change-detection
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| | P0 | Low | Solid-aware dirty filtering | Only dirty nav/collision when a change adds/removes a *solid* material |
-| | P0 | Low | NavField tile change-detection | Hash the downsampled tile; skip rebuild when solidity unchanged (mirrors collision helper) |
-| | P0 | Low | Measure & verify | Confirm steady-state NavField + collision drop to ~0 ms for non-solid effects |
+| x | P0 | Low | Solid-aware dirty filtering | Only dirty nav/collision when a change adds/removes a *solid* material |
+| x | P0 | Low | NavField tile change-detection | Hash the downsampled tile; skip rebuild when solidity unchanged (mirrors collision helper) |
+| x | P0 | Low | Measure & verify | Confirm steady-state NavField + collision drop to ~0 ms for non-solid effects |
 
 ### Sub-project 2: GPU passability buffer (NavField structural)
 | Done | Priority | Difficulty | Task | Description |
