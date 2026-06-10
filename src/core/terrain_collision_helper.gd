@@ -48,15 +48,23 @@ func rebuild_dirty(chunks: Dictionary, _delta: float) -> void:
 func _consume_readback(chunks: Dictionary) -> void:
 	var compute = world_manager.compute_device
 	var readback: Dictionary = compute.read_collider_buffer_coalesced()
+	var segments_map: Dictionary = readback["segments"]
+	var passability_map: Dictionary = readback["passability"]
 	_in_flight.clear()
-	for coord in readback:
+
+	# Feed every dispatched chunk's passability tile into the nav grid,
+	# independent of the seg-hash skip below: an all-solid chunk emits no
+	# segments but still has a meaningful passability grid.
+	if world_manager.nav_field != null:
+		for coord in passability_map:
+			if chunks.has(coord):
+				world_manager.nav_field.grid.set_tile(coord, passability_map[coord])
+
+	for coord in segments_map:
 		if not chunks.has(coord):
 			continue
-		var segments: PackedVector2Array = readback[coord]
-		# If segments are byte-identical to what we already built, the shape
-		# and occluders are unchanged — skip the rebuild. This is the common
-		# case for chunks marked dirty by GPU writes that didn't actually
-		# alter the collision boundary.
+		var segments: PackedVector2Array = segments_map[coord]
+		# Byte-identical segments => shape + occluders unchanged; skip rebuild.
 		var seg_hash: int = hash(segments)
 		var is_first_build: bool = not _last_seg_hash.has(coord)
 		if _last_seg_hash.get(coord, -1) == seg_hash:
