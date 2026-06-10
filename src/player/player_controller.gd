@@ -61,9 +61,13 @@ func _ready() -> void:
 	var delivery := WeaponDelivery.new()
 	delivery.name = "WeaponDelivery"
 	add_child(delivery)
-	await get_tree().process_frame
-	await get_tree().process_frame
 	var guidance_center := _find_guidance_room_center()
+	var wm := get_parent().get_node_or_null("WorldManager")
+	if wm:
+		wm.tracking_position = Vector2(guidance_center)
+	var target_chunk := Vector2i(floori(float(guidance_center.x) / 256), floori(float(guidance_center.y) / 256))
+	while wm != null and not wm.chunks.has(target_chunk):
+		await get_tree().process_frame
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(guidance_center, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
 	_last_safe_position = position
