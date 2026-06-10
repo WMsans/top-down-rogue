@@ -8,6 +8,7 @@ extends Area2D
 @export var crit_chance: float = 0.0
 @export var crit_multiplier: float = 2.0
 @export var crit_status: String = ""
+@export var collisionless_time: float = 0.0
 
 const CRIT_STATUS_STAIN := 2.0
 const ATTACKABLE_HIT_LAYER := 1 << 7  # layer 8, zero-indexed bit 7
@@ -51,6 +52,8 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func _handle_hit(target: Node) -> void:
+	if _age < collisionless_time:
+		return
 	if is_enemy_projectile:
 		if target.is_in_group("player"):
 			if target.has_method("on_hit_impact"):
