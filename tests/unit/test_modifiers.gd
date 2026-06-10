@@ -270,3 +270,48 @@ func test_bouncing_bullets_fires_four_with_bounce_on_third() -> void:
 	for c in pu[0].get_children():
 		if c is Projectile:
 			assert_that(c.behaviors[0] is BounceBehavior).is_true()
+
+
+func test_shockwave_fires_only_on_full_charge() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := PenetratingShockwaveModifier.new()
+	m.on_attack(null, pu[1], _ctx(false, 0.0))  # not charged
+	assert_int(_count_projectiles(pu[0])).is_equal(0)
+	m.on_attack(null, pu[1], _ctx(true, 0.5))   # partial charge
+	assert_int(_count_projectiles(pu[0])).is_equal(0)
+	m.on_attack(null, pu[1], _ctx(true, 1.0))   # full charge
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			var has_pen := false
+			var has_clear := false
+			for b in c.behaviors:
+				has_pen = has_pen or b is PenetrateBehavior
+				has_clear = has_clear or b is ClearBulletsBehavior
+			assert_bool(has_pen).is_true()
+			assert_bool(has_clear).is_true()
+
+
+func test_lightning_damages_nearest_and_applies_frozen() -> void:
+	var pu := _spawn_parent_and_user()
+	(pu[1] as Node2D).global_position = Vector2.ZERO
+	var target := _StubTarget.new()
+	pu[0].add_child(target)
+	target.global_position = Vector2(20, 0)
+	var m := LightningBoltModifier.new()
+	m.proc_chance = 1.0  # always fire
+	m.on_attack(null, pu[1], _ctx())
+	assert_int(target.hits.size()).is_equal(1)
+	var sc: StatusComponent = target.get_node("StatusComponent")
+	assert_that(sc.get_stain("frozen")).is_greater(0.0)
+
+
+func test_lightning_no_proc_does_nothing() -> void:
+	var pu := _spawn_parent_and_user()
+	var target := _StubTarget.new()
+	pu[0].add_child(target)
+	target.global_position = Vector2(20, 0)
+	var m := LightningBoltModifier.new()
+	m.proc_chance = 0.0  # never fire
+	m.on_attack(null, pu[1], _ctx())
+	assert_int(target.hits.size()).is_equal(0)
