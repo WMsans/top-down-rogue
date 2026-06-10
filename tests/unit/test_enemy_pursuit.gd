@@ -58,16 +58,17 @@ func test_direct_steer_when_seen() -> void:
 	assert_bool(e.velocity.x > 0.0).is_true()
 	assert_float(absf(e.velocity.y)).is_less(1.0)
 
-func test_deaggro_past_leash() -> void:
+func test_persistent_aggro_past_leash() -> void:
+	# Once aggroed, the enemy pursues forever — leash radius no longer applies.
 	var e := _make_enemy()
 	e._state = Enemy.State.CHASE
 	e._aggroed = true
 	e.can_see = false
 	e.leash_radius = 280.0
-	_make_player(e, Vector2(400, 0))          # beyond leash
+	_make_player(e, Vector2(400, 0))          # beyond old leash
 	e._process_chase(0.1)
-	assert_that(e._state).is_equal(Enemy.State.WANDER)
-	assert_bool(e._aggroed).is_false()
+	assert_that(e._state).is_equal(Enemy.State.CHASE)
+	assert_bool(e._aggroed).is_true()
 
 func test_unseen_and_unaggroed_reverts() -> void:
 	# Sight-to-acquire: a target never seen and currently blocked does not commit.
