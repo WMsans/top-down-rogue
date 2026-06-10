@@ -246,3 +246,31 @@ func test_effective_speed_uses_base_when_not_aggroed() -> void:
 	e._aggroed = false
 	e._player_ref = null
 	assert_float(e._get_effective_speed()).is_equal_approx(60.0, 0.001)
+
+
+class _FakeWorld extends Node:
+	var swarm_grid
+	var encounter_director
+
+func test_contagion_aggros_idle_enemy_near_pursuer() -> void:
+	var d = _Director.new()
+	var world: Node = auto_free(_FakeWorld.new())
+	add_child(world)
+	world.encounter_director = d
+	world.swarm_grid = preload("res://src/core/swarm_grid.gd").new(64.0)
+
+	var idle: MockEnemy = auto_free(MockEnemy.new())
+	idle.global_position = Vector2.ZERO
+	idle._world_manager = world
+	idle._director = d
+	idle._state = Enemy.State.WANDER
+	idle._player_ref = null
+
+	var pursuer: MockEnemy = auto_free(MockEnemy.new())
+	pursuer.global_position = Vector2(30, 0)  # within CONTAGION_RADIUS (48)
+	pursuer._aggroed = true
+
+	world.swarm_grid.rebuild([idle, pursuer])
+	idle._process_idle(0.1)
+	assert_bool(idle._aggroed).is_true()
+	assert_that(idle._state).is_equal(Enemy.State.CHASE)
