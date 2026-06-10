@@ -85,10 +85,10 @@ func _ready() -> void:
 	nav_field = preload("res://src/core/nav/nav_field.gd").new(self)
 
 func mark_terrain_dirty(coord: Vector2i) -> void:
+	# Nav grid is now fed by the collider dispatch's passability output (via
+	# TerrainCollisionHelper), so only the collision helper is marked here.
 	if _collision_helper != null:
 		_collision_helper.mark_dirty(coord)
-	if nav_field != null:
-		nav_field.mark_dirty(coord)
 
 
 func _exit_tree() -> void:

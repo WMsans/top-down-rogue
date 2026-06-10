@@ -137,6 +137,8 @@ func unload_chunk(coord: Vector2i) -> void:
 	world_manager.chunk_unloaded.emit(coord)
 	if world_manager._collision_helper != null:
 		world_manager._collision_helper.on_chunk_unloaded(coord)
+	if world_manager.nav_field != null:
+		world_manager.nav_field.grid.drop_chunk(coord)
 	# Free our own uniform sets first, while our textures are still alive.
 	free_chunk_uniform_sets(chunk)
 	# Neighbors' sim_uniform_sets reference our rd_texture. Freeing the
@@ -288,7 +290,7 @@ func build_collider_uniform_sets(chunk: Chunk) -> void:
 		if chunk.collider_uniform_sets[i].is_valid():
 			world_manager.rd.free_rid(chunk.collider_uniform_sets[i])
 			chunk.collider_uniform_sets[i] = RID()
-		if not compute.collider_output_buffers[i].is_valid():
+		if not compute.collider_output_buffers[i].is_valid() or not compute.passability_output_buffers[i].is_valid():
 			continue
 		var uniforms: Array[RDUniform] = []
 		var u0 := RDUniform.new()
@@ -301,6 +303,11 @@ func build_collider_uniform_sets(chunk: Chunk) -> void:
 		u1.binding = 1
 		u1.add_id(compute.collider_output_buffers[i])
 		uniforms.append(u1)
+		var u2 := RDUniform.new()
+		u2.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+		u2.binding = 2
+		u2.add_id(compute.passability_output_buffers[i])
+		uniforms.append(u2)
 		chunk.collider_uniform_sets[i] = world_manager.rd.uniform_set_create(uniforms, compute.collider_shader, 0)
 
 

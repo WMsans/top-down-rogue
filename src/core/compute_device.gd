@@ -26,6 +26,9 @@ var collider_write_index: int = 0
 var collider_first_frame: bool = true
 # Manifest entries are [coord.x, coord.y, slot_index] triples; one per dispatched chunk.
 var collider_dispatch_manifests: Array[PackedInt32Array] = [PackedInt32Array(), PackedInt32Array()]
+# Passability grid output, written by the same collider dispatch. Shares the
+# collider write-index / manifest / double-buffer; one 32x32 byte-grid per slot.
+var passability_output_buffers: Array[RID] = [RID(), RID()]
 var solidity_flag_buffer: RID = RID()
 var solidity_dispatch_manifest: PackedInt32Array = PackedInt32Array()
 var dummy_texture: RID
@@ -58,6 +61,11 @@ const COLLIDER_MAX_DISPATCH_PER_FRAME := 4
 const COLLIDER_MAX_SEGMENTS_PER_SLOT := 4096
 const COLLIDER_SLOT_STRIDE_BYTES := 4 + COLLIDER_MAX_SEGMENTS_PER_SLOT * 4 * 4
 const COLLIDER_COALESCED_BUFFER_SIZE := COLLIDER_MAX_DISPATCH_PER_FRAME * COLLIDER_SLOT_STRIDE_BYTES
+
+const PASSABILITY_CELLS_PER_SIDE := 32          # 256px chunk / 8px cell
+const PASSABILITY_SLOT_U32 := 1024              # 32 * 32, one uint per cell
+const PASSABILITY_SLOT_BYTES := 4096            # 1024 * 4
+const PASSABILITY_BUFFER_SIZE := COLLIDER_MAX_DISPATCH_PER_FRAME * PASSABILITY_SLOT_BYTES  # 16 KB
 
 const SIM_MAX_CHUNKS := 64
 const SIM_FLAG_SLOT_BYTES := 4
@@ -150,6 +158,12 @@ func init_collider_storage_buffer() -> void:
 	collider_dispatch_manifests[1] = PackedInt32Array()
 	# Legacy single buffer retained for any in-flight CPU fallback path; keep as zero RID.
 	collider_storage_buffer = RID()
+	var pzero := PackedByteArray()
+	pzero.resize(PASSABILITY_BUFFER_SIZE)
+	pzero.fill(0)
+	for i in range(2):
+		passability_output_buffers[i] = rd.storage_buffer_create(PASSABILITY_BUFFER_SIZE)
+		rd.buffer_update(passability_output_buffers[i], 0, PASSABILITY_BUFFER_SIZE, pzero)
 
 
 func init_solidity_flag_buffer() -> void:
@@ -456,6 +470,10 @@ func free_resources() -> void:
 		if collider_output_buffers[i].is_valid():
 			rd.free_rid(collider_output_buffers[i])
 			collider_output_buffers[i] = RID()
+	for i in range(2):
+		if passability_output_buffers[i].is_valid():
+			rd.free_rid(passability_output_buffers[i])
+			passability_output_buffers[i] = RID()
 	if solidity_flag_buffer.is_valid():
 		rd.free_rid(solidity_flag_buffer)
 		solidity_flag_buffer = RID()
@@ -745,33 +763,40 @@ func dispatch_collider_pack(chunks: Dictionary, coords: Array) -> void:
 
 
 func read_collider_buffer_coalesced() -> Dictionary:
+	var empty := {"segments": {}, "passability": {}}
 	if collider_first_frame:
 		collider_first_frame = false
 		collider_write_index = 1 - collider_write_index
-		return {}
+		return empty
 
 	var read_index := 1 - collider_write_index
 	var manifest: PackedInt32Array = collider_dispatch_manifests[read_index]
 	if manifest.is_empty():
 		collider_write_index = 1 - collider_write_index
-		return {}
+		return empty
 
 	var entry_count := manifest.size() / 3
+
 	var bytes_needed := entry_count * COLLIDER_SLOT_STRIDE_BYTES
 	if entry_count == COLLIDER_MAX_DISPATCH_PER_FRAME:
 		bytes_needed = COLLIDER_COALESCED_BUFFER_SIZE
 	var data: PackedByteArray = rd.buffer_get_data(collider_output_buffers[read_index], 0, bytes_needed)
 
+	var pass_bytes_needed := entry_count * PASSABILITY_SLOT_BYTES
+	if entry_count == COLLIDER_MAX_DISPATCH_PER_FRAME:
+		pass_bytes_needed = PASSABILITY_BUFFER_SIZE
+	var pass_data: PackedByteArray = rd.buffer_get_data(passability_output_buffers[read_index], 0, pass_bytes_needed)
+
 	collider_write_index = 1 - collider_write_index
 
-	var result: Dictionary = {}
+	var segments: Dictionary = {}
+	var passability: Dictionary = {}
 	for i in range(entry_count):
-		var cx := manifest[i * 3]
-		var cy := manifest[i * 3 + 1]
 		var slot := manifest[i * 3 + 2]
-		var coord := Vector2i(cx, cy)
-		result[coord] = decode_collider_slice(data, slot)
-	return result
+		var coord := Vector2i(manifest[i * 3], manifest[i * 3 + 1])
+		segments[coord] = decode_collider_slice(data, slot)
+		passability[coord] = decode_passability_slice(pass_data, slot)
+	return {"segments": segments, "passability": passability}
 
 
 func decode_collider_slice(data: PackedByteArray, slot: int) -> PackedVector2Array:
@@ -795,6 +820,18 @@ func decode_collider_slice(data: PackedByteArray, slot: int) -> PackedVector2Arr
 		segments.append(Vector2(x1, y1))
 		segments.append(Vector2(x2, y2))
 	return segments
+
+
+static func decode_passability_slice(data: PackedByteArray, slot: int) -> PackedByteArray:
+	var tile := PackedByteArray()
+	tile.resize(PASSABILITY_SLOT_U32)
+	tile.fill(0)
+	var slot_offset := slot * PASSABILITY_SLOT_BYTES
+	if slot_offset + PASSABILITY_SLOT_BYTES > data.size():
+		return tile
+	for i in range(PASSABILITY_SLOT_U32):
+		tile[i] = 1 if data.decode_u32(slot_offset + i * 4) != 0 else 0
+	return tile
 
 
 static func decode_solidity_flags(data: PackedByteArray, manifest: PackedInt32Array, loaded: Dictionary) -> Array[Vector2i]:

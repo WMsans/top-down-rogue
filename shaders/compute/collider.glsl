@@ -10,6 +10,10 @@ layout(std430, binding = 1) buffer SegmentBuffer {
 	uint data[];
 } segment_buffer;
 
+layout(std430, binding = 2) buffer PassabilityBuffer {
+	uint data[];
+} passability_buffer;
+
 layout(push_constant, std430) uniform Params {
 	uint slot_index;
 	uint _pad0;
@@ -21,6 +25,10 @@ const uint CELL_SIZE = 2u;
 const uint CHUNK_SIZE = 256u;
 const uint CELLS_PER_SIDE = CHUNK_SIZE / CELL_SIZE;
 const uint MAX_SEGMENTS = 4096u;
+
+const uint PASS_CELL = 8u;
+const uint PASS_CELLS_PER_SIDE = 32u;   // CHUNK_SIZE / PASS_CELL
+const uint PASS_SLOT_U32 = 1024u;       // 32 * 32, one uint per 8px cell
 
 // Slot layout: 1 u32 header (segment count) + MAX_SEGMENTS * 4 u32 of segment data.
 // data[] is shared across slots; each slot starts at slot_base.
@@ -52,6 +60,23 @@ void main() {
 	// Sample 4 corners of the cell
 	uint gx = cell_x * CELL_SIZE;
 	uint gy = cell_y * CELL_SIZE;
+
+	// Passability grid: the invocation owning each 8px cell (every 4th 2px cell
+	// on each axis) samples its full 8x8 pixel block and writes 1 if ANY pixel
+	// is solid. Raw solidity with NO border-air forcing, so a wall touching the
+	// chunk edge reads solid and enemies don't path into it.
+	if ((cell_x & 3u) == 0u && (cell_y & 3u) == 0u) {
+		uint pass_solid = 0u;
+		for (uint ppy = 0u; ppy < PASS_CELL; ppy++) {
+			for (uint ppx = 0u; ppx < PASS_CELL; ppx++) {
+				uint pmat = uint(round(imageLoad(terrain_texture, ivec2(gx + ppx, gy + ppy)).r * 255.0));
+				if (pmat != 0u && HAS_COLLIDER[pmat]) { pass_solid = 1u; break; }
+			}
+			if (pass_solid == 1u) break;
+		}
+		uint pcell = (cell_y / 4u) * PASS_CELLS_PER_SIDE + (cell_x / 4u);
+		passability_buffer.data[pc.slot_index * PASS_SLOT_U32 + pcell] = pass_solid;
+	}
 
 	// Sample corners, clamping positions that fall outside the texture
 	vec4 tl_sample = imageLoad(terrain_texture, ivec2(gx, gy));
