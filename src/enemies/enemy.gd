@@ -627,7 +627,17 @@ func _get_effective_speed() -> float:
 	var base := _base_effective_speed()
 	if _status_component != null and is_instance_valid(_status_component):
 		base *= _status_component.get_move_speed_multiplier()
-	return base
+	return _apply_catch_up(base)
+
+
+func _apply_catch_up(base: float) -> float:
+	if not _aggroed or _player_ref == null or not is_instance_valid(_player_ref):
+		return base
+	var dist := global_position.distance_to(_player_ref.global_position)
+	var player_speed: float = 120.0
+	if "max_speed" in _player_ref:
+		player_speed = _player_ref.max_speed
+	return EncounterDirector.catch_up_speed(base, dist, player_speed)
 
 
 func _base_effective_speed() -> float:
