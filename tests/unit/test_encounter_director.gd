@@ -60,3 +60,16 @@ func test_tokens_for_floor_scales_gently() -> void:
 	assert_int(Director.tokens_for_floor(2, 3)).is_equal(2)
 	assert_int(Director.tokens_for_floor(2, 4)).is_equal(3)
 	assert_int(Director.tokens_for_floor(2, 9)).is_equal(3)
+
+func test_catch_up_returns_base_when_close() -> void:
+	var s := Director.catch_up_speed(60.0, 40.0, 120.0)
+	assert_float(s).is_equal_approx(60.0, 0.001)
+
+func test_catch_up_ramps_toward_cap_when_far() -> void:
+	var s := Director.catch_up_speed(60.0, 1000.0, 120.0)
+	assert_float(s).is_equal_approx(114.0, 0.001)
+
+func test_catch_up_never_exceeds_player_cap() -> void:
+	for dist in [0.0, 90.0, 300.0, 5000.0]:
+		var s := Director.catch_up_speed(200.0, dist, 120.0)
+		assert_float(s).is_less_equal(114.0 + 0.001)

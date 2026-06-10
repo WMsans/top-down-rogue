@@ -40,3 +40,12 @@ func release_attack(enemy) -> void:
 
 static func tokens_for_floor(base: int, floor_number: int) -> int:
 	return base + clampi((floor_number - 1) / 3, 0, 1)
+
+
+static func catch_up_speed(base_speed: float, dist_to_player: float, player_speed: float) -> float:
+	var cap := player_speed * SPEED_CAP_FRACTION
+	if dist_to_player <= TETHER_DISTANCE:
+		return minf(base_speed, cap)
+	var t := clampf((dist_to_player - TETHER_DISTANCE) / RAMP_BAND, 0.0, 1.0)
+	var target := maxf(base_speed, cap)
+	return minf(lerpf(base_speed, target, t), cap)
