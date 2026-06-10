@@ -224,3 +224,25 @@ func test_die_unregisters_from_director() -> void:
 	d.try_claim_attack(e, false)
 	e.die()
 	assert_bool(d.is_active(e)).is_false()
+
+
+func test_effective_speed_capped_below_player_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.speed = 60.0
+	e._speed_base = 60.0
+	e._aggroed = true
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.set("max_speed", 120.0)
+	e._player_ref.global_position = Vector2(2000, 0)  # far -> ramps to cap
+	e.global_position = Vector2.ZERO
+	var s := e._get_effective_speed()
+	assert_float(s).is_equal_approx(114.0, 0.001)  # 120 * 0.95
+
+func test_effective_speed_uses_base_when_not_aggroed() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.speed = 60.0
+	e._speed_base = 60.0
+	e._aggroed = false
+	e._player_ref = null
+	assert_float(e._get_effective_speed()).is_equal_approx(60.0, 0.001)
