@@ -156,6 +156,12 @@ func init_collider_storage_buffer() -> void:
 	collider_dispatch_manifests[1] = PackedInt32Array()
 	# Legacy single buffer retained for any in-flight CPU fallback path; keep as zero RID.
 	collider_storage_buffer = RID()
+	var pzero := PackedByteArray()
+	pzero.resize(PASSABILITY_BUFFER_SIZE)
+	pzero.fill(0)
+	for i in range(2):
+		passability_output_buffers[i] = rd.storage_buffer_create(PASSABILITY_BUFFER_SIZE)
+		rd.buffer_update(passability_output_buffers[i], 0, PASSABILITY_BUFFER_SIZE, pzero)
 
 
 func init_solidity_flag_buffer() -> void:
@@ -462,6 +468,10 @@ func free_resources() -> void:
 		if collider_output_buffers[i].is_valid():
 			rd.free_rid(collider_output_buffers[i])
 			collider_output_buffers[i] = RID()
+	for i in range(2):
+		if passability_output_buffers[i].is_valid():
+			rd.free_rid(passability_output_buffers[i])
+			passability_output_buffers[i] = RID()
 	if solidity_flag_buffer.is_valid():
 		rd.free_rid(solidity_flag_buffer)
 		solidity_flag_buffer = RID()
