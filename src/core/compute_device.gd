@@ -763,33 +763,40 @@ func dispatch_collider_pack(chunks: Dictionary, coords: Array) -> void:
 
 
 func read_collider_buffer_coalesced() -> Dictionary:
+	var empty := {"segments": {}, "passability": {}}
 	if collider_first_frame:
 		collider_first_frame = false
 		collider_write_index = 1 - collider_write_index
-		return {}
+		return empty
 
 	var read_index := 1 - collider_write_index
 	var manifest: PackedInt32Array = collider_dispatch_manifests[read_index]
 	if manifest.is_empty():
 		collider_write_index = 1 - collider_write_index
-		return {}
+		return empty
 
 	var entry_count := manifest.size() / 3
+
 	var bytes_needed := entry_count * COLLIDER_SLOT_STRIDE_BYTES
 	if entry_count == COLLIDER_MAX_DISPATCH_PER_FRAME:
 		bytes_needed = COLLIDER_COALESCED_BUFFER_SIZE
 	var data: PackedByteArray = rd.buffer_get_data(collider_output_buffers[read_index], 0, bytes_needed)
 
+	var pass_bytes_needed := entry_count * PASSABILITY_SLOT_BYTES
+	if entry_count == COLLIDER_MAX_DISPATCH_PER_FRAME:
+		pass_bytes_needed = PASSABILITY_BUFFER_SIZE
+	var pass_data: PackedByteArray = rd.buffer_get_data(passability_output_buffers[read_index], 0, pass_bytes_needed)
+
 	collider_write_index = 1 - collider_write_index
 
-	var result: Dictionary = {}
+	var segments: Dictionary = {}
+	var passability: Dictionary = {}
 	for i in range(entry_count):
-		var cx := manifest[i * 3]
-		var cy := manifest[i * 3 + 1]
 		var slot := manifest[i * 3 + 2]
-		var coord := Vector2i(cx, cy)
-		result[coord] = decode_collider_slice(data, slot)
-	return result
+		var coord := Vector2i(manifest[i * 3], manifest[i * 3 + 1])
+		segments[coord] = decode_collider_slice(data, slot)
+		passability[coord] = decode_passability_slice(pass_data, slot)
+	return {"segments": segments, "passability": passability}
 
 
 func decode_collider_slice(data: PackedByteArray, slot: int) -> PackedVector2Array:
