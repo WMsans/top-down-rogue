@@ -274,3 +274,55 @@ func test_contagion_aggros_idle_enemy_near_pursuer() -> void:
 	idle._process_idle(0.1)
 	assert_bool(idle._aggroed).is_true()
 	assert_that(idle._state).is_equal(Enemy.State.CHASE)
+
+
+func test_chase_attacks_when_token_available() -> void:
+	var d = _Director.new()
+	d.melee_token_count = 1
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e._director = d
+	e._aggroed = true
+	e._state = Enemy.State.CHASE
+	d._active = [e]
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.global_position = Vector2(10, 0)
+	e.global_position = Vector2.ZERO
+	e._attack_range = 32.0
+	e._settle_timer = e.min_attack_settle_time + 1.0
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.WINDUP)
+
+func test_chase_holds_when_no_token() -> void:
+	var d = _Director.new()
+	d.melee_token_count = 0  # no tokens available
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e._director = d
+	e._aggroed = true
+	e._state = Enemy.State.CHASE
+	d._active = [e]
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.global_position = Vector2(10, 0)
+	e.global_position = Vector2.ZERO
+	e._attack_range = 32.0
+	e._settle_timer = e.min_attack_settle_time + 1.0
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.CHASE)  # cannot commit, keeps circling
+
+func test_change_state_releases_token_on_return_to_chase() -> void:
+	var d = _Director.new()
+	d.melee_token_count = 1
+	var holder: MockEnemy = auto_free(MockEnemy.new())
+	var waiter: MockEnemy = auto_free(MockEnemy.new())
+	add_child(holder)
+	add_child(waiter)
+	holder._director = d
+	waiter._director = d
+	d._active = [holder, waiter]
+	assert_bool(holder._try_claim_attack()).is_true()
+	assert_bool(waiter._try_claim_attack()).is_false()
+	holder._change_state(Enemy.State.CHASE)  # leaving the attack cycle
+	assert_bool(waiter._try_claim_attack()).is_true()  # token released
