@@ -37,6 +37,7 @@ const TARGETED_SPEED_MULT: float = 1.3
 const TARGETED_COOLDOWN_MULT: float = 0.6
 const PASSIVE_SPEED_MULT: float = 0.7
 const PASSIVE_COOLDOWN_MULT: float = 1.5
+const RING_STRAFE_MULT: float = 0.4
 
 var health: int
 var drop_table: DropTable = null
@@ -71,6 +72,8 @@ var _attack_started: bool = false
 var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
 var _wander_is_paused: bool = true
+var _orbit_sign: float = 1.0
+var _orbit_flip_timer: float = 0.0
 
 var _exclaim_label: Label = null
 var _exclaim_tween: Tween = null
@@ -80,6 +83,8 @@ func _ready() -> void:
 	add_to_group("attackable")
 	health = max_health
 	_speed_base = speed
+	_orbit_sign = 1.0 if randf() < 0.5 else -1.0
+	_orbit_flip_timer = randf_range(1.5, 3.0)
 	_apply_damage_scale()
 	motion_mode = MOTION_MODE_FLOATING
 
@@ -260,7 +265,12 @@ func _process_idle(delta: float) -> void:
 		velocity = _wander_direction * _get_effective_speed() * 0.5
 
 
-func _process_chase(_delta: float) -> void:
+func _process_chase(delta: float) -> void:
+	_orbit_flip_timer -= delta
+	if _orbit_flip_timer <= 0.0:
+		_orbit_sign = -_orbit_sign
+		_orbit_flip_timer = randf_range(1.5, 3.0)
+
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		_aggroed = false
 		_change_state(State.WANDER)
@@ -273,7 +283,6 @@ func _process_chase(_delta: float) -> void:
 	if sees:
 		_aggroed = true
 	elif not _aggroed:
-		# Sight-to-acquire: never seen the player and currently blocked — don't commit.
 		_change_state(State.WANDER)
 		return
 
@@ -288,19 +297,28 @@ func _process_chase(_delta: float) -> void:
 		var fd := _nav_field_dir()
 		move_dir = fd if fd != Vector2.ZERO else to_player.normalized()
 
-	if sees and dist <= _attack_range and _settle_timer >= min_attack_settle_time:
+	if sees and _settle_timer >= min_attack_settle_time and dist <= _attack_range + surround_offset:
 		if _try_claim_attack():
-			velocity = Vector2.ZERO
-			_change_state(State.WINDUP)
+			if dist <= _attack_range:
+				velocity = Vector2.ZERO
+				_change_state(State.WINDUP)
+				return
+			velocity = _apply_separation(to_player.normalized()) * _get_effective_speed()
 			return
 
+	var speed_mult := 1.0
 	if not _holds_attack_token:
-		var slot_dir := _surround_dir(_attack_range + surround_offset)
-		if slot_dir != Vector2.ZERO:
-			move_dir = slot_dir
+		var d = _get_director()
+		if d != null and d.is_active(self):
+			var slot_dir := _surround_dir(_attack_range + surround_offset)
+			if slot_dir != Vector2.ZERO:
+				move_dir = slot_dir
+			else:
+				move_dir = _ring_strafe_dir()
+				speed_mult = RING_STRAFE_MULT
 
 	move_dir = _apply_separation(move_dir)
-	velocity = move_dir * _get_effective_speed()
+	velocity = move_dir * _get_effective_speed() * speed_mult
 
 
 func _process_windup(delta: float) -> void:
@@ -554,6 +572,7 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 func die() -> void:
 	var dir = _get_director()
 	if dir != null:
+		dir.register_kill()
 		dir.unregister(self)
 	died.emit()
 	_on_death()
@@ -681,6 +700,15 @@ func _surround_dir(preferred_radius: float) -> Vector2:
 	if to_slot.length() < 6.0:
 		return Vector2.ZERO
 	return to_slot.normalized()
+
+
+func _ring_strafe_dir() -> Vector2:
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return Vector2.ZERO
+	var radial := global_position - _player_ref.global_position
+	if radial.length() < 0.001:
+		return Vector2.ZERO
+	return radial.normalized().rotated(_orbit_sign * PI * 0.5)
 
 
 func get_facing_direction() -> Vector2:
