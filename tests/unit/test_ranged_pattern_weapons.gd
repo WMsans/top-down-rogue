@@ -45,3 +45,14 @@ func test_split_emits_two_diverging_with_gap() -> void:
 	assert_float(dirs[1].angle()).is_equal_approx(deg_to_rad(15.0), 0.01)
 	for d in dirs:
 		assert_bool(abs(d.angle()) < 0.01).is_false()
+
+func test_fan_emits_center_plus_two_spread() -> void:
+	var w := FanWeapon.new()
+	w.spread_angle = 40.0
+	var dirs: Array = []
+	w.shot_sink = func(d): dirs.append(d)
+	w.use(_shooter(Vector2.RIGHT))
+	assert_int(dirs.size()).is_equal(3)
+	assert_float(dirs[0].angle()).is_equal_approx(deg_to_rad(-20.0), 0.01)
+	assert_float(dirs[1].angle()).is_equal_approx(0.0, 0.01)
+	assert_float(dirs[2].angle()).is_equal_approx(deg_to_rad(20.0), 0.01)
