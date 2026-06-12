@@ -62,6 +62,11 @@ func _handle_hit(target: Node) -> void:
 				target.on_hit_impact(global_position, direction, int(damage))
 			queue_free()
 		elif target is StaticBody2D:
+			var keep := false
+			for b in behaviors:
+				keep = b.on_terrain_hit(self) or keep
+			if keep:
+				return
 			_carve_terrain()
 			queue_free()
 		return

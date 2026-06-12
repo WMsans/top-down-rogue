@@ -7,11 +7,20 @@ const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 @export var projectile_lifetime: float = 3.0
 @export var spread_angle: float = 0.0
 @export var projectile_count: int = 1
+@export var burst_count: int = 1
+@export var burst_interval: float = 0.12
+@export var reaim_each_shot: bool = false
 @export var weapon_texture: Texture2D:
 	set(value):
 		weapon_texture = value
 		icon_texture = value
 @export var projectile_texture: Texture2D
+
+var shot_sink: Callable = Callable()
+var _shots_left: int = 0
+var _burst_timer: float = 0.0
+var _burst_dir: Vector2 = Vector2.RIGHT
+var _burst_user: Node = null
 
 
 func _init() -> void:
@@ -20,6 +29,15 @@ func _init() -> void:
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
 	rarity = DropTable.ItemTier.UNCOMMON
+	_configure()
+
+
+func _configure() -> void:
+	pass
+
+
+func _make_behaviors() -> Array:
+	return []
 
 
 func has_visual() -> bool:
@@ -45,10 +63,34 @@ func update_visual(_delta: float, user: Node) -> void:
 
 
 func _use_impl(user: Node) -> void:
-	var direction := _get_facing_direction(user)
-	var base_angle := direction.angle()
-	var half_spread := deg_to_rad(spread_angle) / 2.0
+	_burst_user = user
+	_burst_dir = _get_facing_direction(user)
+	_shots_left = maxi(0, burst_count - 1)
+	_burst_timer = burst_interval
+	_emit_shot(user, _burst_dir)
 
+
+func _tick_impl(delta: float) -> void:
+	if _shots_left <= 0:
+		return
+	if not is_instance_valid(_burst_user):
+		_shots_left = 0
+		return
+	_burst_timer -= delta
+	if _burst_timer <= 0.0:
+		_burst_timer += burst_interval
+		_burst_dir = _get_facing_direction(_burst_user) if reaim_each_shot else _burst_dir
+		_emit_shot(_burst_user, _burst_dir)
+		_shots_left -= 1
+
+
+func is_bursting() -> bool:
+	return _shots_left > 0
+
+
+func _emit_shot(user: Node, base_dir: Vector2) -> void:
+	var base_angle := base_dir.angle()
+	var half_spread := deg_to_rad(spread_angle) / 2.0
 	for i in range(projectile_count):
 		var angle_offset: float = 0.0
 		if projectile_count > 1:
@@ -56,7 +98,7 @@ func _use_impl(user: Node) -> void:
 		var proj_dir := Vector2(cos(base_angle + angle_offset), sin(base_angle + angle_offset))
 		_spawn_projectile(user, proj_dir)
 	notify_attack(user, {
-		"direction": direction,
+		"direction": base_dir,
 		"origin": user.global_position,
 		"charged": false,
 		"charge_ratio": 0.0,
@@ -64,7 +106,11 @@ func _use_impl(user: Node) -> void:
 
 
 func _spawn_projectile(user: Node, direction: Vector2) -> void:
+	if shot_sink.is_valid():
+		shot_sink.call(direction.normalized())
+		return
 	var proj := PROJECTILE_SCENE.instantiate()
+	proj.behaviors = _make_behaviors()
 	proj.global_position = user.global_position
 	proj.damage = damage
 	proj.crit_chance = get_effective_crit_chance()
