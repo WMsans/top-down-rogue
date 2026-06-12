@@ -554,6 +554,7 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 func die() -> void:
 	var dir = _get_director()
 	if dir != null:
+		dir.register_kill()
 		dir.unregister(self)
 	died.emit()
 	_on_death()

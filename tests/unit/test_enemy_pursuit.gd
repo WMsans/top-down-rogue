@@ -22,6 +22,13 @@ class StubWM extends Node:
 	var nav_field
 	var swarm_grid = null
 
+class StubDirector:
+	var kills: int = 0
+	func register_kill() -> void:
+		kills += 1
+	func unregister(_enemy) -> void:
+		pass
+
 func _make_enemy() -> MockEnemy:
 	var e: MockEnemy = auto_free(MockEnemy.new())
 	add_child(e)
@@ -93,3 +100,10 @@ func test_clamp_blocks_into_wall_allows_slide() -> void:
 	e._move_with_clamp(0.1)                    # target (10,10): x blocked, y allowed
 	assert_float(e.global_position.x).is_equal(0.0)
 	assert_float(e.global_position.y).is_equal(10.0)
+
+func test_die_reports_kill_to_director() -> void:
+	var e := _make_enemy()
+	var dir := StubDirector.new()
+	e._director = dir
+	e.die()
+	assert_int(dir.kills).is_equal(1)
