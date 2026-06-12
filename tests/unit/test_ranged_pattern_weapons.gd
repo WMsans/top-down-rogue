@@ -56,3 +56,23 @@ func test_fan_emits_center_plus_two_spread() -> void:
 	assert_float(dirs[0].angle()).is_equal_approx(deg_to_rad(-20.0), 0.01)
 	assert_float(dirs[1].angle()).is_equal_approx(0.0, 0.01)
 	assert_float(dirs[2].angle()).is_equal_approx(deg_to_rad(20.0), 0.01)
+
+func test_sniper_defaults() -> void:
+	var w := SniperWeapon.new()
+	assert_int(w.burst_count).is_equal(1)
+	assert_float(w.damage).is_greater(15.0)
+	assert_float(w.cooldown).is_greater(2.0)
+
+func test_sniper_makes_penetration_behavior() -> void:
+	var w := SniperWeapon.new()
+	var behaviors: Array = w._make_behaviors()
+	assert_int(behaviors.size()).is_equal(1)
+	assert_bool(behaviors[0] is SniperPenetrationBehavior).is_true()
+
+func test_sniper_fires_one_shot() -> void:
+	var w := SniperWeapon.new()
+	var dirs: Array = []
+	w.shot_sink = func(d): dirs.append(d)
+	w.use(_shooter(Vector2.RIGHT))
+	assert_int(dirs.size()).is_equal(1)
+	assert_bool(w.is_bursting()).is_false()

@@ -36,6 +36,10 @@ func _configure() -> void:
 	pass
 
 
+func _make_behaviors() -> Array:
+	return []
+
+
 func has_visual() -> bool:
 	return weapon_texture != null
 
@@ -106,6 +110,7 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 		shot_sink.call(direction.normalized())
 		return
 	var proj := PROJECTILE_SCENE.instantiate()
+	proj.behaviors = _make_behaviors()
 	proj.global_position = user.global_position
 	proj.damage = damage
 	proj.crit_chance = get_effective_crit_chance()
