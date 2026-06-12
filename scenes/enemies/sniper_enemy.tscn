@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://sniperenemy01"]
+
+[ext_resource type="PackedScene" uid="uid://enemybase01" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Script" path="res://src/enemies/sniper_enemy.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://jf368i2hd33h" path="res://textures/Enemies/ranged_test.png" id="3"]
+
+[node name="SniperEnemy" instance=ExtResource("1")]
+script = ExtResource("2")
+preferred_distance = 160.0
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("3")
