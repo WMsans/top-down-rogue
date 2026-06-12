@@ -110,33 +110,27 @@ Separation continues to apply, so enemies spread along the ring as they pace.
 
 ### 3. Dynamic aggression tokens
 
-`world_manager.gd` currently overwrites `melee_token_count` / `ranged_token_count`
-every frame from the floor number, which would wipe any dynamic value. Restructure
-so the floor value is a **base** and a persistent **delta** rides on top.
+`world_manager.gd` already overwrites `melee_token_count` / `ranged_token_count`
+every frame from the floor number. We keep those two fields **as the per-floor
+base** (no rename, no change to the world-manager assignment) and ride a
+persistent **delta** on top, applied only where the budget is consumed. This
+keeps existing director tests (which set `melee_token_count` directly) valid:
+with `aggression_delta == 0`, the effective budget equals the base.
 
 `EncounterDirector` changes:
-- New fields:
-  - `var floor_base_melee: int = 2`
-  - `var floor_base_ranged: int = 2`
-  - `var aggression_delta: int = 0`
+- New field: `var aggression_delta: int = 0` (persists across frames; never reset
+  by the per-frame base assignment).
 - Constants: `const AGGRO_MIN := -2`, `const AGGRO_MAX := 4`,
   `const KILL_GAIN := 2`, `const HIT_LOSS := 1`.
-- `melee_token_count` / `ranged_token_count` become **computed** effective values
-  (methods or getters):
-  - `effective_melee_tokens() -> int: return maxi(1, floor_base_melee + aggression_delta)`
-  - `effective_ranged_tokens() -> int: return maxi(1, floor_base_ranged + aggression_delta)`
-  - Floor of 1 guarantees combat never fully stalls even at minimum aggression.
-- `try_claim_attack` uses the effective value as its budget instead of the raw
-  field.
-- `register_kill() -> void: aggression_delta = clampi(aggression_delta + KILL_GAIN, AGGRO_MIN, AGGRO_MAX)`
-- `register_player_hit() -> void: aggression_delta = clampi(aggression_delta - HIT_LOSS, AGGRO_MIN, AGGRO_MAX)`
+- New helpers returning the dynamic budget (base + delta, floored at 1 so combat
+  never fully stalls):
+  - `func effective_melee_tokens() -> int: return maxi(1, melee_token_count + aggression_delta)`
+  - `func effective_ranged_tokens() -> int: return maxi(1, ranged_token_count + aggression_delta)`
+- `try_claim_attack` computes its budget from `effective_ranged_tokens()` /
+  `effective_melee_tokens()` instead of reading the raw field directly.
+- `func register_kill() -> void: aggression_delta = clampi(aggression_delta + KILL_GAIN, AGGRO_MIN, AGGRO_MAX)`
+- `func register_player_hit() -> void: aggression_delta = clampi(aggression_delta - HIT_LOSS, AGGRO_MIN, AGGRO_MAX)`
 - **No decay** — momentum persists until countered by the opposite event.
-
-> Implementation note: `melee_token_count` / `ranged_token_count` are currently
-> plain mutable fields read inside `try_claim_attack`. Replace those reads with
-> `effective_*_tokens()` and convert the two fields into the new
-> `floor_base_*` + computed pair. Update any tests that set
-> `melee_token_count` directly to set `floor_base_melee` instead.
 
 ### 4. Wiring the events
 
@@ -154,15 +148,10 @@ player exists, find `get_tree().get_first_node_in_group("player")`, get its
 `encounter_director.register_player_hit`. Guard with a `bool` so it connects
 exactly once.
 
-**Per-frame update** — `world_manager.gd:105-106` changes from setting the token
-counts to setting the bases:
-
-```
-encounter_director.floor_base_melee  = EncounterDirector.tokens_for_floor(2, LevelManager.floor_number)
-encounter_director.floor_base_ranged = EncounterDirector.tokens_for_floor(2, LevelManager.floor_number)
-```
-
-`tokens_for_floor` is unchanged.
+**Per-frame update** — `world_manager.gd:105-106` is **unchanged**: it keeps
+setting `melee_token_count` / `ranged_token_count` from `tokens_for_floor`, which
+now act as the per-floor base. `aggression_delta` lives independently and is not
+touched by this assignment.
 
 ## Testing
 
@@ -174,7 +163,7 @@ New/updated GdUnit tests:
   at its slot produces a non-zero tangential (ring-strafe) velocity, not zero and
   not straight at the player.
 - **test_encounter_director.gd** —
-  - `effective_melee_tokens` = `maxi(1, floor_base + aggression_delta)`.
+  - `effective_melee_tokens` = `maxi(1, melee_token_count + aggression_delta)`.
   - `register_kill` raises the delta by `KILL_GAIN`, clamped at `AGGRO_MAX`.
   - `register_player_hit` lowers it by `HIT_LOSS`, clamped at `AGGRO_MIN`.
   - Effective tokens never drop below 1 even at `AGGRO_MIN`.
