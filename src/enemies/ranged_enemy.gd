@@ -15,6 +15,10 @@ func _uses_ranged_token() -> bool:
 	return true
 
 
+func _attack_in_progress() -> bool:
+	return weapon != null and weapon.is_bursting()
+
+
 func _ready() -> void:
 	if weapon_resource:
 		weapon = weapon_resource.duplicate()

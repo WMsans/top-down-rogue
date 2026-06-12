@@ -66,6 +66,7 @@ var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 var _director = null
 var _holds_attack_token: bool = false
+var _attack_started: bool = false
 
 var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
@@ -314,8 +315,15 @@ func _process_windup(delta: float) -> void:
 
 
 func _process_attack(_delta: float) -> void:
-	_execute_attack()
-	_change_state(State.COOLDOWN)
+	if not _attack_started:
+		_attack_started = true
+		_execute_attack()
+	if not _attack_in_progress():
+		_change_state(State.COOLDOWN)
+
+
+func _attack_in_progress() -> bool:
+	return false
 
 
 func _process_cooldown(delta: float) -> void:
@@ -419,6 +427,8 @@ func _change_state(new_state: int) -> void:
 
 	_state = new_state
 	match new_state:
+		State.ATTACK:
+			_attack_started = false
 		State.WINDUP:
 			_state_timer = windup_duration
 			_settle_timer = 0.0
