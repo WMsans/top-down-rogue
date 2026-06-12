@@ -13,6 +13,8 @@ const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 		icon_texture = value
 @export var projectile_texture: Texture2D
 
+var shot_sink: Callable = Callable()
+
 
 func _init() -> void:
 	cooldown = 1.0
@@ -45,10 +47,12 @@ func update_visual(_delta: float, user: Node) -> void:
 
 
 func _use_impl(user: Node) -> void:
-	var direction := _get_facing_direction(user)
-	var base_angle := direction.angle()
-	var half_spread := deg_to_rad(spread_angle) / 2.0
+	_emit_shot(user, _get_facing_direction(user))
 
+
+func _emit_shot(user: Node, base_dir: Vector2) -> void:
+	var base_angle := base_dir.angle()
+	var half_spread := deg_to_rad(spread_angle) / 2.0
 	for i in range(projectile_count):
 		var angle_offset: float = 0.0
 		if projectile_count > 1:
@@ -56,7 +60,7 @@ func _use_impl(user: Node) -> void:
 		var proj_dir := Vector2(cos(base_angle + angle_offset), sin(base_angle + angle_offset))
 		_spawn_projectile(user, proj_dir)
 	notify_attack(user, {
-		"direction": direction,
+		"direction": base_dir,
 		"origin": user.global_position,
 		"charged": false,
 		"charge_ratio": 0.0,
@@ -64,6 +68,9 @@ func _use_impl(user: Node) -> void:
 
 
 func _spawn_projectile(user: Node, direction: Vector2) -> void:
+	if shot_sink.is_valid():
+		shot_sink.call(direction.normalized())
+		return
 	var proj := PROJECTILE_SCENE.instantiate()
 	proj.global_position = user.global_position
 	proj.damage = damage
