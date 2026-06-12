@@ -18,6 +18,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var is_elite: bool = false
 @export var elite_ability: int = EliteAbility.NONE
 @export var separation_radius: float = 16.0
+@export var surround_offset: float = 56.0
 @export var min_attack_settle_time: float = 0.5
 @export var leash_radius: float = 280.0
 @export var damage_scale: float = 1.0
@@ -293,7 +294,7 @@ func _process_chase(_delta: float) -> void:
 			return
 
 	if not _holds_attack_token:
-		var slot_dir := _surround_dir(_attack_range + 8.0)
+		var slot_dir := _surround_dir(_attack_range + surround_offset)
 		if slot_dir != Vector2.ZERO:
 			move_dir = slot_dir
 
