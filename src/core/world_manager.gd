@@ -26,6 +26,7 @@ signal chunk_unloaded(coord: Vector2i)
 
 var swarm_grid: RefCounted = preload("res://src/core/swarm_grid.gd").new(32.0)
 var encounter_director: EncounterDirector = EncounterDirector.new()
+var _player_hit_connected: bool = false
 var nav_field  # NavField
 
 # Max new chunks to create+generate per frame; the rest stay "desired but not
@@ -101,6 +102,13 @@ func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 	var attackable := get_tree().get_nodes_in_group("attackable")
+	if not _player_hit_connected:
+		var player := get_tree().get_first_node_in_group("player")
+		if player != null:
+			var inv = player.get_node_or_null("PlayerInventory")
+			if inv != null:
+				inv.damaged.connect(encounter_director.register_player_hit.unbind(1))
+				_player_hit_connected = true
 	swarm_grid.rebuild(attackable)
 	encounter_director.melee_token_count = EncounterDirector.tokens_for_floor(2, LevelManager.floor_number)
 	encounter_director.ranged_token_count = EncounterDirector.tokens_for_floor(2, LevelManager.floor_number)
