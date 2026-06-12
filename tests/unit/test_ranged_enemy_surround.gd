@@ -15,12 +15,17 @@ func test_ranged_uses_ranged_token_pool() -> void:
 
 func test_ranged_holds_when_no_ranged_token() -> void:
 	var d: EncounterDirector = _Director.new()
-	d.ranged_token_count = 0
+	d.ranged_token_count = 1
+	var holder: MockRangedEnemy = auto_free(MockRangedEnemy.new())
+	add_child(holder)
+	holder._director = d
+	d._active = [holder]
+	holder._try_claim_attack()
 	var e: MockRangedEnemy = auto_free(MockRangedEnemy.new())
 	add_child(e)
 	e._director = d
 	e._aggroed = true
-	d._active = [e]
+	d._active = [holder, e]
 	e._player_ref = Node2D.new()
 	add_child(e._player_ref)
 	e._player_ref.global_position = Vector2(10, 0)
