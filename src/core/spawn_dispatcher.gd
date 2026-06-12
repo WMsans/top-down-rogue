@@ -3,6 +3,7 @@ extends Node
 const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
 const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
+const SNIPER_ENEMY_SCENE := preload("res://scenes/enemies/sniper_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const SHOP_STALL_SCENE := preload("res://scenes/economy/shop_stall.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
@@ -208,6 +209,8 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 			if randf() < 0.8:
 				enemy = MELEE_ENEMY_SCENE.instantiate()
 				enemy.weapon_resource = _pick_melee_weapon()
+			elif randf() < 0.15:
+				enemy = SNIPER_ENEMY_SCENE.instantiate()
 			else:
 				enemy = RANGED_ENEMY_SCENE.instantiate()
 				enemy.weapon_resource = _pick_ranged_weapon()
@@ -246,9 +249,12 @@ func _pick_melee_weapon() -> Weapon:
 
 
 func _pick_ranged_weapon() -> Weapon:
-	if randf() < 0.7:
-		return WeaponRegistry.get_weapon_by_id("throwing_knife")
-	return WeaponRegistry.get_weapon_by_id("fire_orb")
+	var roll := randf()
+	if roll < 0.6:
+		return AimedBurstWeapon.new()
+	elif roll < 0.8:
+		return SplitShotWeapon.new()
+	return FanWeapon.new()
 
 
 func _spawn_chest(world_pos: Vector2, is_secret_loot: bool) -> void:
