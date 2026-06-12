@@ -6,9 +6,14 @@ const CONTAGION_RADIUS := 48.0
 const SPEED_CAP_FRACTION := 0.95
 const TETHER_DISTANCE := 80.0
 const RAMP_BAND := 120.0
+const AGGRO_MIN := -2
+const AGGRO_MAX := 4
+const KILL_GAIN := 2
+const HIT_LOSS := 1
 
 var melee_token_count: int = 2
 var ranged_token_count: int = 2
+var aggression_delta: int = 0
 
 var _active: Array = []
 var _melee_claims: Dictionary = {}
@@ -26,7 +31,7 @@ func try_claim_attack(enemy, is_ranged: bool) -> bool:
 	var claims: Dictionary = _ranged_claims if is_ranged else _melee_claims
 	if claims.has(enemy):
 		return true
-	var budget: int = ranged_token_count if is_ranged else melee_token_count
+	var budget: int = effective_ranged_tokens() if is_ranged else effective_melee_tokens()
 	if claims.size() >= budget:
 		return false
 	claims[enemy] = true
@@ -36,6 +41,22 @@ func try_claim_attack(enemy, is_ranged: bool) -> bool:
 func release_attack(enemy) -> void:
 	_melee_claims.erase(enemy)
 	_ranged_claims.erase(enemy)
+
+
+func effective_melee_tokens() -> int:
+	return maxi(1, melee_token_count + aggression_delta)
+
+
+func effective_ranged_tokens() -> int:
+	return maxi(1, ranged_token_count + aggression_delta)
+
+
+func register_kill() -> void:
+	aggression_delta = clampi(aggression_delta + KILL_GAIN, AGGRO_MIN, AGGRO_MAX)
+
+
+func register_player_hit() -> void:
+	aggression_delta = clampi(aggression_delta - HIT_LOSS, AGGRO_MIN, AGGRO_MAX)
 
 
 static func tokens_for_floor(base: int, floor_number: int) -> int:

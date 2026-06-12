@@ -176,3 +176,50 @@ func test_get_slot_angle_falls_back_to_current_bearing() -> void:
 	var e := _stub_at(self, Vector2(0, 50), true)
 	var a := d.get_slot_angle(e)
 	assert_float(a).is_equal_approx((Vector2(0, 50)).angle(), 0.01)
+
+func test_effective_tokens_add_aggression_delta() -> void:
+	var d = Director.new()
+	d.melee_token_count = 2
+	d.aggression_delta = 1
+	assert_int(d.effective_melee_tokens()).is_equal(3)
+	assert_int(d.effective_ranged_tokens()).is_equal(d.ranged_token_count + 1)
+
+func test_effective_tokens_never_below_one() -> void:
+	var d = Director.new()
+	d.melee_token_count = 1
+	d.aggression_delta = -5
+	assert_int(d.effective_melee_tokens()).is_equal(1)
+
+func test_register_kill_raises_delta_by_gain() -> void:
+	var d = Director.new()
+	d.register_kill()
+	assert_int(d.aggression_delta).is_equal(Director.KILL_GAIN)
+
+func test_register_kill_clamps_at_max() -> void:
+	var d = Director.new()
+	for i in range(10):
+		d.register_kill()
+	assert_int(d.aggression_delta).is_equal(Director.AGGRO_MAX)
+
+func test_register_player_hit_lowers_delta_by_loss() -> void:
+	var d = Director.new()
+	d.register_player_hit()
+	assert_int(d.aggression_delta).is_equal(-Director.HIT_LOSS)
+
+func test_register_player_hit_clamps_at_min() -> void:
+	var d = Director.new()
+	for i in range(10):
+		d.register_player_hit()
+	assert_int(d.aggression_delta).is_equal(Director.AGGRO_MIN)
+
+func test_dynamic_budget_grants_more_claims_when_aggro_high() -> void:
+	var d = Director.new()
+	d.melee_token_count = 1
+	d.aggression_delta = 1
+	var a := _enemy_at(self, Vector2(0, 0))
+	var b := _enemy_at(self, Vector2(10, 0))
+	var c := _enemy_at(self, Vector2(20, 0))
+	d._active = [a, b, c]
+	assert_bool(d.try_claim_attack(a, false)).is_true()
+	assert_bool(d.try_claim_attack(b, false)).is_true()
+	assert_bool(d.try_claim_attack(c, false)).is_false()
