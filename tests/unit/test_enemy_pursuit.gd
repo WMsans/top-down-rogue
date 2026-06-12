@@ -22,6 +22,24 @@ class StubWM extends Node:
 	var nav_field
 	var swarm_grid = null
 
+class StubDirector:
+	var kills: int = 0
+	var active: bool = true
+	var grant: bool = true
+	var player_pos: Vector2 = Vector2.ZERO
+	func register_kill() -> void:
+		kills += 1
+	func unregister(_enemy) -> void:
+		pass
+	func is_active(_enemy) -> bool:
+		return active
+	func try_claim_attack(_enemy, _is_ranged) -> bool:
+		return grant
+	func release_attack(_enemy) -> void:
+		pass
+	func get_slot_angle(enemy) -> float:
+		return (enemy.global_position - player_pos).angle()
+
 func _make_enemy() -> MockEnemy:
 	var e: MockEnemy = auto_free(MockEnemy.new())
 	add_child(e)
@@ -93,3 +111,58 @@ func test_clamp_blocks_into_wall_allows_slide() -> void:
 	e._move_with_clamp(0.1)                    # target (10,10): x blocked, y allowed
 	assert_float(e.global_position.x).is_equal(0.0)
 	assert_float(e.global_position.y).is_equal(10.0)
+
+func test_die_reports_kill_to_director() -> void:
+	var e := _make_enemy()
+	var dir := StubDirector.new()
+	e._director = dir
+	e.die()
+	assert_int(dir.kills).is_equal(1)
+
+func test_committed_attacker_presses_in_from_ring() -> void:
+	var e := _make_enemy()
+	e._state = Enemy.State.CHASE
+	e.can_see = true
+	e._settle_timer = 1.0
+	_make_player(e, Vector2(70, 0))
+	var dir := StubDirector.new()
+	dir.player_pos = e._player_ref.global_position
+	dir.grant = true
+	e._director = dir
+	e._world_manager = null
+	e._process_chase(0.1)
+	assert_bool(e._holds_attack_token).is_true()
+	assert_bool(e.velocity.x > 0.0).is_true()
+
+func test_committed_attacker_winds_up_in_range() -> void:
+	var e := _make_enemy()
+	e._state = Enemy.State.CHASE
+	e.can_see = true
+	e._settle_timer = 1.0
+	_make_player(e, Vector2(20, 0))
+	var dir := StubDirector.new()
+	dir.player_pos = e._player_ref.global_position
+	dir.grant = true
+	e._director = dir
+	e._world_manager = null
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.WINDUP)
+
+func test_non_attacker_strafes_along_ring() -> void:
+	var e := _make_enemy()
+	e._state = Enemy.State.CHASE
+	e.can_see = true
+	e._settle_timer = 1.0
+	e.global_position = Vector2(0, 0)
+	e._orbit_sign = 1.0
+	_make_player(e, Vector2(88, 0))
+	var dir := StubDirector.new()
+	dir.player_pos = e._player_ref.global_position
+	dir.active = true
+	dir.grant = false
+	e._director = dir
+	e._world_manager = null
+	e._process_chase(0.1)
+	assert_bool(e._holds_attack_token).is_false()
+	assert_float(absf(e.velocity.y)).is_greater(1.0)
+	assert_float(absf(e.velocity.x)).is_less(absf(e.velocity.y))

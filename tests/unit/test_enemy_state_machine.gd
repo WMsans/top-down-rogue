@@ -296,13 +296,18 @@ func test_chase_attacks_when_token_available() -> void:
 
 func test_chase_holds_when_no_token() -> void:
 	var d = _Director.new()
-	d.melee_token_count = 0  # no tokens available
+	d.melee_token_count = 1
+	var holder: MockEnemy = auto_free(MockEnemy.new())
+	add_child(holder)
+	holder._director = d
+	d._active = [holder]
+	holder._try_claim_attack()
 	var e: MockEnemy = auto_free(MockEnemy.new())
 	add_child(e)
 	e._director = d
 	e._aggroed = true
 	e._state = Enemy.State.CHASE
-	d._active = [e]
+	d._active = [holder, e]
 	e._player_ref = auto_free(Node2D.new())
 	add_child(e._player_ref)
 	e._player_ref.global_position = Vector2(10, 0)
@@ -310,7 +315,7 @@ func test_chase_holds_when_no_token() -> void:
 	e._attack_range = 32.0
 	e._settle_timer = e.min_attack_settle_time + 1.0
 	e._process_chase(0.1)
-	assert_that(e._state).is_equal(Enemy.State.CHASE)  # cannot commit, keeps circling
+	assert_that(e._state).is_equal(Enemy.State.CHASE)
 
 func test_damage_scale_multiplies_weapon_damage_on_ready() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
