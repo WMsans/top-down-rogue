@@ -28,3 +28,20 @@ func test_aimed_burst_fires_three_aimed_shots() -> void:
 	assert_int(dirs.size()).is_equal(3)
 	for d in dirs:
 		assert_float(d.angle()).is_equal_approx(0.0, 0.01)
+
+func test_split_defaults() -> void:
+	var w := SplitShotWeapon.new()
+	assert_int(w.projectile_count).is_equal(2)
+	assert_bool(w.reaim_each_shot).is_true()
+
+func test_split_emits_two_diverging_with_gap() -> void:
+	var w := SplitShotWeapon.new()
+	w.spread_angle = 30.0
+	var dirs: Array = []
+	w.shot_sink = func(d): dirs.append(d)
+	w.use(_shooter(Vector2.RIGHT))
+	assert_int(dirs.size()).is_equal(2)
+	assert_float(dirs[0].angle()).is_equal_approx(deg_to_rad(-15.0), 0.01)
+	assert_float(dirs[1].angle()).is_equal_approx(deg_to_rad(15.0), 0.01)
+	for d in dirs:
+		assert_bool(abs(d.angle()) < 0.01).is_false()
