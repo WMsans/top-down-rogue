@@ -3,6 +3,9 @@ extends Weapon
 
 @export var weapon_texture: Texture2D = preload("res://textures/Weapons/sword_01c.png")
 @export var weapon_reach: float = 36.0
+
+const REFERENCE_REACH := 36.0
+var _reach_scale: float = 1.0
 @export var arc_angle: float = PI / 2.0
 @export var push_speed: float = 60.0
 
@@ -91,6 +94,7 @@ func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 	_sprite.texture = weapon_texture
 	_pommel_offset = _compute_pommel_offset(weapon_texture)
 	_sprite.offset = _pommel_offset
+	_reach_scale = weapon_reach / REFERENCE_REACH
 
 
 func _compute_pommel_offset(tex: Texture2D) -> Vector2:
@@ -393,7 +397,7 @@ func _apply_pose() -> void:
 	visual.rotation = 0.0
 	_sprite.position = _pose_pos
 	_sprite.rotation = _pose_rot
-	_sprite.scale = _pose_scale
+	_sprite.scale = _pose_scale * _reach_scale
 
 
 func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> void:
@@ -409,7 +413,7 @@ func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> voi
 	visual.add_child(trail)
 	trail.position = local_pos
 	trail.rotation = _blade_to_sprite_rot(blade_angle)
-	trail.scale = scale
+	trail.scale = scale * _reach_scale
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, trail_lifetime)
 	tween.tween_callback(trail.queue_free)
