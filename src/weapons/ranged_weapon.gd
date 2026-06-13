@@ -10,11 +10,11 @@ const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 @export var burst_count: int = 1
 @export var burst_interval: float = 0.12
 @export var reaim_each_shot: bool = false
-@export var weapon_texture: Texture2D:
+@export var weapon_texture: Texture2D = preload("res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/bow_01a.png"):
 	set(value):
 		weapon_texture = value
 		icon_texture = value
-@export var projectile_texture: Texture2D
+@export var projectile_texture: Texture2D = preload("res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/arrow_01a.png")
 
 var shot_sink: Callable = Callable()
 var _shots_left: int = 0
@@ -29,6 +29,7 @@ func _init() -> void:
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
 	rarity = DropTable.ItemTier.UNCOMMON
+	icon_texture = weapon_texture
 	_configure()
 
 
