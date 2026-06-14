@@ -6,10 +6,10 @@ uid="uid://cuo0p86tl88qr"
 
 [deps]
 
-files=["res://docs/design_docs/modifiers.name.translation", "res://docs/design_docs/modifiers.description.translation", "res://docs/design_docs/modifiers.suppresses.translation"]
+files=["res://docs/design_docs/modifiers.name.translation", "res://docs/design_docs/modifiers.description.translation", "res://docs/design_docs/modifiers.rarity.translation", "res://docs/design_docs/modifiers.category.translation", "res://docs/design_docs/modifiers.trigger.translation", "res://docs/design_docs/modifiers.condition.translation", "res://docs/design_docs/modifiers.effect.translation", "res://docs/design_docs/modifiers.element.translation", "res://docs/design_docs/modifiers.magnitude.translation", "res://docs/design_docs/modifiers.magnitude2.translation", "res://docs/design_docs/modifiers.suppresses.translation"]
 
 source_file="res://docs/design_docs/modifiers.csv"
-dest_files=["res://docs/design_docs/modifiers.name.translation", "res://docs/design_docs/modifiers.description.translation", "res://docs/design_docs/modifiers.suppresses.translation"]
+dest_files=["res://docs/design_docs/modifiers.name.translation", "res://docs/design_docs/modifiers.description.translation", "res://docs/design_docs/modifiers.rarity.translation", "res://docs/design_docs/modifiers.category.translation", "res://docs/design_docs/modifiers.trigger.translation", "res://docs/design_docs/modifiers.condition.translation", "res://docs/design_docs/modifiers.effect.translation", "res://docs/design_docs/modifiers.element.translation", "res://docs/design_docs/modifiers.magnitude.translation", "res://docs/design_docs/modifiers.magnitude2.translation", "res://docs/design_docs/modifiers.suppresses.translation"]
 
 [params]
 
