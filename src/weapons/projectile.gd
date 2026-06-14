@@ -61,6 +61,9 @@ func _handle_hit(target: Node) -> void:
 			if target.has_method("on_hit_impact"):
 				target.on_hit_impact(global_position, direction, int(damage))
 			queue_free()
+		elif target.is_in_group("destructible") and target.has_method("on_hit_impact"):
+			target.on_hit_impact(global_position, direction, int(damage))
+			queue_free()
 		elif target is StaticBody2D:
 			var keep := false
 			for b in behaviors:
@@ -95,6 +98,9 @@ func _handle_hit(target: Node) -> void:
 				keep_enemy = b.on_enemy_hit(self, target) or keep_enemy
 			if not keep_enemy:
 				queue_free()
+	elif target.is_in_group("destructible") and target.has_method("on_hit_impact"):
+		target.on_hit_impact(global_position, direction, int(damage))
+		queue_free()
 	elif target is StaticBody2D:
 		var keep_terrain := false
 		for b in behaviors:
