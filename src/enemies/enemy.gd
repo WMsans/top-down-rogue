@@ -23,6 +23,10 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
+const DEFAULT_BODY_RADIUS: float = 8.0
+# Max distance moved per collision sub-step. Matches NavField.CELL so a single
+# step never skips over a solid cell (prevents knockback tunneling through walls).
+const MOVE_STEP_PX: float = 8.0
 const FLASH_COLOR: Color = Color(3.0, 3.0, 3.0)
 const FLASH_DECAY: float = 0.12
 const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
@@ -41,6 +45,7 @@ var health: int
 var drop_table: DropTable = null
 var weapon: Weapon = null
 var _knockback_velocity: Vector2 = Vector2.ZERO
+var _body_radius: float = DEFAULT_BODY_RADIUS
 var _base_modulate: Color = Color.WHITE
 var _burn_flash: float = 0.0
 var _flash_tween: Tween = null
@@ -77,6 +82,8 @@ var _exclaim_tween: Tween = null
 
 func _ready() -> void:
 	add_to_group("attackable")
+	add_to_group("gas_interactors")
+	_body_radius = _measure_body_radius()
 	health = max_health
 	_speed_base = speed
 	_apply_damage_scale()
@@ -394,12 +401,61 @@ func _is_blocked(pos: Vector2) -> bool:
 
 
 func _move_with_clamp(delta: float) -> void:
-	var target := global_position + velocity * delta
-	if _is_blocked(Vector2(target.x, global_position.y)):
-		target.x = global_position.x
-	if _is_blocked(Vector2(global_position.x, target.y)):
-		target.y = global_position.y
-	global_position = target
+	var motion := velocity * delta
+	# Sub-step so a single step never exceeds one nav cell. Without this, fast
+	# knockback can tunnel straight through a thin wall in one frame.
+	var steps := maxi(1, ceili(motion.length() / MOVE_STEP_PX))
+	var step := motion / float(steps)
+	for _i in range(steps):
+		if step.x != 0.0 and not _edge_blocked(Vector2(step.x, 0.0)):
+			global_position.x += step.x
+		elif step.x != 0.0:
+			step.x = 0.0
+			velocity.x = 0.0
+		if step.y != 0.0 and not _edge_blocked(Vector2(0.0, step.y)):
+			global_position.y += step.y
+		elif step.y != 0.0:
+			step.y = 0.0
+			velocity.y = 0.0
+		if step == Vector2.ZERO:
+			break
+
+
+## True if moving the body's leading edge by `step` (a single-axis delta) would
+## put part of the body inside a solid cell. Samples the leading face's centre
+## and both corners so the body half-width can't sink into a wall.
+func _edge_blocked(step: Vector2) -> bool:
+	var axis := step.normalized()
+	var perp := Vector2(-axis.y, axis.x)
+	var lead := global_position + axis * _body_radius + step
+	for t in [-1.0, 0.0, 1.0]:
+		if _is_blocked(lead + perp * (_body_radius * t)):
+			return true
+	return false
+
+
+## Largest half-extent of the body's collision shape, used for edge sampling.
+func _measure_body_radius() -> float:
+	for owner_id in get_shape_owners():
+		var xform: Transform2D = shape_owner_get_transform(owner_id)
+		for i in range(shape_owner_get_shape_count(owner_id)):
+			var shape: Shape2D = shape_owner_get_shape(owner_id, i)
+			var rect := Rect2()
+			if shape is CircleShape2D:
+				var r: float = (shape as CircleShape2D).radius
+				rect = Rect2(Vector2(-r, -r), Vector2(r, r) * 2.0)
+			elif shape is RectangleShape2D:
+				var half: Vector2 = (shape as RectangleShape2D).size * 0.5
+				rect = Rect2(-half, half * 2.0)
+			elif shape is CapsuleShape2D:
+				var cs := shape as CapsuleShape2D
+				var h := cs.height * 0.5 + cs.radius
+				rect = Rect2(Vector2(-cs.radius, -h), Vector2(cs.radius * 2.0, h * 2.0))
+			else:
+				continue
+			rect = xform * rect
+			return maxf(rect.size.x, rect.size.y) * 0.5
+	return DEFAULT_BODY_RADIUS
 
 
 func _change_state(new_state: int) -> void:
