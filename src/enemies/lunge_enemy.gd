@@ -28,3 +28,36 @@ func _begin_dash() -> void:
 
 func _moves_during_attack() -> bool:
 	return _state == State.ATTACK and not _dash_done
+
+
+func _process_attack(delta: float) -> void:
+	if not _attack_started:
+		_attack_started = true
+		if _dash_done:
+			_change_state(State.COOLDOWN)
+			return
+		_begin_dash()
+	_tick_dash(delta)
+
+
+func _tick_dash(delta: float) -> void:
+	velocity = _lock_dir * dash_speed
+	_check_body_contact()
+	_dash_timer -= delta
+	if _dash_timer <= 0.0:
+		_dash_done = true
+		velocity = Vector2.ZERO
+		_change_state(State.COOLDOWN)
+
+
+func _check_body_contact() -> void:
+	if _dash_hit:
+		return
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return
+	if global_position.distance_to(_player_ref.global_position) > contact_radius:
+		return
+	_dash_hit = true
+	if _player_ref.has_method("on_hit_impact"):
+		var dmg: int = int(weapon.damage) if weapon else 0
+		_player_ref.on_hit_impact(global_position, _lock_dir, dmg)
