@@ -120,3 +120,18 @@ func test_dash_done_blocks_restart() -> void:
 	e._process_attack(0.05)
 	assert_int(e._state).is_equal(Enemy.State.COOLDOWN)
 	assert_int(e._player_ref.hits.size()).is_equal(0)
+
+
+# --- Task 4: windup reset + telegraph ---
+
+func test_entering_windup_resets_dash_done() -> void:
+	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
+	e._dash_done = true
+	e._change_state(Enemy.State.WINDUP)
+	assert_bool(e._dash_done).is_false()
+	assert_int(e._state).is_equal(Enemy.State.WINDUP)
+
+func test_entering_windup_runs_telegraph_without_error() -> void:
+	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
+	e._change_state(Enemy.State.WINDUP)
+	assert_float(e._state_timer).is_equal(e.windup_duration)
