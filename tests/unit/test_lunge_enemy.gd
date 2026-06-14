@@ -39,3 +39,84 @@ func test_moves_during_attack_tracks_state_and_dash_done() -> void:
 	assert_bool(e._moves_during_attack()).is_true()
 	e._dash_done = true
 	assert_bool(e._moves_during_attack()).is_false()
+
+
+# --- Task 3: dash tick + body-check + termination ---
+
+func _make_recording_player(pos: Vector2) -> Node2D:
+	var script := GDScript.new()
+	script.source_code = '\n'.join([
+		"extends Node2D",
+		"var hits: Array = []",
+		"func on_hit_impact(_pos: Vector2, _dir: Vector2, dmg: int) -> void:",
+		"\thits.push_back({_pos = _pos, _dir = _dir, dmg = dmg})",
+	])
+	var err := script.reload()
+	assert_int(err).is_equal(OK)
+	var p: Node2D = auto_free(Node2D.new())
+	p.set_script(script)
+	add_child(p)
+	p.global_position = pos
+	return p
+
+func _lunge_to_recording(origin: Vector2, player_pos: Vector2) -> LungeEnemy:
+	var e: LungeEnemy = auto_free(LungeEnemy.new())
+	add_child(e)
+	e.global_position = origin
+	e._player_ref = _make_recording_player(player_pos)
+	return e
+
+func test_dash_sets_velocity_along_lock_dir() -> void:
+	var e := _lunge_to_recording(Vector2.ZERO, Vector2(100, 0))
+	e._state = Enemy.State.ATTACK
+	e._attack_started = false
+	e._dash_done = false
+	e._process_attack(0.05)
+	assert_float(e.velocity.x).is_equal_approx(e.dash_speed, 0.01)
+	assert_float(e.velocity.y).is_equal_approx(0.0, 0.01)
+
+func test_dash_terminates_into_cooldown() -> void:
+	var e := _lunge_to_recording(Vector2.ZERO, Vector2(100, 0))
+	e._state = Enemy.State.ATTACK
+	e._attack_started = false
+	e._dash_done = false
+	for i in range(20):
+		if e._state != Enemy.State.ATTACK:
+			break
+		e._process_attack(0.05)
+	assert_int(e._state).is_equal(Enemy.State.COOLDOWN)
+	assert_bool(e._dash_done).is_true()
+
+func test_body_check_hits_once_within_contact_radius() -> void:
+	var e := _lunge_to_recording(Vector2.ZERO, Vector2(5, 0))
+	e.weapon.damage = 7.0
+	e._state = Enemy.State.ATTACK
+	e._attack_started = false
+	e._dash_done = false
+	for i in range(20):
+		if e._state != Enemy.State.ATTACK:
+			break
+		e._process_attack(0.05)
+	var hits: Array = e._player_ref.hits
+	assert_int(hits.size()).is_equal(1)
+	assert_int(hits[0]["dmg"]).is_equal(7)
+
+func test_sidestepped_player_takes_no_hit() -> void:
+	var e := _lunge_to_recording(Vector2.ZERO, Vector2(200, 0))
+	e._state = Enemy.State.ATTACK
+	e._attack_started = false
+	e._dash_done = false
+	for i in range(20):
+		if e._state != Enemy.State.ATTACK:
+			break
+		e._process_attack(0.05)
+	assert_int(e._player_ref.hits.size()).is_equal(0)
+
+func test_dash_done_blocks_restart() -> void:
+	var e := _lunge_to_recording(Vector2.ZERO, Vector2(5, 0))
+	e._state = Enemy.State.ATTACK
+	e._attack_started = false
+	e._dash_done = true
+	e._process_attack(0.05)
+	assert_int(e._state).is_equal(Enemy.State.COOLDOWN)
+	assert_int(e._player_ref.hits.size()).is_equal(0)
