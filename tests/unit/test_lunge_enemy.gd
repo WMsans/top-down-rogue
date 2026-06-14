@@ -135,3 +135,14 @@ func test_entering_windup_runs_telegraph_without_error() -> void:
 	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
 	e._change_state(Enemy.State.WINDUP)
 	assert_float(e._state_timer).is_equal(e.windup_duration)
+
+
+# --- Task 5: scene ---
+
+func test_scene_instantiates_as_lunge_enemy() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/lunge_enemy.tscn")
+	assert_object(scene).is_not_null()
+	var e = auto_free(scene.instantiate())
+	add_child(e)
+	assert_bool(e is LungeEnemy).is_true()
+	assert_float(e._attack_range).is_equal(e.lunge_range)
