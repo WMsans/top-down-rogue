@@ -6,6 +6,8 @@ const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
 const DUMMY_ENEMY_SCENE := preload("res://scenes/enemies/dummy_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const PARDUMMY_SCENE := preload("res://scenes/enemies/parry_dummy.tscn")
+const VENT_SCENE := preload("res://scenes/props/vent.tscn")
+const BARREL_SCENE := preload("res://scenes/props/barrel.tscn")
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 const PROJECTILE_TEX := preload("res://textures/wall.png")
 
@@ -28,6 +30,8 @@ static func register(registry: CommandRegistry) -> void:
 	registry.register("spawn enemy dummy", "Spawn a dummy enemy", _spawn_enemy)
 	registry.register("spawn gold", "Spawn a gold drop (default 10)", _spawn_gold)
 	registry.register("spawn chest", "Spawn a chest", _spawn_chest)
+	registry.register("spawn gas_emitter", "Spawn a gas vent that periodically emits gas", _spawn_gas_emitter)
+	registry.register("spawn barrel", "Spawn a destructible oil barrel", _spawn_barrel)
 	registry.register("spawn static_slash", "Spawn a parry dummy that always parries", _spawn_static_slash)
 	registry.register("spawn static_projectile", "Spawn a static enemy projectile", _spawn_static_projectile)
 	registry.register("spawn projectile bounce", "Fire a bouncing projectile", _spawn_behavior_projectile.bind("bounce"))
@@ -144,6 +148,26 @@ static func _spawn_chest(_args: Array[String], ctx: Dictionary) -> String:
 	parent.add_child(chest)
 	chest.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned chest"
+
+
+static func _spawn_gas_emitter(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var vent: Node2D = VENT_SCENE.instantiate()
+	parent.add_child(vent)
+	vent.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned gas emitter"
+
+
+static func _spawn_barrel(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var barrel: Area2D = BARREL_SCENE.instantiate()
+	parent.add_child(barrel)
+	barrel.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned oil barrel"
 
 
 static func _spawn_static_slash(_args: Array[String], ctx: Dictionary) -> String:
