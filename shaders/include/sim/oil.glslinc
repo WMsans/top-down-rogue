@@ -61,7 +61,7 @@ void oil_advect_pull(
 	int out_right = stochastic_div(density * comp_right, V_MAX_OUTFLOW, pos, 104u);
 
 	int total_out = out_up + out_down + out_left + out_right;
-	int max_outflow = min(density, max(1, density / 2));
+	int max_outflow = min(density, max(1, density / 3));
 	if (total_out > max_outflow) {
 		out_up    = out_up    * max_outflow / max(1, total_out);
 		out_down  = out_down  * max_outflow / max(1, total_out);
@@ -113,13 +113,10 @@ void oil_advect_pull(
 	           + vin_up * in_up + vin_down * in_down
 	           + vin_left * in_left + vin_right * in_right;
 	ivec2 new_vel = vsum / weight;
-	// Heavy damping toward rest. Oil should sit still by default; it only moves
-	// when actively pushed by a rigidbody (via injection.glslinc) or when
-	// drained into adjacent air. Without strong damping, velocity introduced
-	// by a transient (rigidbody push, or in past versions a wave clobber that
-	// wrote a=0 → vel=(-8,-8)) self-perpetuates through advection because the
-	// inflow mixing preserves the common velocity of donor cells.
-	new_vel = (new_vel * 3) / 4;
+	int new_vel_mag = max(abs(new_vel.x), abs(new_vel.y));
+	if (new_vel_mag > 0) {
+		new_vel = (new_vel * 7) / 8;
+	}
 	new_vel = clamp(new_vel, ivec2(-8), ivec2(7));
 
 	int temp_weight = stayed * temperature;
@@ -143,7 +140,7 @@ void oil_advect_pull(
 			ivec2 inflow_vel = ivec2(0);
 			if (total_in > 0) {
 				inflow_vel = (vin_up * in_up + vin_down * in_down + vin_left * in_left + vin_right * in_right) / total_in;
-				inflow_vel = (inflow_vel * 3) / 4;
+				inflow_vel = (inflow_vel * 7) / 8;
 				inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
 			}
 			imageStore(chunk_tex, pos, pack_oil(total_in, new_temp, inflow_vel));
