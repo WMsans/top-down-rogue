@@ -220,6 +220,15 @@ void fragment() {
 		mat = MAT_AIR;
 	}
 
+	if (mat == MAT_OIL) {
+		vec4 tint = MATERIAL_TINT[MAT_OIL];
+		vec3 oil_color = tint.rgb * effective_glow(MAT_OIL, data.b);
+		oil_color = apply_temperature_tint(oil_color, data.b);
+		fluid_tint = vec4(oil_color, 1.0);
+		fluid_alpha = mix(0.25, tint.a, data.g);
+		mat = MAT_AIR;
+	}
+
 	if (mat == MAT_DUST) {
 		int dust_src = int(round(data.b * 255.0));
 		vec3 dust_rgb = get_material_top_color(dust_src, px.x);

@@ -97,7 +97,7 @@ func place_oil_splash(world_pos: Vector2, radius: float, outward_speed: float, b
 			if data[idx] != MaterialRegistry.MAT_AIR:
 				continue
 			data[idx] = MaterialRegistry.MAT_OIL
-			data[idx + 1] = 255
+			data[idx + 1] = clampi(200 + randi_range(-40, 55), 1, 255)
 			data[idx + 2] = 0
 			var dir_normalized := dir
 			if dir.length_squared() > 0.0001:
