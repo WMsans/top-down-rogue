@@ -27,6 +27,11 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		adapter.place_fire(world_pos, radius)
 
 
+func place_oil(world_pos: Vector2, radius: float) -> void:
+	if adapter:
+		adapter.place_material(world_pos, radius, MaterialRegistry.MAT_OIL)
+
+
 func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array, damage: float = -1.0) -> void:
 	if adapter:
 		var typed: Array[int] = []
