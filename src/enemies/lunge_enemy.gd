@@ -20,6 +20,18 @@ func _ready() -> void:
 	cooldown_duration = recovery_duration
 
 
+func _change_state(new_state: int) -> void:
+	if new_state == State.WINDUP:
+		_dash_done = false
+		_play_windup_telegraph()
+	super._change_state(new_state)
+
+
+func _play_windup_telegraph() -> void:
+	_play_hit_flash()
+	_play_squash()
+
+
 func _begin_dash() -> void:
 	_lock_dir = get_facing_direction()
 	_dash_timer = dash_duration
