@@ -10,7 +10,7 @@ extends MeleeEnemy
 var _lock_dir: Vector2 = Vector2.DOWN
 var _dash_timer: float = 0.0
 var _dash_hit: bool = false
-var _dash_done: bool = false  # set when a dash finishes; blocks restart after a HURT interrupt
+var _dash_done: bool = false
 
 
 func _ready() -> void:
