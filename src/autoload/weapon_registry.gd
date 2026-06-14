@@ -123,6 +123,7 @@ func _apply_weapon_texture(weapon: Weapon, tex_path: String) -> void:
 	var tex := load(tex_path)
 	if tex is Texture2D:
 		weapon.weapon_texture = tex
+		weapon.icon_texture = tex
 	else:
 		push_warning("WeaponRegistry: could not load texture '%s'" % tex_path)
 
