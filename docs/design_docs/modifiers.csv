@@ -1,12 +1,58 @@
-id,name,description,suppresses_base_use
-lava_emitter,Lava Emitter,Spawns lava around the user when the weapon is used.,No
-green_crescent,Green Crescent,Spin slash hurls a crescent of green energy that cuts through enemies in its path.,No
-fireball_fan,Fireball Fan,Every swing looses a fan of five fireballs.,No
-icicle_volley,Icicle Volley,Every strike fires five icicles.,No
-gleaming_projectile,Gleaming Projectile,Every swing releases a gleaming projectile that shatters incoming enemy bullets clearing a path through gunfire.,No
-lightning_bolt,Lightning Bolt,Calls a bolt of lightning down onto a marked target with a chance to stun. Not triggered every attack.,No
-arc_volley,Arc Volley,First two hits of a three-hit combo each fire seven projectiles.,No
-triangular_volley,Triangular Volley,Third hit of a three-hit combo sprays thirteen bolts in a triangular volley.,No
-bouncing_bullets,Bouncing Bullets,Forward spin summons a skyward shockwave that looses four bouncing bullets.,No
-splitting_rounds,Splitting Rounds,Follow-up thrust scatters three rounds that split into four shards on impact.,No
-penetrating_shockwave,Penetrating Shockwave,Full charge fires a massive penetrating shockwave that deletes enemy projectiles as it travels.,No
+id,name,description,rarity,category,trigger,condition,effect,element,magnitude,magnitude2,suppresses_base_use
+lava_emitter,Lava Emitter,"Spawns lava around the user when the weapon is used.",Common,emitter,on_swing,,spawn_material,lava,16,0,No
+green_crescent,Green Crescent,"Spin slash hurls a crescent of green energy that cuts through enemies in its path.",Uncommon,projectile,on_combo_step,,spawn_projectile,,1,0,No
+fireball_fan,Fireball Fan,"Every swing looses a fan of five fireballs.",Common,projectile,on_swing,,spawn_projectile,on_fire,5,0,No
+icicle_volley,Icicle Volley,"Every strike fires five icicles.",Common,projectile,on_swing,,spawn_projectile,chilly,5,0,No
+gleaming_projectile,Gleaming Projectile,"Every swing releases a gleaming projectile that shatters incoming enemy bullets clearing a path through gunfire.",Uncommon,projectile,on_swing,,spawn_projectile,,1,0,No
+lightning_bolt,Lightning Bolt,"Calls a bolt of lightning down onto a marked target with a chance to stun. Not triggered every attack.",Rare,projectile,on_hit,,spawn_projectile,lightning,1,0,No
+arc_volley,Arc Volley,"First two hits of a three-hit combo each fire seven projectiles.",Rare,projectile,on_combo_step,,spawn_projectile,,7,0,No
+triangular_volley,Triangular Volley,"Third hit of a three-hit combo sprays thirteen bolts in a triangular volley.",Rare,projectile,on_combo_step,,spawn_projectile,,13,0,No
+bouncing_bullets,Bouncing Bullets,"Forward spin summons a skyward shockwave that looses four bouncing bullets.",Uncommon,projectile,on_combo_step,,spawn_projectile,,4,0,No
+splitting_rounds,Splitting Rounds,"Follow-up thrust scatters three rounds that split into four shards on impact.",Uncommon,projectile,on_combo_step,,spawn_projectile,,3,4,No
+penetrating_shockwave,Penetrating Shockwave,"Full charge fires a massive penetrating shockwave that deletes enemy projectiles as it travels.",Rare,projectile,on_charge,,spawn_projectile,,1,0,No
+oil_emitter,Oil Emitter,"Each swing leaves a slick of flammable oil — ignite it for a firestorm.",Common,emitter,on_swing,,spawn_material,oil,24,0,No
+water_emitter,Aqua Font,"Swings spray water, dousing flames and soaking the ground for freeze combos.",Common,emitter,on_swing,,spawn_material,water,24,0,No
+gas_emitter,Miasma Vent,"Belches a cloud of toxic gas with each swing, poisoning anything inside.",Uncommon,emitter,on_swing,,spawn_material,gas,20,0,No
+frost_emitter,Frost Emitter,"Lays a patch of ice underfoot — slick footing that chills the careless.",Uncommon,emitter,on_swing,,spawn_material,ice,18,0,No
+blood_emitter,Sanguine Spray,"Sprays blood across the floor, fuel for blood-soaked synergies.",Common,emitter,on_swing,,spawn_material,blood,20,0,No
+coal_seeder,Coal Seeder,"Scatters lumps of flammable coal that smolder into lingering fire.",Uncommon,emitter,on_swing,,spawn_material,coal,12,0,No
+dust_veil,Dust Veil,"Kicks up a concealing cloud of dust on every swing.",Common,emitter,on_swing,,spawn_material,dust,20,0,No
+venom_edge,Venom Edge,"Strikes coat foes in venom, poisoning them over time.",Common,status,on_hit,,apply_status,poisoned,2.0,0,No
+soaking_strike,Soaking Strike,"Blows leave enemies drenched, priming them for freezing or shock.",Common,status,on_hit,,apply_status,wet,2.0,0,No
+greased_edge,Greased Edge,"Coats struck foes in oil — one spark sets them ablaze.",Common,status,on_hit,,apply_status,oiled,2.0,0,No
+frostbite_edge,Frostbite Edge,"Each hit saps warmth, chilling foes toward a deep freeze.",Uncommon,status,on_hit,,apply_status,chilly,2.0,0,No
+ember_edge,Ember Edge,"Strikes ignite foes, setting them burning.",Uncommon,status,on_hit,,apply_status,on_fire,2.0,0,No
+rending_edge,Rending Edge,"Wounds bleed freely, leaving enemies bloody and weakened.",Common,status,on_hit,,apply_status,bloody,2.0,0,No
+sharpened,Sharpened,"+3 flat damage to every hit.",Common,stat,passive,,stat_add,damage,3,0,No
+heavy_head,Heavy Head,"+5 damage, but swings land 25% slower.",Common,stat,passive,,stat_add,damage,5,1.25,No
+honed_point,Honed Point,"+15% critical strike chance.",Uncommon,stat,passive,,stat_add,crit_chance,0.15,0,No
+executioners_mark,Executioner's Mark,"Critical hits deal an extra +0.5x damage.",Uncommon,stat,passive,,stat_add,crit_multiplier,0.5,0,No
+quickdraw,Quickdraw,"Swings come 20% faster.",Uncommon,stat,passive,,stat_mult,cooldown,0.8,0,No
+long_reach,Long Reach,"Extends weapon reach by 30%.",Common,stat,passive,,stat_mult,reach,1.3,0,No
+wide_arc,Wide Arc,"Widens the swing arc by 40%, sweeping more foes.",Common,stat,passive,,stat_mult,arc,1.4,0,No
+deep_cut,Deep Cut,"Carves 80% deeper into terrain — dig and tunnel with ease.",Uncommon,stat,passive,,stat_mult,carve_depth,1.8,0,No
+fleetfoot,Fleetfoot,"Move 15% faster while attacking.",Uncommon,stat,passive,,stat_mult,move_speed,1.15,0,No
+frostbreaker,Frostbreaker,"Deal +60% damage to chilled or frozen foes.",Uncommon,trigger,on_hit,target_status:frozen,stat_mult,damage,1.6,0,No
+pyroclast,Pyroclast,"Deal +50% damage to burning foes.",Uncommon,trigger,on_hit,target_status:on_fire,stat_mult,damage,1.5,0,No
+coup_de_grace,Coup de Grace,"+100% damage to foes below 30% health.",Uncommon,trigger,on_hit,target_low_hp,stat_mult,damage,2.0,0.3,No
+bloodlust,Bloodlust,"Each kill grants stacking damage that fades when the killing stops.",Rare,trigger,on_kill,,stat_add,damage,1,8,No
+rampage,Rampage,"Consecutive hits ramp damage; missing resets the streak.",Rare,trigger,on_hit,,stat_add,damage,1,6,No
+glass_cannon,Glass Cannon,"+80% damage while at full health; drops the moment you're hurt.",Rare,trigger,on_hit,self_full_hp,stat_mult,damage,1.8,0,No
+vampiric,Vampiric,"Heal a sliver of health on each kill.",Uncommon,trigger,on_kill,,heal,,3,0,No
+momentum,Momentum,"The faster you move, the harder you hit — up to +50%.",Uncommon,trigger,on_hit,,stat_mult,damage,1.5,0,No
+adrenaline,Adrenaline,"Swings get faster as your health drops, up to 40% faster.",Rare,trigger,passive,self_low_hp,stat_mult,cooldown,0.6,0,No
+combo_keeper,Combo Keeper,"Every 5th hit is a guaranteed critical.",Uncommon,trigger,every_n_hits,,stat_add,crit_chance,1.0,5,No
+homing_hex,Homing Hex,"Every swing looses a bolt that curves toward the nearest foe.",Uncommon,projectile,on_swing,,spawn_projectile,,1,0,No
+chain_spark,Chain Spark,"Critical hits arc lightning to nearby enemies, with a chance to stun.",Rare,projectile,on_crit,,spawn_projectile,lightning,3,0,No
+ricochet_shard,Ricochet Shard,"Swings fling a shard that ricochets off walls, striking again.",Uncommon,projectile,on_swing,,spawn_projectile,,1,3,No
+piercing_lance,Piercing Lance,"Looses a lance that skewers every foe in a line.",Uncommon,projectile,on_swing,,spawn_projectile,,1,0,No
+cluster_bomb,Cluster Bomb,"Hurls a bomb that bursts into a ring of fragments.",Rare,projectile,on_swing,,spawn_projectile,on_fire,8,0,No
+boomerang_arc,Boomerang Arc,"Throws a blade-arc that returns, hitting foes both ways.",Uncommon,projectile,on_swing,,spawn_projectile,,1,0,No
+spectral_echo,Spectral Echo,"A ghostly copy repeats your swing a moment later.",Rare,projectile,on_swing,,spawn_projectile,,1,0,No
+tunnel_borer,Tunnel Borer,"Swings blast a wide tunnel through soft terrain.",Uncommon,terrain,on_swing,,carve,,32,0,No
+shockwave_stomp,Shockwave Stomp,"Each swing emits a shockwave that knocks foes back.",Uncommon,utility,on_swing,,knockback,,40,0,No
+magnet_field,Magnet Field,"Pulls loose gold and drops toward you on every swing.",Common,utility,on_swing,,pull,,48,0,No
+repulsor_nova,Repulsor Nova,"A full charge releases a nova that flings enemies away.",Rare,utility,on_charge,,knockback,,80,0,No
+concussive_edge,Concussive Edge,"Hits have a chance to stun, briefly halting foes.",Uncommon,trigger,on_hit,,stun,,0.5,0.2,No
+midas_touch,Midas Touch,"Slain enemies spill extra gold.",Uncommon,utility,on_kill,,bounty,,5,0,No
+steam_burst,Steam Burst,"Striking a wet foe erupts in scalding steam, spreading the burn.",Rare,trigger,on_hit,target_status:wet,apply_status,steam,3,0,No

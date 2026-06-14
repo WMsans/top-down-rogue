@@ -522,5 +522,5 @@ All weapons have 3 modifier slots. Format below: **id — Name** *(rarity · cd 
 
 ## 6. Acceptance for this session
 - `modifiers.csv`: header extended; 11 existing rows backfilled; 46 new rows appended (57 total).
-- `weapons.csv`: 28 new rows appended (52 total).
+- `weapons.csv`: 28 new rows appended (51 total; 23 pre-existing).
 - This spec committed.
