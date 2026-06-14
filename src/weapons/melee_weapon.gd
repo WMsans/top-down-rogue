@@ -1,7 +1,10 @@
 class_name MeleeWeapon
 extends Weapon
 
-@export var weapon_texture: Texture2D = preload("res://textures/Weapons/sword_01c.png")
+@export var weapon_texture: Texture2D = preload("res://textures/Weapons/sword_01c.png"):
+	set(value):
+		weapon_texture = value
+		icon_texture = value
 @export var weapon_reach: float = 36.0
 
 const REFERENCE_REACH := 36.0
