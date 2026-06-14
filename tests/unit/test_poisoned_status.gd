@@ -1,5 +1,17 @@
 extends GdUnitTestSuite
 
+func test_barrel_constants() -> void:
+	const OilBarrelScript := preload("res://src/props/oil_barrel.gd")
+	assert_that(OilBarrelScript.MAX_HP).is_equal(3)
+	assert_that(OilBarrelScript.SPLASH_RADIUS).is_equal(4.0)
+	assert_that(OilBarrelScript.DUMP_RADIUS).is_equal(8.0)
+
+func test_gas_vent_constants() -> void:
+	const GasVentScript := preload("res://src/props/gas_vent.gd")
+	assert_that(GasVentScript.EMIT_INTERVAL).is_equal(5.0)
+	assert_that(GasVentScript.EMIT_RADIUS).is_equal(6.0)
+	assert_that(GasVentScript.EMIT_DENSITY).is_equal(80)
+
 func test_poisoned_status_exists() -> void:
 	var def := StatusRegistry.get_def("poisoned")
 	assert_that(def).is_not_null()
@@ -29,3 +41,7 @@ func test_poisoned_slow_multiplier() -> void:
 func test_poisoned_burn_dps() -> void:
 	var dps := StatusRegistry.get_burn_dps("poisoned")
 	assert_that(dps).is_equal(2.0)
+
+func test_poisoned_does_not_block_movement() -> void:
+	var blocks := StatusRegistry.blocks_movement("poisoned")
+	assert_that(blocks).is_false()
