@@ -210,7 +210,8 @@ func _physics_process(delta: float) -> void:
 				if _burn_flash > 0.0:
 					m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
 				sprite.modulate = m
-	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
+	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT \
+			or (_state == State.ATTACK and _moves_during_attack()):
 		_move_with_clamp(delta)
 
 
@@ -317,6 +318,10 @@ func _process_attack(_delta: float) -> void:
 
 
 func _attack_in_progress() -> bool:
+	return false
+
+
+func _moves_during_attack() -> bool:
 	return false
 
 

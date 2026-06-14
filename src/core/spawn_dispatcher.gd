@@ -4,6 +4,7 @@ const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
 const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
 const SNIPER_ENEMY_SCENE := preload("res://scenes/enemies/sniper_enemy.tscn")
+const LUNGE_ENEMY_SCENE := preload("res://scenes/enemies/lunge_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const SHOP_STALL_SCENE := preload("res://scenes/economy/shop_stall.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
@@ -19,6 +20,8 @@ const NUDGE_MAX_RINGS: int = 3  # outward search radius ~= 24px
 
 const GAUNTLET_EXTRA_PER_RING := 0.34
 const GAUNTLET_EXTRA_CAP := 4
+
+const LUNGE_MELEE_CHANCE := 0.25
 
 const REINFORCE_INTERVAL := 12.0
 const REINFORCE_SPAWN_DIST := 360.0
@@ -207,7 +210,10 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 			enemy.weapon_resource = _pick_melee_weapon()
 		else:
 			if randf() < 0.8:
-				enemy = MELEE_ENEMY_SCENE.instantiate()
+				if roll_melee_is_lunge(randf()):
+					enemy = LUNGE_ENEMY_SCENE.instantiate()
+				else:
+					enemy = MELEE_ENEMY_SCENE.instantiate()
 				enemy.weapon_resource = _pick_melee_weapon()
 			elif randf() < 0.15:
 				enemy = SNIPER_ENEMY_SCENE.instantiate()
@@ -240,6 +246,10 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 
 	enemy.global_position = world_pos
 	_spawn_parent.add_child(enemy)
+
+
+static func roll_melee_is_lunge(r: float) -> bool:
+	return r < LUNGE_MELEE_CHANCE
 
 
 func _pick_melee_weapon() -> Weapon:
