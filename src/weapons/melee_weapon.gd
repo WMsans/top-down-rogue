@@ -190,10 +190,7 @@ func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: fl
 				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
 		var is_crit: bool = force_crit or roll_crit()
-		var dmg: int = int(base_dmg * crit_multiplier) if is_crit else int(base_dmg)
-		node.on_hit_impact(node2d.global_position, hit_dir, dmg)
-		if is_crit:
-			_on_crit(node)
+		resolve_hit(user, node, damage * dmg_mult, is_crit)
 
 
 func _tick_impl(_delta: float) -> void:
