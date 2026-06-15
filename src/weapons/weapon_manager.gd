@@ -55,6 +55,9 @@ func _input(event: InputEvent) -> void:
 	if slot < 0 or _inventory == null:
 		return
 	if event.pressed:
+		var status := _player.get_node_or_null("StatusComponent")
+		if status != null and not status.can_attack():
+			return
 		var weapon = _inventory.get_weapon(slot)
 		if slot < PlayerInventory.MAX_WEAPON_SLOTS and weapon != null:
 			_activate_weapon(weapon)
