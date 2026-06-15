@@ -126,6 +126,7 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	proj.lifetime = projectile_lifetime
 	proj.direction = direction.normalized()
 	proj.source_node = user
+	proj.source_weapon = self
 	if projectile_texture:
 		var proj_sprite := proj.get_node_or_null("Sprite2D")
 		if proj_sprite:
