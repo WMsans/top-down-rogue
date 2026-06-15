@@ -152,6 +152,10 @@ func _apply_damage_scale() -> void:
 
 
 func _process(delta: float) -> void:
+	if _state == State.DEATH:
+		_process_death(delta)
+		return
+
 	if _status_component != null and _status_component.is_stunned():
 		velocity = Vector2.ZERO
 		return
@@ -160,10 +164,6 @@ func _process(delta: float) -> void:
 		_teleport_cooldown -= delta
 
 	_update_player_in_range()
-
-	if _state == State.DEATH:
-		_process_death(delta)
-		return
 
 	if _state == State.HURT:
 		_process_hurt(delta)
