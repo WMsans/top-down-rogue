@@ -162,6 +162,59 @@ tao_sword, broadsword, throwing_knife, fire_orb, spread_shot, boss_staff, lava_e
 
 ---
 
+The 46 new modifiers (`modifiers.csv`) and 28 new weapons (`weapons.csv`, redesigned per
+`2026-06-15-weapon-modifier-separation-design.md`) remain unbuilt. They ride on ~5 new
+subsystems, split into the sub-projects below. Foundations-first ordering: each cycle ships
+playable content. SP-A is the keystone (a data-driven modifier runtime) and is built first.
+
+### Sub-project A (5): Data-driven runtime (weapons + modifiers)
+See `docs/superpowers/specs/2026-06-15-sp-a-data-driven-runtime-design.md`.
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P1 | High | Fully data-driven weapon factory | Build every weapon from its CSV row alone; delete all 23 `.tres`; `archetype` column selects script; new `reach/arc/projectile_*` columns; `.tres`-free |
+|  | P1 | High | `DataModifier` dispatch class | One Modifier subclass that reads `category/trigger/condition/effect/element/magnitude` from the CSV row and dispatches behavior; 11 bespoke modifier scripts kept |
+|  | P1 | Medium | Effective-stats pipeline | `Weapon.get_effective_stats()` folds passive `stat_add`/`stat_mult`; melee/ranged read effective values |
+|  | P1 | High | Hit-resolution chokepoint | `Weapon.resolve_hit()` applies conditional multipliers, status-edges, on-kill; melee + projectile (`source_weapon` ref) both route through it |
+|  | P1 | Medium | CSV → registry | Build weapons + all 57 modifiers from CSV; register every entry in tiered drop tables |
+|  | P1 | Medium | Emitters (7) | oil/water/gas/frost/blood/coal/dust `spawn_material` on swing |
+|  | P1 | Medium | Status edges (6) | venom/soaking/greased/frostbite/ember/rending `apply_status` on hit |
+|  | P1 | Medium | Stat affixes (9) | sharpened, heavy_head, honed_point, executioners_mark, quickdraw, long_reach, wide_arc, deep_cut, fleetfoot |
+|  | P1 | Medium | Conditional triggers (10) | frostbreaker, pyroclast, coup_de_grace, bloodlust, rampage, glass_cannon, vampiric, momentum, adrenaline, combo_keeper (reuse existing hooks only) |
+|  | P1 | Low | Data-only new weapons | rapier, iron_mace, bone_cleaver, venom_fang_blade, tide_caller, cinder_brand, glacier_edge, thunder_katana, scatter_blunderbuss, frost_repeater (obsidian/gravedigger playable sans native carve) |
+
+### Sub-project B (6): New statuses & combat hooks
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P2 | High | `lightning`/`steam`/`stun` statuses | StatusDefs + reaction rules (wet→steam, neutral stun) |
+|  | P2 | Medium | Enemy stun + knockback hooks | Immobilize + radial impulse verbs |
+|  | P2 | Medium | Player heal + economy bounty hooks | `heal` verb; `bounty` extra-gold on kill |
+|  | P2 | Medium | Modifiers using new hooks | chain_spark, steam_burst, concussive_edge, repulsor_nova, shockwave_stomp, magnet_field, midas_touch |
+
+### Sub-project C (7): New projectile behaviors + projectile modifiers
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P2 | Medium | `homing` steering | Curve toward nearest enemy with capped turn rate |
+|  | P2 | Medium | `return` steering | Travel out then reverse to player, hitting both legs |
+|  | P2 | Medium | Projectile modifiers | homing_hex, boomerang_arc, ricochet_shard, piercing_lance, cluster_bomb, spectral_echo |
+
+### Sub-project D (8): Native melee mechanics + 18 melee weapons
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P2 | Medium | Native arc shapes | wide front arc (Bone Cleaver), surround/rear arc (War Scythe) |
+|  | P2 | Medium | Double-hit + charged spin | twin_daggers double pass; whirlwind 360° charge |
+|  | P2 | High | Native attrition/charge traits | free-carve, heal-on-kill, low-HP ramp, per-kill stacking, charged shockwave, melee deflect |
+|  | P2 | Medium | Melee `.tres` + stat wiring | iron_mace, rapier, cleaver, war_scythe, twin_daggers, obsidian_greatsword, venom_fang_blade, tide_caller, cinder_brand, glacier_edge, thunder_katana, gravedigger_spade, reaper_glaive, berserker_axe, mirror_blade, whirlwind_blade, quake_hammer, soul_reaver |
+
+### Sub-project E (9): Native ranged mechanics + 10 ranged weapons
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P2 | Medium | Line-pierce + charged rail | heavy_crossbow pierce; arc_railgun charge-to-fire rail |
+|  | P2 | Medium | Lob-splat + chain/fork | flame_lobber/venom_spitter impact hazard; tesla_gun chaining |
+|  | P2 | Medium | Area-volley + folded-native | hailstorm_bow volley; chakram return, seeker homing fold native |
+|  | P2 | Medium | Ranged `.tres` + stat wiring | heavy_crossbow, scatter_blunderbuss, arc_railgun, flame_lobber, frost_repeater, venom_spitter, tesla_gun, chakram_launcher, seeker_launcher, hailstorm_bow |
+
+---
+
 ## Phase 8: Steady-State Performance (Nav + Collision Readback)
 
 After the enemy navigation system landed, frame time regressed to ~47–83 ms (12–21 fps).
