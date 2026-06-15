@@ -210,6 +210,9 @@ func _apply_effects(delta: float) -> void:
 			if _owner_node != null and _owner_node.has_method("apply_status_damage"):
 				_owner_node.apply_status_damage(whole)
 
+	if has_status("steam"):
+		_burn_accum += StatusRegistry.get_burn_dps("steam") * delta
+
 
 func _poll_terrain(delta: float) -> void:
 	if _terrain_physical == null or _owner_node == null:
