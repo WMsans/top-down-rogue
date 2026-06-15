@@ -2,6 +2,7 @@ extends Node
 
 const _Weapon = preload("res://src/weapons/weapon.gd")
 const _Modifier = preload("res://src/weapons/modifier.gd")
+const _DataModifier = preload("res://src/weapons/modifiers/data_modifier.gd")
 
 class WeaponDropEntry:
 	var weapon_resource: Weapon
@@ -13,10 +14,12 @@ class WeaponDropEntry:
 
 class ModifierDropEntry:
 	var modifier_script: GDScript
+	var modifier_id: String
 	var weight: float
 
-	func _init(p_script: GDScript, p_weight: float = 1.0) -> void:
+	func _init(p_script: GDScript, p_id: String, p_weight: float = 1.0) -> void:
 		modifier_script = p_script
+		modifier_id = p_id
 		weight = p_weight
 
 var weapon_scripts: Dictionary = {}
@@ -29,7 +32,7 @@ const WEAPON_CSV_PATH := "res://docs/design_docs/weapons.csv"
 const MODIFIER_CSV_PATH := "res://docs/design_docs/modifiers.csv"
 
 var _all_weapons: Array = []
-var _modifier_data: Dictionary = {}  # id -> { name, description, suppresses_base_use }
+var _modifier_data: Dictionary = {}  # id -> full CSV row
 var _weapons_by_id: Dictionary = {}  # id -> overlaid Weapon (canonical copy)
 
 const _RARITY_WORDS := {
@@ -152,23 +155,13 @@ func _build_tier_buckets() -> void:
 
 
 func _populate_modifier_tiers() -> void:
-	modifier_tiers[DropTable.ItemTier.COMMON] = [
-		ModifierDropEntry.new(modifier_scripts["lava_emitter"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["fireball_fan"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["icicle_volley"], 1.0),
-	]
-	modifier_tiers[DropTable.ItemTier.UNCOMMON] = [
-		ModifierDropEntry.new(modifier_scripts["gleaming_projectile"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["green_crescent"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["splitting_rounds"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["bouncing_bullets"], 1.0),
-	]
-	modifier_tiers[DropTable.ItemTier.RARE] = [
-		ModifierDropEntry.new(modifier_scripts["arc_volley"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["triangular_volley"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["penetrating_shockwave"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["lightning_bolt"], 1.0),
-	]
+	modifier_tiers.clear()
+	for id in _modifier_data.keys():
+		var row: Dictionary = _modifier_data[id]
+		var tier: int = _map_rarity(row.get("rarity", "Common"))
+		if not modifier_tiers.has(tier):
+			modifier_tiers[tier] = []
+		modifier_tiers[tier].append(ModifierDropEntry.new(modifier_scripts.get(id), id, 1.0))
 
 
 func get_random_weapon(tier: int) -> _Weapon:
@@ -211,8 +204,8 @@ func get_random_modifier(tier: int) -> _Modifier:
 	for entry in entries:
 		cumulative += entry.weight
 		if roll <= cumulative:
-			return entry.modifier_script.new()
-	return entries[0].modifier_script.new()
+			return _make_modifier(entry.modifier_id)
+	return _make_modifier(entries[0].modifier_id)
 
 
 func _load_modifier_data() -> void:
@@ -221,24 +214,19 @@ func _load_modifier_data() -> void:
 		var id: String = row.get("id", "")
 		if id == "":
 			continue
-		_modifier_data[id] = {
-			"name": row.get("name", ""),
-			"description": row.get("description", ""),
-			"suppresses_base_use": row.get("suppresses_base_use", "No").strip_edges() == "Yes",
-		}
+		_modifier_data[id] = row
 
 
 func _make_modifier(id: String) -> _Modifier:
+	var data: Dictionary = _modifier_data.get(id, {})
 	var script: GDScript = modifier_scripts.get(id)
-	if script == null:
+	if script != null:
+		var mod: _Modifier = script.new()
+		mod.name = data.get("name", mod.name)
+		mod.description = data.get("description", mod.description)
+		mod.suppresses_base_use = String(data.get("suppresses_base_use", "No")).strip_edges() == "Yes"
+		return mod
+	if data.is_empty():
 		push_warning("WeaponRegistry: unknown modifier id '%s'" % id)
 		return null
-	var mod: _Modifier = script.new()
-	var data: Dictionary = _modifier_data.get(id, {})
-	if data.has("name"):
-		mod.name = data["name"]
-	if data.has("description"):
-		mod.description = data["description"]
-	if data.has("suppresses_base_use"):
-		mod.suppresses_base_use = data["suppresses_base_use"]
-	return mod
+	return _DataModifier.new(data)
