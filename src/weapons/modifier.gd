@@ -27,6 +27,14 @@ func modify_crit_chance(_weapon: Weapon, base: float) -> float:
 	return base
 
 
+func get_stat_add(_stat: String) -> float:
+	return 0.0
+
+
+func get_stat_mult(_stat: String) -> float:
+	return 1.0
+
+
 func modify_stat(_stat: String, value: float) -> float:
 	return value
 
