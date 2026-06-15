@@ -50,6 +50,18 @@ func _register_defs() -> void:
 		"poisoned", "Poisoned", Color(0.3, 0.85, 0.25, 1.0),
 		0.4, 0.3, StatusDef.Category.HARMFUL, 2.0, false, 0.6,
 		"res://textures/ui/status/Effect_poisoned.png"))
+	_add(StatusDefScript.new(
+		"steam", "Steamed", Color(0.85, 0.85, 0.85, 1.0),
+		1.2, 1.0, StatusDef.Category.HARMFUL, 3.0, false, 0.8,
+		""))
+	_add(StatusDefScript.new(
+		"lightning", "Shocked", Color(0.9, 0.95, 1.0, 1.0),
+		0.0, 0.0, StatusDef.Category.HARMFUL, 0.0, false, 1.0,
+		"", StatusDef.Mode.TIMED, 0.4))
+	_add(StatusDefScript.new(
+		"stun", "Stunned", Color(1.0, 1.0, 0.5, 1.0),
+		0.0, 0.0, StatusDef.Category.HARMFUL, 0.0, false, 1.0,
+		"", StatusDef.Mode.TIMED, 0.2))
 
 
 func _add(def: StatusDef) -> void:
@@ -124,6 +136,8 @@ func stain_for_material(material_id: int) -> String:
 		return "bloody"
 	if material_id == MaterialRegistry.MAT_GAS:
 		return "poisoned"
+	if material_id == MaterialRegistry.MAT_STEAM:
+		return "steam"
 	return ""
 
 
