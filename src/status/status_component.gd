@@ -203,15 +203,14 @@ func _decay(delta: float) -> void:
 func _apply_effects(delta: float) -> void:
 	if has_status("on_fire"):
 		_burn_accum += StatusRegistry.get_burn_dps("on_fire") * delta
-		var whole: int = int(_burn_accum)
-		if whole >= 1:
-			_burn_accum -= float(whole)
-			burn_tick.emit()
-			if _owner_node != null and _owner_node.has_method("apply_status_damage"):
-				_owner_node.apply_status_damage(whole)
-
 	if has_status("steam"):
 		_burn_accum += StatusRegistry.get_burn_dps("steam") * delta
+	var whole: int = int(_burn_accum)
+	if whole >= 1:
+		_burn_accum -= float(whole)
+		burn_tick.emit()
+		if _owner_node != null and _owner_node.has_method("apply_status_damage"):
+			_owner_node.apply_status_damage(whole)
 
 
 func _poll_terrain(delta: float) -> void:
