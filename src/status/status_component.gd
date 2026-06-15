@@ -39,6 +39,7 @@ var _origin_history: Array[Vector2] = []  # recent poll positions, oldest first
 var _frame_counter: int = 0
 var _poll_phase: int = 0           # which frame-in-interval this component polls on
 var _accum_poll_delta: float = 0.0  # delta accumulated since the last terrain poll
+var _timed_statuses: Dictionary = {}
 
 
 func _ready() -> void:
@@ -90,13 +91,40 @@ func clear(id: String) -> void:
 		changed.emit()
 
 
+func add_timed_status(id: String, duration: float) -> void:
+	_timed_statuses[id] = {"remaining": duration, "duration": duration}
+	changed.emit()
+
+
+func has_timed_status(id: String) -> bool:
+	return id in _timed_statuses and _timed_statuses[id]["remaining"] > 0.0
+
+
+func get_timed_remaining(id: String) -> float:
+	if id in _timed_statuses:
+		return _timed_statuses[id]["remaining"]
+	return 0.0
+
+
+func is_stunned() -> bool:
+	return has_timed_status("stun")
+
+
+func can_attack() -> bool:
+	return not is_stunned()
+
+
 func get_blended_tint() -> Color:
 	var ids: Array = get_active_ids()
-	if ids.is_empty():
-		return Color.WHITE
 	var c: Color = Color.WHITE
+	if ids.is_empty() and _timed_statuses.is_empty():
+		return Color.WHITE
 	for id in ids:
 		c = c.lerp(StatusRegistry.get_tint(id), 0.5)
+	for id in _timed_statuses:
+		if _timed_statuses[id]["remaining"] > 0.0:
+			var ratio: float = _timed_statuses[id]["remaining"] / _timed_statuses[id]["duration"]
+			c = c.lerp(StatusRegistry.get_tint(id), 0.5 * ratio)
 	return c
 
 
@@ -114,6 +142,8 @@ func get_move_speed_multiplier() -> float:
 
 
 func is_movement_blocked() -> bool:
+	if is_stunned():
+		return true
 	return is_zero_approx(get_move_speed_multiplier())
 
 
@@ -123,11 +153,18 @@ func tick(delta: float) -> void:
 	# Idle fast path: nothing to decay, no burn in flight -> no work, no signal.
 	# Reactions only matter when at least one stain is present, so an empty
 	# component with no pending burn can safely do nothing this frame.
-	if _stains.is_empty() and _burn_accum == 0.0:
+	if _stains.is_empty() and _burn_accum == 0.0 and _timed_statuses.is_empty():
 		return
 	_decay(delta)
 	StatusRegistry.apply_reactions(self, delta)
 	_apply_effects(delta)
+	var _expired: Array = []
+	for id in _timed_statuses:
+		_timed_statuses[id]["remaining"] -= delta
+		if _timed_statuses[id]["remaining"] <= 0.0:
+			_expired.append(id)
+	for id in _expired:
+		_timed_statuses.erase(id)
 	changed.emit()
 
 
