@@ -17,6 +17,8 @@ var _sprite: Sprite2D = null
 var modifier_slot_count: int = 3
 var modifiers: Array = []
 var _cooldown_timer: float = 0.0
+const COOLDOWN_FLOOR := 0.1
+var _effective_cache: Dictionary = {}
 
 
 func use(user: Node) -> void:
@@ -98,8 +100,10 @@ func update_visual(_delta: float, _user: Node) -> void:
 func add_modifier(slot_index: int, modifier: Modifier) -> void:
 	if slot_index < 0 or slot_index >= modifier_slot_count:
 		return
+	modifiers.resize(max(modifiers.size(), modifier_slot_count))
 	modifiers[slot_index] = modifier
 	modifier.on_equip(self)
+	invalidate_effective_stats()
 
 
 func get_modifier_at(slot_index: int) -> Modifier:
@@ -113,6 +117,41 @@ func find_empty_modifier_slot() -> int:
 		if modifiers[i] == null:
 			return i
 	return -1
+
+
+func _seed_effective_stats() -> Dictionary:
+	return {
+		"damage": damage,
+		"cooldown": cooldown,
+		"crit_chance": crit_chance,
+		"crit_multiplier": crit_multiplier,
+		"reach": 0.0,
+		"arc": 0.0,
+		"move_speed": 1.0,
+		"carve_depth": 1.0,
+	}
+
+
+func get_effective_stats() -> Dictionary:
+	if not _effective_cache.is_empty():
+		return _effective_cache
+	var s := _seed_effective_stats()
+	for stat in s.keys():
+		var v: float = s[stat]
+		for m in modifiers:
+			if m != null:
+				v += m.get_stat_add(stat)
+		for m in modifiers:
+			if m != null:
+				v *= m.get_stat_mult(stat)
+		s[stat] = v
+	s["cooldown"] = maxf(COOLDOWN_FLOOR, s["cooldown"])
+	_effective_cache = s
+	return s
+
+
+func invalidate_effective_stats() -> void:
+	_effective_cache = {}
 
 
 func get_base_stats() -> Dictionary:
