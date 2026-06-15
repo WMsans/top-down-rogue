@@ -83,3 +83,40 @@ func test_heavy_head_dual_stat() -> void:
 	var m := DataModifier.new(_row({ "category": "stat", "trigger": "passive", "effect": "stat_add", "element": "damage", "magnitude": "5", "magnitude2": "1.25" }))
 	assert_that(m.get_stat_add("damage")).is_equal(5.0)
 	assert_that(m.get_stat_mult("cooldown")).is_equal(1.25)
+
+
+class _HpTarget extends Node2D:
+	var health: float = 3.0
+	var max_health: float = 10.0
+	func _init() -> void:
+		var sc := StatusComponent.new(); sc.name = "StatusComponent"; add_child(sc)
+
+func test_pyroclast_multiplies_only_when_target_burning() -> void:
+	var t: _HpTarget = auto_free(_HpTarget.new()); add_child(t)
+	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "on_hit", "condition": "target_status:on_fire", "effect": "stat_mult", "element": "damage", "magnitude": "1.5" }))
+	assert_that(m.modify_hit_damage(null, null, t, 10.0)).is_equal(10.0)
+	t.get_node("StatusComponent").add_stain("on_fire", 2.0)
+	assert_that(m.modify_hit_damage(null, null, t, 10.0)).is_equal(15.0)
+
+func test_discovery_check() -> void:
+	assert_that(1).is_equal(1)
+
+func test_coup_de_grace_executes_low_hp() -> void:
+	var t: _HpTarget = auto_free(_HpTarget.new()); add_child(t)
+	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "on_hit", "condition": "target_low_hp", "effect": "stat_mult", "element": "damage", "magnitude": "2.0", "magnitude2": "0.3" }))
+	assert_that(m.modify_hit_damage(null, null, t, 10.0)).is_equal(20.0)
+
+func test_bloodlust_stacks_on_kill_capped() -> void:
+	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "on_kill", "effect": "stat_add", "element": "damage", "magnitude": "1", "magnitude2": "8" }))
+	for i in range(10):
+		m.on_kill(null, null, null)
+	assert_that(m.get_stat_add("damage")).is_equal(8.0)
+
+func test_combo_keeper_forces_crit_on_fifth() -> void:
+	var w: Weapon = Weapon.new()
+	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "every_n_hits", "effect": "stat_add", "element": "crit_chance", "magnitude": "1.0", "magnitude2": "5" }))
+	w.modifiers = [m, null, null]
+	w._hit_count = 4
+	assert_that(w.get_effective_crit_chance()).is_equal(1.0)
+	w._hit_count = 2
+	assert_that(w.get_effective_crit_chance()).is_equal(0.0)
