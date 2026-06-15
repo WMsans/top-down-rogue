@@ -68,3 +68,18 @@ func test_status_edge_stains_target_on_hit() -> void:
 	}))
 	m.on_hit_target(null, null, t)
 	assert_that(t.get_node("StatusComponent").get_stain("poisoned")).is_equal(2.0)
+
+func test_stat_add_affix() -> void:
+	var m := DataModifier.new(_row({ "category": "stat", "trigger": "passive", "effect": "stat_add", "element": "damage", "magnitude": "3" }))
+	assert_that(m.get_stat_add("damage")).is_equal(3.0)
+	assert_that(m.get_stat_add("cooldown")).is_equal(0.0)
+
+func test_stat_mult_affix() -> void:
+	var m := DataModifier.new(_row({ "category": "stat", "trigger": "passive", "effect": "stat_mult", "element": "cooldown", "magnitude": "0.8" }))
+	assert_that(m.get_stat_mult("cooldown")).is_equal(0.8)
+	assert_that(m.get_stat_mult("damage")).is_equal(1.0)
+
+func test_heavy_head_dual_stat() -> void:
+	var m := DataModifier.new(_row({ "category": "stat", "trigger": "passive", "effect": "stat_add", "element": "damage", "magnitude": "5", "magnitude2": "1.25" }))
+	assert_that(m.get_stat_add("damage")).is_equal(5.0)
+	assert_that(m.get_stat_mult("cooldown")).is_equal(1.25)
