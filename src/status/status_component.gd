@@ -100,6 +100,14 @@ func has_timed_status(id: String) -> bool:
 	return id in _timed_statuses and _timed_statuses[id]["remaining"] > 0.0
 
 
+func get_timed_ids() -> Array:
+	var result: Array = []
+	for id in _timed_statuses:
+		if _timed_statuses[id]["remaining"] > 0.0:
+			result.append(id)
+	return result
+
+
 func get_timed_remaining(id: String) -> float:
 	if id in _timed_statuses:
 		return _timed_statuses[id]["remaining"]
