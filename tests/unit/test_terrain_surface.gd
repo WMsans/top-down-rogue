@@ -23,7 +23,7 @@ class FakeAdapter:
 
 func test_place_gas_delegates_to_adapter() -> void:
 	var fake := FakeAdapter.new()
-	var surface := TerrainSurface.new()
+	var surface: TerrainSurface = TerrainSurface.new()
 	surface.adapter = fake
 	surface.place_gas(Vector2(10, 20), 5.0, 200)
 	assert_that(fake.place_gas_calls.size()).is_equal(1)
@@ -31,13 +31,27 @@ func test_place_gas_delegates_to_adapter() -> void:
 
 func test_place_lava_delegates_to_adapter() -> void:
 	var fake := FakeAdapter.new()
-	var surface := TerrainSurface.new()
+	var surface: TerrainSurface = TerrainSurface.new()
 	surface.adapter = fake
 	surface.place_lava(Vector2(30, 40), 8.0)
 	assert_that(fake.place_lava_calls.size()).is_equal(1)
 
 func test_null_adapter_does_not_crash() -> void:
-	var surface := TerrainSurface.new()
+	var surface: TerrainSurface = TerrainSurface.new()
 	surface.place_gas(Vector2.ZERO, 1.0, 100)
 	surface.place_lava(Vector2.ZERO, 1.0)
 	assert_bool(true).is_true()
+
+class _RecordAdapter:
+	var calls: Array = []
+	func place_material(pos: Vector2, radius: float, mat: int) -> void:
+		calls.append([pos, radius, mat])
+
+func test_place_material_forwards_to_adapter() -> void:
+	var rec := _RecordAdapter.new()
+	var prev = TerrainSurface.adapter
+	TerrainSurface.register_adapter(rec)
+	TerrainSurface.place_material(Vector2(5, 6), 12.0, 3)
+	TerrainSurface.register_adapter(prev)
+	assert_int(rec.calls.size()).is_equal(1)
+	assert_that(rec.calls[0][2]).is_equal(3)

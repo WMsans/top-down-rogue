@@ -37,6 +37,11 @@ func place_oil(world_pos: Vector2, radius: float) -> void:
 		adapter.place_material(world_pos, radius, MaterialRegistry.MAT_OIL)
 
 
+func place_material(world_pos: Vector2, radius: float, material_id: int) -> void:
+	if adapter:
+		adapter.place_material(world_pos, radius, material_id)
+
+
 func place_oil_splash(world_pos: Vector2, radius: float, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
 	if adapter:
 		adapter.place_oil_splash(world_pos, radius, outward_speed, bias_dir)
