@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://drp51kbxhptmf"
+
+[deps]
+
+files=["res://docs/design_docs/modifiers-chinese.name.translation", "res://docs/design_docs/modifiers-chinese.description.translation", "res://docs/design_docs/modifiers-chinese.rarity.translation", "res://docs/design_docs/modifiers-chinese.category.translation", "res://docs/design_docs/modifiers-chinese.trigger.translation", "res://docs/design_docs/modifiers-chinese.condition.translation", "res://docs/design_docs/modifiers-chinese.effect.translation", "res://docs/design_docs/modifiers-chinese.element.translation", "res://docs/design_docs/modifiers-chinese.magnitude.translation", "res://docs/design_docs/modifiers-chinese.magnitude2.translation", "res://docs/design_docs/modifiers-chinese.suppresses.translation"]
+
+source_file="res://docs/design_docs/modifiers-chinese.csv"
+dest_files=["res://docs/design_docs/modifiers-chinese.name.translation", "res://docs/design_docs/modifiers-chinese.description.translation", "res://docs/design_docs/modifiers-chinese.rarity.translation", "res://docs/design_docs/modifiers-chinese.category.translation", "res://docs/design_docs/modifiers-chinese.trigger.translation", "res://docs/design_docs/modifiers-chinese.condition.translation", "res://docs/design_docs/modifiers-chinese.effect.translation", "res://docs/design_docs/modifiers-chinese.element.translation", "res://docs/design_docs/modifiers-chinese.magnitude.translation", "res://docs/design_docs/modifiers-chinese.magnitude2.translation", "res://docs/design_docs/modifiers-chinese.suppresses.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
