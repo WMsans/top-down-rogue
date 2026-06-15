@@ -34,7 +34,7 @@ func use(user: Node) -> void:
 			break
 	if not suppress:
 		_use_impl(user)
-	_cooldown_timer = cooldown
+	_cooldown_timer = get_effective_stats()["cooldown"]
 
 
 func notify_attack(user: Node, ctx: Dictionary) -> void:

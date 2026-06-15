@@ -41,6 +41,11 @@ func _make_behaviors() -> Array:
 	return []
 
 
+func _seed_effective_stats() -> Dictionary:
+	var s := super._seed_effective_stats()
+	return s
+
+
 func has_visual() -> bool:
 	return weapon_texture != null
 
@@ -113,7 +118,7 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	var proj := PROJECTILE_SCENE.instantiate()
 	proj.behaviors = _make_behaviors()
 	proj.global_position = user.global_position
-	proj.damage = damage
+	proj.damage = get_effective_stats()["damage"]
 	proj.crit_chance = get_effective_crit_chance()
 	proj.crit_multiplier = crit_multiplier
 	proj.crit_status = crit_status
