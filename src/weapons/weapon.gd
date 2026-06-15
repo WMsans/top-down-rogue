@@ -19,6 +19,7 @@ var modifiers: Array = []
 var _cooldown_timer: float = 0.0
 const COOLDOWN_FLOOR := 0.1
 var _effective_cache: Dictionary = {}
+var _hit_count: int = 0
 
 
 func use(user: Node) -> void:
@@ -152,6 +153,32 @@ func get_effective_stats() -> Dictionary:
 
 func invalidate_effective_stats() -> void:
 	_effective_cache = {}
+
+
+func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> void:
+	var dmg: float = base_dmg
+	if is_crit:
+		dmg *= get_effective_stats()["crit_multiplier"]
+	for m in modifiers:
+		if m != null:
+			dmg = m.modify_hit_damage(self, user, target, dmg)
+	var had_hp: bool = ("health" in target)
+	var pre_hp: float = target.health if had_hp else 1.0
+	if target.has_method("on_hit_impact"):
+		var hit_dir: Vector2 = Vector2.ZERO
+		if target is Node2D and user is Node2D:
+			hit_dir = (target.global_position - user.global_position).normalized()
+		target.on_hit_impact(target.global_position if target is Node2D else Vector2.ZERO, hit_dir, int(dmg))
+	for m in modifiers:
+		if m != null:
+			m.on_hit_target(self, user, target)
+	if is_crit:
+		_on_crit(target)
+	_hit_count += 1
+	if had_hp and pre_hp > 0.0 and target.health <= 0.0:
+		for m in modifiers:
+			if m != null:
+				m.on_kill(self, user, target)
 
 
 func get_base_stats() -> Dictionary:
