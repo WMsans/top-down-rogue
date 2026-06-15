@@ -60,3 +60,23 @@ func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
 	var sc = target.get_node_or_null("StatusComponent")
 	if sc != null:
 		sc.add_stain(element, magnitude)
+
+
+func get_stat_add(stat: String) -> float:
+	if effect == "stat_add" and element == stat:
+		return magnitude
+	return 0.0
+
+
+func get_stat_mult(stat: String) -> float:
+	if effect == "stat_mult" and element == stat:
+		return magnitude
+	if effect == "stat_add" and element == "damage" and stat == "cooldown" and magnitude2 > 0.0:
+		return magnitude2
+	return 1.0
+
+
+func modify_crit_chance(_weapon: Weapon, base: float) -> float:
+	if effect == "stat_add" and element == "crit_chance":
+		return base + magnitude
+	return base
