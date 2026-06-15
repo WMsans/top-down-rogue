@@ -50,6 +50,15 @@ func _ready() -> void:
 	weapon_scripts["fan"] = preload("res://src/weapons/fan_weapon.gd")
 	weapon_scripts["split_shot"] = preload("res://src/weapons/split_shot_weapon.gd")
 	weapon_scripts["sniper"] = preload("res://src/weapons/sniper_weapon.gd")
+	weapon_scripts["willowblade"] = preload("res://src/weapons/willowblade_weapon.gd")
+	weapon_scripts["blood_blade"] = preload("res://src/weapons/blood_blade_weapon.gd")
+	weapon_scripts["void_sword"] = preload("res://src/weapons/void_sword_weapon.gd")
+	weapon_scripts["dragon_fang"] = preload("res://src/weapons/dragon_fang_weapon.gd")
+	weapon_scripts["executioner"] = preload("res://src/weapons/executioner_weapon.gd")
+	weapon_scripts["grand_knight"] = preload("res://src/weapons/grand_knight_weapon.gd")
+	weapon_scripts["deep_dark"] = preload("res://src/weapons/deep_dark_weapon.gd")
+	weapon_scripts["phantom_blade"] = preload("res://src/weapons/phantom_blade_weapon.gd")
+	weapon_scripts["qinggang"] = preload("res://src/weapons/qinggang_weapon.gd")
 	modifier_scripts["lava_emitter"] = preload("res://src/weapons/modifiers/lava_emitter_modifier.gd")
 	modifier_scripts["fireball_fan"] = preload("res://src/weapons/modifiers/fireball_fan_modifier.gd")
 	modifier_scripts["icicle_volley"] = preload("res://src/weapons/modifiers/icicle_volley_modifier.gd")
@@ -75,13 +84,16 @@ func _load_weapon_resources() -> void:
 		var id: String = row.get("id", "")
 		if id == "":
 			continue
-		var path := "%s/%s.tres" % [WEAPON_RESOURCE_DIR, id]
-		var res := load(path)
-		if not (res is Weapon):
-			push_warning("WeaponRegistry: missing or invalid .tres for '%s' (%s)" % [id, path])
+		var arch: String = row.get("archetype", "").strip_edges()
+		if arch == "":
+			arch = "ranged" if row.get("type", "") == "Ranged" else "melee"
+		var script: GDScript = weapon_scripts.get(arch)
+		if script == null:
+			push_warning("WeaponRegistry: weapon '%s' archetype '%s' not registered; skipping" % [id, arch])
 			continue
-		var weapon: Weapon = res.duplicate(true)
+		var weapon: Weapon = script.new()
 		_apply_csv_fields(weapon, row)
+		weapon.invalidate_effective_stats()
 		_weapons_by_id[id] = weapon
 		_all_weapons.append({ "id": id, "resource": weapon, "weight": 1.0 })
 
@@ -102,6 +114,7 @@ func _apply_csv_fields(weapon: Weapon, row: Dictionary) -> void:
 	weapon.rarity = _map_rarity(row.get("rarity", ""))
 	_validate_type(weapon, row.get("type", ""))
 	_apply_weapon_texture(weapon, row.get("weapon_texture", ""))
+	_apply_tuning(weapon, row)
 	_apply_pre_attached_modifiers(weapon, row)
 
 
@@ -130,6 +143,34 @@ func _apply_weapon_texture(weapon: Weapon, tex_path: String) -> void:
 	else:
 		push_warning("WeaponRegistry: could not load texture '%s'" % tex_path)
 
+
+func _apply_tuning(weapon: Weapon, row: Dictionary) -> void:
+	if weapon is MeleeWeapon:
+		var reach: String = row.get("reach", "")
+		if reach != "":
+			(weapon as MeleeWeapon).weapon_reach = float(reach)
+		var arc: String = row.get("arc", "")
+		if arc != "":
+			(weapon as MeleeWeapon).arc_angle = deg_to_rad(float(arc))
+	elif weapon is RangedWeapon:
+		var rw := weapon as RangedWeapon
+		var ps: String = row.get("projectile_speed", "")
+		if ps != "":
+			rw.projectile_speed = float(ps)
+		var pl: String = row.get("projectile_lifetime", "")
+		if pl != "":
+			rw.projectile_lifetime = float(pl)
+		var sp: String = row.get("spread", "")
+		if sp != "":
+			rw.spread_angle = float(sp)
+		var pc: String = row.get("projectile_count", "")
+		if pc != "":
+			rw.projectile_count = int(pc)
+		var pt: String = row.get("projectile_texture", "")
+		if pt != "":
+			var tex := load(pt)
+			if tex is Texture2D:
+				rw.projectile_texture = tex
 
 func _apply_pre_attached_modifiers(weapon: Weapon, row: Dictionary) -> void:
 	for i in range(1, 4):
