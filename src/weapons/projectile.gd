@@ -17,6 +17,7 @@ const ATTACKABLE_HIT_LAYER := 1 << 7  # layer 8, zero-indexed bit 7
 
 var direction: Vector2 = Vector2.RIGHT
 var source_node: Node2D = null
+var source_weapon: Weapon = null
 var behaviors: Array = []  # of ProjectileBehavior
 var solidity_oracle: Callable = Callable()  # injectable; tests supply a stub
 
@@ -82,17 +83,11 @@ func _handle_hit(target: Node) -> void:
 
 	if target.is_in_group("attackable"):
 		if target != source_node and target.has_method("on_hit_impact"):
-			var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
-			var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
-			target.on_hit_impact(global_position, direction, dmg)
-			if is_crit and crit_status != "":
-				var sc = target.get_node_or_null("StatusComponent")
-				if sc != null:
-					sc.add_stain(crit_status, CRIT_STATUS_STAIN)
-			if hit_status != "":
-				var hs = target.get_node_or_null("StatusComponent")
-				if hs != null:
-					hs.add_stain(hit_status, HIT_STATUS_STAIN)
+			if source_weapon != null:
+				var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
+				source_weapon.resolve_hit(source_node, target, damage, is_crit)
+			else:
+				_legacy_apply_hit(target)
 			var keep_enemy := false
 			for b in behaviors:
 				keep_enemy = b.on_enemy_hit(self, target) or keep_enemy
@@ -122,6 +117,20 @@ func _carve_terrain() -> void:
 	TerrainSurface.clear_and_push_materials_in_arc(
 		global_position, direction, 3.0, TAU, 0.0, 0.0, solids, damage
 	)
+
+
+func _legacy_apply_hit(target: Node) -> void:
+	var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
+	var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
+	target.on_hit_impact(global_position, direction, dmg)
+	if is_crit and crit_status != "":
+		var sc = target.get_node_or_null("StatusComponent")
+		if sc != null:
+			sc.add_stain(crit_status, CRIT_STATUS_STAIN)
+	if hit_status != "":
+		var hs = target.get_node_or_null("StatusComponent")
+		if hs != null:
+			hs.add_stain(hit_status, HIT_STATUS_STAIN)
 
 
 func is_solid_at(pos: Vector2) -> bool:
