@@ -156,7 +156,10 @@ func tick(delta: float) -> void:
 	if _stains.is_empty() and _burn_accum == 0.0 and _timed_statuses.is_empty():
 		return
 	_decay(delta)
-	StatusRegistry.apply_reactions(self, delta)
+	var entity_pos: Vector2 = Vector2.ZERO
+	if _owner_node is Node2D:
+		entity_pos = (_owner_node as Node2D).global_position
+	StatusRegistry.apply_reactions(self, delta, entity_pos)
 	_apply_effects(delta)
 	var _expired: Array = []
 	for id in _timed_statuses:

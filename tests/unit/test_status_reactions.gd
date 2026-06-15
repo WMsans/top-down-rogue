@@ -57,3 +57,20 @@ func test_chilly_ramps_to_frozen() -> void:
 	# CHILLY_RAMP_RATE (1) moved chilly->frozen
 	assert_float(c.get_stain("chilly")).is_equal_approx(4.0, 0.001)
 	assert_float(c.get_stain("frozen")).is_equal_approx(1.0, 0.001)
+
+
+func test_lightning_plus_wet_drains_wet_and_consumes_lightning() -> void:
+	var comp := _make_comp()
+	comp.add_stain("wet", 5.0)
+	comp.add_timed_status("lightning", 0.4)
+	StatusRegistry.apply_reactions(comp, 0.1, Vector2(100.0, 100.0))
+	assert_float(comp.get_stain("wet")).is_less(5.0)
+	assert_bool(comp.has_timed_status("lightning")).is_false()
+
+func test_steam_smothers_fire() -> void:
+	var comp := _make_comp()
+	comp.add_stain("steam", 4.0)
+	comp.add_stain("on_fire", 3.0)
+	StatusRegistry.apply_reactions(comp, 0.1, Vector2.ZERO)
+	assert_float(comp.get_stain("on_fire")).is_less(3.0)
+	assert_float(comp.get_stain("steam")).is_less(4.0)
