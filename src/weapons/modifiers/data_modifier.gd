@@ -52,3 +52,11 @@ func _spawn_material(user: Node, ctx: Dictionary) -> void:
 	var dir: Vector2 = ctx.get("direction", Vector2.DOWN)
 	var at: Vector2 = origin + dir * EMITTER_FORWARD
 	TerrainSurface.place_material(at, magnitude, mat)
+
+
+func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
+	if trigger != "on_hit" or effect != "apply_status":
+		return
+	var sc = target.get_node_or_null("StatusComponent")
+	if sc != null:
+		sc.add_stain(element, magnitude)
