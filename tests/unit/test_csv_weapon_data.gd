@@ -35,3 +35,20 @@ func test_pre_attached_modifier_applied() -> void:
 
 func test_unknown_weapon_id_returns_null() -> void:
 	assert_that(WeaponRegistry.get_weapon_by_id("nope")).is_null()
+
+func test_make_modifier_builds_data_modifier_for_new_id() -> void:
+	var m = WeaponRegistry._make_modifier("oil_emitter")
+	assert_that(m).is_not_null()
+	assert_that(m is DataModifier).is_true()
+	assert_str(m.name).is_equal("Oil Emitter")
+	assert_str(m.element).is_equal("oil")
+
+func test_bespoke_modifier_still_scripted() -> void:
+	var m = WeaponRegistry._make_modifier("lava_emitter")
+	assert_that(m is DataModifier).is_false()
+
+func test_new_modifier_is_droppable() -> void:
+	var total := 0
+	for tier in WeaponRegistry.modifier_tiers.keys():
+		total += WeaponRegistry.modifier_tiers[tier].size()
+	assert_int(total).is_greater_equal(50)
