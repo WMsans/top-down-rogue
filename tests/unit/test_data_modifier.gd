@@ -51,3 +51,20 @@ func test_emitter_places_material_on_swing() -> void:
 	TerrainSurface.register_adapter(prev)
 	assert_int(rec.placed.size()).is_equal(1)
 	assert_that(rec.placed[0]).is_equal(MaterialRegistry.MAT_WATER)
+
+
+class _StatusTarget extends Node2D:
+	func _init() -> void:
+		var sc := StatusComponent.new()
+		sc.name = "StatusComponent"
+		add_child(sc)
+
+func test_status_edge_stains_target_on_hit() -> void:
+	var t: _StatusTarget = auto_free(_StatusTarget.new())
+	add_child(t)
+	var m: DataModifier = DataModifier.new(_row({
+		"category": "status", "trigger": "on_hit", "effect": "apply_status",
+		"element": "poisoned", "magnitude": "2",
+	}))
+	m.on_hit_target(null, null, t)
+	assert_that(t.get_node("StatusComponent").get_stain("poisoned")).is_equal(2.0)
