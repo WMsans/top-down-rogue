@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="RangedWeapon" format=3 uid="uid://bbossstaff"]
-
-[ext_resource type="Script" uid="uid://b08b3cytaotsb" path="res://src/weapons/ranged_weapon.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://bcl2afruwt8hv" path="res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/arrow_03a.png" id="3"]
-
-[resource]
-script = ExtResource("1")
-spread_angle = 10.0
-projectile_texture = ExtResource("3")
