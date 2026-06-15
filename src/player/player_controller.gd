@@ -32,16 +32,18 @@ const RECOVERY_STEP := 2.0
 
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _dash_velocity: Vector2 = Vector2.ZERO
-
-
-func apply_knockback(direction: Vector2, strength: float) -> void:
-	_knockback_velocity = direction.normalized() * strength
 var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
 var _last_safe_position: Vector2 = Vector2.ZERO
 var _status_tint: Color = Color.WHITE
 var _burn_flash: float = 0.0
+
+
+func apply_knockback(direction: Vector2, strength: float) -> void:
+	_knockback_velocity = direction.normalized() * strength
+
+
 func _enter_tree() -> void:
 	var inventory := PlayerInventory.new()
 	inventory.name = "PlayerInventory"
@@ -400,11 +402,12 @@ func try_parry(attacker: Node, hit_pos: Vector2, hit_dir: Vector2) -> bool:
 			return false
 	var dir := hit_dir.normalized() if hit_dir.length_squared() > 0.0001 else Vector2.RIGHT
 	_knockback_velocity = -dir * PARRY_KNOCKBACK_SPEED
-	if attacker != null and "apply_knockback" in attacker:
-		attacker.apply_knockback(dir, PARRY_KNOCKBACK_SPEED)
-	var attacker_status = attacker.get_node_or_null("StatusComponent")
-	if attacker_status != null:
-		attacker_status.add_timed_status("stun", PARRY_STUN_DURATION)
+	if attacker != null:
+		if "apply_knockback" in attacker:
+			attacker.apply_knockback(dir, PARRY_KNOCKBACK_SPEED)
+		var attacker_status = attacker.get_node_or_null("StatusComponent")
+		if attacker_status != null:
+			attacker_status.add_timed_status("stun", PARRY_STUN_DURATION)
 	var midpoint: Vector2 = (global_position + (attacker.global_position if attacker is Node2D else hit_pos)) * 0.5
 	var nail_clash := preload("res://src/player/feedback/nail_clash_fx.gd")
 	nail_clash.play(midpoint, dir.orthogonal())
