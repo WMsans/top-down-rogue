@@ -27,5 +27,21 @@ func modify_crit_chance(_weapon: Weapon, base: float) -> float:
 	return base
 
 
+func modify_stat(_stat: String, value: float) -> float:
+	return value
+
+
+func modify_hit_damage(_weapon: Weapon, _user: Node, _target: Node, dmg: float) -> float:
+	return dmg
+
+
+func on_hit_target(_weapon: Weapon, _user: Node, _target: Node) -> void:
+	pass
+
+
+func on_kill(_weapon: Weapon, _user: Node, _target: Node) -> void:
+	pass
+
+
 func get_description() -> String:
 	return description
