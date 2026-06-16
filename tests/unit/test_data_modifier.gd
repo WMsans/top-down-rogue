@@ -232,3 +232,41 @@ func test_concussive_edge_never_stuns_when_chance_zero() -> void:
 	}))
 	m.on_hit_target(null, null, t)
 	assert_bool(t.get_node("StatusComponent").has_timed_status("stun")).is_false()
+
+
+class _SteamAdapter:
+	var steamed: Array = []
+	func place_steam(pos: Vector2, radius: float, density: int) -> void:
+		steamed.append({ "pos": pos, "radius": radius, "density": density })
+	func place_material(_pos: Vector2, _radius: float, _mat: int) -> void:
+		pass
+
+func test_steam_burst_erupts_only_on_wet_target() -> void:
+	var rec := _SteamAdapter.new()
+	var prev: Variant = TerrainSurface.adapter
+	TerrainSurface.register_adapter(rec)
+	var dry: _StatusTarget = auto_free(_StatusTarget.new())
+	add_child(dry)
+	var wet: _StatusTarget = auto_free(_StatusTarget.new())
+	add_child(wet)
+	wet.get_node("StatusComponent").add_stain("wet", 5.0)
+	var m := DataModifier.new(_row({
+		"category": "trigger", "trigger": "on_hit", "condition": "target_status:wet",
+		"effect": "apply_status", "element": "steam", "magnitude": "3",
+	}))
+	m.on_hit_target(null, null, dry)   # not wet -> nothing
+	m.on_hit_target(null, null, wet)   # wet -> steam cloud + stain
+	TerrainSurface.register_adapter(prev)
+	assert_int(rec.steamed.size()).is_equal(1)
+	assert_that(wet.get_node("StatusComponent").get_stain("steam")).is_equal(3.0)
+	assert_that(dry.get_node("StatusComponent").get_stain("steam")).is_equal(0.0)
+
+func test_unconditional_status_edge_still_applies() -> void:
+	var t: _StatusTarget = auto_free(_StatusTarget.new())
+	add_child(t)
+	var m := DataModifier.new(_row({
+		"category": "status", "trigger": "on_hit", "effect": "apply_status",
+		"element": "poisoned", "magnitude": "2",
+	}))
+	m.on_hit_target(null, null, t)
+	assert_that(t.get_node("StatusComponent").get_stain("poisoned")).is_equal(2.0)
