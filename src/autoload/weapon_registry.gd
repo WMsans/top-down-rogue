@@ -70,6 +70,7 @@ func _ready() -> void:
 	modifier_scripts["bouncing_bullets"] = preload("res://src/weapons/modifiers/bouncing_bullets_modifier.gd")
 	modifier_scripts["penetrating_shockwave"] = preload("res://src/weapons/modifiers/penetrating_shockwave_modifier.gd")
 	modifier_scripts["lightning_bolt"] = preload("res://src/weapons/modifiers/lightning_bolt_modifier.gd")
+	modifier_scripts["chain_spark"] = preload("res://src/weapons/modifiers/chain_spark_modifier.gd")
 	_load_modifier_data()
 
 	_load_weapon_resources()
