@@ -51,5 +51,9 @@ func on_kill(_weapon: Weapon, _user: Node, _target: Node) -> void:
 	pass
 
 
+func on_crit(_weapon: Weapon, _user: Node, _target: Node) -> void:
+	pass
+
+
 func get_description() -> String:
 	return description
