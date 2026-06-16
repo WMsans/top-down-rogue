@@ -203,8 +203,8 @@ func _decay(delta: float) -> void:
 func _apply_effects(delta: float) -> void:
 	if has_status("on_fire"):
 		_burn_accum += StatusRegistry.get_burn_dps("on_fire") * delta
-	if has_status("steam"):
-		_burn_accum += StatusRegistry.get_burn_dps("steam") * delta
+	if has_status("poisoned"):
+		_burn_accum += StatusRegistry.get_burn_dps("poisoned") * delta
 	var whole: int = int(_burn_accum)
 	if whole >= 1:
 		_burn_accum -= float(whole)
