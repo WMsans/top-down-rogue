@@ -49,11 +49,11 @@ func _register_defs() -> void:
 	_add(StatusDefScript.new(
 		"poisoned", "Poisoned", Color(0.3, 0.85, 0.25, 1.0),
 		0.4, 0.3, StatusDef.Category.HARMFUL, 2.0, false, 0.6,
-		"res://textures/ui/status/Effect_poisoned.png"))
+		"res://textures/ui/status/Effect_radioactive.png"))
 	_add(StatusDefScript.new(
 		"steam", "Steamed", Color(0.85, 0.85, 0.85, 1.0),
 		1.2, 1.0, StatusDef.Category.HARMFUL, 3.0, false, 0.8,
-		""))
+		"res://textures/ui/status/Effect_curse_cloud.png"))
 	_add(StatusDefScript.new(
 		"lightning", "Shocked", Color(0.9, 0.95, 1.0, 1.0),
 		0.0, 0.0, StatusDef.Category.HARMFUL, 0.0, false, 1.0,

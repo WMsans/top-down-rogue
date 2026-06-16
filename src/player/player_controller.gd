@@ -123,12 +123,14 @@ func _physics_process(delta: float) -> void:
 	if _color_rect != null:
 		_color_rect.scale.x = -1.0 if _facing_left else 1.0
 	var status := get_node_or_null("StatusComponent")
+	var speed_mult: float = 1.0
 	if status and status.is_movement_blocked():
 		input_dir = Vector2.ZERO
 		velocity = Vector2.ZERO
 	elif status:
-		input_dir *= status.get_move_speed_multiplier()
-	_apply_movement(input_dir, delta)
+		speed_mult = status.get_move_speed_multiplier()
+		input_dir *= speed_mult
+	_apply_movement(input_dir, delta, speed_mult)
 	velocity += _knockback_velocity + _dash_velocity
 	var tint_status := get_node_or_null("StatusComponent")
 	if tint_status and _color_rect:
@@ -245,7 +247,7 @@ func _resolve_terrain_overlap() -> void:
 	global_position = _last_safe_position
 
 
-func _apply_movement(input_dir: Vector2, delta: float) -> void:
+func _apply_movement(input_dir: Vector2, delta: float, speed_mult: float = 1.0) -> void:
 	if input_dir != Vector2.ZERO:
 		velocity += input_dir * acceleration * delta
 	else:
@@ -254,8 +256,9 @@ func _apply_movement(input_dir: Vector2, delta: float) -> void:
 			velocity = Vector2.ZERO
 		else:
 			velocity -= velocity.normalized() * friction_amount
-	if velocity.length() > max_speed:
-		velocity = velocity.normalized() * max_speed
+	var effective_max := max_speed * speed_mult
+	if velocity.length() > effective_max:
+		velocity = velocity.normalized() * effective_max
 
 
 func _can_see_enemy(enemy: Node2D) -> bool:
