@@ -14,6 +14,7 @@ var chain_count: int = 3
 func _init() -> void:
 	name = "Chain Spark"
 	description = "Critical hits arc lightning to nearby enemies, with a chance to stun."
+	icon_texture = preload("res://textures/wall.png")
 
 
 func on_crit(_weapon: Weapon, user: Node, _target: Node) -> void:
