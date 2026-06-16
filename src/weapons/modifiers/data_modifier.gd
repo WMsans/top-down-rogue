@@ -4,6 +4,8 @@ extends Modifier
 const EMITTER_FORWARD := 14.0
 const KNOCKBACK_RADIUS_FACTOR := 1.8
 const PULL_IMPULSE := 220.0
+const STEAM_BURST_RADIUS := 14.0
+const STEAM_BURST_DENSITY := 180
 
 var category: String = ""
 var trigger: String = ""
@@ -161,10 +163,15 @@ func _self_full_hp(user: Node) -> bool:
 
 
 func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
-	if trigger == "on_hit" and effect == "apply_status":
+	if trigger == "on_hit" and effect == "apply_status" and _condition_met(target):
 		var sc = target.get_node_or_null("StatusComponent")
 		if sc != null:
-			sc.add_stain(element, magnitude)
+			if element == "steam":
+				if target is Node2D:
+					TerrainSurface.place_steam((target as Node2D).global_position, STEAM_BURST_RADIUS, STEAM_BURST_DENSITY)
+				sc.add_stain("steam", magnitude)
+			else:
+				sc.add_stain(element, magnitude)
 	if trigger == "on_hit" and effect == "stun":
 		if randf() < magnitude2:
 			var scs = target.get_node_or_null("StatusComponent")
