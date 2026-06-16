@@ -122,3 +122,45 @@ func test_combo_keeper_forces_crit_on_fifth() -> void:
 	assert_that(w.get_effective_crit_chance()).is_equal(1.0)
 	w._hit_count = 2
 	assert_that(w.get_effective_crit_chance()).is_equal(0.0)
+
+
+class _KnockTarget extends Node2D:
+	var knocks: Array = []
+	func _init() -> void:
+		add_to_group("attackable")
+	func apply_knockback(dir: Vector2, strength: float) -> void:
+		knocks.append({ "dir": dir, "strength": strength })
+
+func test_shockwave_stomp_knocks_in_range_on_swing() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var near: _KnockTarget = auto_free(_KnockTarget.new())
+	add_child(near)
+	near.global_position = Vector2(30, 0)   # within 40*1.8=72
+	var far: _KnockTarget = auto_free(_KnockTarget.new())
+	add_child(far)
+	far.global_position = Vector2(300, 0)   # outside
+	var m := DataModifier.new(_row({
+		"category": "utility", "trigger": "on_swing", "effect": "knockback", "magnitude": "40",
+	}))
+	m.on_attack(null, user, { "origin": Vector2.ZERO, "direction": Vector2.RIGHT, "charged": false, "charge_ratio": 0.0 })
+	assert_int(near.knocks.size()).is_equal(1)
+	assert_that(near.knocks[0]["strength"]).is_equal(40.0)
+	assert_int(far.knocks.size()).is_equal(0)
+
+func test_repulsor_nova_only_on_full_charge() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var near: _KnockTarget = auto_free(_KnockTarget.new())
+	add_child(near)
+	near.global_position = Vector2(50, 0)   # within 80*1.8=144
+	var m := DataModifier.new(_row({
+		"category": "utility", "trigger": "on_charge", "effect": "knockback", "magnitude": "80",
+	}))
+	# partial charge: no knockback
+	m.on_attack(null, user, { "origin": Vector2.ZERO, "direction": Vector2.RIGHT, "charged": true, "charge_ratio": 0.5 })
+	assert_int(near.knocks.size()).is_equal(0)
+	# full charge: knockback
+	m.on_attack(null, user, { "origin": Vector2.ZERO, "direction": Vector2.RIGHT, "charged": true, "charge_ratio": 1.0 })
+	assert_int(near.knocks.size()).is_equal(1)
+	assert_that(near.knocks[0]["strength"]).is_equal(80.0)

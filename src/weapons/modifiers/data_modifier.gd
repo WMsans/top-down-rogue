@@ -2,6 +2,7 @@ class_name DataModifier
 extends Modifier
 
 const EMITTER_FORWARD := 14.0
+const KNOCKBACK_RADIUS_FACTOR := 1.8
 
 var category: String = ""
 var trigger: String = ""
@@ -41,10 +42,10 @@ func _material_id() -> int:
 
 
 func on_attack(_weapon: Weapon, user: Node, ctx: Dictionary) -> void:
-	if trigger != "on_swing":
-		return
-	if effect == "spawn_material":
+	if effect == "spawn_material" and trigger == "on_swing":
 		_spawn_material(user, ctx)
+	elif effect == "knockback":
+		_do_knockback(user, ctx)
 
 
 func _spawn_material(user: Node, ctx: Dictionary) -> void:
@@ -55,6 +56,39 @@ func _spawn_material(user: Node, ctx: Dictionary) -> void:
 	var dir: Vector2 = ctx.get("direction", Vector2.DOWN)
 	var at: Vector2 = origin + dir * EMITTER_FORWARD
 	TerrainSurface.place_material(at, magnitude, mat)
+
+
+func _do_knockback(user: Node, ctx: Dictionary) -> void:
+	if trigger == "on_charge":
+		if not ctx.get("charged", false) or ctx.get("charge_ratio", 0.0) < 1.0:
+			return
+	elif trigger != "on_swing":
+		return
+	if user == null or not (user is Node2D):
+		return
+	var radius: float = magnitude * KNOCKBACK_RADIUS_FACTOR
+	for n in _radial_targets(user, radius):
+		var dir: Vector2 = (n as Node2D).global_position - (user as Node2D).global_position
+		if dir == Vector2.ZERO:
+			dir = Vector2.DOWN
+		n.apply_knockback(dir, magnitude)
+
+
+func _radial_targets(user: Node, radius: float) -> Array:
+	var out: Array = []
+	var tree := user.get_tree()
+	if tree == null:
+		return out
+	var origin: Vector2 = (user as Node2D).global_position
+	var r2: float = radius * radius
+	for n in tree.get_nodes_in_group("attackable"):
+		if n == user or not is_instance_valid(n) or not (n is Node2D):
+			continue
+		if not n.has_method("apply_knockback"):
+			continue
+		if origin.distance_squared_to((n as Node2D).global_position) <= r2:
+			out.append(n)
+	return out
 
 
 func _condition_met(target: Node) -> bool:
