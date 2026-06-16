@@ -367,6 +367,19 @@ func test_piercing_lance_has_penetrate_behavior() -> void:
 			assert_that(c.behaviors[0] is PenetrateBehavior).is_true()
 
 
+func test_cluster_bomb_has_split_behavior_with_burn_ring() -> void:
+	var pu := _spawn_parent_and_user()
+	ClusterBombModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			var sb := c.behaviors[0] as SplitBehavior
+			assert_that(sb).is_not_null()
+			assert_int(sb.shard_count).is_equal(8)
+			assert_float(sb.spread_deg).is_equal(360.0)
+			assert_str(sb.shard_hit_status).is_equal("burn")
+
+
 func test_new_modifier_is_droppable() -> void:
 	var total := 0
 	for tier in WeaponRegistry.modifier_tiers.keys():
