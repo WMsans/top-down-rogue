@@ -2,6 +2,7 @@ extends Node
 
 const _Weapon = preload("res://src/weapons/weapon.gd")
 const _Modifier = preload("res://src/weapons/modifier.gd")
+const _DataModifier = preload("res://src/weapons/modifiers/data_modifier.gd")
 
 class WeaponDropEntry:
 	var weapon_resource: Weapon
@@ -13,10 +14,12 @@ class WeaponDropEntry:
 
 class ModifierDropEntry:
 	var modifier_script: GDScript
+	var modifier_id: String
 	var weight: float
 
-	func _init(p_script: GDScript, p_weight: float = 1.0) -> void:
+	func _init(p_script: GDScript, p_id: String, p_weight: float = 1.0) -> void:
 		modifier_script = p_script
+		modifier_id = p_id
 		weight = p_weight
 
 var weapon_scripts: Dictionary = {}
@@ -29,7 +32,7 @@ const WEAPON_CSV_PATH := "res://docs/design_docs/weapons.csv"
 const MODIFIER_CSV_PATH := "res://docs/design_docs/modifiers.csv"
 
 var _all_weapons: Array = []
-var _modifier_data: Dictionary = {}  # id -> { name, description, suppresses_base_use }
+var _modifier_data: Dictionary = {}  # id -> full CSV row
 var _weapons_by_id: Dictionary = {}  # id -> overlaid Weapon (canonical copy)
 
 const _RARITY_WORDS := {
@@ -47,6 +50,15 @@ func _ready() -> void:
 	weapon_scripts["fan"] = preload("res://src/weapons/fan_weapon.gd")
 	weapon_scripts["split_shot"] = preload("res://src/weapons/split_shot_weapon.gd")
 	weapon_scripts["sniper"] = preload("res://src/weapons/sniper_weapon.gd")
+	weapon_scripts["willowblade"] = preload("res://src/weapons/willowblade_weapon.gd")
+	weapon_scripts["blood_blade"] = preload("res://src/weapons/blood_blade_weapon.gd")
+	weapon_scripts["void_sword"] = preload("res://src/weapons/void_sword_weapon.gd")
+	weapon_scripts["dragon_fang"] = preload("res://src/weapons/dragon_fang_weapon.gd")
+	weapon_scripts["executioner"] = preload("res://src/weapons/executioner_weapon.gd")
+	weapon_scripts["grand_knight"] = preload("res://src/weapons/grand_knight_weapon.gd")
+	weapon_scripts["deep_dark"] = preload("res://src/weapons/deep_dark_weapon.gd")
+	weapon_scripts["phantom_blade"] = preload("res://src/weapons/phantom_blade_weapon.gd")
+	weapon_scripts["qinggang"] = preload("res://src/weapons/qinggang_weapon.gd")
 	modifier_scripts["lava_emitter"] = preload("res://src/weapons/modifiers/lava_emitter_modifier.gd")
 	modifier_scripts["fireball_fan"] = preload("res://src/weapons/modifiers/fireball_fan_modifier.gd")
 	modifier_scripts["icicle_volley"] = preload("res://src/weapons/modifiers/icicle_volley_modifier.gd")
@@ -72,13 +84,16 @@ func _load_weapon_resources() -> void:
 		var id: String = row.get("id", "")
 		if id == "":
 			continue
-		var path := "%s/%s.tres" % [WEAPON_RESOURCE_DIR, id]
-		var res := load(path)
-		if not (res is Weapon):
-			push_warning("WeaponRegistry: missing or invalid .tres for '%s' (%s)" % [id, path])
+		var arch: String = row.get("archetype", "").strip_edges()
+		if arch == "":
+			arch = "ranged" if row.get("type", "") == "Ranged" else "melee"
+		var script: GDScript = weapon_scripts.get(arch)
+		if script == null:
+			push_warning("WeaponRegistry: weapon '%s' archetype '%s' not registered; skipping" % [id, arch])
 			continue
-		var weapon: Weapon = res.duplicate(true)
+		var weapon: Weapon = script.new()
 		_apply_csv_fields(weapon, row)
+		weapon.invalidate_effective_stats()
 		_weapons_by_id[id] = weapon
 		_all_weapons.append({ "id": id, "resource": weapon, "weight": 1.0 })
 
@@ -99,6 +114,7 @@ func _apply_csv_fields(weapon: Weapon, row: Dictionary) -> void:
 	weapon.rarity = _map_rarity(row.get("rarity", ""))
 	_validate_type(weapon, row.get("type", ""))
 	_apply_weapon_texture(weapon, row.get("weapon_texture", ""))
+	_apply_tuning(weapon, row)
 	_apply_pre_attached_modifiers(weapon, row)
 
 
@@ -128,6 +144,34 @@ func _apply_weapon_texture(weapon: Weapon, tex_path: String) -> void:
 		push_warning("WeaponRegistry: could not load texture '%s'" % tex_path)
 
 
+func _apply_tuning(weapon: Weapon, row: Dictionary) -> void:
+	if weapon is MeleeWeapon:
+		var reach: String = row.get("reach", "")
+		if reach != "":
+			(weapon as MeleeWeapon).weapon_reach = float(reach)
+		var arc: String = row.get("arc", "")
+		if arc != "":
+			(weapon as MeleeWeapon).arc_angle = deg_to_rad(float(arc))
+	elif weapon is RangedWeapon:
+		var rw := weapon as RangedWeapon
+		var ps: String = row.get("projectile_speed", "")
+		if ps != "":
+			rw.projectile_speed = float(ps)
+		var pl: String = row.get("projectile_lifetime", "")
+		if pl != "":
+			rw.projectile_lifetime = float(pl)
+		var sp: String = row.get("spread", "")
+		if sp != "":
+			rw.spread_angle = float(sp)
+		var pc: String = row.get("projectile_count", "")
+		if pc != "":
+			rw.projectile_count = int(pc)
+		var pt: String = row.get("projectile_texture", "")
+		if pt != "":
+			var tex := load(pt)
+			if tex is Texture2D:
+				rw.projectile_texture = tex
+
 func _apply_pre_attached_modifiers(weapon: Weapon, row: Dictionary) -> void:
 	for i in range(1, 4):
 		var mod_id: String = row.get("pre_attached_modifier%d" % i, "")
@@ -152,23 +196,13 @@ func _build_tier_buckets() -> void:
 
 
 func _populate_modifier_tiers() -> void:
-	modifier_tiers[DropTable.ItemTier.COMMON] = [
-		ModifierDropEntry.new(modifier_scripts["lava_emitter"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["fireball_fan"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["icicle_volley"], 1.0),
-	]
-	modifier_tiers[DropTable.ItemTier.UNCOMMON] = [
-		ModifierDropEntry.new(modifier_scripts["gleaming_projectile"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["green_crescent"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["splitting_rounds"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["bouncing_bullets"], 1.0),
-	]
-	modifier_tiers[DropTable.ItemTier.RARE] = [
-		ModifierDropEntry.new(modifier_scripts["arc_volley"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["triangular_volley"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["penetrating_shockwave"], 1.0),
-		ModifierDropEntry.new(modifier_scripts["lightning_bolt"], 1.0),
-	]
+	modifier_tiers.clear()
+	for id in _modifier_data.keys():
+		var row: Dictionary = _modifier_data[id]
+		var tier: int = _map_rarity(row.get("rarity", "Common"))
+		if not modifier_tiers.has(tier):
+			modifier_tiers[tier] = []
+		modifier_tiers[tier].append(ModifierDropEntry.new(modifier_scripts.get(id), id, 1.0))
 
 
 func get_random_weapon(tier: int) -> _Weapon:
@@ -211,8 +245,8 @@ func get_random_modifier(tier: int) -> _Modifier:
 	for entry in entries:
 		cumulative += entry.weight
 		if roll <= cumulative:
-			return entry.modifier_script.new()
-	return entries[0].modifier_script.new()
+			return _make_modifier(entry.modifier_id)
+	return _make_modifier(entries[0].modifier_id)
 
 
 func _load_modifier_data() -> void:
@@ -221,24 +255,19 @@ func _load_modifier_data() -> void:
 		var id: String = row.get("id", "")
 		if id == "":
 			continue
-		_modifier_data[id] = {
-			"name": row.get("name", ""),
-			"description": row.get("description", ""),
-			"suppresses_base_use": row.get("suppresses_base_use", "No").strip_edges() == "Yes",
-		}
+		_modifier_data[id] = row
 
 
 func _make_modifier(id: String) -> _Modifier:
+	var data: Dictionary = _modifier_data.get(id, {})
 	var script: GDScript = modifier_scripts.get(id)
-	if script == null:
+	if script != null:
+		var mod: _Modifier = script.new()
+		mod.name = data.get("name", mod.name)
+		mod.description = data.get("description", mod.description)
+		mod.suppresses_base_use = String(data.get("suppresses_base_use", "No")).strip_edges() == "Yes"
+		return mod
+	if data.is_empty():
 		push_warning("WeaponRegistry: unknown modifier id '%s'" % id)
 		return null
-	var mod: _Modifier = script.new()
-	var data: Dictionary = _modifier_data.get(id, {})
-	if data.has("name"):
-		mod.name = data["name"]
-	if data.has("description"):
-		mod.description = data["description"]
-	if data.has("suppresses_base_use"):
-		mod.suppresses_base_use = data["suppresses_base_use"]
-	return mod
+	return _DataModifier.new(data)

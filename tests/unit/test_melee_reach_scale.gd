@@ -76,6 +76,6 @@ func test_trail_inherits_reach_scale() -> void:
 	container.queue_free()
 
 func test_resource_file_reach_values_differ() -> void:
-	var bone := preload("res://resources/weapons/bone_dagger.tres")
-	var rusty := preload("res://resources/weapons/rusty_sword.tres")
+	var bone := WeaponRegistry.get_weapon_by_id("bone_dagger")
+	var rusty := WeaponRegistry.get_weapon_by_id("rusty_sword")
 	assert_that(bone.weapon_reach).is_less(rusty.weapon_reach)
