@@ -17,6 +17,7 @@ func should_auto_pickup() -> bool:
 	return false
 
 func _ready() -> void:
+	add_to_group("pickup")
 	gravity_scale = 0.0
 	linear_damp = linear_damp_value
 	mass = 1.0
