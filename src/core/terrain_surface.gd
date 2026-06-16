@@ -32,6 +32,11 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 		adapter.place_fire(world_pos, radius)
 
 
+func place_steam(world_pos: Vector2, radius: float, density: int) -> void:
+	if adapter:
+		adapter.place_steam(world_pos, radius, density)
+
+
 func place_oil(world_pos: Vector2, radius: float) -> void:
 	if adapter:
 		adapter.place_material(world_pos, radius, MaterialRegistry.MAT_OIL)

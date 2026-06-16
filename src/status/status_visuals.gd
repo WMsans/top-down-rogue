@@ -31,13 +31,17 @@ func refresh() -> void:
 	if _status == null:
 		return
 	var active: Array = _status.get_active_ids()
+	var timed: Array = _status.get_timed_ids()
 	for id in _icons.keys():
-		if not active.has(id):
+		if not active.has(id) and not timed.has(id):
 			var spr: Sprite2D = _icons[id]
 			remove_child(spr)
 			spr.queue_free()
 			_icons.erase(id)
 	for id in active:
+		if not _icons.has(id):
+			_icons[id] = _make_icon(id)
+	for id in timed:
 		if not _icons.has(id):
 			_icons[id] = _make_icon(id)
 	var ordered: Array = _icons.keys()
@@ -46,8 +50,14 @@ func refresh() -> void:
 		var spr: Sprite2D = _icons[id]
 		var x := (float(i) - (ordered.size() - 1) * 0.5) * ICON_SPACING
 		spr.position = _head_offset + Vector2(x, 0.0)
-		var a := StatusRegistry.get_icon_alpha(id, _status.get_stain(id))
-		spr.modulate = Color(1.0, 1.0, 1.0, a)
+		if timed.has(id):
+			var remaining := _status.get_timed_remaining(id)
+			var duration := StatusRegistry.get_def(id).default_duration
+			var ratio := clampf(remaining / maxf(duration, 0.001), 0.0, 1.0)
+			spr.modulate = Color(1.0, 1.0, 1.0, lerpf(0.15, 1.0, ratio))
+		else:
+			var a := StatusRegistry.get_icon_alpha(id, _status.get_stain(id))
+			spr.modulate = Color(1.0, 1.0, 1.0, a)
 	if _particles != null:
 		_particles.emitting = _status.has_status("on_fire")
 

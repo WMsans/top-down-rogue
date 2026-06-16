@@ -64,7 +64,6 @@ var _player_in_range: bool = false
 var _aggroed: bool = false
 var _speed_base: float = 0.0
 var _teleport_cooldown: float = 0.0
-var _parry_stun_remaining: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
@@ -153,11 +152,11 @@ func _apply_damage_scale() -> void:
 
 
 func _process(delta: float) -> void:
-	if _parry_stun_remaining > 0.0:
-		_parry_stun_remaining -= delta
-		# Keep cooldown at least as long as the remaining stun.
-		if _state == State.COOLDOWN and _state_timer < _parry_stun_remaining:
-			_state_timer = _parry_stun_remaining
+	if _state == State.DEATH:
+		_process_death(delta)
+		return
+
+	if _status_component != null and _status_component.is_stunned():
 		velocity = Vector2.ZERO
 		return
 
@@ -165,10 +164,6 @@ func _process(delta: float) -> void:
 		_teleport_cooldown -= delta
 
 	_update_player_in_range()
-
-	if _state == State.DEATH:
-		_process_death(delta)
-		return
 
 	if _state == State.HURT:
 		_process_hurt(delta)
@@ -299,6 +294,9 @@ func _process_chase(_delta: float) -> void:
 
 
 func _process_windup(delta: float) -> void:
+	if _status_component != null and _status_component.is_stunned():
+		_change_state(State.CHASE)
+		return
 	_state_timer -= delta
 	if not _can_see_player():
 		_hide_exclaim()
@@ -310,6 +308,9 @@ func _process_windup(delta: float) -> void:
 
 
 func _process_attack(_delta: float) -> void:
+	if _status_component != null and _status_component.is_stunned():
+		_change_state(State.CHASE)
+		return
 	if not _attack_started:
 		_attack_started = true
 		_execute_attack()
@@ -561,7 +562,7 @@ func apply_status_damage(amount: int) -> void:
 
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
 	if hit_dir.length_squared() > 0.0001:
-		_knockback_velocity += hit_dir.normalized() * KNOCKBACK_SPEED
+		apply_knockback(hit_dir, KNOCKBACK_SPEED)
 	var display_damage: int = max_health if GameModeManager.is_creative() else damage
 	var lethal: bool = display_damage >= health
 	var spec := HitSpec.new()
@@ -616,6 +617,10 @@ func _tick_knockback(delta: float) -> void:
 		_knockback_velocity = Vector2.ZERO
 		return
 	_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
+
+
+func apply_knockback(direction: Vector2, strength: float) -> void:
+	_knockback_velocity += direction.normalized() * strength
 
 
 func _set_base_modulate(c: Color) -> void:

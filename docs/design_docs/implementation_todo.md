@@ -185,10 +185,17 @@ See `docs/superpowers/specs/2026-06-15-sp-a-data-driven-runtime-design.md`.
 ### Sub-project B (6): New statuses & combat hooks
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P2 | High | `lightning`/`steam`/`stun` statuses | StatusDefs + reaction rules (wet→steam, neutral stun) |
-|  | P2 | Medium | Enemy stun + knockback hooks | Immobilize + radial impulse verbs |
-|  | P2 | Medium | Player heal + economy bounty hooks | `heal` verb; `bounty` extra-gold on kill |
-|  | P2 | Medium | Modifiers using new hooks | chain_spark, steam_burst, concussive_edge, repulsor_nova, shockwave_stomp, magnet_field, midas_touch |
+| x | P2 | High | `lightning`/`steam`/`stun` statuses | StatusDefs + reaction rules (wet→steam, neutral stun) |
+| x | P2 | Medium | Enemy stun + knockback hooks | Immobilize + radial impulse verbs |
+| x | P2 | Medium | Player heal + economy bounty hooks | `heal` verb; `bounty` extra-gold on kill |
+| x | P2 | Medium | Modifiers using new hooks | chain_spark, steam_burst, concussive_edge, repulsor_nova, shockwave_stomp, magnet_field, midas_touch |
+
+### Sub-project B.1 (6.5): SP-B modifier scripts
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P2 | Medium | chain_spark, steam_burst, concussive_edge | New on_hit/on_crit modifiers |
+|  | P2 | Medium | repulsor_nova, shockwave_stomp | Knockback/area modifiers |
+|  | P2 | Medium | magnet_field, midas_touch | Pull/bounty utility modifiers |
 
 ### Sub-project C (7): New projectile behaviors + projectile modifiers
 | Done | Priority | Difficulty | Task | Description |
