@@ -318,16 +318,38 @@ func test_lightning_no_proc_does_nothing() -> void:
 
 
 func test_all_csv_modifiers_registered() -> void:
-	var ids := [
+	var scripted := [
 		"lava_emitter", "fireball_fan", "icicle_volley", "gleaming_projectile",
 		"green_crescent", "arc_volley", "triangular_volley", "splitting_rounds",
 		"bouncing_bullets", "penetrating_shockwave", "lightning_bolt",
 	]
-	for id in ids:
+	for id in scripted:
 		assert_bool(WeaponRegistry.modifier_scripts.has(id)).is_true()
+	for id in ["oil_emitter", "venom_edge", "sharpened", "pyroclast"]:
+		assert_that(WeaponRegistry._make_modifier(id)).is_not_null()
 
 
 func test_make_modifier_overlays_csv_data() -> void:
 	var m: Modifier = WeaponRegistry._make_modifier("fireball_fan")
 	assert_that(m).is_not_null()
 	assert_str(m.name).is_equal("Fireball Fan")
+
+
+func test_make_modifier_builds_data_modifier_for_new_id() -> void:
+	var m = WeaponRegistry._make_modifier("oil_emitter")
+	assert_that(m).is_not_null()
+	assert_that(m is DataModifier).is_true()
+	assert_str(m.name).is_equal("Oil Emitter")
+	assert_str(m.element).is_equal("oil")
+
+
+func test_bespoke_modifier_still_scripted() -> void:
+	var m = WeaponRegistry._make_modifier("lava_emitter")
+	assert_that(m is DataModifier).is_false()
+
+
+func test_new_modifier_is_droppable() -> void:
+	var total := 0
+	for tier in WeaponRegistry.modifier_tiers.keys():
+		total += WeaponRegistry.modifier_tiers[tier].size()
+	assert_int(total).is_greater_equal(50)

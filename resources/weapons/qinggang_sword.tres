@@ -1,8 +1,0 @@
-[gd_resource type="Resource" script_class="QinggangWeapon" format=3 uid="uid://c4ay75ktj3ahp"]
-
-[ext_resource type="Script" path="res://src/weapons/qinggang_weapon.gd" id="1"]
-
-[resource]
-script = ExtResource("1")
-weapon_reach = 28.0
-arc_angle = 1.5707963268

@@ -115,13 +115,24 @@ static func _is_inside_arc(origin: Vector2, target: Vector2, dir_angle: float, h
 	return absf(angle_difference(dir_angle, to_target.angle())) <= half_arc_angle
 
 
+func _seed_effective_stats() -> Dictionary:
+	var s := super._seed_effective_stats()
+	s["reach"] = weapon_reach
+	s["arc"] = arc_angle
+	return s
+
+
 func _use_impl(user: Node) -> void:
 	_current_user = user
+	var eff := get_effective_stats()
+	var reach: float = eff["reach"]
+	var arc: float = eff["arc"]
+	var dmg: float = eff["damage"]
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
-	_carve_and_push(pos, direction, weapon_reach, arc_angle, damage)
-	_hit_attackables(user, pos, direction, weapon_reach, arc_angle, 1.0, false, false)
+	_carve_and_push(pos, direction, reach * eff["carve_depth"], arc, dmg)
+	_hit_attackables(user, pos, direction, reach, arc, 1.0, false, false)
 	notify_attack(user, {
 		"direction": direction,
 		"origin": pos,
@@ -179,10 +190,7 @@ func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: fl
 				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
 		var is_crit: bool = force_crit or roll_crit()
-		var dmg: int = int(base_dmg * crit_multiplier) if is_crit else int(base_dmg)
-		node.on_hit_impact(node2d.global_position, hit_dir, dmg)
-		if is_crit:
-			_on_crit(node)
+		resolve_hit(user, node, damage * dmg_mult, is_crit)
 
 
 func _tick_impl(_delta: float) -> void:
