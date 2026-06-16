@@ -380,6 +380,24 @@ func test_cluster_bomb_has_split_behavior_with_burn_ring() -> void:
 			assert_str(sb.shard_hit_status).is_equal("burn")
 
 
+func test_homing_hex_has_homing_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	HomingHexModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is HomingBehavior).is_true()
+
+
+func test_boomerang_arc_has_return_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	BoomerangArcModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is ReturnBehavior).is_true()
+
+
 func test_new_modifier_is_droppable() -> void:
 	var total := 0
 	for tier in WeaponRegistry.modifier_tiers.keys():

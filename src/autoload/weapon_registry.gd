@@ -74,6 +74,8 @@ func _ready() -> void:
 	modifier_scripts["ricochet_shard"] = preload("res://src/weapons/modifiers/ricochet_shard_modifier.gd")
 	modifier_scripts["piercing_lance"] = preload("res://src/weapons/modifiers/piercing_lance_modifier.gd")
 	modifier_scripts["cluster_bomb"] = preload("res://src/weapons/modifiers/cluster_bomb_modifier.gd")
+	modifier_scripts["homing_hex"] = preload("res://src/weapons/modifiers/homing_hex_modifier.gd")
+	modifier_scripts["boomerang_arc"] = preload("res://src/weapons/modifiers/boomerang_arc_modifier.gd")
 	_load_modifier_data()
 
 	_load_weapon_resources()
