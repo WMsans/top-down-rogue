@@ -29,6 +29,7 @@ func should_auto_pickup() -> bool:
 
 
 func _ready() -> void:
+	add_to_group("pickup")
 	_sprite.modulate = Color(1.0, 0.84, 0.0)
 	_sprite.scale = Vector2(0.6, 0.6)
 

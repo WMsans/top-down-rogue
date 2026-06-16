@@ -98,8 +98,10 @@ func test_pyroclast_multiplies_only_when_target_burning() -> void:
 	t.get_node("StatusComponent").add_stain("on_fire", 2.0)
 	assert_that(m.modify_hit_damage(null, null, t, 10.0)).is_equal(15.0)
 
-func test_discovery_check() -> void:
-	assert_that(1).is_equal(1)
+func test_gold_drop_joins_pickup_group() -> void:
+	var g: GoldDrop = auto_free(preload("res://scenes/gold_drop.tscn").instantiate())
+	add_child(g)
+	assert_bool(g.is_in_group("pickup")).is_true()
 
 func test_coup_de_grace_executes_low_hp() -> void:
 	var t: _HpTarget = auto_free(_HpTarget.new()); add_child(t)
