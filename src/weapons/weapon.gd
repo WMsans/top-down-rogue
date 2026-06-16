@@ -174,6 +174,9 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 			m.on_hit_target(self, user, target)
 	if is_crit:
 		_on_crit(target)
+		for m in modifiers:
+			if m != null:
+				m.on_crit(self, user, target)
 	_hit_count += 1
 	if had_hp and pre_hp > 0.0 and target.health <= 0.0:
 		for m in modifiers:
