@@ -348,6 +348,25 @@ func test_bespoke_modifier_still_scripted() -> void:
 	assert_that(m is DataModifier).is_false()
 
 
+func test_ricochet_shard_has_bounce_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	RicochetShardModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is BounceBehavior).is_true()
+			assert_int((c.behaviors[0] as BounceBehavior).max_bounces).is_equal(3)
+
+
+func test_piercing_lance_has_penetrate_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	PiercingLanceModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is PenetrateBehavior).is_true()
+
+
 func test_new_modifier_is_droppable() -> void:
 	var total := 0
 	for tier in WeaponRegistry.modifier_tiers.keys():
