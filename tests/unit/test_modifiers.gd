@@ -425,3 +425,10 @@ func test_spectral_echo_fire_delays_then_spawns() -> void:
 	assert_int(_count_projectiles(pu[0])).is_equal(0)  # nothing yet
 	await get_tree().create_timer(SpectralEchoModifier.ECHO_DELAY + 0.1).timeout
 	assert_int(_count_projectiles(pu[0])).is_equal(1)
+
+
+func test_sp_c_projectile_modifiers_registered() -> void:
+	for id in ["homing_hex", "boomerang_arc", "ricochet_shard", "piercing_lance", "cluster_bomb", "spectral_echo"]:
+		assert_bool(WeaponRegistry.modifier_scripts.has(id)).is_true()
+		assert_that(WeaponRegistry._make_modifier(id)).is_not_null()
+
