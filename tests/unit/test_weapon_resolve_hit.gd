@@ -25,6 +25,11 @@ class _KillCounter extends Modifier:
 	func on_kill(_w, _u, _t) -> void:
 		kills += 1
 
+class _CritCounter extends Modifier:
+	var crits: int = 0
+	func on_crit(_w, _u, _t) -> void:
+		crits += 1
+
 func _target() -> _Target:
 	var t := _Target.new()
 	add_child(t)
@@ -67,3 +72,19 @@ func test_hit_count_advances() -> void:
 	w.resolve_hit(null, t, 1.0, false)
 	w.resolve_hit(null, t, 1.0, false)
 	assert_int(w._hit_count).is_equal(2)
+
+func test_on_crit_hook_fires_on_crit() -> void:
+	var w := Weapon.new()
+	var cm := _CritCounter.new()
+	w.modifiers = [cm, null, null]
+	var t := _target()
+	w.resolve_hit(null, t, 5.0, true)
+	assert_int(cm.crits).is_equal(1)
+
+func test_on_crit_hook_silent_on_non_crit() -> void:
+	var w := Weapon.new()
+	var cm := _CritCounter.new()
+	w.modifiers = [cm, null, null]
+	var t := _target()
+	w.resolve_hit(null, t, 5.0, false)
+	assert_int(cm.crits).is_equal(0)
