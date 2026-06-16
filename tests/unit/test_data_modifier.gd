@@ -188,3 +188,26 @@ func test_magnet_field_pulls_pickup_in_range() -> void:
 	# near pulled toward user (negative x), far untouched
 	assert_that(near._velocity.x).is_less(0.0)
 	assert_that(far._velocity).is_equal(Vector2.ZERO)
+
+
+class _GoldUser extends Node2D:
+	var gold: int = 0
+	func _init() -> void:
+		var inv := Node.new()
+		inv.name = "PlayerInventory"
+		inv.set_script(_make_inv_script())
+		add_child(inv)
+	func _make_inv_script() -> GDScript:
+		var s := GDScript.new()
+		s.source_code = "extends Node\nvar owner_ref\nfunc add_gold(a: int) -> void:\n\tget_parent().gold += a\n"
+		s.reload()
+		return s
+
+func test_midas_touch_adds_gold_on_kill() -> void:
+	var user: _GoldUser = auto_free(_GoldUser.new())
+	add_child(user)
+	var m := DataModifier.new(_row({
+		"category": "utility", "trigger": "on_kill", "effect": "bounty", "magnitude": "5",
+	}))
+	m.on_kill(null, user, null)
+	assert_int(user.gold).is_equal(5)

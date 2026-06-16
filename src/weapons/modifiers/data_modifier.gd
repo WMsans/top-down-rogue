@@ -180,6 +180,10 @@ func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 		var inv = user.get_node_or_null("PlayerInventory") if user else null
 		if inv != null and inv.has_method("heal"):
 			inv.heal(int(magnitude))
+	elif effect == "bounty":
+		var ginv = user.get_node_or_null("PlayerInventory") if user else null
+		if ginv != null and ginv.has_method("add_gold"):
+			ginv.add_gold(int(magnitude))
 
 
 func get_stat_add(stat: String) -> float:
