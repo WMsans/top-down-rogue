@@ -1,13 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://vent_stub_0001"]
+[gd_scene format=3 uid="uid://w0s51v26i7mp"]
 
-[ext_resource type="Script" path="res://src/props/gas_vent.gd" id="1"]
+[ext_resource type="Script" uid="uid://bb3jas7h6k2ni" path="res://src/props/gas_vent.gd" id="1"]
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_vent"]
 size = Vector2(20, 20)
 
-[node name="Vent" type="Node2D"]
+[node name="Vent" type="Node2D" unique_id=1461184203]
 script = ExtResource("1")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=142949987]
 modulate = Color(0.4, 0.4, 0.5, 1)
 texture = SubResource("PlaceholderTexture2D_vent")
