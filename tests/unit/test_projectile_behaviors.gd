@@ -170,3 +170,42 @@ func test_clear_destroys_overlapping_enemy_projectile() -> void:
 	await get_tree().process_frame
 	assert_that(is_instance_valid(enemy_proj)).is_false()
 	assert_that(is_instance_valid(p)).is_true()
+
+
+func test_split_shards_inherit_hit_status_when_set() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = Projectile.new()
+	p.is_enemy_projectile = false
+	p.damage = 10.0
+	var b := SplitBehavior.new()
+	b.shard_count = 3
+	b.shard_hit_status = "burn"
+	p.behaviors = [b]
+	parent.add_child(p)
+	var target: Enemy = auto_free(Enemy.new())
+	parent.add_child(target)
+	p._handle_hit(target)
+	await get_tree().process_frame
+	for c in parent.get_children():
+		if c is Projectile:
+			assert_str(c.hit_status).is_equal("burn")
+
+
+func test_split_shards_default_no_hit_status() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = Projectile.new()
+	p.is_enemy_projectile = false
+	p.damage = 10.0
+	var b := SplitBehavior.new()
+	b.shard_count = 2
+	p.behaviors = [b]
+	parent.add_child(p)
+	var target: Enemy = auto_free(Enemy.new())
+	parent.add_child(target)
+	p._handle_hit(target)
+	await get_tree().process_frame
+	for c in parent.get_children():
+		if c is Projectile:
+			assert_str(c.hit_status).is_equal("")
