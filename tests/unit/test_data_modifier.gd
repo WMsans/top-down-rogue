@@ -211,3 +211,24 @@ func test_midas_touch_adds_gold_on_kill() -> void:
 	}))
 	m.on_kill(null, user, null)
 	assert_int(user.gold).is_equal(5)
+
+
+func test_concussive_edge_stuns_when_chance_certain() -> void:
+	var t: _StatusTarget = auto_free(_StatusTarget.new())
+	add_child(t)
+	var m := DataModifier.new(_row({
+		"category": "trigger", "trigger": "on_hit", "effect": "stun",
+		"magnitude": "0.5", "magnitude2": "1",
+	}))
+	m.on_hit_target(null, null, t)
+	assert_bool(t.get_node("StatusComponent").has_timed_status("stun")).is_true()
+
+func test_concussive_edge_never_stuns_when_chance_zero() -> void:
+	var t: _StatusTarget = auto_free(_StatusTarget.new())
+	add_child(t)
+	var m := DataModifier.new(_row({
+		"category": "trigger", "trigger": "on_hit", "effect": "stun",
+		"magnitude": "0.5", "magnitude2": "0",
+	}))
+	m.on_hit_target(null, null, t)
+	assert_bool(t.get_node("StatusComponent").has_timed_status("stun")).is_false()

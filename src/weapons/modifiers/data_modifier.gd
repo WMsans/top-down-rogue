@@ -165,6 +165,11 @@ func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
 		var sc = target.get_node_or_null("StatusComponent")
 		if sc != null:
 			sc.add_stain(element, magnitude)
+	if trigger == "on_hit" and effect == "stun":
+		if randf() < magnitude2:
+			var scs = target.get_node_or_null("StatusComponent")
+			if scs != null:
+				scs.add_timed_status("stun", magnitude)
 	if name == "Rampage":
 		_hit_streak = minf(_hit_streak + magnitude, magnitude2)
 		_time_since_event = 0.0
