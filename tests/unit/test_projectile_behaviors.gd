@@ -192,6 +192,38 @@ func test_split_shards_inherit_hit_status_when_set() -> void:
 			assert_str(c.hit_status).is_equal("burn")
 
 
+func test_homing_turns_toward_target_capped() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = auto_free(Projectile.new())
+	p.is_enemy_projectile = false
+	p.direction = Vector2.RIGHT  # angle 0
+	parent.add_child(p)
+	p.global_position = Vector2.ZERO
+	var target: Node2D = auto_free(Node2D.new())
+	target.add_to_group("attackable")
+	parent.add_child(target)
+	target.global_position = Vector2(0, 100)  # desired angle +PI/2
+	var b := HomingBehavior.new()
+	b.turn_rate_rad = PI * 2.0
+	b.on_process(p, 0.1)  # max step 0.628 rad
+	# Turned toward target but capped short of PI/2.
+	assert_float(p.direction.angle()).is_greater(0.0)
+	assert_float(p.direction.angle()).is_less(PI / 2.0)
+
+
+func test_homing_no_target_keeps_direction() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = auto_free(Projectile.new())
+	p.is_enemy_projectile = false
+	p.direction = Vector2.RIGHT
+	parent.add_child(p)
+	var b := HomingBehavior.new()
+	b.on_process(p, 0.1)
+	assert_float(p.direction.angle()).is_equal_approx(0.0, 0.0001)
+
+
 func test_split_shards_default_no_hit_status() -> void:
 	var parent: Node2D = auto_free(Node2D.new())
 	add_child(parent)
