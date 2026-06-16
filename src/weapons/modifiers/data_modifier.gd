@@ -3,6 +3,7 @@ extends Modifier
 
 const EMITTER_FORWARD := 14.0
 const KNOCKBACK_RADIUS_FACTOR := 1.8
+const PULL_IMPULSE := 220.0
 
 var category: String = ""
 var trigger: String = ""
@@ -46,6 +47,8 @@ func on_attack(_weapon: Weapon, user: Node, ctx: Dictionary) -> void:
 		_spawn_material(user, ctx)
 	elif effect == "knockback":
 		_do_knockback(user, ctx)
+	elif effect == "pull" and trigger == "on_swing":
+		_do_pull(user)
 
 
 func _spawn_material(user: Node, ctx: Dictionary) -> void:
@@ -89,6 +92,27 @@ func _radial_targets(user: Node, radius: float) -> Array:
 		if origin.distance_squared_to((n as Node2D).global_position) <= r2:
 			out.append(n)
 	return out
+
+
+func _do_pull(user: Node) -> void:
+	if user == null or not (user is Node2D):
+		return
+	var tree := user.get_tree()
+	if tree == null:
+		return
+	var origin: Vector2 = (user as Node2D).global_position
+	var r2: float = magnitude * magnitude
+	for n in tree.get_nodes_in_group("pickup"):
+		if not is_instance_valid(n) or not (n is Node2D):
+			continue
+		var to_user: Vector2 = origin - (n as Node2D).global_position
+		if to_user.length_squared() > r2:
+			continue
+		var dir: Vector2 = to_user.normalized()
+		if n is RigidBody2D:
+			(n as RigidBody2D).apply_central_impulse(dir * PULL_IMPULSE)
+		elif "_velocity" in n:
+			n._velocity += dir * PULL_IMPULSE
 
 
 func _condition_met(target: Node) -> bool:
