@@ -115,7 +115,7 @@ func test_parry_stun_blocks_ai_tick() -> void:
 	var player_ref: Node2D = auto_free(Node2D.new())
 	add_child(player_ref)
 	e._player_ref = player_ref
-	e._parry_stun_remaining = 0.2
+	e._status_component.add_timed_status("stun", 0.2)
 	# Force state to CHASE so we'd normally see velocity change.
 	e._state = Enemy.State.CHASE
 	e.global_position = Vector2.ZERO
@@ -123,7 +123,8 @@ func test_parry_stun_blocks_ai_tick() -> void:
 	e._process(0.05)
 	# While stunned, AI should not have driven velocity toward player.
 	assert_that(e.velocity).is_equal(Vector2.ZERO)
-	assert_that(e._parry_stun_remaining).is_less(0.2)
+	e._status_component.tick(0.05)
+	assert_that(e._status_component.get_timed_remaining("stun")).is_less(0.2)
 
 func test_parry_stun_extends_cooldown() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
@@ -131,10 +132,10 @@ func test_parry_stun_extends_cooldown() -> void:
 	await get_tree().process_frame
 	e.cooldown_duration = 0.1
 	e._change_state(Enemy.State.COOLDOWN)
-	e._parry_stun_remaining = 0.5
+	e._status_component.add_timed_status("stun", 0.5)
 	e._process(0.05)
-	# After 0.05s, normal cooldown would be ~0.05 remaining; stun should keep it >= 0.4.
-	assert_that(e._state_timer).is_greater(0.3)
+	# Stun returns early from _process, so cooldown timer does not decrease.
+	assert_that(e._state_timer).is_equal(0.1)
 
 # Minimal stand-in for WorldManager exposing a swarm_grid for separation tests.
 class FakeWorld extends Node:

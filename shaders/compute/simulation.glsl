@@ -47,6 +47,13 @@ layout(set = 0, binding = 6, std430) buffer SolidityFlags {
 #include "res://shaders/include/sim/injection.glslinc"
 #include "res://shaders/include/sim/burning.glslinc"
 
+bool simulate_steam(ivec2 pos, inout vec4 pixel, inout int material,
+                    vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right) {
+	if (material != MAT_STEAM) return false;
+	gas_advect_pull(pos, pixel, n_up, n_down, n_left, n_right, MAT_STEAM);
+	return true;
+}
+
 void main() {
 	ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
 	if (pos.x >= CHUNK_SIZE || pos.y >= CHUNK_SIZE) return;
@@ -76,6 +83,7 @@ void main() {
 	if (simulate_water(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 	if (simulate_dust(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
 	if (simulate_gas(pos, pixel, material, n_up, n_down, n_left, n_right))   return;
+	if (simulate_steam(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 
 	simulate_burning(pos, pixel, n_up, n_down, n_left, n_right);
 }

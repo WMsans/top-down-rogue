@@ -232,3 +232,49 @@ func test_idle_tick_keeps_stains_empty() -> void:
 	var c: StatusComponent = auto_free(StatusComponentScript.new())
 	c.tick(1.0)
 	assert_int(c._stains.size()).is_equal(0)
+
+
+func test_add_timed_status() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_timed_status("stun", 0.5)
+	assert_bool(c.has_timed_status("stun")).is_true()
+	assert_bool(c.has_timed_status("lightning")).is_false()
+
+
+func test_timed_status_ticks_down() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_timed_status("stun", 0.3)
+	c.tick(0.2)
+	assert_bool(c.has_timed_status("stun")).is_true()
+	assert_float(c.get_timed_remaining("stun")).is_equal_approx(0.1, 0.001)
+
+
+func test_timed_status_expires() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_timed_status("stun", 0.2)
+	c.tick(0.3)
+	assert_bool(c.has_timed_status("stun")).is_false()
+	assert_float(c.get_timed_remaining("stun")).is_equal(0.0)
+
+
+func test_is_stunned() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	assert_bool(c.is_stunned()).is_false()
+	c.add_timed_status("stun", 0.5)
+	assert_bool(c.is_stunned()).is_true()
+
+
+func test_can_attack() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	assert_bool(c.can_attack()).is_true()
+	c.add_timed_status("stun", 0.5)
+	assert_bool(c.can_attack()).is_false()
+
+
+func test_stain_and_timed_coexist() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_stain("on_fire", 3.0)
+	c.add_timed_status("stun", 0.5)
+	assert_bool(c.has_status("on_fire")).is_true()
+	assert_bool(c.has_timed_status("stun")).is_true()
+	assert_bool(c.is_stunned()).is_true()

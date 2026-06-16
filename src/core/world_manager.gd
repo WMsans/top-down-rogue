@@ -258,6 +258,10 @@ func place_fire(world_pos: Vector2, radius: float) -> void:
 	terrain_modifier.place_fire(world_pos, radius)
 
 
+func place_steam(world_pos: Vector2, radius: float, density: int) -> void:
+	terrain_modifier.place_steam(world_pos, radius, density)
+
+
 func get_active_chunk_coords() -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	for coord in chunks:

@@ -50,6 +50,18 @@ func _register_defs() -> void:
 		"poisoned", "Poisoned", Color(0.3, 0.85, 0.25, 1.0),
 		0.4, 0.3, StatusDef.Category.HARMFUL, 2.0, false, 0.6,
 		"res://textures/ui/status/Effect_poisoned.png"))
+	_add(StatusDefScript.new(
+		"steam", "Steamed", Color(0.85, 0.85, 0.85, 1.0),
+		1.2, 1.0, StatusDef.Category.HARMFUL, 3.0, false, 0.8,
+		""))
+	_add(StatusDefScript.new(
+		"lightning", "Shocked", Color(0.9, 0.95, 1.0, 1.0),
+		0.0, 0.0, StatusDef.Category.HARMFUL, 0.0, false, 1.0,
+		"", StatusDef.Mode.TIMED, 0.4))
+	_add(StatusDefScript.new(
+		"stun", "Stunned", Color(1.0, 1.0, 0.5, 1.0),
+		0.0, 0.0, StatusDef.Category.HARMFUL, 0.0, false, 1.0,
+		"", StatusDef.Mode.TIMED, 0.2))
 
 
 func _add(def: StatusDef) -> void:
@@ -124,6 +136,8 @@ func stain_for_material(material_id: int) -> String:
 		return "bloody"
 	if material_id == MaterialRegistry.MAT_GAS:
 		return "poisoned"
+	if material_id == MaterialRegistry.MAT_STEAM:
+		return "steam"
 	return ""
 
 
@@ -137,9 +151,12 @@ const WET_FREEZE_RATE := 2.0       # wet+chilly converted to frozen/sec
 const FIRE_MELT_RATE := 3.0        # chilly/frozen drained/sec while on fire
 const CHILLY_FREEZE_THRESHOLD := 4.0
 const CHILLY_RAMP_RATE := 1.0      # chilly->frozen conversion/sec past threshold
+const LIGHTNING_STEAM_DRAIN_WET := 3.0
+const STEAM_EXTINGUISH_FIRE := 3.0
+const STEAM_DRAIN_RATE := 2.0
 
 
-func apply_reactions(c: StatusComponent, delta: float) -> void:
+func apply_reactions(c: StatusComponent, delta: float, entity_position: Vector2 = Vector2.ZERO) -> void:
 	# 1. Wet extinguishes Fire.
 	if c.get_stain("wet") > 0.0 and c.get_stain("on_fire") > 0.0:
 		c.reduce_stain("on_fire", WET_EXTINGUISH_RATE * delta)
@@ -168,3 +185,12 @@ func apply_reactions(c: StatusComponent, delta: float) -> void:
 		var rconv: float = CHILLY_RAMP_RATE * delta
 		c.reduce_stain("chilly", rconv)
 		c.add_stain("frozen", rconv)
+	# 7. Lightning + wet → spawn MAT_STEAM around the entity.
+	if c.has_timed_status("lightning") and c.get_stain("wet") >= get_threshold("wet"):
+		TerrainSurface.place_steam(entity_position, 12.0, 180)
+		c.reduce_stain("wet", LIGHTNING_STEAM_DRAIN_WET * delta)
+		c.add_timed_status("lightning", 0.0)  # consume lightning
+	# 8. Steam smothers fire (bidirectional).
+	if c.get_stain("steam") > 0.0 and c.get_stain("on_fire") > 0.0:
+		c.reduce_stain("on_fire", STEAM_EXTINGUISH_FIRE * delta)
+		c.reduce_stain("steam", STEAM_DRAIN_RATE * delta)

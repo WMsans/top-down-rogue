@@ -52,3 +52,45 @@ func test_get_icon_returns_texture_for_each_status() -> void:
 
 func test_get_icon_unknown_is_null() -> void:
 	assert_object(StatusRegistry.get_icon("nope")).is_null()
+
+
+func test_status_def_has_mode_and_default_duration() -> void:
+	var def := StatusDef.new("test_stain", "Test", Color.WHITE, 1.0, 1.0)
+	assert_int(def.mode).is_equal(StatusDef.Mode.STAIN)
+	assert_float(def.default_duration).is_equal(0.0)
+
+func test_timed_status_def() -> void:
+	var def := StatusDef.new("test_timed", "Timed", Color.BLUE, 0.0, 0.0, StatusDef.Category.HARMFUL, 0.0, false, 1.0, "", StatusDef.Mode.TIMED, 0.5)
+	assert_int(def.mode).is_equal(StatusDef.Mode.TIMED)
+	assert_float(def.default_duration).is_equal(0.5)
+
+
+func test_steam_status_def() -> void:
+	var def := StatusRegistry.get_def("steam")
+	assert_that(def).is_not_null()
+	assert_str(def.id).is_equal("steam")
+	assert_int(def.mode).is_equal(StatusDef.Mode.STAIN)
+	assert_float(def.burn_dps).is_equal(3.0)
+	assert_float(def.slow_multiplier).is_equal(0.8)
+	assert_float(def.decay_rate).is_equal(1.2)
+
+
+func test_lightning_status_def() -> void:
+	var def := StatusRegistry.get_def("lightning")
+	assert_that(def).is_not_null()
+	assert_str(def.id).is_equal("lightning")
+	assert_int(def.mode).is_equal(StatusDef.Mode.TIMED)
+	assert_float(def.default_duration).is_equal(0.4)
+	assert_float(def.burn_dps).is_equal(0.0)
+
+
+func test_stun_status_def() -> void:
+	var def := StatusRegistry.get_def("stun")
+	assert_that(def).is_not_null()
+	assert_str(def.id).is_equal("stun")
+	assert_int(def.mode).is_equal(StatusDef.Mode.TIMED)
+	assert_float(def.default_duration).is_equal(0.2)
+
+
+func test_stain_for_material_steam() -> void:
+	assert_str(StatusRegistry.stain_for_material(MaterialRegistry.MAT_STEAM)).is_equal("steam")
