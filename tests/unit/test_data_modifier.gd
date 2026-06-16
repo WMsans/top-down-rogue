@@ -164,3 +164,27 @@ func test_repulsor_nova_only_on_full_charge() -> void:
 	m.on_attack(null, user, { "origin": Vector2.ZERO, "direction": Vector2.RIGHT, "charged": true, "charge_ratio": 1.0 })
 	assert_int(near.knocks.size()).is_equal(1)
 	assert_that(near.knocks[0]["strength"]).is_equal(80.0)
+
+
+class _FakeGold extends Node2D:
+	var _velocity: Vector2 = Vector2.ZERO
+	func _init() -> void:
+		add_to_group("pickup")
+
+func test_magnet_field_pulls_pickup_in_range() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	user.global_position = Vector2.ZERO
+	var near: _FakeGold = auto_free(_FakeGold.new())
+	add_child(near)
+	near.global_position = Vector2(20, 0)    # within 48
+	var far: _FakeGold = auto_free(_FakeGold.new())
+	add_child(far)
+	far.global_position = Vector2(200, 0)    # outside 48
+	var m := DataModifier.new(_row({
+		"category": "utility", "trigger": "on_swing", "effect": "pull", "magnitude": "48",
+	}))
+	m.on_attack(null, user, { "origin": Vector2.ZERO, "direction": Vector2.RIGHT, "charged": false, "charge_ratio": 0.0 })
+	# near pulled toward user (negative x), far untouched
+	assert_that(near._velocity.x).is_less(0.0)
+	assert_that(far._velocity).is_equal(Vector2.ZERO)
