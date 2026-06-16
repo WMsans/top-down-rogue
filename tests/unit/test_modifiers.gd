@@ -403,3 +403,25 @@ func test_new_modifier_is_droppable() -> void:
 	for tier in WeaponRegistry.modifier_tiers.keys():
 		total += WeaponRegistry.modifier_tiers[tier].size()
 	assert_int(total).is_greater_equal(50)
+
+
+func test_spectral_echo_spawn_is_translucent_ghost() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := SpectralEchoModifier.new()
+	m._spawn_echo(pu[1], Vector2.ZERO, Vector2.RIGHT)
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_float(c.damage).is_equal(SpectralEchoModifier.ECHO_DAMAGE)
+			var sprite: Sprite2D = c.get_node_or_null("Sprite2D")
+			assert_that(sprite).is_not_null()
+			assert_float(sprite.modulate.a).is_less(1.0)
+
+
+func test_spectral_echo_fire_delays_then_spawns() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := SpectralEchoModifier.new()
+	m._fire(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(0)  # nothing yet
+	await get_tree().create_timer(SpectralEchoModifier.ECHO_DELAY + 0.1).timeout
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
