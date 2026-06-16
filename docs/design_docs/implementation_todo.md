@@ -193,9 +193,9 @@ See `docs/superpowers/specs/2026-06-15-sp-a-data-driven-runtime-design.md`.
 ### Sub-project B.1 (6.5): SP-B modifier scripts
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P2 | Medium | chain_spark, steam_burst, concussive_edge | New on_hit/on_crit modifiers |
-|  | P2 | Medium | repulsor_nova, shockwave_stomp | Knockback/area modifiers |
-|  | P2 | Medium | magnet_field, midas_touch | Pull/bounty utility modifiers |
+| x | P2 | Medium | chain_spark, steam_burst, concussive_edge | New on_hit/on_crit modifiers |
+| x | P2 | Medium | repulsor_nova, shockwave_stomp | Knockback/area modifiers |
+| x | P2 | Medium | magnet_field, midas_touch | Pull/bounty utility modifiers |
 
 ### Sub-project C (7): New projectile behaviors + projectile modifiers
 | Done | Priority | Difficulty | Task | Description |

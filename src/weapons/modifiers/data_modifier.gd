@@ -2,6 +2,10 @@ class_name DataModifier
 extends Modifier
 
 const EMITTER_FORWARD := 14.0
+const KNOCKBACK_RADIUS_FACTOR := 1.8
+const PULL_IMPULSE := 220.0
+const STEAM_BURST_RADIUS := 14.0
+const STEAM_BURST_DENSITY := 180
 
 var category: String = ""
 var trigger: String = ""
@@ -41,10 +45,12 @@ func _material_id() -> int:
 
 
 func on_attack(_weapon: Weapon, user: Node, ctx: Dictionary) -> void:
-	if trigger != "on_swing":
-		return
-	if effect == "spawn_material":
+	if effect == "spawn_material" and trigger == "on_swing":
 		_spawn_material(user, ctx)
+	elif effect == "knockback":
+		_do_knockback(user, ctx)
+	elif effect == "pull" and trigger == "on_swing":
+		_do_pull(user)
 
 
 func _spawn_material(user: Node, ctx: Dictionary) -> void:
@@ -55,6 +61,60 @@ func _spawn_material(user: Node, ctx: Dictionary) -> void:
 	var dir: Vector2 = ctx.get("direction", Vector2.DOWN)
 	var at: Vector2 = origin + dir * EMITTER_FORWARD
 	TerrainSurface.place_material(at, magnitude, mat)
+
+
+func _do_knockback(user: Node, ctx: Dictionary) -> void:
+	if trigger == "on_charge":
+		if not ctx.get("charged", false) or ctx.get("charge_ratio", 0.0) < 1.0:
+			return
+	elif trigger != "on_swing":
+		return
+	if user == null or not (user is Node2D):
+		return
+	var radius: float = magnitude * KNOCKBACK_RADIUS_FACTOR
+	for n in _radial_targets(user, radius):
+		var dir: Vector2 = (n as Node2D).global_position - (user as Node2D).global_position
+		if dir == Vector2.ZERO:
+			dir = Vector2.DOWN
+		n.apply_knockback(dir, magnitude)
+
+
+func _radial_targets(user: Node, radius: float) -> Array:
+	var out: Array = []
+	var tree := user.get_tree()
+	if tree == null:
+		return out
+	var origin: Vector2 = (user as Node2D).global_position
+	var r2: float = radius * radius
+	for n in tree.get_nodes_in_group("attackable"):
+		if n == user or not is_instance_valid(n) or not (n is Node2D):
+			continue
+		if not n.has_method("apply_knockback"):
+			continue
+		if origin.distance_squared_to((n as Node2D).global_position) <= r2:
+			out.append(n)
+	return out
+
+
+func _do_pull(user: Node) -> void:
+	if user == null or not (user is Node2D):
+		return
+	var tree := user.get_tree()
+	if tree == null:
+		return
+	var origin: Vector2 = (user as Node2D).global_position
+	var r2: float = magnitude * magnitude
+	for n in tree.get_nodes_in_group("pickup"):
+		if not is_instance_valid(n) or not (n is Node2D):
+			continue
+		var to_user: Vector2 = origin - (n as Node2D).global_position
+		if to_user.length_squared() > r2:
+			continue
+		var dir: Vector2 = to_user.normalized()
+		if n is RigidBody2D:
+			(n as RigidBody2D).apply_central_impulse(dir * PULL_IMPULSE)
+		elif "_velocity" in n:
+			n._velocity += dir * PULL_IMPULSE
 
 
 func _condition_met(target: Node) -> bool:
@@ -103,10 +163,20 @@ func _self_full_hp(user: Node) -> bool:
 
 
 func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
-	if trigger == "on_hit" and effect == "apply_status":
+	if trigger == "on_hit" and effect == "apply_status" and _condition_met(target):
 		var sc = target.get_node_or_null("StatusComponent")
 		if sc != null:
-			sc.add_stain(element, magnitude)
+			if element == "steam":
+				if target is Node2D:
+					TerrainSurface.place_steam((target as Node2D).global_position, STEAM_BURST_RADIUS, STEAM_BURST_DENSITY)
+				sc.add_stain("steam", magnitude)
+			else:
+				sc.add_stain(element, magnitude)
+	if trigger == "on_hit" and effect == "stun":
+		if randf() < magnitude2:
+			var scs = target.get_node_or_null("StatusComponent")
+			if scs != null:
+				scs.add_timed_status("stun", magnitude)
 	if name == "Rampage":
 		_hit_streak = minf(_hit_streak + magnitude, magnitude2)
 		_time_since_event = 0.0
@@ -122,6 +192,10 @@ func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 		var inv = user.get_node_or_null("PlayerInventory") if user else null
 		if inv != null and inv.has_method("heal"):
 			inv.heal(int(magnitude))
+	elif effect == "bounty":
+		var ginv = user.get_node_or_null("PlayerInventory") if user else null
+		if ginv != null and ginv.has_method("add_gold"):
+			ginv.add_gold(int(magnitude))
 
 
 func get_stat_add(stat: String) -> float:
