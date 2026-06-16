@@ -241,3 +241,32 @@ func test_split_shards_default_no_hit_status() -> void:
 	for c in parent.get_children():
 		if c is Projectile:
 			assert_str(c.hit_status).is_equal("")
+
+
+func test_return_reverses_toward_source_after_out_time() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var source: Node2D = auto_free(Node2D.new())
+	parent.add_child(source)
+	source.global_position = Vector2.ZERO
+	var p: Projectile = auto_free(Projectile.new())
+	p.direction = Vector2.RIGHT
+	p.source_node = source
+	parent.add_child(p)
+	p.global_position = Vector2(100, 0)
+	var b := ReturnBehavior.new()
+	b.out_time = 0.5
+	b.on_spawn(p)
+	# Before out_time: outbound, unchanged.
+	b.on_process(p, 0.1)
+	assert_float(p.direction.x).is_greater(0.0)
+	# Cross out_time, then steer: now points back toward source (-X).
+	b.on_process(p, 0.5)
+	b.on_process(p, 0.1)
+	assert_float(p.direction.x).is_less(0.0)
+
+
+func test_return_passes_through_enemies() -> void:
+	var b := ReturnBehavior.new()
+	var p: Projectile = auto_free(Projectile.new())
+	assert_bool(b.on_enemy_hit(p, null)).is_true()
