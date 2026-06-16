@@ -180,7 +180,17 @@ void gas_advect_pull(
 			if (w > 0) inflow_vel /= w;
 			inflow_vel = (inflow_vel * 15) / 16;
 			inflow_vel = clamp(inflow_vel, ivec2(-8), ivec2(7));
-			vec4 packed = (out_material == MAT_STEAM) ? pack_steam(air_total_in, inflow_vel) : pack_gas(air_total_in, inflow_vel);
+			// Air is always processed by simulate_gas (out_material == MAT_GAS), so the
+			// passed-in out_material can't tell us whether the inflow came from gas or
+			// steam. Pick the dominant fluid in the neighborhood by density-weighted mass
+			// so steam spreading into air stays steam instead of turning into gas.
+			int steam_mass = 0;
+			int gas_mass = 0;
+			if (n_mat_up == MAT_STEAM)    steam_mass += get_density(n_up);    else if (n_mat_up == MAT_GAS)    gas_mass += get_density(n_up);
+			if (n_mat_down == MAT_STEAM)  steam_mass += get_density(n_down);  else if (n_mat_down == MAT_GAS)  gas_mass += get_density(n_down);
+			if (n_mat_left == MAT_STEAM)  steam_mass += get_density(n_left);  else if (n_mat_left == MAT_GAS)  gas_mass += get_density(n_left);
+			if (n_mat_right == MAT_STEAM) steam_mass += get_density(n_right); else if (n_mat_right == MAT_GAS) gas_mass += get_density(n_right);
+			vec4 packed = (steam_mass > gas_mass) ? pack_steam(air_total_in, inflow_vel) : pack_gas(air_total_in, inflow_vel);
 			imageStore(chunk_tex, pos, packed);
 			return;
 		}

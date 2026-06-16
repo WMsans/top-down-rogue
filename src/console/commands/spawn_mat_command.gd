@@ -40,6 +40,8 @@ static func _spawn_mat(type: String, args: Array[String], ctx: Dictionary) -> St
 
 	if mat_id == MaterialRegistry.MAT_GAS:
 		world_manager.place_gas(world_pos, radius, density)
+	elif mat_id == MaterialRegistry.MAT_STEAM:
+		world_manager.place_steam(world_pos, radius, density)
 	else:
 		world_manager.place_material(world_pos, radius, mat_id)
 
