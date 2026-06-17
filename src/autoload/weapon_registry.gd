@@ -159,6 +159,9 @@ func _apply_tuning(weapon: Weapon, row: Dictionary) -> void:
 		var arc: String = row.get("arc", "")
 		if arc != "":
 			(weapon as MeleeWeapon).arc_angle = deg_to_rad(float(arc))
+		var fc: String = row.get("free_carve", "").strip_edges()
+		if fc != "":
+			(weapon as MeleeWeapon).free_carve = (fc == "Yes")
 	elif weapon is RangedWeapon:
 		var rw := weapon as RangedWeapon
 		var ps: String = row.get("projectile_speed", "")
