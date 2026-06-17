@@ -6,6 +6,8 @@ extends Weapon
 		weapon_texture = value
 		icon_texture = value
 @export var weapon_reach: float = 36.0
+@export var free_carve: bool = false
+const FREE_CARVE_STRENGTH := 1.0e9
 
 const REFERENCE_REACH := 36.0
 var _reach_scale: float = 1.0
@@ -151,7 +153,11 @@ func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float,
 		MaterialRegistry.MAT_COAL,
 		MaterialRegistry.MAT_ICE,
 	]
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, 0.0, 0.0, solids, dmg)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, 0.0, 0.0, solids, _solid_carve_strength(dmg))
+
+
+func _solid_carve_strength(dmg: float) -> float:
+	return FREE_CARVE_STRENGTH if free_carve else dmg
 
 
 func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: float, arc: float, dmg_mult: float, force_crit: bool, ignore_parry: bool) -> void:
