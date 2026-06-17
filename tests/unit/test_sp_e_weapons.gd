@@ -65,3 +65,18 @@ func test_tesla_gun_chains() -> void:
 	assert_int(b.size()).is_equal(1)
 	assert_bool(b[0] is ChainBehavior).is_true()
 	assert_int((b[0] as ChainBehavior).jumps).is_greater(0)
+
+func test_hailstorm_emits_full_jittered_volley() -> void:
+	var dirs: Array = []
+	var w := HailstormBowWeapon.new()
+	w.shot_sink = func(dir): dirs.append(dir)
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	w._emit_shot(user, Vector2.RIGHT)
+	assert_int(dirs.size()).is_equal(w.volley_count)
+	# Jitter: not all angles identical, and they span a wide arc.
+	var angles: Array = []
+	for d in dirs:
+		angles.append((d as Vector2).angle())
+	angles.sort()
+	assert_float(angles[angles.size() - 1] - angles[0]).is_greater(0.3)
