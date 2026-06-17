@@ -162,6 +162,7 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 	for m in modifiers:
 		if m != null:
 			dmg = m.modify_hit_damage(self, user, target, dmg)
+	dmg = _native_modify_hit_damage(user, target, dmg)
 	var had_hp: bool = ("health" in target)
 	var pre_hp: float = target.health if had_hp else 1.0
 	if target.has_method("on_hit_impact"):
@@ -182,6 +183,15 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 		for m in modifiers:
 			if m != null:
 				m.on_kill(self, user, target)
+		_native_on_kill(user, target)
+
+
+func _native_modify_hit_damage(_user: Node, _target: Node, dmg: float) -> float:
+	return dmg
+
+
+func _native_on_kill(_user: Node, _target: Node) -> void:
+	pass
 
 
 func get_base_stats() -> Dictionary:
