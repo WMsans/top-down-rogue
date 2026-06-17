@@ -348,8 +348,87 @@ func test_bespoke_modifier_still_scripted() -> void:
 	assert_that(m is DataModifier).is_false()
 
 
+func test_ricochet_shard_has_bounce_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	RicochetShardModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is BounceBehavior).is_true()
+			assert_int((c.behaviors[0] as BounceBehavior).max_bounces).is_equal(3)
+
+
+func test_piercing_lance_has_penetrate_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	PiercingLanceModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is PenetrateBehavior).is_true()
+
+
+func test_cluster_bomb_has_split_behavior_with_burn_ring() -> void:
+	var pu := _spawn_parent_and_user()
+	ClusterBombModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			var sb := c.behaviors[0] as SplitBehavior
+			assert_that(sb).is_not_null()
+			assert_int(sb.shard_count).is_equal(8)
+			assert_float(sb.spread_deg).is_equal(360.0)
+			assert_str(sb.shard_hit_status).is_equal("burn")
+
+
+func test_homing_hex_has_homing_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	HomingHexModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is HomingBehavior).is_true()
+
+
+func test_boomerang_arc_has_return_behavior() -> void:
+	var pu := _spawn_parent_and_user()
+	BoomerangArcModifier.new().on_attack(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_that(c.behaviors[0] is ReturnBehavior).is_true()
+
+
 func test_new_modifier_is_droppable() -> void:
 	var total := 0
 	for tier in WeaponRegistry.modifier_tiers.keys():
 		total += WeaponRegistry.modifier_tiers[tier].size()
 	assert_int(total).is_greater_equal(50)
+
+
+func test_spectral_echo_spawn_is_translucent_ghost() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := SpectralEchoModifier.new()
+	m._spawn_echo(pu[1], Vector2.ZERO, Vector2.RIGHT)
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+	for c in pu[0].get_children():
+		if c is Projectile:
+			assert_float(c.damage).is_equal(SpectralEchoModifier.ECHO_DAMAGE)
+			var sprite: Sprite2D = c.get_node_or_null("Sprite2D")
+			assert_that(sprite).is_not_null()
+			assert_float(sprite.modulate.a).is_less(1.0)
+
+
+func test_spectral_echo_fire_delays_then_spawns() -> void:
+	var pu := _spawn_parent_and_user()
+	var m := SpectralEchoModifier.new()
+	m._fire(null, pu[1], _ctx())
+	assert_int(_count_projectiles(pu[0])).is_equal(0)  # nothing yet
+	await get_tree().create_timer(SpectralEchoModifier.ECHO_DELAY + 0.1).timeout
+	assert_int(_count_projectiles(pu[0])).is_equal(1)
+
+
+func test_sp_c_projectile_modifiers_registered() -> void:
+	for id in ["homing_hex", "boomerang_arc", "ricochet_shard", "piercing_lance", "cluster_bomb", "spectral_echo"]:
+		assert_bool(WeaponRegistry.modifier_scripts.has(id)).is_true()
+		assert_that(WeaponRegistry._make_modifier(id)).is_not_null()
+
