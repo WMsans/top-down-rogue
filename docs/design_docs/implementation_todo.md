@@ -207,10 +207,10 @@ See `docs/superpowers/specs/2026-06-15-sp-a-data-driven-runtime-design.md`.
 ### Sub-project D (8): Native melee mechanics + 18 melee weapons
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P2 | Medium | Native arc shapes | wide front arc (Bone Cleaver), surround/rear arc (War Scythe) |
-|  | P2 | Medium | Double-hit + charged spin | twin_daggers double pass; whirlwind 360° charge |
-|  | P2 | High | Native attrition/charge traits | free-carve, heal-on-kill, low-HP ramp, per-kill stacking, charged shockwave, melee deflect |
-|  | P2 | Medium | Melee `.tres` + stat wiring | iron_mace, rapier, cleaver, war_scythe, twin_daggers, obsidian_greatsword, venom_fang_blade, tide_caller, cinder_brand, glacier_edge, thunder_katana, gravedigger_spade, reaper_glaive, berserker_axe, mirror_blade, whirlwind_blade, quake_hammer, soul_reaver |
+| x | P2 | Medium | Native arc shapes | wide front arc (Bone Cleaver), surround/rear arc (War Scythe) |
+| x | P2 | Medium | Double-hit + charged spin | twin_daggers double pass; whirlwind 360° charge |
+| x | P2 | High | Native attrition/charge traits | free-carve, heal-on-kill, low-HP ramp, per-kill stacking, charged shockwave, melee deflect |
+| x | P2 | Medium | Melee `.tres` + stat wiring | iron_mace, rapier, cleaver, war_scythe, twin_daggers, obsidian_greatsword, venom_fang_blade, tide_caller, cinder_brand, glacier_edge, thunder_katana, gravedigger_spade, reaper_glaive, berserker_axe, mirror_blade, whirlwind_blade, quake_hammer, soul_reaver |
 
 ### Sub-project E (9): Native ranged mechanics + 10 ranged weapons
 | Done | Priority | Difficulty | Task | Description |
