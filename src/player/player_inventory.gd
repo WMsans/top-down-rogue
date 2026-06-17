@@ -124,6 +124,10 @@ func take_status_damage(amount: int) -> void:
 			player_died.emit()
 
 
+func get_health_fraction() -> float:
+	return float(_current_health) / float(maxi(1, max_health))
+
+
 func heal(amount: int) -> void:
 	if _is_dead:
 		return
