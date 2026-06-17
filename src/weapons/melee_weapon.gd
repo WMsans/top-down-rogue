@@ -399,8 +399,11 @@ func _process_swing(_delta: float) -> void:
 	_apply_pose()
 
 	if _phase == Phase.ACTION:
-		var current_blade := _pose_rot + local_blade_angle
-		var progress := angle_difference(_last_trail_angle, current_blade) * _swing_dir
+		var blade_start := _start_angle - anticipation_pullback * _swing_dir
+		var blade_end := _end_angle + overshoot_angle * _swing_dir
+		var swing_t := _phase_time / action_duration
+		var current_blade: float = lerp(blade_start, blade_end, clampf(swing_t, 0.0, 1.0))
+		var progress: float = (current_blade - _last_trail_angle) * _swing_dir
 		var max_spawns := 32
 		while progress >= trail_angle_step and max_spawns > 0:
 			_last_trail_angle += trail_angle_step * _swing_dir
