@@ -46,3 +46,15 @@ func test_arc_railgun_only_fires_at_full_charge() -> void:
 	w.tick(0.6)
 	w.on_release(user)   # full -> one rail
 	assert_int(shots.size()).is_equal(1)
+
+func test_flame_lobber_splats_lava() -> void:
+	var b: Array = FlameLobberWeapon.new()._make_behaviors()
+	assert_int(b.size()).is_equal(1)
+	assert_bool(b[0] is SplatBehavior).is_true()
+	assert_str((b[0] as SplatBehavior).material).is_equal("lava")
+
+func test_venom_spitter_splats_gas() -> void:
+	var b: Array = VenomSpitterWeapon.new()._make_behaviors()
+	assert_int(b.size()).is_equal(1)
+	assert_bool(b[0] is SplatBehavior).is_true()
+	assert_str((b[0] as SplatBehavior).material).is_equal("gas")
