@@ -215,10 +215,10 @@ See `docs/superpowers/specs/2026-06-15-sp-a-data-driven-runtime-design.md`.
 ### Sub-project E (9): Native ranged mechanics + 10 ranged weapons
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P2 | Medium | Line-pierce + charged rail | heavy_crossbow pierce; arc_railgun charge-to-fire rail |
-|  | P2 | Medium | Lob-splat + chain/fork | flame_lobber/venom_spitter impact hazard; tesla_gun chaining |
-|  | P2 | Medium | Area-volley + folded-native | hailstorm_bow volley; chakram return, seeker homing fold native |
-|  | P2 | Medium | Ranged `.tres` + stat wiring | heavy_crossbow, scatter_blunderbuss, arc_railgun, flame_lobber, frost_repeater, venom_spitter, tesla_gun, chakram_launcher, seeker_launcher, hailstorm_bow |
+| x | P2 | Medium | Line-pierce + charged rail | heavy_crossbow pierce; arc_railgun charge-to-fire rail |
+| x | P2 | Medium | Lob-splat + chain/fork | flame_lobber/venom_spitter impact hazard; tesla_gun chaining |
+| x | P2 | Medium | Area-volley + folded-native | hailstorm_bow volley; chakram return, seeker homing fold native |
+| x | P2 | Medium | Ranged `.tres` + stat wiring | heavy_crossbow, scatter_blunderbuss, arc_railgun, flame_lobber, frost_repeater, venom_spitter, tesla_gun, chakram_launcher, seeker_launcher, hailstorm_bow |
 
 ---
 
