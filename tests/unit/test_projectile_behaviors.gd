@@ -170,3 +170,103 @@ func test_clear_destroys_overlapping_enemy_projectile() -> void:
 	await get_tree().process_frame
 	assert_that(is_instance_valid(enemy_proj)).is_false()
 	assert_that(is_instance_valid(p)).is_true()
+
+
+func test_split_shards_inherit_hit_status_when_set() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = Projectile.new()
+	p.is_enemy_projectile = false
+	p.damage = 10.0
+	var b := SplitBehavior.new()
+	b.shard_count = 3
+	b.shard_hit_status = "burn"
+	p.behaviors = [b]
+	parent.add_child(p)
+	var target: Enemy = auto_free(Enemy.new())
+	parent.add_child(target)
+	p._handle_hit(target)
+	await get_tree().process_frame
+	for c in parent.get_children():
+		if c is Projectile:
+			assert_str(c.hit_status).is_equal("burn")
+
+
+func test_homing_turns_toward_target_capped() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = auto_free(Projectile.new())
+	p.is_enemy_projectile = false
+	p.direction = Vector2.RIGHT  # angle 0
+	parent.add_child(p)
+	p.global_position = Vector2.ZERO
+	var target: Node2D = auto_free(Node2D.new())
+	target.add_to_group("attackable")
+	parent.add_child(target)
+	target.global_position = Vector2(0, 100)  # desired angle +PI/2
+	var b := HomingBehavior.new()
+	b.turn_rate_rad = PI * 2.0
+	b.on_process(p, 0.1)  # max step 0.628 rad
+	# Turned toward target but capped short of PI/2.
+	assert_float(p.direction.angle()).is_greater(0.0)
+	assert_float(p.direction.angle()).is_less(PI / 2.0)
+
+
+func test_homing_no_target_keeps_direction() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = auto_free(Projectile.new())
+	p.is_enemy_projectile = false
+	p.direction = Vector2.RIGHT
+	parent.add_child(p)
+	var b := HomingBehavior.new()
+	b.on_process(p, 0.1)
+	assert_float(p.direction.angle()).is_equal_approx(0.0, 0.0001)
+
+
+func test_split_shards_default_no_hit_status() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var p: Projectile = Projectile.new()
+	p.is_enemy_projectile = false
+	p.damage = 10.0
+	var b := SplitBehavior.new()
+	b.shard_count = 2
+	p.behaviors = [b]
+	parent.add_child(p)
+	var target: Enemy = auto_free(Enemy.new())
+	parent.add_child(target)
+	p._handle_hit(target)
+	await get_tree().process_frame
+	for c in parent.get_children():
+		if c is Projectile:
+			assert_str(c.hit_status).is_equal("")
+
+
+func test_return_reverses_toward_source_after_out_time() -> void:
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var source: Node2D = auto_free(Node2D.new())
+	parent.add_child(source)
+	source.global_position = Vector2.ZERO
+	var p: Projectile = auto_free(Projectile.new())
+	p.direction = Vector2.RIGHT
+	p.source_node = source
+	parent.add_child(p)
+	p.global_position = Vector2(100, 0)
+	var b := ReturnBehavior.new()
+	b.out_time = 0.5
+	b.on_spawn(p)
+	# Before out_time: outbound, unchanged.
+	b.on_process(p, 0.1)
+	assert_float(p.direction.x).is_greater(0.0)
+	# Cross out_time, then steer: now points back toward source (-X).
+	b.on_process(p, 0.5)
+	b.on_process(p, 0.1)
+	assert_float(p.direction.x).is_less(0.0)
+
+
+func test_return_passes_through_enemies() -> void:
+	var b := ReturnBehavior.new()
+	var p: Projectile = auto_free(Projectile.new())
+	assert_bool(b.on_enemy_hit(p, null)).is_true()

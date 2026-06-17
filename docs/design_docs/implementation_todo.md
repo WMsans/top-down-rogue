@@ -200,9 +200,9 @@ See `docs/superpowers/specs/2026-06-15-sp-a-data-driven-runtime-design.md`.
 ### Sub-project C (7): New projectile behaviors + projectile modifiers
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P2 | Medium | `homing` steering | Curve toward nearest enemy with capped turn rate |
-|  | P2 | Medium | `return` steering | Travel out then reverse to player, hitting both legs |
-|  | P2 | Medium | Projectile modifiers | homing_hex, boomerang_arc, ricochet_shard, piercing_lance, cluster_bomb, spectral_echo |
+| x | P2 | Medium | `homing` steering | Curve toward nearest enemy with capped turn rate |
+| x | P2 | Medium | `return` steering | Travel out then reverse to player, hitting both legs |
+| x | P2 | Medium | Projectile modifiers | homing_hex, boomerang_arc, ricochet_shard, piercing_lance, cluster_bomb, spectral_echo |
 
 ### Sub-project D (8): Native melee mechanics + 18 melee weapons
 | Done | Priority | Difficulty | Task | Description |
