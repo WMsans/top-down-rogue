@@ -36,6 +36,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_age += delta
 	if _age >= lifetime:
+		for b in behaviors:
+			b.on_expire(self)
 		queue_free()
 		return
 	global_position += direction * speed * delta
