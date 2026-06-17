@@ -58,3 +58,10 @@ func test_venom_spitter_splats_gas() -> void:
 	assert_int(b.size()).is_equal(1)
 	assert_bool(b[0] is SplatBehavior).is_true()
 	assert_str((b[0] as SplatBehavior).material).is_equal("gas")
+
+func test_tesla_gun_chains() -> void:
+	var w := TeslaGunWeapon.new()
+	var b: Array = w._make_behaviors()
+	assert_int(b.size()).is_equal(1)
+	assert_bool(b[0] is ChainBehavior).is_true()
+	assert_int((b[0] as ChainBehavior).jumps).is_greater(0)
