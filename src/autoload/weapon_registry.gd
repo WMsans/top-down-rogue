@@ -189,6 +189,9 @@ func _apply_tuning(weapon: Weapon, row: Dictionary) -> void:
 			var tex := load(pt)
 			if tex is Texture2D:
 				rw.projectile_texture = tex
+		var hs: String = row.get("hit_status", "")
+		if hs != "":
+			rw.hit_status = hs
 
 func _apply_pre_attached_modifiers(weapon: Weapon, row: Dictionary) -> void:
 	for i in range(1, 4):

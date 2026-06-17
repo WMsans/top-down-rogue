@@ -15,6 +15,7 @@ const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 		weapon_texture = value
 		icon_texture = value
 @export var projectile_texture: Texture2D = preload("res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/16x16/arrow_01a.png")
+@export var hit_status: String = ""
 
 var shot_sink: Callable = Callable()
 var _shots_left: int = 0
@@ -122,6 +123,7 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	proj.crit_chance = get_effective_crit_chance()
 	proj.crit_multiplier = crit_multiplier
 	proj.crit_status = crit_status
+	proj.hit_status = hit_status
 	proj.speed = projectile_speed
 	proj.lifetime = projectile_lifetime
 	proj.direction = direction.normalized()
