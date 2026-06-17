@@ -72,28 +72,7 @@ func _do_knockback(user: Node, ctx: Dictionary) -> void:
 	if user == null or not (user is Node2D):
 		return
 	var radius: float = magnitude * KNOCKBACK_RADIUS_FACTOR
-	for n in _radial_targets(user, radius):
-		var dir: Vector2 = (n as Node2D).global_position - (user as Node2D).global_position
-		if dir == Vector2.ZERO:
-			dir = Vector2.DOWN
-		n.apply_knockback(dir, magnitude)
-
-
-func _radial_targets(user: Node, radius: float) -> Array:
-	var out: Array = []
-	var tree := user.get_tree()
-	if tree == null:
-		return out
-	var origin: Vector2 = (user as Node2D).global_position
-	var r2: float = radius * radius
-	for n in tree.get_nodes_in_group("attackable"):
-		if n == user or not is_instance_valid(n) or not (n is Node2D):
-			continue
-		if not n.has_method("apply_knockback"):
-			continue
-		if origin.distance_squared_to((n as Node2D).global_position) <= r2:
-			out.append(n)
-	return out
+	CombatUtil.radial_knockback(user, radius, magnitude)
 
 
 func _do_pull(user: Node) -> void:
