@@ -67,6 +67,14 @@ func _ready() -> void:
 	weapon_scripts["reaper_glaive"] = preload("res://src/weapons/reaper_glaive_weapon.gd")
 	weapon_scripts["berserker_axe"] = preload("res://src/weapons/berserker_axe_weapon.gd")
 	weapon_scripts["soul_reaver"] = preload("res://src/weapons/soul_reaver_weapon.gd")
+	weapon_scripts["heavy_crossbow"] = preload("res://src/weapons/heavy_crossbow_weapon.gd")
+	weapon_scripts["chakram_launcher"] = preload("res://src/weapons/chakram_launcher_weapon.gd")
+	weapon_scripts["seeker_launcher"] = preload("res://src/weapons/seeker_launcher_weapon.gd")
+	weapon_scripts["arc_railgun"] = preload("res://src/weapons/arc_railgun_weapon.gd")
+	weapon_scripts["flame_lobber"] = preload("res://src/weapons/flame_lobber_weapon.gd")
+	weapon_scripts["venom_spitter"] = preload("res://src/weapons/venom_spitter_weapon.gd")
+	weapon_scripts["tesla_gun"] = preload("res://src/weapons/tesla_gun_weapon.gd")
+	weapon_scripts["hailstorm_bow"] = preload("res://src/weapons/hailstorm_bow_weapon.gd")
 	modifier_scripts["lava_emitter"] = preload("res://src/weapons/modifiers/lava_emitter_modifier.gd")
 	modifier_scripts["fireball_fan"] = preload("res://src/weapons/modifiers/fireball_fan_modifier.gd")
 	modifier_scripts["icicle_volley"] = preload("res://src/weapons/modifiers/icicle_volley_modifier.gd")
@@ -189,6 +197,9 @@ func _apply_tuning(weapon: Weapon, row: Dictionary) -> void:
 			var tex := load(pt)
 			if tex is Texture2D:
 				rw.projectile_texture = tex
+		var hs: String = row.get("hit_status", "")
+		if hs != "":
+			rw.hit_status = hs
 
 func _apply_pre_attached_modifiers(weapon: Weapon, row: Dictionary) -> void:
 	for i in range(1, 4):

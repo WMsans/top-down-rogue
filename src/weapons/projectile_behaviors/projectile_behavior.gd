@@ -15,3 +15,6 @@ func on_terrain_hit(_proj) -> bool:
 
 func on_enemy_projectile_overlap(_proj, _enemy_proj) -> void:
 	pass
+
+func on_expire(_proj) -> void:
+	pass
