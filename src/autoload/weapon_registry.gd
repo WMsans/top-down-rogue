@@ -73,6 +73,7 @@ func _ready() -> void:
 	weapon_scripts["arc_railgun"] = preload("res://src/weapons/arc_railgun_weapon.gd")
 	weapon_scripts["flame_lobber"] = preload("res://src/weapons/flame_lobber_weapon.gd")
 	weapon_scripts["venom_spitter"] = preload("res://src/weapons/venom_spitter_weapon.gd")
+	weapon_scripts["tesla_gun"] = preload("res://src/weapons/tesla_gun_weapon.gd")
 	modifier_scripts["lava_emitter"] = preload("res://src/weapons/modifiers/lava_emitter_modifier.gd")
 	modifier_scripts["fireball_fan"] = preload("res://src/weapons/modifiers/fireball_fan_modifier.gd")
 	modifier_scripts["icicle_volley"] = preload("res://src/weapons/modifiers/icicle_volley_modifier.gd")
