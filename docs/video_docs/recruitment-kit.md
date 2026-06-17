@@ -23,17 +23,6 @@ Discord/landing point, and finalize the two intros below.
 
 ## The video (60–90s, gameplay-first)
 
-1. **First 10s — the hook, no preamble.** Lead straight with the gas sim doing something
-   dramatic. No logo, no "hi I'm…", no setup.
-2. **20–40s — the emergent loop.** Dig terrain → gas flows/pools → status reaction →
-   enemy combat feedback. Show that the *systems interact*. This is the differentiator vs.
-   every other top-down roguelike.
-3. **The honest ask.** "This is a solo Godot prototype. The core sim works; it needs
-   content, art, sound, and more hands to become a real roguelike."
-4. **Logistics on screen.** Unpaid passion project · everyone is credited · you keep and
-   can showcase your own contributions · solo lead / open to contributors.
-5. **One CTA** — the Discord/form link, on screen and in the description.
-
 **Do:** keep placeholder art (it shows artists where their work plugs in).
 **Don't:** over-explain the 3-year roadmap, or apologize for the art.
 
@@ -99,14 +88,3 @@ Discord/landing point, and finalize the two intros below.
 > you), designers, 2D artists, and sound designers. Unpaid/portfolio, fully credited.
 >
 > [video link] · Repo/demo details → [Discord link]
-
----
-
-## Before posting — checklist
-
-- [ ] 60–90s video recorded with one reliably reproducible "wow" moment
-- [ ] Landing point set up (Discord server or Google Form) and linked everywhere
-- [ ] IP/ownership note written once, plainly (lead = maintainer; contributors keep/showcase
-      their own work)
-- [ ] Fill in `[video link]` and `[Discord link]` placeholders above
-- [ ] r/godot test post done before the student-term push
