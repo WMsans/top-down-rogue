@@ -4,18 +4,20 @@ const TerrainCollisionHelper := preload("res://src/core/terrain_collision_helper
 
 class FakeComputeDevice extends RefCounted:
 	var dispatched_coords: Array = []
-	var pending_readback: Dictionary = {}
+	var pending_readback: Dictionary = {"segments": {}, "passability": {}}
 	func dispatch_collider_pack(_chunks: Dictionary, coords: Array) -> void:
 		dispatched_coords = coords.duplicate()
 	func read_collider_buffer_coalesced() -> Dictionary:
 		var out := pending_readback.duplicate()
-		pending_readback = {}
+		pending_readback = {"segments": {}, "passability": {}}
 		return out
 
 class FakeWorldManager extends RefCounted:
 	var compute_device
 	var chunks: Dictionary = {}
 	var dirty_marks: Array = []
+	var nav_field = null
+	var tracking_position = Vector2.ZERO
 	func mark_terrain_dirty(coord: Vector2i) -> void:
 		dirty_marks.append(coord)
 

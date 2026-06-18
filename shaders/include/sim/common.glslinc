@@ -7,6 +7,7 @@ const int V_MAX_OUTFLOW = 8;
 const int THRESHOLD_BECOME_GAS = 1;
 const int THRESHOLD_BECOME_LAVA = 1;
 const int THRESHOLD_BECOME_BLOOD = 1;
+const int THRESHOLD_BECOME_WATER = 1;
 const int THRESHOLD_DISSIPATE = 1;
 const int MAX_INJECTIONS_PER_CHUNK = 32;
 const int DIFFUSION_RATE = 4;

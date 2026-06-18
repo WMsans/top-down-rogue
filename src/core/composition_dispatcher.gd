@@ -206,7 +206,11 @@ func _replay_stamps_for_chunks(new_coords: Array[Vector2i]) -> void:
 				break
 		if not intersects:
 			continue
+		# Restrict the re-issue to the chunks that just generated. Already-loaded
+		# chunks received this stamp at issue time and may have been edited since
+		# (e.g. the player carved the guidance wall); replaying across them would
+		# re-fill those carved holes.
 		if kind == "ring":
-			_world_manager.place_material_ring(stamp["pos"], stamp["inner"], stamp["outer"], stamp["mat"])
+			_world_manager.place_material_ring(stamp["pos"], stamp["inner"], stamp["outer"], stamp["mat"], new_chunks)
 		else:
-			_world_manager.place_material_blob(stamp["pos"], stamp["radius"], stamp["mat"], stamp["seed"], stamp["jitter"])
+			_world_manager.place_material_blob(stamp["pos"], stamp["radius"], stamp["mat"], stamp["seed"], stamp["jitter"], new_chunks)

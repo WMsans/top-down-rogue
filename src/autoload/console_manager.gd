@@ -46,6 +46,8 @@ func _register_commands() -> void:
 	GamemodeCommands.register(_registry)
 	var TpCommands := preload("res://src/console/commands/tp_command.gd")
 	TpCommands.register(_registry)
+	var EffectCommands := preload("res://src/console/commands/effect_command.gd")
+	EffectCommands.register(_registry)
 
 
 func _build_ui() -> void:

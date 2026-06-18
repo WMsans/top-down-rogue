@@ -6,6 +6,8 @@ const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
 const DUMMY_ENEMY_SCENE := preload("res://scenes/enemies/dummy_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const PARDUMMY_SCENE := preload("res://scenes/enemies/parry_dummy.tscn")
+const VENT_SCENE := preload("res://scenes/props/vent.tscn")
+const BARREL_SCENE := preload("res://scenes/props/barrel.tscn")
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 const PROJECTILE_TEX := preload("res://textures/wall.png")
 
@@ -28,8 +30,15 @@ static func register(registry: CommandRegistry) -> void:
 	registry.register("spawn enemy dummy", "Spawn a dummy enemy", _spawn_enemy)
 	registry.register("spawn gold", "Spawn a gold drop (default 10)", _spawn_gold)
 	registry.register("spawn chest", "Spawn a chest", _spawn_chest)
+	registry.register("spawn gas_emitter", "Spawn a gas vent that periodically emits gas", _spawn_gas_emitter)
+	registry.register("spawn barrel", "Spawn a destructible oil barrel", _spawn_barrel)
 	registry.register("spawn static_slash", "Spawn a parry dummy that always parries", _spawn_static_slash)
 	registry.register("spawn static_projectile", "Spawn a static enemy projectile", _spawn_static_projectile)
+	registry.register("spawn projectile bounce", "Fire a bouncing projectile", _spawn_behavior_projectile.bind("bounce"))
+	registry.register("spawn projectile split", "Fire a splitting projectile", _spawn_behavior_projectile.bind("split"))
+	registry.register("spawn projectile penetrate", "Fire a penetrating projectile", _spawn_behavior_projectile.bind("penetrate"))
+	registry.register("spawn projectile clear", "Fire a bullet-clearing projectile", _spawn_behavior_projectile.bind("clear"))
+	registry.register("spawn projectile shockwave", "Fire a penetrating + bullet-clearing shockwave", _spawn_behavior_projectile.bind("shockwave"))
 
 
 static func _get_spawn_parent(ctx: Dictionary) -> Node:
@@ -141,6 +150,26 @@ static func _spawn_chest(_args: Array[String], ctx: Dictionary) -> String:
 	return "Spawned chest"
 
 
+static func _spawn_gas_emitter(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var vent: Node2D = VENT_SCENE.instantiate()
+	parent.add_child(vent)
+	vent.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned gas emitter"
+
+
+static func _spawn_barrel(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var barrel: Area2D = BARREL_SCENE.instantiate()
+	parent.add_child(barrel)
+	barrel.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned oil barrel"
+
+
 static func _spawn_static_slash(_args: Array[String], ctx: Dictionary) -> String:
 	var parent := _get_spawn_parent(ctx)
 	if parent == null:
@@ -167,3 +196,43 @@ static func _spawn_static_projectile(_args: Array[String], ctx: Dictionary) -> S
 	parent.add_child(proj)
 	proj.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned static enemy projectile"
+
+
+static func _spawn_behavior_projectile(_args: Array[String], ctx: Dictionary, kind: String) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var dir := Vector2.RIGHT
+	var player = ctx.get("player")
+	if player != null and player.has_method("get_facing_direction"):
+		dir = player.get_facing_direction()
+	if dir.length_squared() < 0.0001:
+		dir = Vector2.RIGHT
+
+	var proj: Projectile = PROJECTILE_SCENE.instantiate()
+	proj.is_enemy_projectile = false
+	proj.direction = dir.normalized()
+	proj.speed = 140.0
+	proj.lifetime = 3.0
+	proj.damage = 5.0
+	var proj_sprite := proj.get_node_or_null("Sprite2D")
+	if proj_sprite:
+		proj_sprite.texture = PROJECTILE_TEX
+
+	match kind:
+		"bounce":
+			proj.behaviors = [BounceBehavior.new()]
+		"split":
+			proj.behaviors = [SplitBehavior.new()]
+		"penetrate":
+			proj.behaviors = [PenetrateBehavior.new()]
+		"clear":
+			proj.behaviors = [ClearBulletsBehavior.new()]
+		"shockwave":
+			proj.behaviors = [PenetrateBehavior.new(), ClearBulletsBehavior.new()]
+		_:
+			return "error: unknown projectile kind '" + kind + "'"
+
+	parent.add_child(proj)
+	proj.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned " + kind + " projectile"

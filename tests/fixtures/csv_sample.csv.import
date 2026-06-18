@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cmevmp5uqe0tk"
+
+[deps]
+
+files=["res://tests/fixtures/csv_sample.name.translation", "res://tests/fixtures/csv_sample.note.translation", "res://tests/fixtures/csv_sample.extra.translation"]
+
+source_file="res://tests/fixtures/csv_sample.csv"
+dest_files=["res://tests/fixtures/csv_sample.name.translation", "res://tests/fixtures/csv_sample.note.translation", "res://tests/fixtures/csv_sample.extra.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dva5xqo417at0"
+
+[deps]
+
+files=["res://docs/design_docs/weapons-chinese.name.translation", "res://docs/design_docs/weapons-chinese.description.translation", "res://docs/design_docs/weapons-chinese.type.translation", "res://docs/design_docs/weapons-chinese.rarity.translation", "res://docs/design_docs/weapons-chinese.cooldown.translation", "res://docs/design_docs/weapons-chinese.damage.translation", "res://docs/design_docs/weapons-chinese.weapon.translation", "res://docs/design_docs/weapons-chinese.modifier.translation", "res://docs/design_docs/weapons-chinese.pre.translation", "res://docs/design_docs/weapons-chinese.en.translation", "res://docs/design_docs/weapons-chinese.en.translation", "res://docs/design_docs/weapons-chinese.crit.translation", "res://docs/design_docs/weapons-chinese.crit.translation", "res://docs/design_docs/weapons-chinese.crit.translation"]
+
+source_file="res://docs/design_docs/weapons-chinese.csv"
+dest_files=["res://docs/design_docs/weapons-chinese.name.translation", "res://docs/design_docs/weapons-chinese.description.translation", "res://docs/design_docs/weapons-chinese.type.translation", "res://docs/design_docs/weapons-chinese.rarity.translation", "res://docs/design_docs/weapons-chinese.cooldown.translation", "res://docs/design_docs/weapons-chinese.damage.translation", "res://docs/design_docs/weapons-chinese.weapon.translation", "res://docs/design_docs/weapons-chinese.modifier.translation", "res://docs/design_docs/weapons-chinese.pre.translation", "res://docs/design_docs/weapons-chinese.en.translation", "res://docs/design_docs/weapons-chinese.en.translation", "res://docs/design_docs/weapons-chinese.crit.translation", "res://docs/design_docs/weapons-chinese.crit.translation", "res://docs/design_docs/weapons-chinese.crit.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

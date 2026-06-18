@@ -14,7 +14,7 @@ layout(rgba8, set = 0, binding = 4) readonly uniform image2D neighbor_right;
 layout(push_constant, std430) uniform PushConstants {
 	int phase;
 	int frame_seed;
-	int _pad2;
+	int chunk_slot;
 	int _pad3;
 } pc;
 
@@ -32,15 +32,27 @@ layout(set = 0, binding = 5, std430) readonly buffer InjectionBuffer {
 	InjectionAABB bodies[];
 } injections;
 
+layout(set = 0, binding = 6, std430) buffer SolidityFlags {
+	uint flags[];
+} solidity;
+
 #include "res://shaders/include/sim/common.glslinc"
 #include "res://shaders/include/sim/gas.glslinc"
 #include "res://shaders/include/sim/lava.glslinc"
 #include "res://shaders/include/sim/oil.glslinc"
 #include "res://shaders/include/sim/explode_wave.glslinc"
 #include "res://shaders/include/sim/blood.glslinc"
+#include "res://shaders/include/sim/water.glslinc"
 #include "res://shaders/include/sim/dust.glslinc"
 #include "res://shaders/include/sim/injection.glslinc"
 #include "res://shaders/include/sim/burning.glslinc"
+
+bool simulate_steam(ivec2 pos, inout vec4 pixel, inout int material,
+                    vec4 n_up, vec4 n_down, vec4 n_left, vec4 n_right) {
+	if (material != MAT_STEAM) return false;
+	gas_advect_pull(pos, pixel, n_up, n_down, n_left, n_right, MAT_STEAM);
+	return true;
+}
 
 void main() {
 	ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
@@ -68,8 +80,10 @@ void main() {
 	if (simulate_lava(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 	if (simulate_oil(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
 	if (simulate_blood(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
+	if (simulate_water(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 	if (simulate_dust(pos, pixel, material, n_up, n_down, n_left, n_right))  return;
 	if (simulate_gas(pos, pixel, material, n_up, n_down, n_left, n_right))   return;
+	if (simulate_steam(pos, pixel, material, n_up, n_down, n_left, n_right)) return;
 
 	simulate_burning(pos, pixel, n_up, n_down, n_left, n_right);
 }

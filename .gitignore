@@ -9,3 +9,4 @@ build/
 /reports
 /opencode.json
 .worktrees/
+/.env

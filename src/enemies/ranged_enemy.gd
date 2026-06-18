@@ -11,6 +11,10 @@ var _strafe_direction: float = 1.0
 var _strafe_re_roll: float = 0.0
 
 
+func _attack_in_progress() -> bool:
+	return weapon != null and weapon.is_bursting()
+
+
 func _ready() -> void:
 	if weapon_resource:
 		weapon = weapon_resource.duplicate()
@@ -26,7 +30,6 @@ func _ready() -> void:
 		cooldown_duration = weapon.cooldown
 	detection_radius = 250.0
 	windup_duration = 0.4
-	min_attack_settle_time = 0.5
 	super._ready()
 	_setup_drop_table()
 
@@ -70,8 +73,9 @@ func _process_chase(delta: float) -> void:
 
 	velocity = _apply_separation(velocity)
 
-	if dist <= _attack_range and _settle_timer >= min_attack_settle_time:
+	if dist <= _attack_range:
 		_change_state(State.WINDUP)
+		return
 
 
 func _execute_attack() -> void:

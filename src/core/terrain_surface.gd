@@ -12,6 +12,11 @@ func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector
 		adapter.place_gas(world_pos, radius, density, velocity)
 
 
+func place_gas_splash(world_pos: Vector2, radius: float, density: int, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	if adapter:
+		adapter.place_gas_splash(world_pos, radius, density, outward_speed, bias_dir)
+
+
 func place_lava(world_pos: Vector2, radius: float) -> void:
 	if adapter:
 		adapter.place_lava(world_pos, radius)
@@ -25,6 +30,26 @@ func place_blood(world_pos: Vector2, radius: float, outward_speed: float, bias_d
 func place_fire(world_pos: Vector2, radius: float) -> void:
 	if adapter:
 		adapter.place_fire(world_pos, radius)
+
+
+func place_steam(world_pos: Vector2, radius: float, density: int) -> void:
+	if adapter:
+		adapter.place_steam(world_pos, radius, density)
+
+
+func place_oil(world_pos: Vector2, radius: float) -> void:
+	if adapter:
+		adapter.place_material(world_pos, radius, MaterialRegistry.MAT_OIL)
+
+
+func place_material(world_pos: Vector2, radius: float, material_id: int) -> void:
+	if adapter:
+		adapter.place_material(world_pos, radius, material_id)
+
+
+func place_oil_splash(world_pos: Vector2, radius: float, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	if adapter:
+		adapter.place_oil_splash(world_pos, radius, outward_speed, bias_dir)
 
 
 func clear_and_push_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, edge_fraction: float, materials: Array, damage: float = -1.0) -> void:

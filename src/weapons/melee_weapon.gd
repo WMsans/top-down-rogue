@@ -1,8 +1,16 @@
 class_name MeleeWeapon
 extends Weapon
 
-@export var weapon_texture: Texture2D = preload("res://textures/Weapons/sword_01c.png")
+@export var weapon_texture: Texture2D = preload("res://textures/Weapons/sword_01c.png"):
+	set(value):
+		weapon_texture = value
+		icon_texture = value
 @export var weapon_reach: float = 36.0
+@export var free_carve: bool = false
+const FREE_CARVE_STRENGTH := 1.0e9
+
+const REFERENCE_REACH := 36.0
+var _reach_scale: float = 1.0
 @export var arc_angle: float = PI / 2.0
 @export var push_speed: float = 60.0
 
@@ -91,6 +99,7 @@ func setup_visual(container: Node2D, sprite: Sprite2D) -> void:
 	_sprite.texture = weapon_texture
 	_pommel_offset = _compute_pommel_offset(weapon_texture)
 	_sprite.offset = _pommel_offset
+	_reach_scale = weapon_reach / REFERENCE_REACH
 
 
 func _compute_pommel_offset(tex: Texture2D) -> Vector2:
@@ -108,13 +117,35 @@ static func _is_inside_arc(origin: Vector2, target: Vector2, dir_angle: float, h
 	return absf(angle_difference(dir_angle, to_target.angle())) <= half_arc_angle
 
 
+func _seed_effective_stats() -> Dictionary:
+	var s := super._seed_effective_stats()
+	s["reach"] = weapon_reach
+	s["arc"] = arc_angle
+	return s
+
+
 func _use_impl(user: Node) -> void:
 	_current_user = user
+	var eff := get_effective_stats()
+	var reach: float = eff["reach"]
+	var arc: float = eff["arc"]
+	var dmg: float = eff["damage"]
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
+	_carve_and_push(pos, direction, reach * eff["carve_depth"], arc, dmg)
+	_hit_attackables(user, pos, direction, reach, arc, 1.0, false, false)
+	notify_attack(user, {
+		"direction": direction,
+		"origin": pos,
+		"charged": false,
+		"charge_ratio": 0.0,
+	})
+
+
+func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float, dmg: float) -> void:
 	var fluids: Array[int] = MaterialRegistry.get_fluids()
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, push_speed, 0.25, fluids)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, push_speed, 0.25, fluids)
 	var solids: Array[int] = [
 		MaterialRegistry.MAT_DIRT,
 		MaterialRegistry.MAT_WOOD,
@@ -122,20 +153,23 @@ func _use_impl(user: Node) -> void:
 		MaterialRegistry.MAT_COAL,
 		MaterialRegistry.MAT_ICE,
 	]
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, weapon_reach, arc_angle, 0.0, 0.0, solids, damage)
-	_hit_attackables_in_arc(user, pos, direction)
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, 0.0, 0.0, solids, _solid_carve_strength(dmg))
 
 
-func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) -> void:
-	var dmg: int = int(damage)
-	if dmg <= 0:
+func _solid_carve_strength(dmg: float) -> float:
+	return FREE_CARVE_STRENGTH if free_carve else dmg
+
+
+func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: float, arc: float, dmg_mult: float, force_crit: bool, ignore_parry: bool) -> void:
+	var base_dmg: float = damage * dmg_mult
+	if int(base_dmg) <= 0:
 		return
 	var dir_angle: float = direction.angle()
-	var half_arc_angle: float = arc_angle / 2.0
+	var half_arc_angle: float = arc / 2.0
 
 	var space_state: PhysicsDirectSpaceState2D = user.get_world_2d().direct_space_state
 	var circle: CircleShape2D = CircleShape2D.new()
-	circle.radius = weapon_reach
+	circle.radius = reach
 	var params: PhysicsShapeQueryParameters2D = PhysicsShapeQueryParameters2D.new()
 	params.shape = circle
 	params.transform = Transform2D(0.0, origin)
@@ -153,15 +187,16 @@ func _hit_attackables_in_arc(user: Node, origin: Vector2, direction: Vector2) ->
 		if not node.has_method("on_hit_impact"):
 			continue
 		var node2d := node as Node2D
-		if not _is_inside_arc(origin, node2d.global_position, dir_angle, half_arc_angle, weapon_reach):
+		if not _is_inside_arc(origin, node2d.global_position, dir_angle, half_arc_angle, reach):
 			continue
 		var hit_dir: Vector2 = (node2d.global_position - origin).normalized()
-		if node.has_method("try_parry"):
+		if not ignore_parry and node.has_method("try_parry"):
 			if node.try_parry(user, node2d.global_position, hit_dir):
 				var tint: Color = trail_color if "trail_color" in self else Color(1, 1, 1, 1)
 				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
-		node.on_hit_impact(node2d.global_position, hit_dir, dmg)
+		var is_crit: bool = force_crit or roll_crit()
+		resolve_hit(user, node, damage * dmg_mult, is_crit)
 
 
 func _tick_impl(_delta: float) -> void:
@@ -364,8 +399,11 @@ func _process_swing(_delta: float) -> void:
 	_apply_pose()
 
 	if _phase == Phase.ACTION:
-		var current_blade := _pose_rot + local_blade_angle
-		var progress := angle_difference(_last_trail_angle, current_blade) * _swing_dir
+		var blade_start := _start_angle - anticipation_pullback * _swing_dir
+		var blade_end := _end_angle + overshoot_angle * _swing_dir
+		var swing_t := _phase_time / action_duration
+		var current_blade: float = lerp(blade_start, blade_end, clampf(swing_t, 0.0, 1.0))
+		var progress: float = (current_blade - _last_trail_angle) * _swing_dir
 		var max_spawns := 32
 		while progress >= trail_angle_step and max_spawns > 0:
 			_last_trail_angle += trail_angle_step * _swing_dir
@@ -379,7 +417,7 @@ func _apply_pose() -> void:
 	visual.rotation = 0.0
 	_sprite.position = _pose_pos
 	_sprite.rotation = _pose_rot
-	_sprite.scale = _pose_scale
+	_sprite.scale = _pose_scale * _reach_scale
 
 
 func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> void:
@@ -395,7 +433,7 @@ func _spawn_trail(local_pos: Vector2, blade_angle: float, scale: Vector2) -> voi
 	visual.add_child(trail)
 	trail.position = local_pos
 	trail.rotation = _blade_to_sprite_rot(blade_angle)
-	trail.scale = scale
+	trail.scale = scale * _reach_scale
 	var tween := trail.create_tween()
 	tween.tween_property(trail, "modulate:a", 0.0, trail_lifetime)
 	tween.tween_callback(trail.queue_free)
