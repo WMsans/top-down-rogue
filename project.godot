@@ -30,6 +30,7 @@ HitReaction="*res://src/core/juice/hit_reaction.gd"
 TerrainSurface="*res://src/core/terrain_surface.gd"
 TerrainImpact="*res://src/core/juice/terrain_impact.gd"
 GameModeManager="*res://src/autoload/game_mode_manager.gd"
+GameRuleManager="*res://src/autoload/game_rule_manager.gd"
 CompositionDispatcher="*res://src/core/composition_dispatcher.gd"
 
 [display]
