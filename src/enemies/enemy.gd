@@ -19,6 +19,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var elite_ability: int = EliteAbility.NONE
 @export var separation_radius: float = 22.0
 @export var separation_weight: float = 1.2
+@export var crowd_spacing_scale: float = 1.0
 @export var leash_radius: float = 280.0
 @export var damage_scale: float = 1.0
 
@@ -28,6 +29,7 @@ const DEFAULT_BODY_RADIUS: float = 8.0
 # Max distance moved per collision sub-step. Matches NavField.CELL so a single
 # step never skips over a solid cell (prevents knockback tunneling through walls).
 const MOVE_STEP_PX: float = 8.0
+const CROWD_PUSH_CAP: float = 4.0
 const FLASH_COLOR: Color = Color(3.0, 3.0, 3.0)
 const FLASH_DECAY: float = 0.12
 const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
@@ -389,6 +391,55 @@ func _apply_separation(move_dir: Vector2) -> Vector2:
 	if sep == Vector2.ZERO:
 		return move_dir
 	return (move_dir + sep * separation_weight).normalized()
+
+
+## Push this body out of any neighbor it overlaps. Each body resolves HALF of a
+## pair's overlap; the neighbor resolves its own half, so the pair separates
+## symmetrically without oscillating. Runs every non-DEATH frame, so stationary
+## enemies (windup/attack/cooldown) spread out too. Wall-safe: corrections that
+## would enter solid terrain are dropped.
+func _resolve_crowd_overlap() -> void:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return
+	var grid = _world_manager.swarm_grid
+	if grid == null:
+		return
+	var push := Vector2.ZERO
+	for enemy in grid.query_neighbors(global_position):
+		if enemy == self or not is_instance_valid(enemy):
+			continue
+		var other_radius: float = DEFAULT_BODY_RADIUS
+		if "_body_radius" in enemy:
+			other_radius = enemy._body_radius
+		var min_dist: float = (_body_radius + other_radius) * crowd_spacing_scale
+		var to_self: Vector2 = global_position - enemy.global_position
+		var dist: float = to_self.length()
+		if dist >= min_dist:
+			continue
+		var dir: Vector2
+		if dist > 0.001:
+			dir = to_self / dist
+		else:
+			# Coincident: split deterministically along X by instance-id order so
+			# the pair always pushes apart (never the same direction).
+			var sign_dir: float = 1.0 if get_instance_id() > enemy.get_instance_id() else -1.0
+			dir = Vector2(sign_dir, 0.0)
+		push += dir * ((min_dist - dist) * 0.5)
+	if push == Vector2.ZERO:
+		return
+	if push.length() > CROWD_PUSH_CAP:
+		push = push.normalized() * CROWD_PUSH_CAP
+	_apply_crowd_push(push)
+
+
+## Apply a small positional correction, clamped per-axis against solid cells so a
+## crowd in a corridor is never shoved into a wall. The cap keeps each axis step
+## under MOVE_STEP_PX, so single-step edge checking can't tunnel.
+func _apply_crowd_push(offset: Vector2) -> void:
+	if offset.x != 0.0 and not _edge_blocked(Vector2(offset.x, 0.0)):
+		global_position.x += offset.x
+	if offset.y != 0.0 and not _edge_blocked(Vector2(0.0, offset.y)):
+		global_position.y += offset.y
 
 
 func _nav_field_dir() -> Vector2:
