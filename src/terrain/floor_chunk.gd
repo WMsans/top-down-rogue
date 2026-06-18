@@ -16,8 +16,10 @@ const _PX_PER_TEXEL := _LIGHT_WORLD / float(_LIGHT_TEX)   # 4.0 world px / texel
 const _DECOR_ENERGY := 1.0                                # global brightness multiplier (tunable)
 
 var _warned_missing_texture := false
+var _decor_light: PointLight2D
 
 func populate(coord: Vector2i, biome: BiomeDef, world_seed: int, material_bytes: PackedByteArray = PackedByteArray()) -> void:
+	_decor_light = null
 	for child in get_children():
 		child.queue_free()
 
@@ -163,7 +165,14 @@ func _bake_decor_lights(splats: Array) -> void:
 	light.texture_scale = _PX_PER_TEXEL
 	# Texture is centered on the node; center the light over the chunk.
 	light.position = Vector2(CHUNK_SIZE, CHUNK_SIZE) * 0.5
+	light.visible = GameRuleManager.are_lights_enabled()
 	add_child(light)
+	_decor_light = light
+	GameRuleManager.lights_toggled.connect(_on_lights_toggled)
+
+func _on_lights_toggled(enabled: bool) -> void:
+	if _decor_light:
+		_decor_light.visible = enabled
 
 
 static func _hash_seed(world_seed: int, coord: Vector2i) -> int:

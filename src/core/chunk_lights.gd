@@ -82,6 +82,12 @@ func _init(coord: Vector2i) -> void:
 	light.visible = false
 	add_child(light)
 
+	GameRuleManager.lights_toggled.connect(_on_lights_toggled)
+
+
+func _on_lights_toggled(_enabled: bool) -> void:
+	_dirty = true
+
 
 ## Feeds the per-cell glow data decoded from the light_pack SSBO. Energies are
 ## smoothed toward these targets in _process so new/extinguished glow fades.
@@ -138,7 +144,7 @@ func _rebuild() -> void:
 					continue
 				_accum[row + tx] += kernel[krow + kx] * e
 
-	light.visible = any_glow
+	light.visible = any_glow and GameRuleManager.are_lights_enabled()
 	if not any_glow:
 		return
 
