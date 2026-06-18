@@ -82,3 +82,24 @@ func test_depenetration_respects_walls() -> void:
 	a._resolve_crowd_overlap()
 	# a's leading edge (radius 8) + push would cross x=10, so the push is blocked.
 	assert_float(a.global_position.x).is_less_equal(0.001)
+
+
+func test_waiting_enemies_spread_in_physics_process() -> void:
+	# ATTACK is a stationary state (no _moves_during_attack), so without the
+	# depenetration call in _physics_process these would stay stacked.
+	var world: FakeWorld = auto_free(FakeWorld.new())
+	add_child(world)
+	var a: MockEnemy = auto_free(MockEnemy.new())
+	var b: MockEnemy = auto_free(MockEnemy.new())
+	a._world_manager = world
+	b._world_manager = world
+	a._state = Enemy.State.ATTACK
+	b._state = Enemy.State.ATTACK
+	a.global_position = Vector2(0, 0)
+	b.global_position = Vector2(3, 0)
+	for _i in range(80):
+		world.swarm_grid.rebuild([a, b])
+		a._physics_process(0.016)
+		b._physics_process(0.016)
+	var d := a.global_position.distance_to(b.global_position)
+	assert_float(d).is_greater_equal(15.0)
