@@ -1,12 +1,15 @@
-[gd_scene format=3 uid="uid://damage_number_fx"]
+[gd_scene format=3 uid="uid://ecvmoa1dc4c5"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_dmg"]
 font_size = 12
-font_color = Color(1, 1, 1, 1)
 outline_size = 2
 outline_color = Color(0, 0, 0, 1)
 
-[node name="DamageNumber" type="Label"]
+[node name="DamageNumber" type="Label" unique_id=506859013]
+offset_right = 7.0
+offset_bottom = 17.0
+theme_override_font_sizes/font_size = 72
+text = "1"
+label_settings = SubResource("LabelSettings_dmg")
 horizontal_alignment = 1
 vertical_alignment = 1
-label_settings = SubResource("LabelSettings_dmg")

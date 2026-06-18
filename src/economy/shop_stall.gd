@@ -7,11 +7,11 @@ const SHOP_REMOVAL := preload("res://scenes/economy/shop_removal.tscn")
 
 const MODIFIER_COUNT := 5
 const WEAPON_COUNT := 3
-const MODIFIER_Y := -30.0
-const MODIFIER_XS: Array[float] = [-36.0, -18.0, 0.0, 18.0, 36.0]
-const WEAPON_Y := 0.0
-const WEAPON_XS: Array[float] = [-28.0, 0.0, 28.0]
-const REMOVAL_OFFSET := Vector2(34.0, 32.0)
+const MODIFIER_Y := -80.0
+const MODIFIER_XS: Array[float] = [-100.0, -50.0, 0.0, 50.0, 100.0]
+const WEAPON_Y := 50.0
+const WEAPON_XS: Array[float] = [-70.0, 0.0, 70.0]
+const REMOVAL_OFFSET := Vector2(95.0, 95.0)
 
 
 func _ready() -> void:

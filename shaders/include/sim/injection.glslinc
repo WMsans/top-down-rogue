@@ -19,7 +19,7 @@ bool try_inject_rigidbody_velocity(ivec2 pos, int material, inout vec4 pixel) {
 
 		ivec2 push_dir = ivec2(0);
 		// Gas's center cell falls back to body velocity so a still cell isn't stuck at 0.
-		if (material == MAT_GAS && diff.x == 0 && diff.y == 0) {
+		if ((material == MAT_GAS || material == MAT_STEAM) && diff.x == 0 && diff.y == 0) {
 			push_dir = b.velocity;
 		} else {
 			int dist_x = abs(diff.x);

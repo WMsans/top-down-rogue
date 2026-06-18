@@ -20,17 +20,28 @@ var targeted_enemy: Node2D = null
 
 const KNOCKBACK_SPEED := 20.0
 const KNOCKBACK_DECAY := 12.0
+const DASH_DECAY := 9.0
 const ZOOM_PUNCH_THRESHOLD := 10.0
 const ZOOM_PUNCH_AMOUNT := 0.92
 const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
+const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
+const BURN_FLASH_MAX := 0.7
+const BURN_FLASH_DECAY := 6.0
 const MAX_RECOVERY_STEPS := 8
 const RECOVERY_STEP := 2.0
 
 var _knockback_velocity: Vector2 = Vector2.ZERO
+var _dash_velocity: Vector2 = Vector2.ZERO
 var _flash_tween: Tween
 var _squash_tween: Tween
 var _zoom_tween: Tween
 var _last_safe_position: Vector2 = Vector2.ZERO
+var _status_tint: Color = Color.WHITE
+var _burn_flash: float = 0.0
+
+
+func apply_knockback(direction: Vector2, strength: float) -> void:
+	_knockback_velocity = direction.normalized() * strength
 
 
 func _enter_tree() -> void:
@@ -56,12 +67,26 @@ func _ready() -> void:
 	var delivery := WeaponDelivery.new()
 	delivery.name = "WeaponDelivery"
 	add_child(delivery)
-	await get_tree().process_frame
-	await get_tree().process_frame
 	var guidance_center := _find_guidance_room_center()
+	var wm := get_parent().get_node_or_null("WorldManager")
+	if wm:
+		wm.tracking_position = Vector2(guidance_center)
+	var target_chunk := Vector2i(floori(float(guidance_center.x) / 256), floori(float(guidance_center.y) / 256))
+	while wm != null and not wm.chunks.has(target_chunk):
+		await get_tree().process_frame
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(guidance_center, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
 	_last_safe_position = position
+
+	var status := StatusComponent.new()
+	status.name = "StatusComponent"
+	add_child(status)
+
+	var visuals := StatusVisuals.new()
+	visuals.name = "StatusVisuals"
+	add_child(visuals)
+	visuals.setup(status, Vector2(BODY_WIDTH / 2.0, -20.0))   # above the charge bar
+	status.burn_tick.connect(_on_burn_tick)
 
 
 func _physics_process(delta: float) -> void:
@@ -81,6 +106,7 @@ func _physics_process(delta: float) -> void:
 	var input_dir := _get_input_direction()
 	if _knockback_velocity.length_squared() > 0.01:
 		_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
+	_decay_dash(delta)
 	_update_target()
 	var enemy_dir := _find_closest_enemy_direction()
 	var is_pushing_wall := input_dir != Vector2.ZERO and _is_blocked_by_terrain(input_dir)
@@ -96,8 +122,29 @@ func _physics_process(delta: float) -> void:
 		_facing_left = false
 	if _color_rect != null:
 		_color_rect.scale.x = -1.0 if _facing_left else 1.0
-	_apply_movement(input_dir, delta)
-	velocity += _knockback_velocity
+	var status := get_node_or_null("StatusComponent")
+	var speed_mult: float = 1.0
+	if status and status.is_movement_blocked():
+		input_dir = Vector2.ZERO
+		velocity = Vector2.ZERO
+	elif status:
+		speed_mult = status.get_move_speed_multiplier()
+		input_dir *= speed_mult
+	_apply_movement(input_dir, delta, speed_mult)
+	velocity += _knockback_velocity + _dash_velocity
+	var tint_status := get_node_or_null("StatusComponent")
+	if tint_status and _color_rect:
+		_status_tint = tint_status.get_blended_tint()
+		if _burn_flash > 0.0:
+			_burn_flash = maxf(0.0, _burn_flash - delta * BURN_FLASH_DECAY)
+		if not (_flash_tween and _flash_tween.is_valid()):
+			var m := _status_tint
+			if _burn_flash > 0.0:
+				m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
+			_color_rect.modulate = m
+		if HitReaction.vignette:
+			HitReaction.vignette.set_burn_intensity(
+				StatusRegistry.get_icon_alpha("on_fire", tint_status.get_stain("on_fire")))
 	move_and_slide()
 	_resolve_terrain_overlap()
 
@@ -200,7 +247,7 @@ func _resolve_terrain_overlap() -> void:
 	global_position = _last_safe_position
 
 
-func _apply_movement(input_dir: Vector2, delta: float) -> void:
+func _apply_movement(input_dir: Vector2, delta: float, speed_mult: float = 1.0) -> void:
 	if input_dir != Vector2.ZERO:
 		velocity += input_dir * acceleration * delta
 	else:
@@ -209,8 +256,9 @@ func _apply_movement(input_dir: Vector2, delta: float) -> void:
 			velocity = Vector2.ZERO
 		else:
 			velocity -= velocity.normalized() * friction_amount
-	if velocity.length() > max_speed:
-		velocity = velocity.normalized() * max_speed
+	var effective_max := max_speed * speed_mult
+	if velocity.length() > effective_max:
+		velocity = velocity.normalized() * effective_max
 
 
 func _can_see_enemy(enemy: Node2D) -> bool:
@@ -267,9 +315,22 @@ func is_facing_left() -> bool:
 	return _facing_left
 
 
+func request_dash(direction: Vector2, speed: float) -> void:
+	if direction.length_squared() < 0.0001:
+		return
+	_dash_velocity = direction.normalized() * speed
+
+
+func _decay_dash(delta: float) -> void:
+	if _dash_velocity.length_squared() > 0.01:
+		_dash_velocity *= exp(-DASH_DECAY * delta)
+	else:
+		_dash_velocity = Vector2.ZERO
+
+
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
 	if hit_dir.length_squared() > 0.0001:
-		_knockback_velocity = hit_dir.normalized() * KNOCKBACK_SPEED
+		apply_knockback(hit_dir, KNOCKBACK_SPEED)
 
 	_play_hit_flash()
 	_play_squash()
@@ -280,12 +341,22 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 		inventory.take_damage(damage, hit_dir)
 
 
+func apply_status_damage(amount: int) -> void:
+	var inventory := get_node_or_null("PlayerInventory")
+	if inventory:
+		inventory.take_status_damage(amount)
+
+
+func _on_burn_tick() -> void:
+	_burn_flash = 1.0
+
+
 func _play_hit_flash() -> void:
 	if _flash_tween and _flash_tween.is_valid():
 		_flash_tween.kill()
 	_color_rect.modulate = HIT_FLASH_COLOR
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(_color_rect, "modulate", Color.WHITE, 0.12)
+	_flash_tween.tween_property(_color_rect, "modulate", _status_tint, 0.12)
 
 
 func _play_squash() -> void:
@@ -334,10 +405,12 @@ func try_parry(attacker: Node, hit_pos: Vector2, hit_dir: Vector2) -> bool:
 			return false
 	var dir := hit_dir.normalized() if hit_dir.length_squared() > 0.0001 else Vector2.RIGHT
 	_knockback_velocity = -dir * PARRY_KNOCKBACK_SPEED
-	if attacker is Node2D and "_knockback_velocity" in attacker:
-		attacker._knockback_velocity = dir * PARRY_KNOCKBACK_SPEED
-	if "_parry_stun_remaining" in attacker:
-		attacker._parry_stun_remaining = PARRY_STUN_DURATION
+	if attacker != null:
+		if "apply_knockback" in attacker:
+			attacker.apply_knockback(dir, PARRY_KNOCKBACK_SPEED)
+		var attacker_status = attacker.get_node_or_null("StatusComponent")
+		if attacker_status != null:
+			attacker_status.add_timed_status("stun", PARRY_STUN_DURATION)
 	var midpoint: Vector2 = (global_position + (attacker.global_position if attacker is Node2D else hit_pos)) * 0.5
 	var nail_clash := preload("res://src/player/feedback/nail_clash_fx.gd")
 	nail_clash.play(midpoint, dir.orthogonal())

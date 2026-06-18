@@ -55,6 +55,187 @@ func place_gas(world_pos: Vector2, radius: float, density: int, velocity: Vector
 		terrain_physical.invalidate_rect(affected_rect)
 
 
+func place_steam(world_pos: Vector2, radius: float, density: int, velocity: Vector2i = Vector2i.ZERO) -> void:
+	var center_x := int(floor(world_pos.x))
+	var center_y := int(floor(world_pos.y))
+	var r := int(ceil(radius))
+	var affected: Dictionary = {}
+	for dx in range(-r, r + 1):
+		for dy in range(-r, r + 1):
+			if dx * dx + dy * dy > r * r:
+				continue
+			var wx := center_x + dx
+			var wy := center_y + dy
+			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
+			if not world_manager.chunks.has(chunk_coord):
+				continue
+			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
+			if not affected.has(chunk_coord):
+				affected[chunk_coord] = []
+			affected[chunk_coord].append(local)
+	var clamped_density: int = clampi(density, 0, 255)
+	var vx := clampi(velocity.x + 8, 0, 15)
+	var vy := clampi(velocity.y + 8, 0, 15)
+	var packed_velocity: int = (vx << 4) | vy
+	for chunk_coord in affected:
+		var chunk: Chunk = world_manager.chunks[chunk_coord]
+		var data: PackedByteArray = world_manager.rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
+		for pixel_pos: Vector2i in affected[chunk_coord]:
+			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
+			if data[idx] != MaterialRegistry.MAT_AIR:
+				continue
+			data[idx] = MaterialRegistry.MAT_STEAM
+			data[idx + 1] = clamped_density
+			data[idx + 2] = 0
+			data[idx + 3] = packed_velocity
+			modified = true
+		if modified:
+			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
+
+	if terrain_physical:
+		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
+
+
+func place_oil_splash(world_pos: Vector2, radius: float, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	var center_x := int(floor(world_pos.x))
+	var center_y := int(floor(world_pos.y))
+	var r := int(ceil(radius))
+	var r_sq := float(r * r)
+	var bias_len := bias_dir.length()
+	var bias := Vector2.ZERO
+	if bias_len > 0.0001:
+		bias = bias_dir / bias_len
+	var affected: Dictionary = {}
+	for dx in range(-r, r + 1):
+		for dy in range(-r, r + 1):
+			var d_sq := float(dx * dx + dy * dy)
+			if d_sq > r_sq:
+				continue
+			var t : float = 1.0 - sqrt(d_sq) / max(1.0, float(r))
+			var keep := 0.35 + 0.65 * t
+			if bias != Vector2.ZERO and (dx != 0 or dy != 0):
+				var cell_dir := Vector2(float(dx), float(dy)).normalized()
+				keep += 0.35 * cell_dir.dot(bias)
+			if randf() > keep:
+				continue
+			var wx := center_x + dx
+			var wy := center_y + dy
+			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
+			if not world_manager.chunks.has(chunk_coord):
+				continue
+			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
+			if not affected.has(chunk_coord):
+				affected[chunk_coord] = []
+			affected[chunk_coord].append([local, Vector2(float(dx), float(dy))])
+	for chunk_coord in affected:
+		var chunk: Chunk = world_manager.chunks[chunk_coord]
+		var data: PackedByteArray = world_manager.rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
+		for entry in affected[chunk_coord]:
+			var pixel_pos: Vector2i = entry[0]
+			var dir: Vector2 = entry[1]
+			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
+			if data[idx] != MaterialRegistry.MAT_AIR:
+				continue
+			data[idx] = MaterialRegistry.MAT_OIL
+			data[idx + 1] = clampi(200 + randi_range(-40, 55), 1, 255)
+			data[idx + 2] = 0
+			var dir_normalized := dir
+			if dir.length_squared() > 0.0001:
+				dir_normalized = dir.normalized()
+			elif bias != Vector2.ZERO:
+				dir_normalized = bias
+			var jitter_angle := randf_range(-0.6, 0.6)
+			dir_normalized = dir_normalized.rotated(jitter_angle)
+			var speed := outward_speed * randf_range(0.6, 1.4)
+			if bias != Vector2.ZERO:
+				dir_normalized = (dir_normalized + bias * 0.6).normalized()
+			var vel := (dir_normalized * speed) / 60.0
+			var vx := clampi(int(round(vel.x)) + 8, 0, 15)
+			var vy := clampi(int(round(vel.y)) + 8, 0, 15)
+			data[idx + 3] = (vx << 4) | vy
+			modified = true
+		if modified:
+			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
+
+	if terrain_physical:
+		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
+
+
+func place_gas_splash(world_pos: Vector2, radius: float, density: int, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	var center_x := int(floor(world_pos.x))
+	var center_y := int(floor(world_pos.y))
+	var r := int(ceil(radius))
+	var r_sq := float(r * r)
+	var bias_len := bias_dir.length()
+	var bias := Vector2.ZERO
+	if bias_len > 0.0001:
+		bias = bias_dir / bias_len
+	var clamped_density: int = clampi(density, 0, 255)
+	var affected: Dictionary = {}
+	for dx in range(-r, r + 1):
+		for dy in range(-r, r + 1):
+			var d_sq := float(dx * dx + dy * dy)
+			if d_sq > r_sq:
+				continue
+			var t : float = 1.0 - sqrt(d_sq) / max(1.0, float(r))
+			var keep := 0.35 + 0.65 * t
+			if bias != Vector2.ZERO and (dx != 0 or dy != 0):
+				var cell_dir := Vector2(float(dx), float(dy)).normalized()
+				keep += 0.35 * cell_dir.dot(bias)
+			if randf() > keep:
+				continue
+			var wx := center_x + dx
+			var wy := center_y + dy
+			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
+			if not world_manager.chunks.has(chunk_coord):
+				continue
+			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
+			if not affected.has(chunk_coord):
+				affected[chunk_coord] = []
+			affected[chunk_coord].append([local, Vector2(float(dx), float(dy))])
+	for chunk_coord in affected:
+		var chunk: Chunk = world_manager.chunks[chunk_coord]
+		var data: PackedByteArray = world_manager.rd.texture_get_data(chunk.rd_texture, 0)
+		var modified := false
+		for entry in affected[chunk_coord]:
+			var pixel_pos: Vector2i = entry[0]
+			var dir: Vector2 = entry[1]
+			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
+			if data[idx] != MaterialRegistry.MAT_AIR:
+				continue
+			data[idx] = MaterialRegistry.MAT_GAS
+			data[idx + 1] = clamped_density
+			data[idx + 2] = 0
+			var dir_normalized := dir
+			if dir.length_squared() > 0.0001:
+				dir_normalized = dir.normalized()
+			elif bias != Vector2.ZERO:
+				dir_normalized = bias
+			var jitter_angle := randf_range(-0.6, 0.6)
+			dir_normalized = dir_normalized.rotated(jitter_angle)
+			var speed := outward_speed * randf_range(0.6, 1.4)
+			if bias != Vector2.ZERO:
+				dir_normalized = (dir_normalized + bias * 0.6).normalized()
+			var vel := (dir_normalized * speed) / 60.0
+			var vx := clampi(int(round(vel.x)) + 8, 0, 15)
+			var vy := clampi(int(round(vel.y)) + 8, 0, 15)
+			data[idx + 3] = (vx << 4) | vy
+			modified = true
+		if modified:
+			world_manager.rd.texture_update(chunk.rd_texture, 0, data)
+			world_manager.mark_terrain_dirty(chunk.coord)
+
+	if terrain_physical:
+		var affected_rect := Rect2i(center_x - r, center_y - r, r * 2 + 1, r * 2 + 1)
+		terrain_physical.invalidate_rect(affected_rect)
+
+
 func place_lava(world_pos: Vector2, radius: float) -> void:
 	var center_x := int(floor(world_pos.x))
 	var center_y := int(floor(world_pos.y))
@@ -172,7 +353,7 @@ func place_material(world_pos: Vector2, radius: float, material_id: int) -> void
 # Place a material blob with optional noisy edges. When edge_jitter > 0, the
 # disc's effective radius varies per-angle using a cheap layered-sine noise seeded
 # by `noise_seed`, producing rough natural shapes instead of perfect circles.
-func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0) -> void:
+func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0, only_chunks: Dictionary = {}) -> void:
 	var center_x := int(floor(world_pos.x))
 	var center_y := int(floor(world_pos.y))
 	var max_radius: float = radius * (1.0 + max(edge_jitter, 0.0))
@@ -199,6 +380,8 @@ func place_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 			var wy := center_y + dy
 			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
 			if not world_manager.chunks.has(chunk_coord):
+				continue
+			if not only_chunks.is_empty() and not only_chunks.has(chunk_coord):
 				continue
 			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
 			if not affected.has(chunk_coord):
@@ -229,7 +412,11 @@ func place_material_blob(world_pos: Vector2, radius: float, material_id: int, no
 		terrain_physical.invalidate_rect(affected_rect)
 
 
-func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int) -> void:
+# `only_chunks`, when non-empty, restricts writes to those chunk coords. The
+# stamp-replay path (composition_dispatcher) uses it so re-issuing a cross-chunk
+# stamp for a newly loaded chunk never re-fills already-loaded, possibly
+# player-edited chunks (carved holes are MAT_AIR and would otherwise heal).
+func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int, only_chunks: Dictionary = {}) -> void:
 	if outer_radius <= 0.0 or outer_radius <= inner_radius:
 		return
 	var center_x := int(floor(world_pos.x))
@@ -247,6 +434,8 @@ func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: 
 			var wy := center_y + dy
 			var chunk_coord := Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wy) / CHUNK_SIZE))
 			if not world_manager.chunks.has(chunk_coord):
+				continue
+			if not only_chunks.is_empty() and not only_chunks.has(chunk_coord):
 				continue
 			var local := Vector2i(posmod(wx, CHUNK_SIZE), posmod(wy, CHUNK_SIZE))
 			if not affected.has(chunk_coord):

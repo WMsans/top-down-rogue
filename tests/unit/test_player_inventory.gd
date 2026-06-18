@@ -64,3 +64,11 @@ func test_has_empty_weapon_slot() -> void:
 	inv.equip_weapon(1, Weapon.new())
 	inv.equip_weapon(2, Weapon.new())
 	assert_that(inv.has_empty_weapon_slot()).is_false()
+
+
+func test_take_status_damage_emits_damaged_signal() -> void:
+	var inv: PlayerInventory = auto_free(PlayerInventory.new())
+	add_child(inv)
+	var monitor = monitor_signals(inv)
+	inv.take_status_damage(7)
+	await assert_signal(monitor).is_emitted("damaged", [7])

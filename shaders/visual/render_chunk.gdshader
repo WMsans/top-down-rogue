@@ -212,10 +212,19 @@ void fragment() {
 	// --- Fluid overlay: remember the tint and fall through as if this cell were air. ---
 	vec4 fluid_tint = vec4(0.0);
 	float fluid_alpha = 0.0;
-	if (mat == MAT_GAS || mat == MAT_LAVA || mat == MAT_BLOOD) {
+	if (mat == MAT_GAS || mat == MAT_STEAM || mat == MAT_LAVA || mat == MAT_WATER || mat == MAT_BLOOD) {
 		vec4 tint = MATERIAL_TINT[mat];
 		fluid_tint = vec4(tint.rgb * MATERIAL_GLOW[mat], 1.0);
 		// Ensure visibility even at low density: minimum 25% alpha, scales to tint.a at max
+		fluid_alpha = mix(0.25, tint.a, data.g);
+		mat = MAT_AIR;
+	}
+
+	if (mat == MAT_OIL) {
+		vec4 tint = MATERIAL_TINT[MAT_OIL];
+		vec3 oil_color = tint.rgb * effective_glow(MAT_OIL, data.b);
+		oil_color = apply_temperature_tint(oil_color, data.b);
+		fluid_tint = vec4(oil_color, 1.0);
 		fluid_alpha = mix(0.25, tint.a, data.g);
 		mat = MAT_AIR;
 	}

@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 MaterialRegistry="*res://src/autoload/material_registry.gd"
+StatusRegistry="*res://src/autoload/status_registry.gd"
 BiomeRegistry="*res://src/autoload/biome_registry.gd"
 LevelManager="*res://src/autoload/level_manager.gd"
 UiTheme="*res://src/ui/ui_theme.gd"
@@ -86,10 +87,12 @@ inventory={
 
 [layer_names]
 
+2d_physics/layer_3="enemy_body"
 2d_physics/layer_8="attackable_hit"
 
 [physics]
 
+common/max_physics_steps_per_frame=2
 3d/physics_engine="Jolt Physics"
 
 [rendering]

@@ -7,6 +7,7 @@ signal health_changed(current: int, maximum: int)
 signal weapon_changed(slot: int)
 signal modifier_changed(weapon_slot: int, modifier_slot: int)
 signal player_died()
+signal damaged(amount: int)
 
 @export var max_health: int = 100
 @export var invincibility_duration: float = 1.0
@@ -92,6 +93,7 @@ func take_damage(amount: int, hit_direction: Vector2 = Vector2.ZERO) -> void:
 		HitReaction.vignette.pulse(float(amount))
 
 	health_changed.emit(_current_health, max_health)
+	damaged.emit(amount)
 	if _current_health <= 0:
 		if GameModeManager.is_creative():
 			_current_health = max_health
@@ -101,6 +103,29 @@ func take_damage(amount: int, hit_direction: Vector2 = Vector2.ZERO) -> void:
 			if _color_rect:
 				_color_rect.visible = true
 			player_died.emit()
+
+
+func take_status_damage(amount: int) -> void:
+	# Damage-over-time path: bypasses invincibility frames and the heavy hit
+	# reaction so burn drains health smoothly. Still triggers death.
+	if _is_dead or amount <= 0:
+		return
+	_current_health = maxi(_current_health - amount, 0)
+	health_changed.emit(_current_health, max_health)
+	damaged.emit(amount)
+	if _current_health <= 0:
+		if GameModeManager.is_creative():
+			_current_health = max_health
+			health_changed.emit(_current_health, max_health)
+		else:
+			_is_dead = true
+			if _color_rect:
+				_color_rect.visible = true
+			player_died.emit()
+
+
+func get_health_fraction() -> float:
+	return float(_current_health) / float(maxi(1, max_health))
 
 
 func heal(amount: int) -> void:

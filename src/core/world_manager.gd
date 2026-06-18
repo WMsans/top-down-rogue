@@ -20,10 +20,19 @@ var shadow_grid: Node = null
 
 var _gen_uniform_sets_to_free: Array[RID] = []
 
-var _light_frame_counter := 0
-var _light_dispatch_buckets: Array[Array] = []   # 5 slots, each = Array[Vector2i]
+var _light_dispatch_cursor := 0                  # stable round-robin cursor for >cap visible chunks
 signal chunks_generated(new_coords: Array[Vector2i])
 signal chunk_unloaded(coord: Vector2i)
+
+var swarm_grid: RefCounted = preload("res://src/core/swarm_grid.gd").new(32.0)
+var encounter_director: EncounterDirector = EncounterDirector.new()
+
+var nav_field  # NavField
+
+# Max new chunks to create+generate per frame; the rest stay "desired but not
+# loaded" and are picked up on following frames, spreading the populate/decor/
+# light-bake cost instead of spiking it in one frame.
+const MAX_NEW_CHUNKS_PER_FRAME := 2
 
 func _ready() -> void:
 	add_to_group("world_manager")
@@ -41,6 +50,7 @@ func _ready() -> void:
 	compute_device.init_shaders()
 	compute_device.init_dummy_texture()
 	compute_device.init_collider_storage_buffer()
+	compute_device.init_solidity_flag_buffer()
 	compute_device.render_shader = preload("res://shaders/visual/render_chunk.gdshader")
 	compute_device.init_material_textures()
 	compute_device.init_gen_stamp_buffer()
@@ -73,13 +83,12 @@ func _ready() -> void:
 	lights_container.name = "LightsContainer"
 	add_child(lights_container)
 
-	_light_dispatch_buckets.resize(5)
-	for i in range(5):
-		_light_dispatch_buckets[i] = []
-
 	TerrainSurface.register_adapter(self)
+	nav_field = preload("res://src/core/nav/nav_field.gd").new(self)
 
 func mark_terrain_dirty(coord: Vector2i) -> void:
+	# Nav grid is now fed by the collider dispatch's passability output (via
+	# TerrainCollisionHelper), so only the collision helper is marked here.
 	if _collision_helper != null:
 		_collision_helper.mark_dirty(coord)
 
@@ -92,14 +101,33 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	var attackable := get_tree().get_nodes_in_group("attackable")
+	swarm_grid.rebuild(attackable)
+	encounter_director.update(tracking_position, attackable)
 	_update_chunks()
+	for coord in compute_device.read_solidity_flags(chunks):
+		mark_terrain_dirty(coord)
 	_run_simulation()
 	_collision_helper.rebuild_dirty(chunks, delta)
+	if nav_field != null:
+		nav_field.update(tracking_position, delta)
 	_run_terrain_probes()
 	_update_lights()
 	_drain_terrain_impacts()
 	terrain_physical.set_center(Vector2i(tracking_position))
 
+
+# Pure selection of which desired chunks to create this frame: skip already-loaded
+# coords, take at most `cap` in desired order. Static + side-effect-free for testing.
+static func _select_new_chunks(desired: Array, loaded: Dictionary, cap: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for coord in desired:
+		if loaded.has(coord):
+			continue
+		if out.size() >= cap:
+			break
+		out.append(coord)
+	return out
 
 func _update_chunks() -> void:
 	for us in _gen_uniform_sets_to_free:
@@ -118,11 +146,9 @@ func _update_chunks() -> void:
 	for coord in to_remove:
 		chunk_manager.unload_chunk(coord)
 
-	var new_chunks: Array[Vector2i] = []
-	for coord in desired:
-		if not chunks.has(coord):
-			chunk_manager.create_chunk(coord)
-			new_chunks.append(coord)
+	var new_chunks: Array[Vector2i] = _select_new_chunks(desired, chunks, MAX_NEW_CHUNKS_PER_FRAME)
+	for coord in new_chunks:
+		chunk_manager.create_chunk(coord)
 
 	if not new_chunks.is_empty():
 		var stamp_bytes := LevelManager.build_stamp_bytes(new_chunks)
@@ -200,6 +226,14 @@ func place_blood(world_pos: Vector2, radius: float, outward_speed: float, bias_d
 	terrain_modifier.place_blood(world_pos, radius, outward_speed, bias_dir)
 
 
+func place_oil_splash(world_pos: Vector2, radius: float, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	terrain_modifier.place_oil_splash(world_pos, radius, outward_speed, bias_dir)
+
+
+func place_gas_splash(world_pos: Vector2, radius: float, density: int, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	terrain_modifier.place_gas_splash(world_pos, radius, density, outward_speed, bias_dir)
+
+
 func disperse_materials_in_arc(origin: Vector2, direction: Vector2, radius: float, arc_angle: float, push_speed: float, materials: Array[int]) -> void:
 	terrain_modifier.disperse_materials_in_arc(origin, direction, radius, arc_angle, push_speed, materials)
 
@@ -212,16 +246,20 @@ func place_material(world_pos: Vector2, radius: float, material_id: int) -> void
 	terrain_modifier.place_material(world_pos, radius, material_id)
 
 
-func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0) -> void:
-	terrain_modifier.place_material_blob(world_pos, radius, material_id, noise_seed, edge_jitter)
+func place_material_blob(world_pos: Vector2, radius: float, material_id: int, noise_seed: int = 0, edge_jitter: float = 0.0, only_chunks: Dictionary = {}) -> void:
+	terrain_modifier.place_material_blob(world_pos, radius, material_id, noise_seed, edge_jitter, only_chunks)
 
 
-func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int) -> void:
-	terrain_modifier.place_material_ring(world_pos, inner_radius, outer_radius, material_id)
+func place_material_ring(world_pos: Vector2, inner_radius: float, outer_radius: float, material_id: int, only_chunks: Dictionary = {}) -> void:
+	terrain_modifier.place_material_ring(world_pos, inner_radius, outer_radius, material_id, only_chunks)
 
 
 func place_fire(world_pos: Vector2, radius: float) -> void:
 	terrain_modifier.place_fire(world_pos, radius)
+
+
+func place_steam(world_pos: Vector2, radius: float, density: int) -> void:
+	terrain_modifier.place_steam(world_pos, radius, density)
 
 
 func get_active_chunk_coords() -> Array[Vector2i]:
@@ -393,24 +431,40 @@ func _update_lights() -> void:
 			for j in range(min(decoded.size(), 16)):
 				chunk.hazard_cells[j] = int(decoded[j].get("hazard", 0))
 
-	# --- Dispatch: 1/5 of visible chunks each frame ---
-	_light_frame_counter = (_light_frame_counter + 1) % 5
-
+	# --- Dispatch: refresh every visible chunk each frame. ---
+	# Previously this dispatched only 1/5 of chunks per frame, bucketed by each chunk's
+	# index in the per-frame-rebuilt `active_coords` array. Under movement, chunks
+	# load/unload so the array reorders and its size changes, shifting every chunk's
+	# index and the bucket size each frame — a chunk near the player could miss its
+	# bucket window for dozens of frames, the 1-5 s movement-only light latency.
+	# Dispatch is cheap (a few tiny compute jobs + the single coalesced readback), so
+	# refresh all active chunks every frame: low latency, independent of movement.
 	var active_coords: Array[Vector2i] = []
 	for coord in chunks:
 		active_coords.append(coord)
 
-	var bucket_idx := _light_frame_counter
-	_light_dispatch_buckets[bucket_idx].clear()
+	var dispatch_coords := active_coords
+	if active_coords.size() > ComputeDevice.LIGHT_MAX_ACTIVE_CHUNKS:
+		dispatch_coords = _select_light_dispatch_window(active_coords)
 
-	var bucket_size := maxi(1, ceili(float(active_coords.size()) / 5.0))
-	var start := bucket_idx * bucket_size
-	if start < active_coords.size():
-		var end := mini(start + bucket_size, active_coords.size())
-		for i in range(start, end):
-			_light_dispatch_buckets[bucket_idx].append(active_coords[i])
+	compute_device.dispatch_light_pack(chunks, dispatch_coords)
 
-	compute_device.dispatch_light_pack(chunks, _light_dispatch_buckets[bucket_idx])
+
+## When more chunks are visible than the coalesced light buffer can hold in one
+## frame, walk them in a stable sorted order with a persistent cursor so every chunk
+## is still covered within ceil(N / cap) frames — regardless of load/unload churn.
+func _select_light_dispatch_window(active_coords: Array[Vector2i]) -> Array[Vector2i]:
+	var cap: int = ComputeDevice.LIGHT_MAX_ACTIVE_CHUNKS
+	var sorted := active_coords.duplicate()
+	sorted.sort()
+	var n := sorted.size()
+	if _light_dispatch_cursor >= n:
+		_light_dispatch_cursor = 0
+	var window: Array[Vector2i] = []
+	for i in range(cap):
+		window.append(sorted[(_light_dispatch_cursor + i) % n])
+	_light_dispatch_cursor = (_light_dispatch_cursor + cap) % n
+	return window
 
 const MAX_IMPACTS_PER_FRAME := 16
 
@@ -433,11 +487,7 @@ func reset() -> void:
 		child.queue_free()
 	for child in lights_container.get_children():
 		child.queue_free()
-	_light_dispatch_buckets.clear()
-	_light_dispatch_buckets.resize(5)
-	for i in range(5):
-		_light_dispatch_buckets[i] = []
-	_light_frame_counter = 0
+	_light_dispatch_cursor = 0
 	compute_device.light_first_frame = true
 	compute_device.light_write_index = 0
 	compute_device.light_dispatch_manifests[0] = PackedInt32Array()

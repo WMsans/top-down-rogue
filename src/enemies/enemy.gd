@@ -18,12 +18,20 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var is_elite: bool = false
 @export var elite_ability: int = EliteAbility.NONE
 @export var separation_radius: float = 16.0
-@export var min_attack_settle_time: float = 0.5
+@export var leash_radius: float = 280.0
+@export var damage_scale: float = 1.0
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
+const DEFAULT_BODY_RADIUS: float = 8.0
+# Max distance moved per collision sub-step. Matches NavField.CELL so a single
+# step never skips over a solid cell (prevents knockback tunneling through walls).
+const MOVE_STEP_PX: float = 8.0
 const FLASH_COLOR: Color = Color(3.0, 3.0, 3.0)
 const FLASH_DECAY: float = 0.12
+const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
+const BURN_FLASH_MAX := 0.7
+const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
 
@@ -32,28 +40,36 @@ const TARGETED_COOLDOWN_MULT: float = 0.6
 const PASSIVE_SPEED_MULT: float = 0.7
 const PASSIVE_COOLDOWN_MULT: float = 1.5
 
+
 var health: int
 var drop_table: DropTable = null
 var weapon: Weapon = null
 var _knockback_velocity: Vector2 = Vector2.ZERO
+var _body_radius: float = DEFAULT_BODY_RADIUS
 var _base_modulate: Color = Color.WHITE
+var _burn_flash: float = 0.0
 var _flash_tween: Tween = null
 var _squash_tween: Tween = null
 var _death_tween: Tween = null
 
 var _state: int = State.WANDER
 var _state_timer: float = 0.0
-var _settle_timer: float = 0.0
+
 var _prev_state: int = State.WANDER
 var _player_ref: Node2D = null
+var _world_manager: Node = null
+var _status_component: Node = null
 var _attack_range: float = 32.0
 var _player_in_range: bool = false
+var _aggroed: bool = false
 var _speed_base: float = 0.0
 var _teleport_cooldown: float = 0.0
-var _parry_stun_remaining: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
+var _director = null
+
+var _attack_started: bool = false
 
 var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
@@ -65,14 +81,18 @@ var _exclaim_tween: Tween = null
 
 func _ready() -> void:
 	add_to_group("attackable")
+	add_to_group("gas_interactors")
+	_body_radius = _measure_body_radius()
 	health = max_health
 	_speed_base = speed
+	_apply_damage_scale()
 	motion_mode = MOTION_MODE_FLOATING
 
 	if is_elite:
 		_apply_elite_scaling()
-
-	_player_ref = get_tree().get_first_node_in_group("player")
+	if is_inside_tree():
+		_player_ref = get_tree().get_first_node_in_group("player")
+		_world_manager = get_tree().get_first_node_in_group("world_manager")
 
 	_weapon_visual = Node2D.new()
 	_weapon_visual.name = "WeaponVisual"
@@ -80,19 +100,6 @@ func _ready() -> void:
 	_weapon_sprite.name = "Sprite2D"
 	_weapon_visual.add_child(_weapon_sprite)
 	add_child(_weapon_visual)
-
-	var detection_area := Area2D.new()
-	detection_area.name = "DetectionArea"
-	detection_area.collision_layer = 0
-	detection_area.collision_mask = 1
-	var shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = detection_radius
-	shape.shape = circle
-	detection_area.add_child(shape)
-	detection_area.body_entered.connect(_on_detection_body_entered)
-	detection_area.body_exited.connect(_on_detection_body_exited)
-	add_child(detection_area)
 
 	_exclaim_label = Label.new()
 	_exclaim_label.name = "ExclaimLabel"
@@ -106,6 +113,17 @@ func _ready() -> void:
 
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
+
+	var status := StatusComponent.new()
+	status.name = "StatusComponent"
+	add_child(status)
+	_status_component = status
+
+	var visuals := StatusVisuals.new()
+	visuals.name = "StatusVisuals"
+	add_child(visuals)
+	visuals.setup(status, Vector2(0.0, -14.0))
+	status.burn_tick.connect(_on_burn_tick)
 
 
 func _apply_elite_scaling() -> void:
@@ -128,21 +146,24 @@ func _apply_elite_scaling() -> void:
 			pass  # dynamically applied in _process
 
 
+func _apply_damage_scale() -> void:
+	if weapon != null and damage_scale != 1.0:
+		weapon.damage *= damage_scale
+
+
 func _process(delta: float) -> void:
-	if _parry_stun_remaining > 0.0:
-		_parry_stun_remaining -= delta
-		# Keep cooldown at least as long as the remaining stun.
-		if _state == State.COOLDOWN and _state_timer < _parry_stun_remaining:
-			_state_timer = _parry_stun_remaining
+	if _state == State.DEATH:
+		_process_death(delta)
+		return
+
+	if _status_component != null and _status_component.is_stunned():
 		velocity = Vector2.ZERO
 		return
 
 	if _teleport_cooldown > 0.0:
 		_teleport_cooldown -= delta
 
-	if _state == State.DEATH:
-		_process_death(delta)
-		return
+	_update_player_in_range()
 
 	if _state == State.HURT:
 		_process_hurt(delta)
@@ -150,11 +171,6 @@ func _process(delta: float) -> void:
 	else:
 		_tick_knockback(delta)
 		_apply_enrage_if_needed()
-
-		if _player_in_range:
-			_settle_timer += delta
-		else:
-			_settle_timer = 0.0
 
 		match _state:
 			State.WANDER:
@@ -174,11 +190,24 @@ func _process(delta: float) -> void:
 			weapon.update_visual(delta, self)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if _state == State.DEATH:
 		return
-	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT:
-		move_and_slide()
+	var tint_status := _status_component
+	if tint_status:
+		_base_modulate = tint_status.get_blended_tint()
+		if _burn_flash > 0.0:
+			_burn_flash = maxf(0.0, _burn_flash - delta * BURN_FLASH_DECAY)
+		if not (_flash_tween and _flash_tween.is_valid()):
+			var sprite := get_node_or_null("Sprite2D")
+			if sprite:
+				var m := _base_modulate
+				if _burn_flash > 0.0:
+					m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
+				sprite.modulate = m
+	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT \
+			or (_state == State.ATTACK and _moves_during_attack()):
+		_move_with_clamp(delta)
 
 
 func _apply_enrage_if_needed() -> void:
@@ -203,6 +232,15 @@ func _process_idle(delta: float) -> void:
 		_change_state(State.CHASE)
 		return
 
+	if _get_director() != null and _world_manager != null and is_instance_valid(_world_manager):
+		var grid = _world_manager.swarm_grid
+		if grid != null:
+			var neighbors: Array = grid.query_neighbors(global_position)
+			if EncounterDirector.should_aggro_from_neighbors(self, neighbors):
+				_aggroed = true
+				_change_state(State.CHASE)
+				return
+
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
 		if _wander_is_paused:
@@ -221,30 +259,44 @@ func _process_idle(delta: float) -> void:
 
 func _process_chase(_delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
-		_change_state(State.WANDER)
-		return
-	if not _player_in_range:
-		_change_state(State.WANDER)
-		return
-	if not _can_see_player():
+		_aggroed = false
 		_change_state(State.WANDER)
 		return
 
 	var to_player := _player_ref.global_position - global_position
-	if to_player.length() < 1.0:
+	var dist := to_player.length()
+	var sees := _can_see_player()
+
+	if sees:
+		_aggroed = true
+	elif not _aggroed:
+		_change_state(State.WANDER)
+		return
+
+	if dist < 1.0:
 		velocity = Vector2.ZERO
 		return
 
-	var move_dir := to_player.normalized()
+	if sees and dist <= _attack_range:
+		velocity = Vector2.ZERO
+		_change_state(State.WINDUP)
+		return
+
+	var move_dir: Vector2
+	if sees:
+		move_dir = to_player.normalized()
+	else:
+		var fd := _nav_field_dir()
+		move_dir = fd if fd != Vector2.ZERO else to_player.normalized()
+
 	move_dir = _apply_separation(move_dir)
 	velocity = move_dir * _get_effective_speed()
 
-	if to_player.length() <= _attack_range and _settle_timer >= min_attack_settle_time:
-		velocity = Vector2.ZERO
-		_change_state(State.WINDUP)
-
 
 func _process_windup(delta: float) -> void:
+	if _status_component != null and _status_component.is_stunned():
+		_change_state(State.CHASE)
+		return
 	_state_timer -= delta
 	if not _can_see_player():
 		_hide_exclaim()
@@ -256,8 +308,22 @@ func _process_windup(delta: float) -> void:
 
 
 func _process_attack(_delta: float) -> void:
-	_execute_attack()
-	_change_state(State.COOLDOWN)
+	if _status_component != null and _status_component.is_stunned():
+		_change_state(State.CHASE)
+		return
+	if not _attack_started:
+		_attack_started = true
+		_execute_attack()
+	if not _attack_in_progress():
+		_change_state(State.COOLDOWN)
+
+
+func _attack_in_progress() -> bool:
+	return false
+
+
+func _moves_during_attack() -> bool:
+	return false
 
 
 func _process_cooldown(delta: float) -> void:
@@ -306,8 +372,13 @@ func _spawn_weapon_drop() -> void:
 
 
 func _apply_separation(move_dir: Vector2) -> Vector2:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return move_dir
+	var grid = _world_manager.swarm_grid
+	if grid == null:
+		return move_dir
 	var sep := Vector2.ZERO
-	for enemy in get_tree().get_nodes_in_group("attackable"):
+	for enemy in grid.query_neighbors(global_position):
 		if enemy == self or not is_instance_valid(enemy):
 			continue
 		var to_other: Vector2 = global_position - enemy.global_position
@@ -315,6 +386,82 @@ func _apply_separation(move_dir: Vector2) -> Vector2:
 		if dist < separation_radius and dist > 0.001:
 			sep += to_other.normalized() * ((separation_radius - dist) / separation_radius)
 	return (move_dir + sep * 0.5).normalized()
+
+
+func _nav_field_dir() -> Vector2:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return Vector2.ZERO
+	var nf = _world_manager.get("nav_field")
+	if nf == null:
+		return Vector2.ZERO
+	return nf.sample_direction(global_position)
+
+
+func _is_blocked(pos: Vector2) -> bool:
+	if _world_manager == null or not is_instance_valid(_world_manager):
+		return false
+	var nf = _world_manager.get("nav_field")
+	if nf == null:
+		return false
+	return nf.is_solid_world(pos)
+
+
+func _move_with_clamp(delta: float) -> void:
+	var motion := velocity * delta
+	# Sub-step so a single step never exceeds one nav cell. Without this, fast
+	# knockback can tunnel straight through a thin wall in one frame.
+	var steps := maxi(1, ceili(motion.length() / MOVE_STEP_PX))
+	var step := motion / float(steps)
+	for _i in range(steps):
+		if step.x != 0.0 and not _edge_blocked(Vector2(step.x, 0.0)):
+			global_position.x += step.x
+		elif step.x != 0.0:
+			step.x = 0.0
+			velocity.x = 0.0
+		if step.y != 0.0 and not _edge_blocked(Vector2(0.0, step.y)):
+			global_position.y += step.y
+		elif step.y != 0.0:
+			step.y = 0.0
+			velocity.y = 0.0
+		if step == Vector2.ZERO:
+			break
+
+
+## True if moving the body's leading edge by `step` (a single-axis delta) would
+## put part of the body inside a solid cell. Samples the leading face's centre
+## and both corners so the body half-width can't sink into a wall.
+func _edge_blocked(step: Vector2) -> bool:
+	var axis := step.normalized()
+	var perp := Vector2(-axis.y, axis.x)
+	var lead := global_position + axis * _body_radius + step
+	for t in [-1.0, 0.0, 1.0]:
+		if _is_blocked(lead + perp * (_body_radius * t)):
+			return true
+	return false
+
+
+## Largest half-extent of the body's collision shape, used for edge sampling.
+func _measure_body_radius() -> float:
+	for owner_id in get_shape_owners():
+		var xform: Transform2D = shape_owner_get_transform(owner_id)
+		for i in range(shape_owner_get_shape_count(owner_id)):
+			var shape: Shape2D = shape_owner_get_shape(owner_id, i)
+			var rect := Rect2()
+			if shape is CircleShape2D:
+				var r: float = (shape as CircleShape2D).radius
+				rect = Rect2(Vector2(-r, -r), Vector2(r, r) * 2.0)
+			elif shape is RectangleShape2D:
+				var half: Vector2 = (shape as RectangleShape2D).size * 0.5
+				rect = Rect2(-half, half * 2.0)
+			elif shape is CapsuleShape2D:
+				var cs := shape as CapsuleShape2D
+				var h := cs.height * 0.5 + cs.radius
+				rect = Rect2(Vector2(-cs.radius, -h), Vector2(cs.radius * 2.0, h * 2.0))
+			else:
+				continue
+			rect = xform * rect
+			return maxf(rect.size.x, rect.size.y) * 0.5
+	return DEFAULT_BODY_RADIUS
 
 
 func _change_state(new_state: int) -> void:
@@ -326,9 +473,10 @@ func _change_state(new_state: int) -> void:
 
 	_state = new_state
 	match new_state:
+		State.ATTACK:
+			_attack_started = false
 		State.WINDUP:
 			_state_timer = windup_duration
-			_settle_timer = 0.0
 			_show_exclaim()
 		State.COOLDOWN:
 			_state_timer = cooldown_duration * _get_cooldown_multiplier()
@@ -366,7 +514,12 @@ func _execute_attack() -> void:
 func _can_see_player() -> bool:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
-	var space_state := get_world_2d().direct_space_state
+	if not is_inside_tree():
+		return false
+	var world := get_world_2d()
+	if world == null:
+		return false
+	var space_state := world.direct_space_state
 	var query := PhysicsRayQueryParameters2D.create(global_position, _player_ref.global_position)
 	query.collision_mask = 1
 	query.exclude = [self, _player_ref]
@@ -393,9 +546,23 @@ func hit(damage: int) -> void:
 	_state_timer = hurt_duration
 
 
+func apply_status_damage(amount: int) -> void:
+	# Quiet DoT path: drains health without forcing HURT state.
+	if amount <= 0 or _state == State.DEATH:
+		return
+	if GameModeManager.is_creative():
+		amount = max_health
+	health -= amount
+	health_changed.emit(health, max_health)
+	_play_hit_flash()
+	if health <= 0:
+		_change_state(State.DEATH)
+		die()
+
+
 func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
 	if hit_dir.length_squared() > 0.0001:
-		_knockback_velocity += hit_dir.normalized() * KNOCKBACK_SPEED
+		apply_knockback(hit_dir, KNOCKBACK_SPEED)
 	var display_damage: int = max_health if GameModeManager.is_creative() else damage
 	var lethal: bool = display_damage >= health
 	var spec := HitSpec.new()
@@ -430,18 +597,19 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 
 
 func die() -> void:
+	var dir = _get_director()
+	if dir != null:
+		dir.unregister(self)
 	died.emit()
 	_on_death()
 
 
-func _on_detection_body_entered(body: Node) -> void:
-	if body.is_in_group("player"):
-		_player_in_range = true
-
-
-func _on_detection_body_exited(body: Node) -> void:
-	if body.is_in_group("player"):
+func _update_player_in_range() -> void:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		_player_in_range = false
+		return
+	var r: float = detection_radius
+	_player_in_range = global_position.distance_squared_to(_player_ref.global_position) <= r * r
 
 
 func _tick_knockback(delta: float) -> void:
@@ -451,11 +619,19 @@ func _tick_knockback(delta: float) -> void:
 	_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
 
 
+func apply_knockback(direction: Vector2, strength: float) -> void:
+	_knockback_velocity += direction.normalized() * strength
+
+
 func _set_base_modulate(c: Color) -> void:
 	_base_modulate = c
 	var sprite := get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.modulate = c
+
+
+func _on_burn_tick() -> void:
+	_burn_flash = 1.0
 
 
 func _play_hit_flash() -> void:
@@ -507,6 +683,18 @@ func _on_death() -> void:
 	pass
 
 
+func is_pursuing() -> bool:
+	return _aggroed
+
+
+func _get_director():
+	if _director != null:
+		return _director
+	if _world_manager != null and is_instance_valid(_world_manager):
+		_director = _world_manager.get("encounter_director")
+	return _director
+
+
 func get_facing_direction() -> Vector2:
 	if _player_ref and is_instance_valid(_player_ref):
 		var d := _player_ref.global_position - global_position
@@ -516,17 +704,32 @@ func get_facing_direction() -> Vector2:
 
 
 func _is_targeted() -> bool:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
-	return player.get("targeted_enemy") == self
+	return _player_ref.get("targeted_enemy") == self
 
 
 func _get_effective_speed() -> float:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	var base := _base_effective_speed()
+	if _status_component != null and is_instance_valid(_status_component):
+		base *= _status_component.get_move_speed_multiplier()
+	return _apply_catch_up(base)
+
+
+func _apply_catch_up(base: float) -> float:
+	if not _aggroed or _player_ref == null or not is_instance_valid(_player_ref):
+		return base
+	var dist := global_position.distance_to(_player_ref.global_position)
+	var player_speed: float = 120.0
+	if "max_speed" in _player_ref:
+		player_speed = _player_ref.max_speed
+	return EncounterDirector.catch_up_speed(base, dist, player_speed)
+
+
+func _base_effective_speed() -> float:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return speed
-	var target = player.get("targeted_enemy")
+	var target = _player_ref.get("targeted_enemy")
 	if target == null:
 		return speed
 	if target == self:
@@ -535,10 +738,9 @@ func _get_effective_speed() -> float:
 
 
 func _get_cooldown_multiplier() -> float:
-	var player = get_tree().get_first_node_in_group("player")
-	if player == null:
+	if _player_ref == null or not is_instance_valid(_player_ref):
 		return 1.0
-	var target = player.get("targeted_enemy")
+	var target = _player_ref.get("targeted_enemy")
 	if target == null:
 		return 1.0
 	if target == self:

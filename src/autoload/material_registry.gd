@@ -61,6 +61,7 @@ var MAT_OIL: int
 var MAT_EXPLODE_WAVE: int
 var MAT_DUST: int
 var MAT_BEDROCK: int
+var MAT_STEAM: int
 
 const HAZARD_LAVA := 1
 const HAZARD_FIRE := 2  # MAT_EXPLODE_WAVE acts as the fire/heat hazard
@@ -163,8 +164,9 @@ func _init_materials():
 	var mat_water := MaterialDef.new(
 		"WATER", "",
 		false, 0, 0,
-		true, true,
-		Color(0.2, 0.45, 0.75, 1.0)
+		false, false,
+		Color(0.2, 0.45, 0.75, 1.0),
+		true
 	)
 	mat_water.id = materials.size()
 	materials.append(mat_water)
@@ -233,6 +235,20 @@ func _init_materials():
 	mat_bedrock.id = materials.size()
 	materials.append(mat_bedrock)
 	MAT_BEDROCK = mat_bedrock.id
+
+	var mat_steam := MaterialDef.new(
+		"STEAM", "",
+		false, 0, 0,
+		false, false,
+		Color(0.9, 0.9, 0.9, 0.7),
+		true,
+		0,
+		1.0,
+		0.0
+	)
+	mat_steam.id = materials.size()
+	materials.append(mat_steam)
+	MAT_STEAM = mat_steam.id
 
 func get_hazard_bit(material_id: int) -> int:
 	if material_id < 0 or material_id >= materials.size():

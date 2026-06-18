@@ -1,12 +1,11 @@
 class_name GdAssertMessages
 extends Resource
 
-const WARN_COLOR = "#EFF883"
-const ERROR_COLOR = "#CD5C5C"
-const VALUE_COLOR = "#1E90FF"
-const SUB_COLOR :=  Color(1, 0, 0, .3)
-const ADD_COLOR :=  Color(0, 1, 0, .3)
 
+const SUB_COLOR :=  Color(1, 0, 0, .15)
+const ADD_COLOR :=  Color(0, 1, 0, .15)
+
+const NO_ORPHAN_DETAILS := "⚠️No details available. Run tests in debug mode to collect details."
 
 # Dictionary of control characters and their readable representations
 const CONTROL_CHARS = {
@@ -19,6 +18,11 @@ const CONTROL_CHARS = {
 	"\a": "<BEL>",  # Bell
 	"": "<ESC>"   # Escape
 }
+
+
+static var _warn_color :=  GdUnitEditorColorTheme.state_warning.to_html()
+static var _error_color := GdUnitEditorColorTheme.state_failure.to_html()
+static var _value_color := GdUnitEditorColorTheme.value_color.to_html()
 
 
 static func format_dict(value :Variant) -> String:
@@ -40,22 +44,40 @@ static func input_event_as_text(event :InputEvent) -> String:
 	var text := ""
 	if event is InputEventKey:
 		var key_event := event as InputEventKey
-		text += "InputEventKey : key='%s', pressed=%s, keycode=%d, physical_keycode=%s" % [
-					event.as_text(), key_event.pressed, key_event.keycode, key_event.physical_keycode]
+		text += """
+			InputEventKey : keycode=%s (%s) pressed: %s
+				physical_keycode: %s
+				location: %s
+				echo: %s""" % [
+					key_event.keycode,
+					key_event.as_text_keycode(),
+					key_event.pressed,
+					key_event.physical_keycode,
+					key_event.location,
+					key_event.echo]
 	else:
 		text += event.as_text()
 	if event is InputEventMouse:
 		var mouse_event := event as InputEventMouse
-		text += ", global_position %s" % mouse_event.global_position
+		text += """
+				global_position: %s""" % mouse_event.global_position
 	if event is InputEventWithModifiers:
 		var mouse_event := event as InputEventWithModifiers
-		text += ", shift=%s, alt=%s, control=%s, meta=%s, command=%s" % [
+		text += """
+				--------
+				mods: %s
+				shift: %s
+				alt: %s
+				control: %s
+				meta: %s
+				command: %s""" % [
+					mouse_event.get_modifiers_mask(),
 					mouse_event.shift_pressed,
 					mouse_event.alt_pressed,
 					mouse_event.ctrl_pressed,
 					mouse_event.meta_pressed,
 					mouse_event.command_or_control_autoremap]
-	return text
+	return text.dedent()
 
 
 static func _colored_string_div(characters: String) -> String:
@@ -102,49 +124,53 @@ static func _typed_value(value :Variant) -> String:
 
 
 static func _warning(error :String) -> String:
-	return "[color=%s]%s[/color]" % [WARN_COLOR, error]
+	return "[color=%s]%s[/color]" % [_warn_color, error]
 
 
 static func _error(error :String) -> String:
-	return "[color=%s]%s[/color]" % [ERROR_COLOR, error]
+	return "[color=%s]%s[/color]" % [_error_color, error]
 
 
 static func _nerror(number :Variant) -> String:
 	match typeof(number):
 		TYPE_INT:
-			return "[color=%s]%d[/color]" % [ERROR_COLOR, number]
+			return "[color=%s]%d[/color]" % [_error_color, number]
 		TYPE_FLOAT:
-			return "[color=%s]%f[/color]" % [ERROR_COLOR, number]
+			return "[color=%s]%f[/color]" % [_error_color, number]
 		_:
-			return "[color=%s]%s[/color]" % [ERROR_COLOR, str(number)]
+			return "[color=%s]%s[/color]" % [_error_color, str(number)]
+
+
+static func _colored(value: Variant, color: Color) -> String:
+	return "[color=%s]%s[/color]" % [color.to_html(), value]
 
 
 static func _colored_value(value :Variant) -> String:
 	match typeof(value):
 		TYPE_STRING, TYPE_STRING_NAME:
-			return "'[color=%s]%s[/color]'" % [VALUE_COLOR, _colored_string_div(str(value))]
+			return "'[color=%s]%s[/color]'" % [_value_color, _colored_string_div(str(value))]
 		TYPE_INT:
-			return "'[color=%s]%d[/color]'" % [VALUE_COLOR, value]
+			return "'[color=%s]%d[/color]'" % [_value_color, value]
 		TYPE_FLOAT:
-			return "'[color=%s]%s[/color]'" % [VALUE_COLOR, _typed_value(value)]
+			return "'[color=%s]%s[/color]'" % [_value_color, _typed_value(value)]
 		TYPE_COLOR:
-			return "'[color=%s]%s[/color]'" % [VALUE_COLOR, _typed_value(value)]
+			return "'[color=%s]%s[/color]'" % [_value_color, _typed_value(value)]
 		TYPE_OBJECT:
 			if value == null:
-				return "'[color=%s]<null>[/color]'" % [VALUE_COLOR]
+				return "'[color=%s]<null>[/color]'" % [_value_color]
 			if value is InputEvent:
 				var ie: InputEvent = value
-				return "[color=%s]<%s>[/color]" % [VALUE_COLOR, input_event_as_text(ie)]
+				return "[color=%s]<%s>[/color]" % [_value_color, input_event_as_text(ie)]
 			var obj_value: Object = value
 			if obj_value.has_method("_to_string"):
-				return "[color=%s]<%s>[/color]" % [VALUE_COLOR, str(value)]
-			return "[color=%s]<%s>[/color]" % [VALUE_COLOR, obj_value.get_class()]
+				return "[color=%s]<%s>[/color]" % [_value_color, str(value)]
+			return "[color=%s]<%s>[/color]" % [_value_color, obj_value.get_class()]
 		TYPE_DICTIONARY:
-			return "'[color=%s]%s[/color]'" % [VALUE_COLOR, format_dict(value)]
+			return "'[color=%s]%s[/color]'" % [_value_color, format_dict(value)]
 		_:
 			if GdArrayTools.is_array_type(value):
-				return "'[color=%s]%s[/color]'" % [VALUE_COLOR, _typed_value(value)]
-			return "'[color=%s]%s[/color]'" % [VALUE_COLOR, value]
+				return "'[color=%s]%s[/color]'" % [_value_color, _typed_value(value)]
+			return "'[color=%s]%s[/color]'" % [_value_color, value]
 
 
 
@@ -161,19 +187,54 @@ static func _index_report_as_table(index_reports :Array) -> String:
 	return table.replace("$cells", cells)
 
 
-static func orphan_detected_on_suite_setup(count :int) -> String:
-	return "%s\n Detected <%d> orphan nodes during test suite setup stage! [b]Check before() and after()![/b]" % [
-		_warning("WARNING:"), count]
+static func orphan_warning(orphans_count: int) -> String:
+	if EngineDebugger.is_active():
+		return """
+			%s Detected %s possible orphan nodes.
+				To collect detailed information, insert this block at the end of your test.
+				%s""".dedent().trim_prefix("\n") % [
+				_warning("WARNING:"),
+				_nerror(orphans_count),
+				_colored("""
+					[code]
+						await get_tree().process_frame
+						collect_orphan_node_details()
+					[/code]""".dedent().trim_prefix("\n"), GdUnitEditorColorTheme.value_color)
+				]
+	return """
+		%s Detected %s possible orphan nodes.
+			%s
+		""".dedent().trim_prefix("\n") % [
+			_warning("WARNING:"),
+			_nerror(orphans_count),
+			_warning(NO_ORPHAN_DETAILS)
+		]
 
 
-static func orphan_detected_on_test_setup(count :int) -> String:
-	return "%s\n Detected <%d> orphan nodes during test setup! [b]Check before_test() and after_test()![/b]" % [
-		_warning("WARNING:"), count]
+static func orphan_detected(orphan_count: int) -> String:
+	if EngineDebugger.is_active():
+		return """
+			%s Detected %s orphan nodes.""".dedent().trim_prefix("\n") % [
+				_warning("WARNING:"),
+				_nerror(orphan_count)
+			]
+	return """
+		%s Detected %s orphan nodes.
+			%s""".dedent().trim_prefix("\n") % [
+			_warning("WARNING:"),
+			_nerror(orphan_count),
+			_warning(NO_ORPHAN_DETAILS)
+		]
 
 
-static func orphan_detected_on_test(count :int) -> String:
-	return "%s\n Detected <%d> orphan nodes during test execution!" % [
-		_warning("WARNING:"), count]
+static func orphan_node_info(orphan_info: GdUnitOrphanNodeInfo) -> String:
+	var message := "<%s> Id:%s" % [
+		_colored(orphan_info._type, GdUnitEditorColorTheme.engine_type_color),
+		_colored(orphan_info._id, GdUnitEditorColorTheme.engine_type_color)
+	]
+	if orphan_info._stack_element == null:
+		message += _warning("\n\tNo source info available")
+	return message
 
 
 static func fuzzer_interuped(iterations: int, error: String) -> String:
@@ -186,6 +247,10 @@ static func fuzzer_interuped(iterations: int, error: String) -> String:
 
 static func test_timeout(timeout :int) -> String:
 	return "%s\n %s" % [_error("Timeout !"), _colored_value("Test timed out after %s" %  LocalTime.elapsed(timeout))]
+
+
+static func test_session_terminated() -> String:
+	return "%s" % _error("Test Session Terminated")
 
 
 # gdlint:disable = mixed-tabs-and-spaces

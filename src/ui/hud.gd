@@ -141,3 +141,5 @@ func _create_outline_panel() -> Panel:
 	p.add_theme_stylebox_override("panel", style)
 	_weapon_icon.add_child(p)
 	return p
+
+

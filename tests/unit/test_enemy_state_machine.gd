@@ -23,7 +23,7 @@ func test_transitions_to_wander_when_player_leaves() -> void:
 	e._player_in_range = false
 	e._player_ref = Node2D.new()
 	add_child(e._player_ref)
-	e._player_ref.global_position = Vector2(10, 0)
+	e._player_ref.global_position = Vector2(200, 0)
 	e._state = Enemy.State.CHASE
 	e._process(0.1)
 	assert_that(e._state).is_equal(Enemy.State.WANDER)
@@ -47,29 +47,30 @@ func test_death_on_zero_health() -> void:
 
 func test_elite_stat_scaling() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.max_health = 20
+	e.health = e.max_health
 	e.speed = 100.0
 	e.is_elite = true
-	e._ready()
+	e._apply_elite_scaling()
 	assert_that(e.max_health).is_equal(60)
 	assert_that(e.speed).is_greater(100.0)
 
 func test_elite_tank_speed() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.max_health = 20
+	e.health = e.max_health
 	e.speed = 100.0
 	e._speed_base = 100.0
 	e.is_elite = true
 	e.elite_ability = Enemy.EliteAbility.TANK
-	e._ready()
+	e._apply_elite_scaling()
 	assert_that(e.speed).is_equal(70.0)
 
 func test_elite_fast_windup_floor() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.health = e.max_health
 	e.windup_duration = 0.3
 	e.is_elite = true
 	e.elite_ability = Enemy.EliteAbility.FAST
-	e._ready()
+	e._apply_elite_scaling()
 	assert_that(e.windup_duration).is_equal(0.2)
 
 func test_wander_enters_pause_after_move() -> void:
@@ -83,6 +84,8 @@ func test_wander_enters_pause_after_move() -> void:
 
 func test_wander_stays_wander_without_player() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	await get_tree().process_frame
 	e._state = Enemy.State.WANDER
 	e._player_in_range = false
 	e._player_ref = null
@@ -112,7 +115,7 @@ func test_parry_stun_blocks_ai_tick() -> void:
 	var player_ref: Node2D = auto_free(Node2D.new())
 	add_child(player_ref)
 	e._player_ref = player_ref
-	e._parry_stun_remaining = 0.2
+	e._status_component.add_timed_status("stun", 0.2)
 	# Force state to CHASE so we'd normally see velocity change.
 	e._state = Enemy.State.CHASE
 	e.global_position = Vector2.ZERO
@@ -120,7 +123,8 @@ func test_parry_stun_blocks_ai_tick() -> void:
 	e._process(0.05)
 	# While stunned, AI should not have driven velocity toward player.
 	assert_that(e.velocity).is_equal(Vector2.ZERO)
-	assert_that(e._parry_stun_remaining).is_less(0.2)
+	e._status_component.tick(0.05)
+	assert_that(e._status_component.get_timed_remaining("stun")).is_less(0.2)
 
 func test_parry_stun_extends_cooldown() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
@@ -128,7 +132,145 @@ func test_parry_stun_extends_cooldown() -> void:
 	await get_tree().process_frame
 	e.cooldown_duration = 0.1
 	e._change_state(Enemy.State.COOLDOWN)
-	e._parry_stun_remaining = 0.5
+	e._status_component.add_timed_status("stun", 0.5)
 	e._process(0.05)
-	# After 0.05s, normal cooldown would be ~0.05 remaining; stun should keep it >= 0.4.
-	assert_that(e._state_timer).is_greater(0.3)
+	# Stun returns early from _process, so cooldown timer does not decrease.
+	assert_that(e._state_timer).is_equal(0.1)
+
+# Minimal stand-in for WorldManager exposing a swarm_grid for separation tests.
+class FakeWorld extends Node:
+	var swarm_grid = preload("res://src/core/swarm_grid.gd").new(32.0)
+
+func test_separation_uses_grid_neighbors_only() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e.global_position = Vector2(0, 0)
+	e.separation_radius = 16.0
+
+	# A crowding neighbour up-right from self.
+	var other: MockEnemy = auto_free(MockEnemy.new())
+	add_child(other)
+	other.global_position = Vector2(8, 4)
+
+	var world: FakeWorld = auto_free(FakeWorld.new())
+	add_child(world)
+	world.swarm_grid.rebuild([e, other])
+	e._world_manager = world
+
+	# Moving right; separation should bend the vector away from +X
+	# (its x-component drops below the raw 1.0).
+	var result: Vector2 = e._apply_separation(Vector2.RIGHT)
+	assert_bool(result.x < 1.0).is_true()
+
+func test_separation_without_world_returns_input() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	add_child(e)
+	e._world_manager = null
+	var result: Vector2 = e._apply_separation(Vector2.RIGHT)
+	assert_vector(result).is_equal(Vector2.RIGHT)
+
+
+func test_player_in_range_true_when_close() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.detection_radius = 100.0
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e.global_position = Vector2.ZERO
+	e._player_ref.global_position = Vector2(50, 0)
+	e._update_player_in_range()
+	assert_bool(e._player_in_range).is_true()
+
+func test_player_in_range_false_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.detection_radius = 100.0
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e.global_position = Vector2.ZERO
+	e._player_ref.global_position = Vector2(200, 0)
+	e._update_player_in_range()
+	assert_bool(e._player_in_range).is_false()
+
+func test_player_in_range_false_when_no_player() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e._player_ref = null
+	e._update_player_in_range()
+	assert_bool(e._player_in_range).is_false()
+
+
+func test_is_pursuing_reflects_aggro() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	assert_bool(e.is_pursuing()).is_false()
+	e._aggroed = true
+	assert_bool(e.is_pursuing()).is_true()
+
+func test_aggroed_enemy_does_not_leash_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.global_position = Vector2(10000, 0)  # well beyond leash_radius
+	e.global_position = Vector2.ZERO
+	e._aggroed = true
+	e._state = Enemy.State.CHASE
+	e._process_chase(0.1)
+	assert_that(e._state).is_equal(Enemy.State.CHASE)  # never gives up once aggroed
+
+
+func test_effective_speed_capped_below_player_when_far() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.speed = 60.0
+	e._speed_base = 60.0
+	e._aggroed = true
+	e._player_ref = auto_free(Node2D.new())
+	add_child(e._player_ref)
+	e._player_ref.set("max_speed", 120.0)
+	e._player_ref.global_position = Vector2(2000, 0)  # far -> ramps to cap
+	e.global_position = Vector2.ZERO
+	var s := e._get_effective_speed()
+	assert_float(s).is_equal_approx(114.0, 0.001)  # 120 * 0.95
+
+func test_effective_speed_uses_base_when_not_aggroed() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.speed = 60.0
+	e._speed_base = 60.0
+	e._aggroed = false
+	e._player_ref = null
+	assert_float(e._get_effective_speed()).is_equal_approx(60.0, 0.001)
+
+
+class _FakeWorld extends Node:
+	var swarm_grid
+	var encounter_director
+
+func test_contagion_aggros_idle_enemy_near_pursuer() -> void:
+	var d = EncounterDirector.new()
+	var world: Node = auto_free(_FakeWorld.new())
+	add_child(world)
+	world.encounter_director = d
+	world.swarm_grid = preload("res://src/core/swarm_grid.gd").new(64.0)
+
+	var idle: MockEnemy = auto_free(MockEnemy.new())
+	idle.global_position = Vector2.ZERO
+	idle._world_manager = world
+	idle._director = d
+	idle._state = Enemy.State.WANDER
+	idle._player_ref = null
+
+	var pursuer: MockEnemy = auto_free(MockEnemy.new())
+	pursuer.global_position = Vector2(30, 0)  # within CONTAGION_RADIUS (48)
+	pursuer._aggroed = true
+
+	world.swarm_grid.rebuild([idle, pursuer])
+	idle._process_idle(0.1)
+	assert_bool(idle._aggroed).is_true()
+	assert_that(idle._state).is_equal(Enemy.State.CHASE)
+
+
+func test_damage_scale_multiplies_weapon_damage_on_ready() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.weapon = MeleeWeapon.new()
+	e.weapon.damage = 5.0
+	e.damage_scale = 2.0
+	e._apply_damage_scale()
+	assert_float(e.weapon.damage).is_equal_approx(10.0, 0.001)
+
+
