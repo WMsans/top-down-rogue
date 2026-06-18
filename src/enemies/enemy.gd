@@ -211,6 +211,7 @@ func _physics_process(delta: float) -> void:
 	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT \
 			or (_state == State.ATTACK and _moves_during_attack()):
 		_move_with_clamp(delta)
+	_resolve_crowd_overlap()
 
 
 func _apply_enrage_if_needed() -> void:
