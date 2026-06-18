@@ -17,7 +17,8 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var cooldown_duration: float = 0.8
 @export var is_elite: bool = false
 @export var elite_ability: int = EliteAbility.NONE
-@export var separation_radius: float = 16.0
+@export var separation_radius: float = 22.0
+@export var separation_weight: float = 1.2
 @export var leash_radius: float = 280.0
 @export var damage_scale: float = 1.0
 
@@ -385,7 +386,9 @@ func _apply_separation(move_dir: Vector2) -> Vector2:
 		var dist: float = to_other.length()
 		if dist < separation_radius and dist > 0.001:
 			sep += to_other.normalized() * ((separation_radius - dist) / separation_radius)
-	return (move_dir + sep * 0.5).normalized()
+	if sep == Vector2.ZERO:
+		return move_dir
+	return (move_dir + sep * separation_weight).normalized()
 
 
 func _nav_field_dir() -> Vector2:
