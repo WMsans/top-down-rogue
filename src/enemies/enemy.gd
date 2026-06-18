@@ -433,8 +433,9 @@ func _resolve_crowd_overlap() -> void:
 
 
 ## Apply a small positional correction, clamped per-axis against solid cells so a
-## crowd in a corridor is never shoved into a wall. The cap keeps each axis step
-## under MOVE_STEP_PX, so single-step edge checking can't tunnel.
+## crowd in a corridor is never shoved into a wall. The caller caps total push at
+## CROWD_PUSH_CAP (4.0), well under MOVE_STEP_PX (8.0), so per-axis EDGE_CHECKS
+## cannot tunnel.
 func _apply_crowd_push(offset: Vector2) -> void:
 	if offset.x != 0.0 and not _edge_blocked(Vector2(offset.x, 0.0)):
 		global_position.x += offset.x
