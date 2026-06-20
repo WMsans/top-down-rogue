@@ -47,3 +47,15 @@ func test_negative_chunk_coords() -> void:
 	g.update_chunk(Vector2i(-1, -1), _region_with_block(0, 2, 248, 248, 256, 256))
 	# World pixel (-4,-4) lives in chunk (-1,-1) local (252,252) -> inside block.
 	assert_bool(g.is_solid_world(Vector2(-4, -4))).is_true()
+
+func test_get_tile_returns_set_tile() -> void:
+	var g := PassabilityGrid.new(8, 256, PackedByteArray())
+	var tile := PackedByteArray()
+	tile.resize(32 * 32)
+	tile.fill(1)
+	g.set_tile(Vector2i(2, -1), tile)
+	assert_that(g.get_tile(Vector2i(2, -1))).is_equal(tile)
+
+func test_get_tile_missing_returns_empty() -> void:
+	var g := PassabilityGrid.new(8, 256, PackedByteArray())
+	assert_that(g.get_tile(Vector2i(9, 9)).is_empty()).is_true()
