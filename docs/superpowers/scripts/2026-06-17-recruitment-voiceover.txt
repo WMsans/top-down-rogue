@@ -1,0 +1,31 @@
+# Voiceover lines extracted from 2026-06-17-recruitment-shooting-script.md
+# Lines are ordered by timestamp. Each line = one sentence/breath unit for TTS.
+# Blank lines separate sections. Lines starting with # are ignored.
+
+# === ACT 1, Scene 1.1: The Destructible World [0:10-0:20] ===
+I'm making an action roguelike.
+Kinda like Noita — every pixel is part of a physical simulation.
+This achieves fully desturctable terrain, and something interesting.
+
+# === ACT 1, Scene 1.2: The Living Elements [0:20-0:30] ===
+Gas and liquids flow and pool through the tunnels you carve.
+Fire ignites oil, water douses flames, while oil fuels them.
+That's why I said its kinda like Noita.
+
+# === ACT 2, Scene 2.1: The Engine [0:30-0:40] ===
+Under the hood, it's a GPU compute shader-driven physics simulation.
+Each chunk is 256 pixels — essentially a cellular automaton.
+Terrain syncs back to the CPU every 4 frames,
+so it can do things where pure-GPU approach can't, like lighting effects.
+
+# === ACT 2, Scene 2.2: The Systems [0:40-0:50] ===
+The rougelike build system is still in development, but it's roughly based on weapons and modifiers,
+with heavy Balatro and Noita influences — though this system will probably get a major overhaul.
+Although currently there's about 17,000 lines of GDScript in total, 
+there still isn't enough content yet to feel like a real roguelike, only combat and basic enemy AI are done.
+
+# === CTA & Closing [1:15-1:25] ===
+I'm currently looking for artists, musicians and game designers who are interested. 
+If this game interest you, 
+join the Discord, check out the repo, or just DM me for a chat.
+The game doesn't have an official name yet — let me know your ideas.
