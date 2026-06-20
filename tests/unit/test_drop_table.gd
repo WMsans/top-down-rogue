@@ -75,16 +75,17 @@ func test_from_enemy_tier_gold_amounts_easy() -> void:
 	assert_that(table.entries.size()).is_equal(1)
 	var entry: _DropTable.DropEntry = table.entries[0]
 	assert_that(entry.kind).is_equal(_DropTable.DropKind.GOLD)
-	assert_that(entry.min_count).is_equal(2)
-	assert_that(entry.max_count).is_equal(5)
-	assert_that(entry.gold_per_drop).is_equal(5)
+	assert_that(entry.min_count).is_equal(1)
+	assert_that(entry.max_count).is_equal(3)
+	assert_that(entry.gold_per_drop).is_equal(2)
 
 
 func test_from_enemy_tier_gold_amounts_hard() -> void:
 	var table := _DropTable.from_enemy_tier(_DropTable.EnemyTier.HARD, true, false, false)
 	var entry: _DropTable.DropEntry = table.entries[0]
-	assert_that(entry.min_count).is_equal(8)
-	assert_that(entry.max_count).is_equal(20)
+	assert_that(entry.min_count).is_equal(3)
+	assert_that(entry.max_count).is_equal(7)
+	assert_that(entry.gold_per_drop).is_equal(3)
 
 
 func test_roll_should_drop_weapon_always_true_at_full_weight() -> void:
@@ -116,3 +117,18 @@ func test_roll_modifier_for_enemy_can_return_null() -> void:
 			got_null = true
 			break
 	assert_that(got_null).is_true()
+
+
+func test_income_mult_floor_one_is_baseline() -> void:
+	assert_float(_DropTable.income_mult(1)).is_equal_approx(1.0, 0.0001)
+
+
+func test_income_mult_scales_with_depth() -> void:
+	assert_float(_DropTable.income_mult(3)).is_equal_approx(1.24, 0.0001)
+
+
+func test_effective_gold_applies_floor_and_biome() -> void:
+	assert_int(_DropTable.effective_gold(10, 1, 1.0)).is_equal(10)
+	assert_int(_DropTable.effective_gold(10, 3, 1.0)).is_equal(12)
+	assert_int(_DropTable.effective_gold(10, 1, 1.2)).is_equal(12)
+	assert_int(_DropTable.effective_gold(0, 1, 1.0)).is_equal(1)
