@@ -41,6 +41,7 @@ func _ready() -> void:
 func _setup_drop_table() -> void:
 	drop_table = DropTable.from_enemy_tier(enemy_tier, true, true, true)
 	drop_table.add_entry(DropTable.DropEntry.modifier_pool(1.0, DropTable.ItemTier.RARE, 1, 1))
+	drop_table.add_entry(DropTable.DropEntry.gold(1.0, 5, 8, 10))
 
 
 func _process(delta: float) -> void:
