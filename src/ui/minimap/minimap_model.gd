@@ -81,3 +81,28 @@ func is_revealed_world(world_pos: Vector2) -> bool:
 	if not _in_bounds(c):
 		return false
 	return reveal_img.get_pixel(c.x, c.y).r >= REVEAL_THRESHOLD
+
+
+func stamp_terrain(coord: Vector2i, tile: PackedByteArray) -> void:
+	if tile.size() < PASS_CELLS * PASS_CELLS:
+		return
+	var origin_cell := world_to_cell(Vector2(coord) * CHUNK)
+	var changed := false
+	for oy in CELLS_PER_CHUNK:
+		for ox in CELLS_PER_CHUNK:
+			var solid := false
+			for sy in 2:
+				for sx in 2:
+					var px := ox * 2 + sx
+					var py := oy * 2 + sy
+					if tile[py * PASS_CELLS + px] == 1:
+						solid = true
+			var dest := origin_cell + Vector2i(ox, oy)
+			if not _in_bounds(dest):
+				continue
+			var val := 1.0 if solid else 0.0
+			if val != terrain_img.get_pixel(dest.x, dest.y).r:
+				terrain_img.set_pixel(dest.x, dest.y, Color(val, val, val, 1.0))
+				changed = true
+	if changed:
+		terrain_tex.update(terrain_img)
