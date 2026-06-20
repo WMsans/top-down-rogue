@@ -65,6 +65,12 @@ static func effective_gold(base_per_drop: int, floor_number: int, biome_mult: fl
 	return maxi(1, int(round(float(base_per_drop) * income_mult(floor_number) * biome_mult)))
 
 
+static func biome_gold_mult() -> float:
+	if LevelManager.current_biome != null:
+		return LevelManager.current_biome.gold_multiplier
+	return 1.0
+
+
 func add_entry(entry: DropEntry) -> void:
 	entries.append(entry)
 

@@ -71,6 +71,7 @@ no_spawn = true
 [resource]
 script = ExtResource("3_silhp")
 display_name = "Magma Caverns"
+gold_multiplier = 0.9
 cave_noise_scale = 0.012
 cave_threshold = 0.5
 ridge_weight = 0.5
