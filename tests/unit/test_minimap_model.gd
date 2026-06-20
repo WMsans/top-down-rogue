@@ -69,3 +69,37 @@ func test_stamp_ignores_undersized_tile() -> void:
 	m.stamp_terrain(Vector2i(0, 0), PackedByteArray())  # must not crash
 	var c := m.world_to_cell(Vector2(128, 128))
 	assert_that(m.terrain_img.get_pixel(c.x, c.y).r < 0.5).is_true()
+
+const _SectorGrid = preload("res://src/core/sector_grid.gd")
+const _BiomeDef = preload("res://src/core/biome_def.gd")
+
+func _grid() -> _SectorGrid:
+	return _SectorGrid.new(12345, _BiomeDef.new())
+
+func test_scan_finds_twelve_bosses() -> void:
+	var m := MinimapModel.new()
+	var no := func(_s: Vector2i) -> bool: return false
+	m.scan_pois(_grid(), no, no)
+	var bosses := 0
+	for p in m.get_pois():
+		if p["type"] == MinimapModel.POI_BOSS:
+			bosses += 1
+	assert_that(bosses).is_equal(12)
+
+func test_scan_dispatches_elite_and_shop_predicates() -> void:
+	var m := MinimapModel.new()
+	var elite := func(s: Vector2i) -> bool: return s == Vector2i(2, 0)
+	var shop := func(s: Vector2i) -> bool: return s == Vector2i(-3, 1)
+	m.scan_pois(_grid(), shop, elite)
+	var kinds := {}
+	for p in m.get_pois():
+		kinds[p["type"]] = kinds.get(p["type"], 0) + 1
+	assert_that(kinds.get(MinimapModel.POI_ELITE, 0)).is_equal(1)
+	assert_that(kinds.get(MinimapModel.POI_SHOP, 0)).is_equal(1)
+
+func test_reset_clears_reveal() -> void:
+	var m := MinimapModel.new()
+	m.reveal_chunk(Vector2i(0, 0))
+	var no := func(_s: Vector2i) -> bool: return false
+	m.reset(_grid(), no, no)
+	assert_that(m.is_revealed_world(Vector2(128, 128))).is_false()

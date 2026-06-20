@@ -106,3 +106,38 @@ func stamp_terrain(coord: Vector2i, tile: PackedByteArray) -> void:
 				changed = true
 	if changed:
 		terrain_tex.update(terrain_img)
+
+
+func scan_pois(grid, shop_check: Callable, elite_check: Callable) -> void:
+	_pois.clear()
+	var n := _SectorGrid.WALL_INNER_SECTORS
+	for sy in range(-n, n + 1):
+		for sx in range(-n, n + 1):
+			var s := Vector2i(sx, sy)
+			if _SectorGrid.is_boss_anchor(s):
+				_pois.append({
+					"type": POI_BOSS,
+					"world_pos": Vector2(grid.sector_to_world_center(s)),
+					"always_visible": true,
+				})
+				continue
+			if elite_check.is_valid() and elite_check.call(s):
+				_pois.append({
+					"type": POI_ELITE,
+					"world_pos": Vector2(grid.sector_to_world_center(s)),
+					"always_visible": false,
+				})
+			elif shop_check.is_valid() and shop_check.call(s):
+				_pois.append({
+					"type": POI_SHOP,
+					"world_pos": Vector2(grid.sector_to_world_center(s)),
+					"always_visible": false,
+				})
+
+
+func reset(grid, shop_check: Callable, elite_check: Callable) -> void:
+	terrain_img.fill(Color(0, 0, 0, 1))
+	reveal_img.fill(Color(0, 0, 0, 1))
+	terrain_tex.update(terrain_img)
+	reveal_tex.update(reveal_img)
+	scan_pois(grid, shop_check, elite_check)
