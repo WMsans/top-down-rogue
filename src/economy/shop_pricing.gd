@@ -1,27 +1,39 @@
-# src/economy/shop_pricing.gd
+# Prices keyed by DropTable.ItemTier. Floor-1 baselines; scaled by price_mult().
 class_name ShopPricing
 
-# Prices keyed by DropTable.ItemTier. Tunable.
 const WEAPON_PRICE := {
-	DropTable.ItemTier.COMMON: 120,
-	DropTable.ItemTier.UNCOMMON: 200,
-	DropTable.ItemTier.RARE: 320,
+	DropTable.ItemTier.COMMON: 130,
+	DropTable.ItemTier.UNCOMMON: 220,
+	DropTable.ItemTier.RARE: 350,
 }
 const MODIFIER_PRICE := {
-	DropTable.ItemTier.COMMON: 30,
-	DropTable.ItemTier.UNCOMMON: 60,
-	DropTable.ItemTier.RARE: 100,
+	DropTable.ItemTier.COMMON: 50,
+	DropTable.ItemTier.UNCOMMON: 90,
+	DropTable.ItemTier.RARE: 150,
 }
-const REMOVE_BASE := 60
-const REMOVE_STEP := 30
+const REMOVE_BASE := 80
+const REMOVE_STEP := 40
+const PRICE_FLOOR_COEFF := 0.18
 
 
-static func price_for_weapon(weapon: Weapon) -> int:
-	return WEAPON_PRICE.get(weapon.rarity, WEAPON_PRICE[DropTable.ItemTier.COMMON])
+# Floor-depth price multiplier. floor_number <= 0 means "use LevelManager".
+static func price_mult(floor_number: int) -> float:
+	var n: int = floor_number if floor_number > 0 else LevelManager.floor_number
+	return 1.0 + PRICE_FLOOR_COEFF * float(maxi(n, 1) - 1)
 
 
-static func price_for_modifier_tier(tier: int) -> int:
-	return MODIFIER_PRICE.get(tier, MODIFIER_PRICE[DropTable.ItemTier.COMMON])
+static func price_for_weapon(weapon: Weapon, floor_number: int = 0) -> int:
+	var base: int = WEAPON_PRICE.get(weapon.rarity, WEAPON_PRICE[DropTable.ItemTier.COMMON])
+	return int(round(float(base) * price_mult(floor_number)))
+
+
+static func price_for_modifier_tier(tier: int, floor_number: int = 0) -> int:
+	var base: int = MODIFIER_PRICE.get(tier, MODIFIER_PRICE[DropTable.ItemTier.COMMON])
+	return int(round(float(base) * price_mult(floor_number)))
+
+
+static func remove_cost(uses: int, floor_number: int = 0) -> int:
+	return int(round(float(REMOVE_BASE + uses * REMOVE_STEP) * price_mult(floor_number)))
 
 
 static func make_price_label(price: int) -> Label:
