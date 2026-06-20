@@ -163,8 +163,8 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Enemy Art (expansion of Phase 2 content)
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P1 | High | Melee enemy sprite sheets | 3–5 melee types × walk/attack/hurt/death frames. |
-|  | P1 | High | Ranged enemy sprite sheets | 3 ranged types × walk/attack/hurt/death frames. |
+|  | P1 | High | Melee enemy sprite sheets | 3–5 melee types × walk/attack/hurt/death frames × biome variation. |
+|  | P1 | High | Ranged enemy sprite sheets | 3 ranged types × walk/attack/hurt/death frames × biome variation. |
 |  | P2 | Medium | Boss sprite sheets | 5 bosses × unique frames for each phase transition + attack patterns. |
 |  | P2 | Medium | Elite visual overlays | Glow outline shader, larger scale, distinct color tint per elite ability. |
 
