@@ -132,3 +132,15 @@ func test_effective_gold_applies_floor_and_biome() -> void:
 	assert_int(_DropTable.effective_gold(10, 3, 1.0)).is_equal(12)
 	assert_int(_DropTable.effective_gold(10, 1, 1.2)).is_equal(12)
 	assert_int(_DropTable.effective_gold(0, 1, 1.0)).is_equal(1)
+
+
+func test_resolve_gold_spawns_scaled_pickup() -> void:
+	var parent := Node2D.new()
+	add_child(parent)
+	auto_free(parent)
+	var table := _DropTable.new()
+	table.add_entry(_DropTable.DropEntry.gold(1.0, 1, 1, 10))
+	table.resolve(Vector2.ZERO, parent, 2.0)
+	var golds := parent.get_children().filter(func(n): return n is GoldDrop)
+	assert_int(golds.size()).is_equal(1)
+	assert_int((golds[0] as GoldDrop).amount).is_equal(20)

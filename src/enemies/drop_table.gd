@@ -105,7 +105,7 @@ static func resolve_item_tier(enemy_tier: int) -> int:
 	return ItemTier.COMMON
 
 
-func resolve(position: Vector2, parent: Node) -> void:
+func resolve(position: Vector2, parent: Node, gold_mult: float = 1.0) -> void:
 	for entry in entries:
 		var roll := randf()
 		if roll > entry.weight:
@@ -114,17 +114,17 @@ func resolve(position: Vector2, parent: Node) -> void:
 		for i in count:
 			match entry.kind:
 				DropKind.GOLD:
-					_resolve_gold(position, parent, entry)
+					_resolve_gold(position, parent, entry, gold_mult)
 				DropKind.MODIFIER_POOL:
 					_resolve_modifier_pool(position, parent, entry)
 				DropKind.SCENE:
 					_resolve_scene(position, parent, entry)
 
 
-func _resolve_gold(position: Vector2, parent: Node, entry: DropEntry) -> void:
+func _resolve_gold(position: Vector2, parent: Node, entry: DropEntry, gold_mult: float = 1.0) -> void:
 	var drop: Node = GOLD_DROP_SCENE.instantiate()
 	if drop.has_method("set_amount") and entry.gold_per_drop > 0:
-		drop.set_amount(entry.gold_per_drop)
+		drop.set_amount(effective_gold(entry.gold_per_drop, 0, biome_gold_mult() * gold_mult))
 	var offset := Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))
 	parent.add_child(drop)
 	drop.global_position = position + offset
