@@ -18,3 +18,19 @@ func test_world_to_uv_center_is_half() -> void:
 	var uv := m.world_to_uv(Vector2.ZERO)
 	assert_that(abs(uv.x - 0.5) < 0.01).is_true()
 	assert_that(abs(uv.y - 0.5) < 0.01).is_true()
+
+func test_reveal_marks_chunk_center() -> void:
+	var m := MinimapModel.new()
+	m.reveal_chunk(Vector2i(0, 0))
+	assert_that(m.is_revealed_world(Vector2(128, 128))).is_true()
+
+func test_unrevealed_far_cell_is_fogged() -> void:
+	var m := MinimapModel.new()
+	m.reveal_chunk(Vector2i(0, 0))
+	assert_that(m.is_revealed_world(Vector2(2000, 2000))).is_false()
+
+func test_adjacent_reveals_merge_across_seam() -> void:
+	var m := MinimapModel.new()
+	m.reveal_chunk(Vector2i(0, 0))
+	m.reveal_chunk(Vector2i(1, 0))
+	assert_that(m.is_revealed_world(Vector2(256, 128))).is_true()
