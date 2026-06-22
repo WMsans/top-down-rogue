@@ -27,8 +27,8 @@ func _world_to_widget(rel: Vector2) -> Vector2:
 
 
 func _clamp_to_edge(rel: Vector2) -> Vector2:
-	var sx := view_extent.x / max(abs(rel.x), 0.001)
-	var sy := view_extent.y / max(abs(rel.y), 0.001)
+	var sx: float = view_extent.x / max(abs(rel.x), 0.001)
+	var sy: float = view_extent.y / max(abs(rel.y), 0.001)
 	var s: float = min(sx, sy) * 0.92
 	return _world_to_widget(rel * s)
 
