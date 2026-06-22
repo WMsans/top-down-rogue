@@ -18,6 +18,7 @@ extends Resource
 @export var decor_defs: Array[DecorDef] = []
 @export var decor_chance: float = 0.02
 @export var cave_spawn_rate: float = 1.0
+@export var gold_multiplier: float = 1.0
 @export var enemy_pool: Array[PackedScene] = []
 @export var elite_chance: float = 0.15
 @export var boss_scene: PackedScene = null

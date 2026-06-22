@@ -39,9 +39,9 @@ const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
 
 const MODIFIER_DROP_SCENE := preload("res://scenes/modifier_drop.tscn")
 
-const _TIER_GOLD_MIN: Dictionary = {EnemyTier.EASY: 2, EnemyTier.NORMAL: 4, EnemyTier.HARD: 8}
-const _TIER_GOLD_MAX: Dictionary = {EnemyTier.EASY: 5, EnemyTier.NORMAL: 10, EnemyTier.HARD: 20}
-const _TIER_GOLD_PER_DROP: Dictionary = {EnemyTier.EASY: 5, EnemyTier.NORMAL: 5, EnemyTier.HARD: 5}
+const _TIER_GOLD_MIN: Dictionary = {EnemyTier.EASY: 1, EnemyTier.NORMAL: 2, EnemyTier.HARD: 3}
+const _TIER_GOLD_MAX: Dictionary = {EnemyTier.EASY: 3, EnemyTier.NORMAL: 5, EnemyTier.HARD: 7}
+const _TIER_GOLD_PER_DROP: Dictionary = {EnemyTier.EASY: 2, EnemyTier.NORMAL: 2, EnemyTier.HARD: 3}
 const _TIER_WEAPON_WEIGHT: Dictionary = {EnemyTier.EASY: 0.3, EnemyTier.NORMAL: 0.3, EnemyTier.HARD: 0.3}
 const _TIER_MODIFIER_WEIGHT: Dictionary = {EnemyTier.EASY: 0.1, EnemyTier.NORMAL: 0.1, EnemyTier.HARD: 0.1}
 const _TIER_ITEM_WEIGHTS: Dictionary = {
@@ -51,6 +51,24 @@ const _TIER_ITEM_WEIGHTS: Dictionary = {
 }
 
 var entries: Array[DropEntry] = []
+
+
+const INCOME_FLOOR_COEFF := 0.12
+
+
+static func income_mult(floor_number: int) -> float:
+	var n: int = floor_number if floor_number > 0 else LevelManager.floor_number
+	return 1.0 + INCOME_FLOOR_COEFF * float(maxi(n, 1) - 1)
+
+
+static func effective_gold(base_per_drop: int, floor_number: int, biome_mult: float) -> int:
+	return maxi(1, int(round(float(base_per_drop) * income_mult(floor_number) * biome_mult)))
+
+
+static func biome_gold_mult() -> float:
+	if LevelManager.current_biome != null:
+		return LevelManager.current_biome.gold_multiplier
+	return 1.0
 
 
 func add_entry(entry: DropEntry) -> void:
@@ -87,7 +105,7 @@ static func resolve_item_tier(enemy_tier: int) -> int:
 	return ItemTier.COMMON
 
 
-func resolve(position: Vector2, parent: Node) -> void:
+func resolve(position: Vector2, parent: Node, gold_mult: float = 1.0) -> void:
 	for entry in entries:
 		var roll := randf()
 		if roll > entry.weight:
@@ -96,17 +114,17 @@ func resolve(position: Vector2, parent: Node) -> void:
 		for i in count:
 			match entry.kind:
 				DropKind.GOLD:
-					_resolve_gold(position, parent, entry)
+					_resolve_gold(position, parent, entry, gold_mult)
 				DropKind.MODIFIER_POOL:
 					_resolve_modifier_pool(position, parent, entry)
 				DropKind.SCENE:
 					_resolve_scene(position, parent, entry)
 
 
-func _resolve_gold(position: Vector2, parent: Node, entry: DropEntry) -> void:
+func _resolve_gold(position: Vector2, parent: Node, entry: DropEntry, gold_mult: float = 1.0) -> void:
 	var drop: Node = GOLD_DROP_SCENE.instantiate()
 	if drop.has_method("set_amount") and entry.gold_per_drop > 0:
-		drop.set_amount(entry.gold_per_drop)
+		drop.set_amount(effective_gold(entry.gold_per_drop, 0, biome_gold_mult() * gold_mult))
 	var offset := Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0))
 	parent.add_child(drop)
 	drop.global_position = position + offset
