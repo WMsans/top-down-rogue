@@ -20,7 +20,7 @@ var reveal_tex: ImageTexture
 var _pois: Array = []
 
 func _init() -> void:
-	world_half_px = _SectorGrid.WALL_INNER_SECTORS * _SectorGrid.SECTOR_SIZE_PX + CHUNK
+	world_half_px = _SectorGrid.WALL_INNER_SECTORS * _SectorGrid.SECTOR_SIZE_PX - CHUNK
 	world_cells = int(ceil(float(world_half_px * 2) / float(CELL)))
 	terrain_img = Image.create(world_cells, world_cells, false, Image.FORMAT_R8)
 	reveal_img = Image.create(world_cells, world_cells, false, Image.FORMAT_R8)
@@ -45,13 +45,21 @@ func _in_bounds(cell: Vector2i) -> bool:
 func get_pois() -> Array:
 	return _pois
 
-const REVEAL_R_INNER := 0.9   # in chunks: plateau radius
-const REVEAL_R_OUTER := 1.25  # in chunks: falloff edge (>1 so neighbors overlap)
+const REVEAL_R_INNER := 1.2   # in chunks: plateau radius
+const REVEAL_R_OUTER := 1.5   # in chunks: falloff edge (>0.5 so neighbors overlap)
 
 
 func reveal_chunk(coord: Vector2i) -> void:
 	var center_world := Vector2(coord) * CHUNK + Vector2(CHUNK / 2.0, CHUNK / 2.0)
-	var center_cell := world_to_cell(center_world)
+	_stamp_reveal_circle(center_world)
+
+
+func reveal_world_pos(world_pos: Vector2) -> void:
+	_stamp_reveal_circle(world_pos)
+
+
+func _stamp_reveal_circle(world_pos: Vector2) -> void:
+	var center_cell := world_to_cell(world_pos)
 	var r_inner := REVEAL_R_INNER * float(CELLS_PER_CHUNK)
 	var r_outer := REVEAL_R_OUTER * float(CELLS_PER_CHUNK)
 	var r := int(ceil(r_outer))

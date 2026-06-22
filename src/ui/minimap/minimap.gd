@@ -4,10 +4,13 @@ const MinimapModel = preload("res://src/ui/minimap/minimap_model.gd")
 
 @export var view_chunks: float = 7.0
 
+const _REVEAL_STEP_PX := 64.0
+
 var _model: MinimapModel
 var _world_manager: Node
 var _connected := false
 var _stamped_hash: Dictionary = {}   # Vector2i -> int
+var _last_reveal_pos: Vector2 = Vector2(INF, INF)
 
 @onready var _surface: ColorRect = $Surface
 @onready var _overlay: Control = $Overlay
@@ -36,7 +39,6 @@ func _process(_delta: float) -> void:
 	_overlay.queue_redraw()
 
 func _connect_world() -> void:
-	_world_manager.chunks_generated.connect(_on_chunks_generated)
 	_do_reset()
 	_connected = true
 
@@ -48,16 +50,11 @@ func _do_reset() -> void:
 		Callable(self, "_sector_has_shop").bind(grid),
 		Callable(self, "_sector_is_elite").bind(grid))
 	_stamped_hash.clear()
-	for c in _world_manager.chunks.keys():
-		_model.reveal_chunk(c)
+	_last_reveal_pos = Vector2(INF, INF)
 
 func _on_floor_changed(_n: int) -> void:
 	if _world_manager != null:
 		_do_reset()
-
-func _on_chunks_generated(coords: Array) -> void:
-	for c in coords:
-		_model.reveal_chunk(c)
 
 func _update_terrain() -> void:
 	var nav = _world_manager.nav_field
@@ -76,6 +73,9 @@ func _update_terrain() -> void:
 func _update_uniforms() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	var ppos: Vector2 = player.global_position if player else _world_manager.tracking_position
+	if ppos.distance_to(_last_reveal_pos) >= _REVEAL_STEP_PX:
+		_model.reveal_world_pos(ppos)
+		_last_reveal_pos = ppos
 	var extent := view_chunks * 0.5 * float(MinimapModel.CHUNK)
 	var mat := _surface.material as ShaderMaterial
 	mat.set_shader_parameter("player_world", ppos)
