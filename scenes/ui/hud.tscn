@@ -5,6 +5,7 @@
 [ext_resource type="Shader" uid="uid://5h53yqww8n6t" path="res://shaders/ui/health_bar_shimmer.gdshader" id="3"]
 [ext_resource type="Texture2D" uid="uid://dqyowb5gsntmk" path="res://textures/ui/gold_icon_atlas.tres" id="4"]
 [ext_resource type="FontFile" uid="uid://djmcix6v8np5e" path="res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf" id="4_136eg"]
+[ext_resource type="PackedScene" uid="uid://minimap0001" path="res://scenes/ui/minimap.tscn" id="mm"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_shimmer"]
 shader = ExtResource("3")
@@ -93,36 +94,56 @@ vertical_alignment = 1
 anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -120.0
-offset_bottom = 120.0
+offset_left = -240.0
+offset_bottom = 480.0
 grow_horizontal = 0
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="Frame" type="PanelContainer" parent="TopRight" unique_id=752333875]
+[node name="ColumnVBox" type="VBoxContainer" parent="TopRight"]
 layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MinimapFrame" type="PanelContainer" parent="TopRight/ColumnVBox"]
+layout_mode = 2
+size_flags_horizontal = 8
 theme_override_styles/panel = ExtResource("2")
 
-[node name="InnerMargin" type="MarginContainer" parent="TopRight/Frame" unique_id=111223726]
+[node name="MinimapInner" type="MarginContainer" parent="TopRight/ColumnVBox/MinimapFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="Minimap" parent="TopRight/ColumnVBox/MinimapFrame/MinimapInner" instance=ExtResource("mm")]
+layout_mode = 2
+
+[node name="WeaponFrame" type="PanelContainer" parent="TopRight/ColumnVBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_styles/panel = ExtResource("2")
+
+[node name="InnerMargin" type="MarginContainer" parent="TopRight/ColumnVBox/WeaponFrame"]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="TopRight/Frame/InnerMargin" unique_id=368513047]
+[node name="VBox" type="VBoxContainer" parent="TopRight/ColumnVBox/WeaponFrame/InnerMargin"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="WeaponIconButton" type="TextureButton" parent="TopRight/Frame/InnerMargin/VBox" unique_id=1454777211]
+[node name="WeaponIconButton" type="TextureButton" parent="TopRight/ColumnVBox/WeaponFrame/InnerMargin/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 stretch_mode = 5
 
-[node name="WeaponFallback" type="ColorRect" parent="TopRight/Frame/InnerMargin/VBox/WeaponIconButton" unique_id=1074141807]
+[node name="WeaponFallback" type="ColorRect" parent="TopRight/ColumnVBox/WeaponFrame/InnerMargin/VBox/WeaponIconButton"]
 unique_name_in_owner = true
 layout_mode = 0
 anchor_right = 1.0
@@ -131,7 +152,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.212, 0.11, 0.133, 1)
 
-[node name="WeaponFallbackLabel" type="Label" parent="TopRight/Frame/InnerMargin/VBox/WeaponIconButton/WeaponFallback" unique_id=1712849623]
+[node name="WeaponFallbackLabel" type="Label" parent="TopRight/ColumnVBox/WeaponFrame/InnerMargin/VBox/WeaponIconButton/WeaponFallback"]
 layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
@@ -152,9 +173,9 @@ anchors_preset = -1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -310.0
-offset_top = 16.0
+offset_top = 234.0
 offset_right = -130.0
-offset_bottom = 96.0
+offset_bottom = 314.0
 grow_horizontal = 0
 
 [node name="TooltipMargin" type="MarginContainer" parent="WeaponTooltip" unique_id=855526282]
