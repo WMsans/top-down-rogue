@@ -42,6 +42,9 @@ func update_chunk(chunk_coord: Vector2i, material_bytes: PackedByteArray) -> voi
 func set_tile(chunk_coord: Vector2i, tile: PackedByteArray) -> void:
 	_tiles[chunk_coord] = tile
 
+func get_tile(chunk_coord: Vector2i) -> PackedByteArray:
+	return _tiles.get(chunk_coord, PackedByteArray())
+
 func drop_chunk(chunk_coord: Vector2i) -> void:
 	_tiles.erase(chunk_coord)
 
