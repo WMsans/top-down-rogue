@@ -30,7 +30,7 @@ func _process(_delta: float) -> void:
 
 
 func _current_cost() -> int:
-	return ShopPricing.REMOVE_BASE + _uses * ShopPricing.REMOVE_STEP
+	return ShopPricing.remove_cost(_uses)
 
 
 func _player_gold() -> int:

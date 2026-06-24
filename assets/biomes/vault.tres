@@ -59,6 +59,7 @@ composition = ExtResource("10_elitec")
 [resource]
 script = ExtResource("3_wsrpv")
 display_name = "Vault"
+gold_multiplier = 1.2
 cave_noise_scale = 0.014
 cave_threshold = 0.55
 ridge_weight = 0.5

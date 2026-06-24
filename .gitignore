@@ -10,3 +10,4 @@ build/
 /opencode.json
 .worktrees/
 /.env
+/graphify-out/cache
