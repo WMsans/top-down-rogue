@@ -19,23 +19,23 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Weapon Balance
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | High | Full weapon stat audit (52 weapons) | Verify every weapon's cooldown/damage/reach/arc against its rarity and archetype. Identify over/underperformers. See `weapons.csv`. |
-|  | P0 | Medium | Rarity-to-power curve | Standardize damage-per-second ranges: Common 5–8 DPS, Uncommon 7–11 DPS, Rare 9–14 DPS (adjusted for utility/status weapons). |
-|  | P1 | Medium | Melee vs. ranged balance | Ranged safety premium: ranged base DPS should trail melee by ~15–20% at same rarity. Tune projectile lifetimes. |
-|  | P1 | Medium | Archetype power budget | Each weapon archetype gets a power budget: stats, native traits, crit profile. Verify no archetype dominates its tier. |
-|  | P1 | Medium | Pre-attached modifier valuation | Weapons with pre-slotted modifiers pay a stat penalty. Audit that penalty is consistent (e.g., ~1 dmg or +0.05s cd per pre-attached Uncommon+ mod). |
-|  | P2 | Low | Charge weapon balance | Charge weapons trade tap DPS for burst. Ensure charge-time-to-damage ratio is ~1.8–2.5× a tap swing at same rarity. |
+| x | P0 | High | Full weapon stat audit (52 weapons) | Verify every weapon's cooldown/damage/reach/arc against its rarity and archetype. Identify over/underperformers. See `weapons.csv`. |
+| x | P0 | Medium | Rarity-to-power curve | Standardize damage-per-second ranges: Common 5–8 DPS, Uncommon 7–11 DPS, Rare 9–14 DPS (adjusted for utility/status weapons). |
+| x | P1 | Medium | Melee vs. ranged balance | Ranged safety premium: ranged base DPS should trail melee by ~15–20% at same rarity. Tune projectile lifetimes. |
+| x | P1 | Medium | Archetype power budget | Each weapon archetype gets a power budget: stats, native traits, crit profile. Verify no archetype dominates its tier. |
+| x | P1 | Medium | Pre-attached modifier valuation | Weapons with pre-slotted modifiers pay a stat penalty. Audit that penalty is consistent (e.g., ~1 dmg or +0.05s cd per pre-attached Uncommon+ mod). |
+| x | P2 | Low | Charge weapon balance | Charge weapons trade tap DPS for burst. Ensure charge-time-to-damage ratio is ~1.8–2.5× a tap swing at same rarity. |
 
 ### Modifier Balance
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | High | Full modifier stat audit (57 modifiers) | Verify every modifier's magnitude/magnitude2 against rarity. See `modifiers.csv`. Identify degenerate combos. |
-|  | P0 | High | Stacking sanity check | Audit additive vs. multiplicative stacking. `stat_add` sums first, `stat_mult` applies after. Cap cooldown floor at ~0.1s. Cap crit_chance at 1.0. |
-|  | P1 | Medium | Conditional trigger payoff | Conditional modifiers (frostbreaker, pyroclast, coup_de_grace, glass_cannon) must reward their condition with ≥1.5× damage. Verify magnitudes. |
-|  | P1 | Medium | Emitter blob sizing | Oil/water/gas/ice/blood/coal/dust blob radii: verify they create meaningful area effects without griefing player pathing or tanking FPS. |
-|  | P1 | Medium | Status stack thresholds | Verify stain thresholds in `status_registry.gd`: on_fire=1.0, wet=1.0, oiled=1.0, chilly=1.0, frozen=3.0, poisoned=0.3, bloody=1.0. Tune magnitudes so ~1–3 hits trigger. |
-|  | P2 | Low | Anti-synergy costs | Document and verify anti-synergies: wet douses fire, oiled amplifies fire. Players running conflicting modifiers should feel the cost. |
-|  | P2 | Low | Rarity distribution in shops | 5 modifier cards per shop: tune rarity weights so shops feel varied (target ~60% Common, ~30% Uncommon, ~10% Rare). |
+| x | P0 | High | Full modifier stat audit (57 modifiers) | Verify every modifier's magnitude/magnitude2 against rarity. See `modifiers.csv`. Identify degenerate combos. |
+| x | P0 | High | Stacking sanity check | Audit additive vs. multiplicative stacking. `stat_add` sums first, `stat_mult` applies after. Cap cooldown floor at ~0.1s. Cap crit_chance at 1.0. |
+| x | P1 | Medium | Conditional trigger payoff | Conditional modifiers (frostbreaker, pyroclast, coup_de_grace, glass_cannon) must reward their condition with ≥1.5× damage. Verify magnitudes. |
+| x | P1 | Medium | Emitter blob sizing | Oil/water/gas/ice/blood/coal/dust blob radii: verify they create meaningful area effects without griefing player pathing or tanking FPS. |
+| x | P1 | Medium | Status stack thresholds | Verify stain thresholds in `status_registry.gd`: on_fire=1.0, wet=1.0, oiled=1.0, chilly=1.0, frozen=3.0, poisoned=0.3, bloody=1.0. Tune magnitudes so ~1–3 hits trigger. |
+| x | P2 | Low | Anti-synergy costs | Document and verify anti-synergies: wet douses fire, oiled amplifies fire. Players running conflicting modifiers should feel the cost. |
+| x | P2 | Low | Rarity distribution in shops | 5 modifier cards per shop: tune rarity weights so shops feel varied (target ~60% Common, ~30% Uncommon, ~10% Rare). |
 
 ### Enemy Balance
 | Done | Priority | Difficulty | Task | Description |
