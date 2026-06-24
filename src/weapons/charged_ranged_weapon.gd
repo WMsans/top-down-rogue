@@ -2,6 +2,7 @@ class_name ChargedRangedWeapon
 extends RangedWeapon
 
 @export var charge_time_full: float = 0.7
+@export var charge_damage_mult: float = 2.0
 
 var _charge_time: float = 0.0
 var _charging: bool = false
