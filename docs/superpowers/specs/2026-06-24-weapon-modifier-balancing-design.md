@@ -1,7 +1,7 @@
 # Weapon & Modifier Balancing — Design
 
 **Date:** 2026-06-24
-**Scope:** All 6 "Weapon Balance" rows + all 7 "Modifier Balance" rows in `docs/design_docs/implementation_todo2.md` (Phase 1), **plus** a new modifier **Resonance & Catalyst** system (Part C) that adds a nonlinear power ceiling.
+**Scope:** All 6 "Weapon Balance" rows + all 7 "Modifier Balance" rows in `docs/design_docs/implementation_todo2.md` (Phase 1), **plus** 24 new **emergent-combo modifiers** (Part C) that add a nonlinear power ceiling.
 **Status:** Approved design, ready for implementation plan.
 **Companion to:** `2026-06-20-economy-balancing-design.md` (same Phase-1 balancing pass).
 
@@ -25,12 +25,14 @@ Two problems, one spec because they're coupled (weapons carry pre-attached modif
 - **Ranged premium:** ranged target = melee × **0.82** (safety premium). Multi-projectile/pierce/chain/AoE is a *trait tax* (sit low in band) — not a license to multiply single-target burst.
 - **Effective-DPS normalization:** all bands measured as `damage × (1 + crit·(critMult−1)) × hits_per_activation ÷ cooldown`, where `hits_per_activation` is a **per-archetype single-target multiplier** (§A1).
 - **Cooldown preserved:** re-tune solves for **damage at fixed cooldown** — cooldown defines a weapon's feel/identity; we don't churn it.
-- **Modifier solo bands describe the NO-RESONANCE state.** Resonance/catalysts (Part C) are a deliberate ceiling *above* band.
-- **Combos are A LOT stronger than band.** This is the design intent: a naked loadout = linear floor; an assembled tag/catalyst build = multiplicative spike (Balatro philosophy). The Part C "cap" (§C5) exists only to kill *infinite/degenerate loops*, **not** to cap finite combo power.
+- **Existing-57 solo magnitudes describe the NO-COMBO state.** The 24 new Part C modifiers are a deliberate ceiling *above* band.
+- **Combos are A LOT stronger than band.** Design intent: a naked loadout = linear floor; an assembled combo build = multiplicative spike (Balatro philosophy). The combo lives in how two concretely-worded rules collide, **not** in a tag/resonance lookup table. The Part C "cap" (§C5) exists only to kill *infinite/degenerate loops*, **not** to cap finite combo power.
+- **No duplicated effects.** Across the 24 new modifiers *and* the existing 57. Stronger-but-different is allowed; pure magnitude clones are not (§B2 audit).
+- **Relics are out of scope.** Global passives (not tied to how a weapon swings) belong in a future relic system — all 24 here stay **weapon-tied** (occupy a weapon's 3 slots).
 - **Status magnitudes are NOT retuned** — `apply_status` mods keep their current `2.0` stain (near-instant trigger). B5 becomes verify-thresholds-only.
 - **Caps already exist:** `weapon.gd` has `COOLDOWN_FLOOR = 0.1` (`maxf` at aggregation) and crit `clampf(0,1)`. The stacking row is verification + tests, not new code.
 - **Unit tests are in scope** (§7).
-- **Phased implementation:** Phase 1 = baseline re-tune (A+B). Phase 2 = resonance/catalyst layer (C). Floor ships independent of ceiling.
+- **Phased implementation:** Phase 1 = baseline re-tune (A+B). Phase 2 = emergent-combo modifiers (C). Floor ships independent of ceiling.
 
 > **Pre-playtest estimates.** Like the economy spec, every number here is a tuning *starting point* anchored to the bands above, not a final value. The bands and the per-archetype taxes are the knobs to turn once real data exists.
 
@@ -184,71 +186,76 @@ Each pre-slotted modifier costs the weapon a stat penalty, **already folded into
 | `status` | stain per hit | **not retuned** (kept at current values per decision) |
 | `utility` | effect strength | flat per-rarity, no DPS contribution |
 
-### B2 — Full modifier audit (57 modifiers)
+### B2 — Full modifier audit (57 existing modifiers)
 
-Most are already in-band; the audit confirms values, assigns **resonance tags** (Part C), and changes only the flagged few. `tags` is a new CSV column (§C1).
+Most are already in-band; the audit confirms values and changes only the flagged few. The 57 keep their effects (no `tags` column — the rejected resonance system is gone).
 
-| id | rarity | cat | mag / mg2 | tags | change |
-|---|---|---|---|---|---|
-| lava_emitter | C | emitter | 16 | fire | keep |
-| green_crescent | U | projectile | 1 | projectile | keep |
-| fireball_fan | C | projectile | 5 | fire, projectile | **count 5 → 3** |
-| icicle_volley | C | projectile | 5 | ice, projectile | **count 5 → 3** |
-| gleaming_projectile | U | projectile | 1 | projectile | keep |
-| lightning_bolt | R | projectile | 1 | lightning, projectile | keep |
-| arc_volley | R | projectile | 7 | projectile | keep |
-| triangular_volley | R | projectile | 13 | projectile | keep |
-| bouncing_bullets | U | projectile | 4 | projectile, kinetic | keep |
-| splitting_rounds | U | projectile | 3 / 4 | projectile | keep |
-| penetrating_shockwave | R | projectile | 1 | projectile, kinetic | keep |
-| oil_emitter | C | emitter | 24 | oil | keep |
-| water_emitter | C | emitter | 24 | water | keep |
-| gas_emitter | U | emitter | 20 | poison | **radius 20 → 16** |
-| frost_emitter | U | emitter | 18 | ice | keep |
-| blood_emitter | C | emitter | 20 | blood | keep |
-| coal_seeder | U | emitter | 12 | fire, earth | keep |
-| dust_veil | C | emitter | 20 | earth | keep |
-| venom_edge | C | status | 2.0 | poison | keep |
-| soaking_strike | C | status | 2.0 | water | keep |
-| greased_edge | C | status | 2.0 | oil | keep |
-| frostbite_edge | U | status | 2.0 | ice | keep |
-| ember_edge | U | status | 2.0 | fire | keep |
-| rending_edge | C | status | 2.0 | blood | keep |
-| sharpened | C | stat | 3 | power | keep |
-| heavy_head | C | stat | 5 / 1.25 | power | keep |
-| honed_point | U | stat | 0.15 | crit | keep |
-| executioners_mark | U | stat | 0.5 | crit | keep |
-| quickdraw | U | stat | 0.8 | power | keep |
-| long_reach | C | stat | 1.3 | power | keep |
-| wide_arc | C | stat | 1.4 | power | keep |
-| deep_cut | U | stat | 1.8 | earth | keep |
-| fleetfoot | U | stat | 1.15 | power | keep |
-| frostbreaker | U | trigger | 1.6 | ice | keep (≥1.5) |
-| pyroclast | U | trigger | 1.5 | fire | keep (≥1.5) |
-| coup_de_grace | U | trigger | 2.0 / 0.3 | power | keep |
-| bloodlust | R | trigger | 1 / 8 | power | keep |
-| rampage | R | trigger | 1 / 6 | power | keep |
-| glass_cannon | R | trigger | 1.8 | power | keep |
-| vampiric | U | trigger | 3 | blood | keep |
-| momentum | U | trigger | 1.5 | kinetic | keep |
-| adrenaline | R | trigger | 0.6 | power | keep |
-| combo_keeper | U | trigger | 1.0 / 5 | crit | keep |
-| homing_hex | U | projectile | 1 | projectile | keep |
-| chain_spark | R | projectile | 3 | lightning, projectile, crit | keep |
-| ricochet_shard | U | projectile | 1 / 3 | projectile, kinetic | keep |
-| piercing_lance | U | projectile | 1 | projectile | keep |
-| cluster_bomb | R | projectile | 8 | fire, projectile | keep |
-| boomerang_arc | U | projectile | 1 | projectile, kinetic | keep |
-| spectral_echo | R | projectile | 1 | projectile | keep |
-| tunnel_borer | U | terrain | 32 | earth | keep |
-| shockwave_stomp | U | utility | 40 | kinetic | keep |
-| magnet_field | C | utility | 48 | greed, kinetic | keep |
-| repulsor_nova | R | utility | 80 | kinetic | keep |
-| concussive_edge | U | trigger | 0.5 / 0.2 | kinetic | keep |
-| midas_touch | U | utility | 5 | greed | keep |
-| steam_burst | R | trigger | 3 | water, fire | keep |
+| id | rarity | cat | mag / mg2 | change |
+|---|---|---|---|---|
+| lava_emitter | C | emitter | 16 | keep |
+| green_crescent | U | projectile | 1 | keep |
+| fireball_fan | C | projectile | 5 | **count 5 → 3** (free-DPS cap) |
+| icicle_volley | C | projectile | 5 | **→ 3 piercing icicles** (de-dup vs fireball_fan) |
+| gleaming_projectile | U | projectile | 1 | keep |
+| lightning_bolt | R | projectile | 1 | keep |
+| arc_volley | R | projectile | 7 | keep |
+| triangular_volley | R | projectile | 13 | keep |
+| bouncing_bullets | U | projectile | 4 | keep |
+| splitting_rounds | U | projectile | 3 / 4 | keep |
+| penetrating_shockwave | R | projectile | 1 | keep |
+| oil_emitter | C | emitter | 24 | keep |
+| water_emitter | C | emitter | 24 | keep |
+| gas_emitter | U | emitter | 20 | **radius 20 → 16** (hazard cap) |
+| frost_emitter | U | emitter | 18 | keep |
+| blood_emitter | C | emitter | 20 | keep |
+| coal_seeder | U | emitter | 12 | keep |
+| dust_veil | C | emitter | 20 | keep |
+| venom_edge | C | status | 2.0 | keep |
+| soaking_strike | C | status | 2.0 | keep |
+| greased_edge | C | status | 2.0 | keep |
+| frostbite_edge | U | status | 2.0 | keep |
+| ember_edge | U | status | 2.0 | keep |
+| rending_edge | C | status | 2.0 | keep |
+| sharpened | C | stat | 3 | keep |
+| heavy_head | C | stat | 5 / 1.25 | keep (tradeoff variant of sharpened) |
+| honed_point | U | stat | 0.15 | keep |
+| executioners_mark | U | stat | 0.5 | keep |
+| quickdraw | U | stat | 0.8 | keep |
+| long_reach | C | stat | 1.3 | keep |
+| wide_arc | C | stat | 1.4 | keep |
+| deep_cut | U | stat | 1.8 | keep |
+| fleetfoot | U | stat | 1.15 | keep |
+| frostbreaker | U | trigger | 1.6 | keep (≥1.5) |
+| pyroclast | U | trigger | 1.5 | keep (≥1.5) |
+| coup_de_grace | U | trigger | 2.0 / 0.3 | keep |
+| bloodlust | R | trigger | 1 / 8 | keep (kill-stack; ≠ rampage) |
+| rampage | R | trigger | 1 / 6 | keep (hit-streak; ≠ bloodlust) |
+| glass_cannon | R | trigger | 1.8 | keep |
+| vampiric | U | trigger | 3 | keep |
+| momentum | U | trigger | 1.5 | keep |
+| adrenaline | R | trigger | 0.6 | keep |
+| combo_keeper | U | trigger | 1.0 / 5 | keep |
+| homing_hex | U | projectile | 1 | keep |
+| chain_spark | R | projectile | 3 | keep |
+| ricochet_shard | U | projectile | 1 / 3 | keep |
+| piercing_lance | U | projectile | 1 | keep |
+| cluster_bomb | R | projectile | 8 | keep |
+| boomerang_arc | U | projectile | 1 | keep |
+| spectral_echo | R | projectile | 1 | keep |
+| tunnel_borer | U | terrain | 32 | keep |
+| shockwave_stomp | U | utility | 40 | keep |
+| magnet_field | C | utility | 48 | keep |
+| repulsor_nova | R | utility | 80 | keep |
+| concussive_edge | U | trigger | 0.5 / 0.2 | keep |
+| midas_touch | U | utility | 5 | keep |
+| steam_burst | R | trigger | 3 | keep |
 
-Only **3 changes**: `fireball_fan` and `icicle_volley` drop 5 → 3 projectiles (Common free-DPS cap — both fire on every swing and stack onto fast weapons), and `gas_emitter` 20 → 16 (hazard radius cap). Everything else is confirmed in-band; the real modifier work is the resonance layer.
+**Duplication audit (per the no-dup rule):**
+- **Clear duplicate fixed:** `fireball_fan` (5 fire fan) and `icicle_volley` (5 ice fan) were the same effect, element-swapped. `icicle_volley` → **3 *piercing* icicles** (distinct mechanic); `fireball_fan` stays a fire fan at 3.
+- **Borderline (kept as meaningful variants, not clones):** `sharpened` vs `heavy_head` (flat dmg vs flat dmg + speed penalty); `bloodlust` vs `rampage` (kill-stack vs hit-streak ramp); `arc_volley` vs `triangular_volley` (combo-step sprays, 7 vs 13, tied to different combo weapons).
+- The 8 emitters and 6 status-appliers are **not** duplicates — each material/status behaves differently downstream.
+
+Net changes to the 57: `fireball_fan` 5→3, `icicle_volley` 5→3+pierce, `gas_emitter` 20→16. Everything else confirmed in-band; the real modifier work is the 24 new combo modifiers (Part C).
 
 ### B3 — Conditional payoff
 
@@ -281,68 +288,96 @@ A player slotting `water_emitter` + `ember_edge` should feel the conflict (water
 
 ---
 
-## Part C — Modifier Resonance & Catalysts
+## Part C — Emergent-Combo Modifiers (24 new)
 
-The nonlinear ceiling. Builds on the **existing** element/status reaction engine rather than a parallel system. Resolves **within a weapon's 3 modifier slots** (bounded, "build around your weapon"). Combos are intended to be **a lot stronger than band** — the floor is linear, the ceiling is multiplicative.
+The nonlinear ceiling. **24 net-new weapon modifiers** (→81 total) whose combos *emerge* from how two concretely-worded rules collide — Balatro's actual design (Photograph + Hanging Chad), **not** a tag/resonance lookup table. Resolve **within a weapon's 3 slots**, evaluated **left→right deterministically** (that ordering is what makes positional/retrigger combos legible). Combos are intended to be **a lot stronger than band** — naked loadout = linear floor, assembled build = multiplicative spike.
 
-### C1 — Tags
+### C1 — Interaction primitives (the scripted machinery)
 
-New `tags` column in `modifiers.csv` (comma-separated). Vocabulary (12): `fire, ice, water, oil, lightning, poison, blood, earth, projectile, crit, kinetic, greed`. `power` = no-resonance (pure stat mods). A modifier may carry several. `DataModifier._init` parses it. Tags assigned for all 57 in §B2.
+Every modifier below is written in this small verb set. These are the only new mechanical capabilities the modifier runtime must gain:
 
-> Modifiers are built via `_init(row)`, **not** `duplicate()`, so the [[weapon-csv-fields-must-be-export]] caveat does not bite — verify during implementation that nothing duplicates a `DataModifier`.
+1. **Positional reference** — act on "the first slot / the modifier to my left / right / the other two." (Slots are already an ordered `weapon.modifiers` array.)
+2. **Retrigger** — re-run another modifier's effect N extra times.
+3. **Target-state conditional** — payoff vs on_fire / frozen / wet / poisoned / bloody / chilly enemies. (`condition: target_status:<id>` already exists in `DataModifier`.)
+4. **Self/run-state conditional** — payoff on after-damage / gold held / slot composition.
+5. **Detonator / consume** — consume a status' stacks for a burst.
+6. **Copy** — become a copy of an adjacent modifier.
+7. **Charge / pause rhythm** — trigger then disable a modifier for N seconds; or charge over swings then dump.
+8. **Run-scaling transform** — permanently grow on an event.
 
-### C2 — Resonance registry
+### C2 — The 24 modifiers
 
-`src/status/resonance_registry.gd` (data-only, mirrors `status_registry`). Each rule = required tag tally → effect, over two **channels** + one flagship **behavior** rule. Magnitudes are large (combos exceed band):
+Every effect is mechanically unique (no clones across the 24 or vs the existing 57). Rarity spread **4 C / 13 U / 7 R** (feeds §B7's 60/30/10).
 
-| Resonance | Trigger (tags in slots) | Channel | Effect |
+**Status setup / enabler (6)** — distinct status manipulations:
+
+| id | rarity | effect | primitive |
 |---|---|---|---|
-| **Ignition** | fire × 2 | amplify | on_fire stain & burn DPS **×1.8** |
-| **Caustic** | poison × 2, or poison + oil | amplify | poisoned DPS **×2.0** |
-| **Permafrost** | water + ice | amplify | wet & chilly stain **×1.6** (faster freeze ramp) |
-| **Hemorrhage** | blood + crit | stat | crit damage **+50%** vs bloody targets |
-| **Fusillade** | projectile × 2 | stat | weapon damage **×1.3** (dense-projectile build) |
-| **Avarice** | greed × 2 | stat | kill gold **×2** + pull radius +50% |
-| **Overrun** | kinetic × 2 | behavior | knockback now **deals damage** (= weapon damage) |
-| **Conduction** | water/wet + lightning | behavior *(flagship)* | lightning effects **chain +1 target** |
+| spark_plug | C | hits **ignite** oiled enemies (oiled→fire) | target-state |
+| deepfreeze | C | hits push chilly→**frozen 2× faster** | target-state |
+| hemophilia | C | **+25% crit chance** vs bleeding enemies | target-state |
+| backdraft | U | hitting a burning enemy **spreads fire** to nearby foes | target-state |
+| riptide | U | hits **knock back** wet enemies and apply chilly | target-state |
+| plague_carrier | U | hits **spread** a target's poison to nearby foes | target-state |
 
-Behavior resonances beyond Conduction/Overrun are documented as the **extensible next layer** (registry data + one handler hook each), not built in this pass.
+**Detonators (4)** — consume a different status, different payoff shape:
 
-### C3 — Integration
-
-Weapon gains a `_resonance` cache computed alongside `_effective_cache`, recomputed on `invalidate_effective_stats()` (i.e. whenever a slot changes — no per-frame cost):
-
-1. Tally tags across the ≤3 slotted modifiers.
-2. Match registry rules → store active resonances + their channel bonuses.
-3. `get_effective_stats()` applies **stat-channel** bonuses (multiplied in after the existing `stat_mult` pass).
-4. `DataModifier.on_hit_target` / status application multiplies stain by `weapon.get_resonance_mult(tag_channel)` — the **amplify channel**.
-5. **Behavior** resonances expose a flag (`weapon.has_resonance("conduction")`) read by the relevant projectile/status code.
-
-One new query method on `Weapon` (`get_resonance_mult` / `has_resonance`); everything else is cached state.
-
-### C4 — Catalyst modifiers (4 new)
-
-New `catalyst` category. Low solo value, paid for by what they do to slot-mates (read via the already-passed `weapon.modifiers`). Strong by design:
-
-| id | rarity | tags | effect |
+| id | rarity | effect | primitive |
 |---|---|---|---|
-| **resonator** | Uncommon | power | **+25% damage per *other* slotted modifier** (max +50% with 2) |
-| **overcharge** | Uncommon | power | sibling status/emitter mods apply **×2 stain**, decay 50% faster (burst) |
-| **echo_lens** | Rare | projectile | **retriggers** the first sibling `projectile` modifier each swing (doubles its bolts) |
-| **catalyst_core** | Rare | power | rewrites one sibling's resonance-tag to match another's — **forces a resonance** (the enabler) |
+| frostshatter | R | consume Frozen → burst = stacks×8 + AoE shatter | detonator |
+| combustion | R | consume On-Fire → instant burst = remaining burn ×3 | detonator |
+| rupture | U | bleeding accumulates; at 5 stacks target bursts for 5× a hit | detonator |
+| necrosis | U | consume Poison stacks → instant ×2 that damage | detonator |
 
-These are new CSV rows + a small `catalyst` branch in `DataModifier` (or a `CatalystModifier` subclass) that iterates `weapon.modifiers`. They are the deliberate "I built something" moments.
+**Retrigger / positional engines (7)** — distinct retrigger shapes (the combo multipliers):
 
-### C5 — Valuation & anti-degenerate
+| id | rarity | effect | primitive |
+|---|---|---|---|
+| echo_strike | R | retrigger your **first** modifier once per swing *(Hanging Chad)* | retrigger + positional |
+| overclock | R | retrigger the **left** modifier, then disable it 5 s | retrigger + pause |
+| mirror_slot | R | become a **copy** of the modifier to your left *(Blueprint)* | copy |
+| catalyst_bond | R | **link** slots 1 & 3: either fires → both fire | positional |
+| keystone | R | slot-2 modifier **+100%**, slots 1 & 3 disabled (focus build) | positional |
+| twin_trigger | U | every 3rd swing, **all** modifiers trigger twice | retrigger + rhythm |
+| flywheel | U | untriggered modifiers charge; at 5, fire **×3** then empty | charge |
 
-- Solo bands (Part B) assume **no resonance**; catalysts are intentionally weak alone (a slot tax).
-- The "cap" is **anti-loop, not anti-power**: `echo_lens` may not retrigger another `echo_lens` or itself; resonance recompute is not re-entrant; `overcharge` does not compound with a second `overcharge`. Finite multipliers (e.g. Ignition ×1.8 × Overcharge ×2 = ×3.6 burn) are **allowed and intended**.
-- Cooldown floor (0.1) already caps attack-speed stacking; no extra cap needed there.
-- **Degenerate combos to watch (documented, not nerfed):** `overcharge` + `ember_edge` + fire weapon (runaway burn — that's the reward); `echo_lens` + `cluster_bomb` (16 fragments); `resonator` + 2 strong mods. These are *features* given the "combos ≫ band" goal; the audit just confirms none cause infinite loops or softlocks.
+**Conditional / scaler / transform (7)** — distinct conditions, no overlap with existing pyroclast/glass_cannon/etc.:
+
+| id | rarity | effect | primitive |
+|---|---|---|---|
+| greedy_edge | C | +1% dmg per 50 gold held (cap +40%) | self-state |
+| last_stand | U | +60% on your **first hit after taking damage** | self-state |
+| overkill | U | damage **exceeding** an enemy's HP carries to the next enemy hit | self-state |
+| evolving_edge | U | after 15 hits, this modifier's **own bonus doubles** (run) | run-transform |
+| pendulum | U | odd swings ×2 your **left** modifier, even swings ×2 your **right** | positional + rhythm |
+| headsman | U | one-shotting an enemy >50% HP **refunds the swing** (instant next attack) | self-state |
+| slot_harmony | U | +20% dmg while all 3 slots are **different categories** | self-state |
+
+### C3 — Flagship combos (emergence, not lookup)
+
+- **echo_strike** (slot 1) + **combustion**/**hemophilia**/any setup → echo_strike retriggers slot 1, so the conditional/detonator payoff lands **twice** per swing. Stack **twin_trigger** and the whole engine doubles on the beat. *(Photograph + Hanging Chad, ported — neither modifier names the other.)*
+- **deepfreeze** (build frozen) + **frostshatter** (detonate it) + a frost weapon → freeze engine.
+- **spark_plug** (ignite oiled) + `oil_emitter`/`greased_edge` (existing) + **backdraft** (spread) → oil-fire chain.
+- **catalyst_bond** links two strong on-hit effects in slots 1 & 3 into one paired engine.
+
+### C4 — Implementation
+
+- **Data-driven (stay in `DataModifier`):** the target-state conditionals (`spark_plug`, `deepfreeze`, `hemophilia`, `backdraft`, `riptide`, `plague_carrier`, `greedy_edge`) — extend the existing `condition`/`effect` verbs.
+- **Scripted `Modifier` subclasses** (`src/weapons/modifiers/`): everything using retrigger / copy / pause / positional / detonator / transform. They read & invoke siblings via the ordered `weapon.modifiers` (already passed to every hook).
+- **New `Weapon` plumbing:** a left→right **modifier evaluation pass** supporting re-entrant retrigger with a **depth guard** (the anti-loop brake). One pass replaces the current ad-hoc `for m in modifiers` loops at each hook.
+- **`modifiers.csv`:** 24 new rows (data ones fully specified; scripted ones reference their script).
+- **No `tags` column** — the resonance idea is dropped; combos are concrete.
+
+### C5 — Anti-degenerate (loops only, not power)
+
+- The cap is **anti-loop, not anti-power.** Finite multipliers are allowed and intended (echo_strike × twin_trigger × a strong slot-1 = the reward).
+- **Guards:** `echo_strike`/`overclock`/`twin_trigger` cannot retrigger a retrigger modifier or themselves; the evaluation pass carries a **depth counter** (hard stop at depth 2); `mirror_slot` copying `mirror_slot` resolves to no-op; `catalyst_bond` + `pendulum` + retrigger can't form a cycle because retriggers don't re-enter the positional pass.
+- Cooldown floor (0.1) already caps attack-speed stacking.
+- **Big combos to watch (documented, not nerfed):** `echo_strike` + `combustion` on a fire build; `keystone` + a Rare slot-2; `headsman` chains. These are *features* given the "combos ≫ band" goal — the audit confirms none loop infinitely or softlock.
 
 ### C6 — Feedback (light hook)
 
-When slotted mods form an active resonance, the modifier-slot UI shows a **combo glow** + the resonance name on hover. Minimal hook (read `weapon` resonance state in the existing weapon/modifier UI); full juice deferred to Phase 6 UI polish.
+Retrigger/positional/disabled states surface in the modifier-slot UI (a glow on a retriggered slot, a dim on an `overclock`-disabled one, a "linked" marker for `catalyst_bond`). Minimal hook reading weapon/modifier state; full juice deferred to Phase 6 UI polish.
 
 ---
 
@@ -350,32 +385,31 @@ When slotted mods form an active resonance, the modifier-slot UI shows a **combo
 
 **Phase 1 — Baseline re-tune (Parts A + B):**
 - `docs/design_docs/weapons.csv` — apply the §A7 damage values (51 rows).
-- `docs/design_docs/modifiers.csv` — apply the 3 §B2 changes; add the `tags` column populated for all 57.
+- `docs/design_docs/modifiers.csv` — apply the 3 §B2 changes (`fireball_fan` 5→3, `icicle_volley` 5→3+pierce, `gas_emitter` 20→16).
 - Charge-move tuning (§A6) in the charge archetype scripts (`willowblade`, `executioner`, `void_sword`, `quake_hammer`, `blood_blade`, `arc_railgun`).
 - Verify A1 archetype multipliers and ranged `projectile_count` against the archetype scripts; re-solve any that differ.
 
-**Phase 2 — Resonance & catalysts (Part C):**
-- `src/status/resonance_registry.gd` (new) — the §C2 rules.
-- `src/weapons/weapon.gd` — `_resonance` cache + `get_resonance_mult` / `has_resonance`; apply stat-channel in `get_effective_stats`.
-- `src/weapons/modifiers/data_modifier.gd` — parse `tags`; multiply stain by resonance amplify channel; `catalyst` branch (or `catalyst_modifier.gd` subclass).
-- Behavior hooks: Conduction (lightning chain +1) in the chain/lightning path; Overrun (knockback damage) in `_do_knockback`/CombatUtil.
-- `modifiers.csv` — 4 new catalyst rows.
-- Modifier-slot UI — combo glow + resonance-name tooltip (light).
+**Phase 2 — Emergent-combo modifiers (Part C):**
+- `src/weapons/weapon.gd` — a left→right **modifier evaluation pass** with a re-entrant retrigger **depth guard**, replacing the ad-hoc per-hook `for m in modifiers` loops; positional/sibling access helpers; disable-state tracking (for `overclock`).
+- `src/weapons/modifiers/data_modifier.gd` — new `condition`/`effect` verbs for the 7 data-driven conditionals (§C4).
+- `src/weapons/modifiers/` — scripted `Modifier` subclasses for the retrigger / copy / pause / positional / detonator / transform modifiers.
+- `docs/design_docs/modifiers.csv` — 24 new rows.
+- Modifier-slot UI — retrigger/disabled/linked state hooks (light, §C6).
 
 ## 7. Tests (in scope)
 
-- `test_weapon_balance.gd` — every weapon's computed effective DPS sits in its rarity band (using the A1 model).
+- `test_weapon_balance.gd` — every weapon's computed effective DPS sits in its rarity band (A1 model).
 - `test_modifier_stacking.gd` — cooldown can't drop below 0.1 with `adrenaline`+`quickdraw`; crit can't exceed 1.0 with `combo_keeper`+`honed_point`; `(base + Σ add) × Π mult` order.
 - `test_status_thresholds.gd` — pins the §B5 `active_threshold` values.
 - `test_anti_synergy.gd` — asserts §B6 reaction directions (wet drains fire, oil feeds fire, wet+chilly→frozen).
 - `test_shop_rarity_distribution.gd` — pins ~60/30/10 over a large sample.
-- `test_resonance.gd` — tag parsing; right tags → right resonance; resonance recomputes on slot change; amplify multiplies stain.
-- `test_catalysts.gd` — `resonator` scales per other mod; `echo_lens` retrigger count; anti-loop guards (no self-retrigger, no double-overcharge compounding).
+- `test_combo_modifiers.gd` — `echo_strike` retriggers the first slot exactly once; `overclock` disables then re-enables after 5 s; detonators consume the right stacks; positional refs resolve correctly; the depth guard stops re-entrant retrigger at depth 2; the flagship `echo_strike`+conditional combo doubles the payoff end-to-end.
 
 ## 8. Risks / out of scope
 
 - **All numbers are pre-playtest estimates** anchored to the §2 bands. The bands and per-archetype taxes are the knobs.
 - **Ranged single-target band can understate crowd clear** — re-check AoE/pierce/chain ranged (`tesla`, `spread`, `scatter`, `hailstorm`, `flame_lobber`, `venom_spitter`) against packs in playtest.
 - **Enemy balance is NOT in this spec.** Part C exists specifically to give the *player* a nonlinear ceiling so the coming enemy-balance pass has something to push against. The enemy curve (HP/dmg per floor, TTK) is a separate todo section.
-- **Loadout-wide combos are out of scope** — resonance is per-weapon (3 slots) by decision; a future spec could add loadout auras.
-- **Resonance UI juice** beyond the light combo-glow hook is deferred to Phase 6.
+- **Relics are out of scope** — a parallel global-passive item axis (StS-style) is a known future spec; all 24 here are weapon-tied.
+- **Loadout-wide combos are out of scope** — combos resolve per-weapon (3 slots) by decision.
+- **Combo UI juice** beyond the light state hooks is deferred to Phase 6.
