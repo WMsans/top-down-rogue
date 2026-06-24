@@ -40,7 +40,7 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Enemy Balance
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | High | Enemy HP/DMG per floor | Standardize enemy stat curve: floor 1 baseline, +20-25% HP/dmg per floor. Bosses scale at +15% (they gain phases). |
+|  | P0 | High | Enemy HP/DMG per floor | Standardize enemy stat curve: floor 1 baseline, +20-25% HP/dmg per floor. Bosses scale at +15%. |
 |  | P0 | Medium | Enemy tier stat ratios | EASY: 1.0×, NORMAL: 1.5× HP / 1.2× dmg, HARD: 2.5× HP / 1.5× dmg. Verify against weapon DPS so TTK feels right (~3–8 swings per enemy). |
 |  | P1 | Medium | Elite stat multipliers | Elite base: 3.0× HP, 1.5× dmg, 1.3× speed. Elite abilities stack further. Verify elite fights feel like minibosses, not bullet sponges. |
 |  | P1 | Medium | Mob density tuning | Per-floor mob cap (25). Per-room enemy counts: calibrate so corridors feel navigable but rooms feel dangerous. |
