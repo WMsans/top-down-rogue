@@ -12,7 +12,7 @@ splitting_rounds,Splitting Rounds,"Follow-up thrust scatters three rounds that s
 penetrating_shockwave,Penetrating Shockwave,"Full charge fires a massive penetrating shockwave that deletes enemy projectiles as it travels.",Rare,projectile,on_charge,,spawn_projectile,,1,0,No
 oil_emitter,Oil Emitter,"Each swing leaves a slick of flammable oil — ignite it for a firestorm.",Common,emitter,on_swing,,spawn_material,oil,24,0,No
 water_emitter,Aqua Font,"Swings spray water, dousing flames and soaking the ground for freeze combos.",Common,emitter,on_swing,,spawn_material,water,24,0,No
-gas_emitter,Miasma Vent,"Belches a cloud of toxic gas with each swing, poisoning anything inside.",Uncommon,emitter,on_swing,,spawn_material,gas,20,0,No
+gas_emitter,Miasma Vent,"Belches a cloud of toxic gas with each swing, poisoning anything inside.",Uncommon,emitter,on_swing,,spawn_material,gas,16,0,No
 frost_emitter,Frost Emitter,"Lays a patch of ice underfoot — slick footing that chills the careless.",Uncommon,emitter,on_swing,,spawn_material,ice,18,0,No
 blood_emitter,Sanguine Spray,"Sprays blood across the floor, fuel for blood-soaked synergies.",Common,emitter,on_swing,,spawn_material,blood,20,0,No
 coal_seeder,Coal Seeder,"Scatters lumps of flammable coal that smolder into lingering fire.",Uncommon,emitter,on_swing,,spawn_material,coal,12,0,No
