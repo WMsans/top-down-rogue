@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://minimap0001"]
+[gd_scene format=3 uid="uid://minimap0001"]
 
 [ext_resource type="Script" path="res://src/ui/minimap/minimap.gd" id="1"]
 [ext_resource type="Script" path="res://src/ui/minimap/minimap_overlay.gd" id="2"]
