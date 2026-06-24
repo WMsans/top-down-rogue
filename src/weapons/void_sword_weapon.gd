@@ -10,7 +10,7 @@ func _setup_moves() -> void:
 	charge_time_full = 0.7
 	charged_flurry_max = 1
 	light_moves = [_slash()]
-	var sweep := _slash(0.0, 1.2)
+	var sweep := _slash(0.0, 2.0)
 	sweep.arc = PI            # wide finishing arc
 	charged_moves = [sweep]
 
