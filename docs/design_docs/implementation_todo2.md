@@ -9,12 +9,12 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Economy Balancing
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | Medium | Shop modifier pricing audit | Set per-rarity baseline, based on playtesting. |
-|  | P0 | Medium | Shop weapon pricing audit | Set per-rarity baseline, based on playtesting. |
-|  | P0 | Medium | Removal service cost curve | Tune `remove_cost = 60 + 30*uses`. Verify against 5-floor economy so ~2–3 removals feel painful but reachable. |
-|  | P1 | Medium | Gold drop rates | Enemy kill gold: calibrate tier weights based on playtesting. Chest gold: calibrate per-rarity fixed amounts. |
-|  | P1 | Medium | Floor-scaling economy | Tune gold multiplier per floor depth (1.0×, 1.15×, 1.3×, …). Ensure floor-1 shops are affordable; floor-5 shops require saving. |
-|  | P2 | Low | Per-biome economy skew | Balance biome-specific gold adjustments (e.g., vault +20% gold, magma -10% but more enemies). |
+| x | P0 | Medium | Shop modifier pricing audit | Set per-rarity baseline, based on playtesting. |
+| x | P0 | Medium | Shop weapon pricing audit | Set per-rarity baseline, based on playtesting. |
+| x | P0 | Medium | Removal service cost curve | Tune `remove_cost = 60 + 30*uses`. Verify against 5-floor economy so ~2–3 removals feel painful but reachable. |
+| x | P1 | Medium | Gold drop rates | Enemy kill gold: calibrate tier weights based on playtesting. Chest gold: calibrate per-rarity fixed amounts. |
+| x | P1 | Medium | Floor-scaling economy | Tune gold multiplier per floor depth (1.0×, 1.15×, 1.3×, …). Ensure floor-1 shops are affordable; floor-5 shops require saving. |
+| x | P2 | Low | Per-biome economy skew | Balance biome-specific gold adjustments (e.g., vault +20% gold, magma -10% but more enemies). |
 
 ### Weapon Balance
 | Done | Priority | Difficulty | Task | Description |
