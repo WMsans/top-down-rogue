@@ -362,7 +362,7 @@ func _process_death(delta: float) -> void:
 
 func _spawn_drops() -> void:
 	if drop_table:
-		drop_table.resolve(global_position, get_parent())
+		drop_table.resolve(global_position, get_parent(), 2.5 if is_elite else 1.0)
 	if weapon and DropTable.roll_should_drop_weapon(enemy_tier):
 		_spawn_weapon_drop()
 

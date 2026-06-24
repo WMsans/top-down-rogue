@@ -4,6 +4,15 @@ extends StaticBody2D
 const CHEST_CLOSED_TEXTURE := preload("res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/32x32/gift_01a.png")
 const CHEST_OPEN_TEXTURE := preload("res://textures/Assets/Kyrise's 16x16 RPG Icon Pack - V1.2/icons/32x32/giftopen_01a.png")
 const CHOICE_COUNT := 3
+const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
+const _CHEST_GOLD: Dictionary = {
+	DropTable.EnemyTier.NORMAL: Vector2i(25, 40),
+	DropTable.EnemyTier.HARD: Vector2i(60, 100),
+}
+
+
+static func gold_range(chest_tier: int) -> Vector2i:
+	return _CHEST_GOLD.get(chest_tier, Vector2i(25, 40))
 
 @export var tier: int = DropTable.EnemyTier.NORMAL
 
@@ -40,6 +49,7 @@ func interact(_player: Node) -> void:
 	_sprite.texture = CHEST_OPEN_TEXTURE
 	set_collision_layer_value(1, false)
 	set_collision_layer_value(2, false)
+	_spawn_gold()
 	_generate_weapons()
 	_open_chest_ui()
 
@@ -73,6 +83,17 @@ func _generate_weapons() -> void:
 			weapon = WeaponRegistry.get_random_weapon(fallback_tier)
 		if weapon != null:
 			_weapons.append(weapon)
+
+
+func _spawn_gold() -> void:
+	var rng := gold_range(tier)
+	var base := randi_range(rng.x, rng.y)
+	var amount := DropTable.effective_gold(base, 0, DropTable.biome_gold_mult())
+	var drop: Node = GOLD_DROP_SCENE.instantiate()
+	if drop.has_method("set_amount"):
+		drop.set_amount(amount)
+	get_parent().add_child(drop)
+	drop.global_position = global_position + Vector2(randf_range(-12.0, 12.0), randf_range(-12.0, 12.0))
 
 
 func _open_chest_ui() -> void:

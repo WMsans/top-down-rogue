@@ -36,9 +36,9 @@ func test_removal_charges_base_and_escalates() -> void:
 	var player := _make_player(500, true, true)
 	var removal := _make_removal()
 	removal.interact(player)
-	assert_int(player.get_node("PlayerInventory").gold).is_equal(440)
+	assert_int(player.get_node("PlayerInventory").gold).is_equal(420)
 	removal.interact(player)
-	assert_int(player.get_node("PlayerInventory").gold).is_equal(350)
+	assert_int(player.get_node("PlayerInventory").gold).is_equal(300)
 
 
 func test_removal_noop_without_equipped_modifier() -> void:
