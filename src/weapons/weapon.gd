@@ -103,6 +103,7 @@ func add_modifier(slot_index: int, modifier: Modifier) -> void:
 		return
 	modifiers.resize(max(modifiers.size(), modifier_slot_count))
 	modifiers[slot_index] = modifier
+	modifier.slot_index = slot_index
 	modifier.on_equip(self)
 	invalidate_effective_stats()
 
@@ -111,6 +112,32 @@ func get_modifier_at(slot_index: int) -> Modifier:
 	if slot_index < 0 or slot_index >= modifiers.size():
 		return null
 	return modifiers[slot_index]
+
+
+func get_first_modifier() -> Modifier:
+	for i in range(modifier_slot_count):
+		var m: Modifier = get_modifier_at(i)
+		if m != null and not m.is_disabled:
+			return m
+	return null
+
+
+func get_left_modifier(of_slot: int) -> Modifier:
+	return get_modifier_at(of_slot - 1)
+
+
+func get_right_modifier(of_slot: int) -> Modifier:
+	return get_modifier_at(of_slot + 1)
+
+
+func get_other_slots(of_slot: int) -> Array:
+	var out: Array = []
+	for i in range(modifier_slot_count):
+		if i != of_slot:
+			var m: Modifier = get_modifier_at(i)
+			if m != null:
+				out.append(m)
+	return out
 
 
 func find_empty_modifier_slot() -> int:
