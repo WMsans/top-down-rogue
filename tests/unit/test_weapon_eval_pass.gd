@@ -39,3 +39,61 @@ func test_disabled_flag_defaults_false_and_settable() -> void:
 	assert_bool(m.is_disabled).is_false()
 	m.is_disabled = true
 	assert_bool(m.is_disabled).is_true()
+
+
+class _Counter extends Modifier:
+	var hits: int = 0
+	func _init() -> void:
+		category = "trigger"
+	func on_hit_target(_w, _u, _t) -> void:
+		hits += 1
+
+
+class _Retrigger extends Modifier:
+	var calls: int = 0
+	func _init() -> void:
+		category = "trigger"
+		is_retrigger_modifier = true
+	func on_hit_target(weapon: Weapon, user: Node, target: Node) -> void:
+		calls += 1
+		var first: Modifier = weapon.get_first_modifier()
+		weapon.retrigger_modifier(first, "on_hit_target", [user, target])
+
+
+class _ChainRetrigger extends Modifier:
+	func _init() -> void:
+		category = "trigger"
+		is_retrigger_modifier = true
+	func on_hit_target(weapon: Weapon, user: Node, target: Node) -> void:
+		var first: Modifier = weapon.get_first_modifier()
+		weapon.retrigger_modifier(first, "on_hit_target", [user, target])
+
+
+func test_retrigger_fires_target_once() -> void:
+	var w := Weapon.new()
+	var c := _Counter.new()
+	var r := _Retrigger.new()
+	w.add_modifier(0, c); w.add_modifier(1, r)
+	var t := Node.new()
+	w.resolve_hit(null, t, 5.0, false)
+	assert_int(c.hits).is_equal(2)
+
+func test_retrigger_skips_retrigger_modifier() -> void:
+	var w := Weapon.new()
+	var r1 := _Retrigger.new()
+	var r2 := _Retrigger.new()
+	w.add_modifier(0, r1); w.add_modifier(1, r2)
+	var t := Node.new()
+	w.resolve_hit(null, t, 5.0, false)
+	assert_int(r1.calls).is_equal(1)
+	assert_int(r2.calls).is_equal(1)
+
+func test_retrigger_depth_guard_stops_at_two() -> void:
+	var w := Weapon.new()
+	var c := _Counter.new()
+	var chainA := _ChainRetrigger.new()
+	var chainB := _ChainRetrigger.new()
+	w.add_modifier(0, c); w.add_modifier(1, chainA); w.add_modifier(2, chainB)
+	var t := Node.new()
+	w.resolve_hit(null, t, 5.0, false)
+	assert_int(c.hits).is_equal(3)

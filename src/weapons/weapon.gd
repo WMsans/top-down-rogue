@@ -20,6 +20,8 @@ var _cooldown_timer: float = 0.0
 const COOLDOWN_FLOOR := 0.1
 var _effective_cache: Dictionary = {}
 var _hit_count: int = 0
+const RETRIGGER_DEPTH_LIMIT := 2
+var _retrigger_depth: int = 0
 
 
 func use(user: Node) -> void:
@@ -138,6 +140,32 @@ func get_other_slots(of_slot: int) -> Array:
 			if m != null:
 				out.append(m)
 	return out
+
+
+func retrigger_modifier(mod: Modifier, hook: String, args: Array) -> Variant:
+	if mod == null or not is_instance_valid(mod) or mod.is_disabled:
+		return args[2] if hook == "modify_hit_damage" else null
+	if mod.is_retrigger_modifier:
+		return args[2] if hook == "modify_hit_damage" else null
+	if _retrigger_depth >= RETRIGGER_DEPTH_LIMIT:
+		return args[2] if hook == "modify_hit_damage" else null
+	_retrigger_depth += 1
+	var result: Variant = null
+	match hook:
+		"on_attack":
+			mod.on_attack(self, args[0], args[1])
+		"on_hit_target":
+			mod.on_hit_target(self, args[0], args[1])
+		"on_kill":
+			mod.on_kill(self, args[0], args[1])
+		"on_crit":
+			mod.on_crit(self, args[0], args[1])
+		"modify_hit_damage":
+			result = mod.modify_hit_damage(self, args[0], args[1], args[2])
+			if result == null:
+				result = args[2]
+	_retrigger_depth -= 1
+	return result
 
 
 func find_empty_modifier_slot() -> int:
