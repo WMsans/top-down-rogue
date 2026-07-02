@@ -23,7 +23,7 @@ func _ready() -> void:
 func _spawn_modifiers() -> void:
 	var seen: Dictionary = {}
 	for i in MODIFIER_COUNT:
-		var tier := DropTable.ItemTier.COMMON
+		var tier := DropTable.roll_modifier_tier()
 		var modifier := _roll_modifier(tier, seen)
 		if modifier == null:
 			continue
