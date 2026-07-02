@@ -282,6 +282,36 @@ func roll_crit() -> bool:
 	return randf() < get_effective_crit_chance()
 
 
+func get_effective_crit_chance_for_target(target: Node) -> float:
+	var c: float = crit_chance
+	for m in _iter_active_modifiers():
+		c = m.modify_crit_chance_for_target(self, c, target)
+	return clampf(c, 0.0, 1.0)
+
+
+func roll_crit_for_target(target: Node) -> bool:
+	return randf() < get_effective_crit_chance_for_target(target)
+
+
+func reset_cooldown() -> void:
+	_cooldown_timer = 0.0
+
+
+func _apply_burst(user: Node, target: Node, amount: float) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	if not target.has_method("on_hit_impact"):
+		return
+	var dir: Vector2 = Vector2.DOWN
+	if target is Node2D and user is Node2D:
+		var d: Vector2 = (target.global_position - user.global_position)
+		if d.length_squared() > 0.0001:
+			dir = d.normalized()
+	target.on_hit_impact(
+		(target.global_position if target is Node2D else Vector2.ZERO),
+		dir, int(amount))
+
+
 func _on_crit(target: Node) -> void:
 	if crit_status == "":
 		return

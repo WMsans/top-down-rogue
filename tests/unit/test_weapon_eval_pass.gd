@@ -124,3 +124,28 @@ func test_disabled_modifier_excluded_from_effective_stats() -> void:
 	m.is_disabled = false
 	w.invalidate_effective_stats()
 	assert_float(w.get_effective_stats()["damage"]).is_equal(15.0)
+
+
+class _StatusTarget extends Node2D:
+	func _init() -> void:
+		var sc := StatusComponent.new()
+		sc.name = "StatusComponent"
+		add_child(sc)
+
+
+func test_target_aware_crit_applies_when_condition_met() -> void:
+	var w := Weapon.new()
+	var m := DataModifier.new({
+		"id": "x", "name": "X", "description": "", "rarity": "Common",
+		"category": "trigger", "trigger": "on_hit", "condition": "target_status:bloody",
+		"effect": "stat_add", "element": "crit_chance", "magnitude": "0.25",
+		"magnitude2": "0", "suppresses_base_use": "No",
+	})
+	w.add_modifier(0, m)
+	w.crit_chance = 0.1
+	var t := _StatusTarget.new()
+	add_child(t)
+	assert_float(w.get_effective_crit_chance_for_target(t)).is_equal(0.1)
+	t.get_node("StatusComponent").add_stain("bloody", 2.0)
+	assert_float(w.get_effective_crit_chance_for_target(t)).is_equal(0.35)
+	assert_float(w.get_effective_crit_chance()).is_equal(0.1)
