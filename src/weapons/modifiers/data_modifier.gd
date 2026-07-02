@@ -7,7 +7,6 @@ const PULL_IMPULSE := 220.0
 const STEAM_BURST_RADIUS := 14.0
 const STEAM_BURST_DENSITY := 180
 
-var category: String = ""
 var trigger: String = ""
 var condition: String = ""
 var effect: String = ""

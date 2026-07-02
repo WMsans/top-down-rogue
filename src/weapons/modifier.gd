@@ -5,6 +5,10 @@ var name: String = "Modifier"
 var description: String = ""
 var icon_texture: Texture2D = null
 var suppresses_base_use: bool = false
+var slot_index: int = -1
+var category: String = ""
+var is_retrigger_modifier: bool = false
+var is_disabled: bool = false
 
 
 func on_equip(_weapon: Weapon) -> void:
@@ -53,6 +57,18 @@ func on_kill(_weapon: Weapon, _user: Node, _target: Node) -> void:
 
 func on_crit(_weapon: Weapon, _user: Node, _target: Node) -> void:
 	pass
+
+
+func modify_crit_chance_for_target(_weapon: Weapon, base: float, _target: Node) -> float:
+	return base
+
+
+func get_state_tag() -> String:
+	if is_disabled:
+		return "disabled"
+	if is_retrigger_modifier:
+		return "retrigger"
+	return ""
 
 
 func get_description() -> String:
