@@ -97,3 +97,30 @@ func test_retrigger_depth_guard_stops_at_two() -> void:
 	var t := Node.new()
 	w.resolve_hit(null, t, 5.0, false)
 	assert_int(c.hits).is_equal(3)
+
+
+func test_disabled_modifier_skipped_in_all_hooks() -> void:
+	var w := Weapon.new()
+	var c := _Counter.new()
+	c.is_disabled = true
+	w.add_modifier(0, c)
+	var t := Node.new()
+	w.notify_attack(null, {"direction": Vector2.RIGHT, "origin": Vector2.ZERO, "charged": false, "charge_ratio": 0.0})
+	w.resolve_hit(null, t, 5.0, false)
+	assert_int(c.hits).is_equal(0)
+
+
+func test_disabled_modifier_excluded_from_effective_stats() -> void:
+	var w := Weapon.new()
+	w.damage = 10.0
+	var m := DataModifier.new({
+		"id": "x", "name": "X", "description": "", "rarity": "Common",
+		"category": "stat", "trigger": "passive", "condition": "", "effect": "stat_add",
+		"element": "damage", "magnitude": "5", "magnitude2": "0", "suppresses_base_use": "No",
+	})
+	m.is_disabled = true
+	w.add_modifier(0, m)
+	assert_float(w.get_effective_stats()["damage"]).is_equal(10.0)
+	m.is_disabled = false
+	w.invalidate_effective_stats()
+	assert_float(w.get_effective_stats()["damage"]).is_equal(15.0)
