@@ -94,6 +94,21 @@ static func roll_should_drop_weapon(enemy_tier: int) -> bool:
 	return randf() <= _TIER_WEAPON_WEIGHT[enemy_tier]
 
 
+const _SHOP_MODIFIER_TIER_WEIGHTS: Dictionary = {
+	ItemTier.COMMON: 0.60, ItemTier.UNCOMMON: 0.30, ItemTier.RARE: 0.10,
+}
+
+
+static func roll_modifier_tier() -> int:
+	var roll := randf()
+	var cumulative := 0.0
+	for item_tier in [ItemTier.COMMON, ItemTier.UNCOMMON, ItemTier.RARE]:
+		cumulative += float(_SHOP_MODIFIER_TIER_WEIGHTS[item_tier])
+		if roll <= cumulative:
+			return item_tier
+	return ItemTier.COMMON
+
+
 static func resolve_item_tier(enemy_tier: int) -> int:
 	var weights: Dictionary = _TIER_ITEM_WEIGHTS[enemy_tier]
 	var roll := randf()
