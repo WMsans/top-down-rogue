@@ -300,9 +300,17 @@ func _add_modifier_slots_to_card(card: Card, weapon: Weapon) -> void:
 		btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 		btn.custom_minimum_size = MODIFIER_ICON_SIZE
 		btn.modulate.a = 0.0
-		if modifier != null and modifier.icon_texture != null:
-			btn.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, btn, card))
-			btn.mouse_exited.connect(_on_modifier_icon_mouse_exited.bind(card))
+		if modifier != null:
+			match modifier.get_state_tag():
+				"disabled":
+					btn.modulate = Color(0.4, 0.4, 0.4, 0.5)
+				"retrigger":
+					btn.modulate = Color(1.3, 1.2, 0.6, 0.9)
+				"linked":
+					btn.modulate = Color(0.6, 1.0, 1.3, 0.9)
+			if modifier.icon_texture != null:
+				btn.mouse_entered.connect(_on_modifier_icon_mouse_entered.bind(modifier, btn, card))
+				btn.mouse_exited.connect(_on_modifier_icon_mouse_exited.bind(card))
 		overlay.add_child(btn)
 	card.add_child(overlay)
 	overlay.position = Vector2(12, card.card_size.y - MODIFIER_ICON_SIZE.y - 8)

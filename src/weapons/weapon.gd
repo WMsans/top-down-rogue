@@ -219,6 +219,8 @@ func get_effective_stats() -> Dictionary:
 			v *= m.get_stat_mult(stat)
 		s[stat] = v
 	s["cooldown"] = maxf(COOLDOWN_FLOOR, s["cooldown"])
+	if _has_keystone():
+		s["damage"] *= 2.0
 	_effective_cache = s
 	return s
 
