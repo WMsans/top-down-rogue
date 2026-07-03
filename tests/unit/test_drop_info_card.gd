@@ -66,3 +66,10 @@ func test_modifier_drop_populate_info_card() -> void:
 	assert_that(stub._populate_modifier_icons).is_empty()
 	assert_that(stub._called_set_rarity).is_true()
 	assert_that(stub._called_rarity).is_equal(DropTable.ItemTier.UNCOMMON)
+
+
+func test_modifier_drop_with_null_modifier_is_safe() -> void:
+	var drop: ModifierDrop = auto_free(ModifierDrop.new())
+	var stub: Card = auto_free(CardStub.new())
+	drop.populate_info_card(stub)
+	assert_that(stub._populate_name).is_equal("")
