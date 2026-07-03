@@ -30,6 +30,7 @@ var modifier_tiers: Dictionary = {}
 const WEAPON_RESOURCE_DIR := "res://resources/weapons"
 const WEAPON_CSV_PATH := "res://docs/design_docs/weapons.csv"
 const MODIFIER_CSV_PATH := "res://docs/design_docs/modifiers.csv"
+const PLACEHOLDER_ICON = preload("res://textures/wall.png")
 
 var _all_weapons: Array = []
 var _modifier_data: Dictionary = {}  # id -> full CSV row
@@ -313,10 +314,14 @@ func _make_modifier(id: String) -> _Modifier:
 		mod.description = data.get("description", mod.description)
 		mod.suppresses_base_use = String(data.get("suppresses_base_use", "No")).strip_edges() == "Yes"
 		mod.rarity = _map_rarity(data.get("rarity", "Common"))
+		if mod.icon_texture == null:
+			mod.icon_texture = PLACEHOLDER_ICON
 		return mod
 	if data.is_empty():
 		push_warning("WeaponRegistry: unknown modifier id '%s'" % id)
 		return null
 	var dmod := _DataModifier.new(data)
 	dmod.rarity = _map_rarity(data.get("rarity", "Common"))
+	if dmod.icon_texture == null:
+		dmod.icon_texture = PLACEHOLDER_ICON
 	return dmod
