@@ -195,7 +195,7 @@ func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: fl
 				var tint: Color = trail_color if "trail_color" in self else Color(1, 1, 1, 1)
 				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
-		var is_crit: bool = force_crit or roll_crit()
+		var is_crit: bool = force_crit or roll_crit_for_target(node)
 		resolve_hit(user, node, damage * dmg_mult, is_crit)
 
 
