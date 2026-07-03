@@ -1,13 +1,18 @@
-# Graph Report - .  (2026-06-20)
+# Graph Report - modifier-icons-and-info-card  (2026-07-03)
 
 ## Corpus Check
-- 2034 files · ~75,544 words
+- 235 files · ~558,345 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1205 nodes · 1233 edges · 223 communities (92 shown, 131 thin omitted)
-- Extraction: 87% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 150 edges (avg confidence: 0.83)
+- 4574 nodes · 4408 edges · 456 communities (334 shown, 122 thin omitted)
+- Extraction: 96% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 150 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `a01ef973`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Game Foundation & Docs|Game Foundation & Docs]]
@@ -230,30 +235,262 @@
 - [[_COMMUNITY_Weapon & Activated & Signal|Weapon & Activated & Signal]]
 - [[_COMMUNITY_Visual & Attack & Animation|Visual & Attack & Animation]]
 - [[_COMMUNITY_Visual & Attack & Animation|Visual & Attack & Animation]]
+- [[_COMMUNITY_Community 223|Community 223]]
+- [[_COMMUNITY_Community 224|Community 224]]
+- [[_COMMUNITY_Community 225|Community 225]]
+- [[_COMMUNITY_Community 226|Community 226]]
+- [[_COMMUNITY_Community 227|Community 227]]
+- [[_COMMUNITY_Community 228|Community 228]]
+- [[_COMMUNITY_Community 229|Community 229]]
+- [[_COMMUNITY_Community 230|Community 230]]
+- [[_COMMUNITY_Community 231|Community 231]]
+- [[_COMMUNITY_Community 232|Community 232]]
+- [[_COMMUNITY_Community 233|Community 233]]
+- [[_COMMUNITY_Community 234|Community 234]]
+- [[_COMMUNITY_Community 235|Community 235]]
+- [[_COMMUNITY_Community 236|Community 236]]
+- [[_COMMUNITY_Community 237|Community 237]]
+- [[_COMMUNITY_Community 238|Community 238]]
+- [[_COMMUNITY_Community 239|Community 239]]
+- [[_COMMUNITY_Community 240|Community 240]]
+- [[_COMMUNITY_Community 241|Community 241]]
+- [[_COMMUNITY_Community 242|Community 242]]
+- [[_COMMUNITY_Community 243|Community 243]]
+- [[_COMMUNITY_Community 244|Community 244]]
+- [[_COMMUNITY_Community 245|Community 245]]
+- [[_COMMUNITY_Community 246|Community 246]]
+- [[_COMMUNITY_Community 247|Community 247]]
+- [[_COMMUNITY_Community 248|Community 248]]
+- [[_COMMUNITY_Community 249|Community 249]]
+- [[_COMMUNITY_Community 250|Community 250]]
+- [[_COMMUNITY_Community 251|Community 251]]
+- [[_COMMUNITY_Community 252|Community 252]]
+- [[_COMMUNITY_Community 253|Community 253]]
+- [[_COMMUNITY_Community 254|Community 254]]
+- [[_COMMUNITY_Community 255|Community 255]]
+- [[_COMMUNITY_Community 256|Community 256]]
+- [[_COMMUNITY_Community 257|Community 257]]
+- [[_COMMUNITY_Community 258|Community 258]]
+- [[_COMMUNITY_Community 259|Community 259]]
+- [[_COMMUNITY_Community 260|Community 260]]
+- [[_COMMUNITY_Community 261|Community 261]]
+- [[_COMMUNITY_Community 262|Community 262]]
+- [[_COMMUNITY_Community 263|Community 263]]
+- [[_COMMUNITY_Community 264|Community 264]]
+- [[_COMMUNITY_Community 265|Community 265]]
+- [[_COMMUNITY_Community 266|Community 266]]
+- [[_COMMUNITY_Community 267|Community 267]]
+- [[_COMMUNITY_Community 268|Community 268]]
+- [[_COMMUNITY_Community 269|Community 269]]
+- [[_COMMUNITY_Community 270|Community 270]]
+- [[_COMMUNITY_Community 271|Community 271]]
+- [[_COMMUNITY_Community 272|Community 272]]
+- [[_COMMUNITY_Community 273|Community 273]]
+- [[_COMMUNITY_Community 274|Community 274]]
+- [[_COMMUNITY_Community 275|Community 275]]
+- [[_COMMUNITY_Community 276|Community 276]]
+- [[_COMMUNITY_Community 277|Community 277]]
+- [[_COMMUNITY_Community 278|Community 278]]
+- [[_COMMUNITY_Community 279|Community 279]]
+- [[_COMMUNITY_Community 280|Community 280]]
+- [[_COMMUNITY_Community 281|Community 281]]
+- [[_COMMUNITY_Community 282|Community 282]]
+- [[_COMMUNITY_Community 283|Community 283]]
+- [[_COMMUNITY_Community 284|Community 284]]
+- [[_COMMUNITY_Community 285|Community 285]]
+- [[_COMMUNITY_Community 286|Community 286]]
+- [[_COMMUNITY_Community 287|Community 287]]
+- [[_COMMUNITY_Community 288|Community 288]]
+- [[_COMMUNITY_Community 289|Community 289]]
+- [[_COMMUNITY_Community 290|Community 290]]
+- [[_COMMUNITY_Community 291|Community 291]]
+- [[_COMMUNITY_Community 292|Community 292]]
+- [[_COMMUNITY_Community 293|Community 293]]
+- [[_COMMUNITY_Community 294|Community 294]]
+- [[_COMMUNITY_Community 295|Community 295]]
+- [[_COMMUNITY_Community 296|Community 296]]
+- [[_COMMUNITY_Community 297|Community 297]]
+- [[_COMMUNITY_Community 298|Community 298]]
+- [[_COMMUNITY_Community 299|Community 299]]
+- [[_COMMUNITY_Community 300|Community 300]]
+- [[_COMMUNITY_Community 301|Community 301]]
+- [[_COMMUNITY_Community 302|Community 302]]
+- [[_COMMUNITY_Community 303|Community 303]]
+- [[_COMMUNITY_Community 304|Community 304]]
+- [[_COMMUNITY_Community 305|Community 305]]
+- [[_COMMUNITY_Community 306|Community 306]]
+- [[_COMMUNITY_Community 307|Community 307]]
+- [[_COMMUNITY_Community 308|Community 308]]
+- [[_COMMUNITY_Community 309|Community 309]]
+- [[_COMMUNITY_Community 310|Community 310]]
+- [[_COMMUNITY_Community 311|Community 311]]
+- [[_COMMUNITY_Community 312|Community 312]]
+- [[_COMMUNITY_Community 313|Community 313]]
+- [[_COMMUNITY_Community 314|Community 314]]
+- [[_COMMUNITY_Community 315|Community 315]]
+- [[_COMMUNITY_Community 316|Community 316]]
+- [[_COMMUNITY_Community 317|Community 317]]
+- [[_COMMUNITY_Community 318|Community 318]]
+- [[_COMMUNITY_Community 319|Community 319]]
+- [[_COMMUNITY_Community 320|Community 320]]
+- [[_COMMUNITY_Community 321|Community 321]]
+- [[_COMMUNITY_Community 322|Community 322]]
+- [[_COMMUNITY_Community 323|Community 323]]
+- [[_COMMUNITY_Community 324|Community 324]]
+- [[_COMMUNITY_Community 325|Community 325]]
+- [[_COMMUNITY_Community 326|Community 326]]
+- [[_COMMUNITY_Community 327|Community 327]]
+- [[_COMMUNITY_Community 328|Community 328]]
+- [[_COMMUNITY_Community 329|Community 329]]
+- [[_COMMUNITY_Community 330|Community 330]]
+- [[_COMMUNITY_Community 331|Community 331]]
+- [[_COMMUNITY_Community 332|Community 332]]
+- [[_COMMUNITY_Community 333|Community 333]]
+- [[_COMMUNITY_Community 334|Community 334]]
+- [[_COMMUNITY_Community 335|Community 335]]
+- [[_COMMUNITY_Community 336|Community 336]]
+- [[_COMMUNITY_Community 337|Community 337]]
+- [[_COMMUNITY_Community 338|Community 338]]
+- [[_COMMUNITY_Community 339|Community 339]]
+- [[_COMMUNITY_Community 340|Community 340]]
+- [[_COMMUNITY_Community 341|Community 341]]
+- [[_COMMUNITY_Community 342|Community 342]]
+- [[_COMMUNITY_Community 343|Community 343]]
+- [[_COMMUNITY_Community 344|Community 344]]
+- [[_COMMUNITY_Community 345|Community 345]]
+- [[_COMMUNITY_Community 346|Community 346]]
+- [[_COMMUNITY_Community 347|Community 347]]
+- [[_COMMUNITY_Community 348|Community 348]]
+- [[_COMMUNITY_Community 349|Community 349]]
+- [[_COMMUNITY_Community 350|Community 350]]
+- [[_COMMUNITY_Community 351|Community 351]]
+- [[_COMMUNITY_Community 352|Community 352]]
+- [[_COMMUNITY_Community 353|Community 353]]
+- [[_COMMUNITY_Community 354|Community 354]]
+- [[_COMMUNITY_Community 355|Community 355]]
+- [[_COMMUNITY_Community 356|Community 356]]
+- [[_COMMUNITY_Community 357|Community 357]]
+- [[_COMMUNITY_Community 358|Community 358]]
+- [[_COMMUNITY_Community 359|Community 359]]
+- [[_COMMUNITY_Community 360|Community 360]]
+- [[_COMMUNITY_Community 361|Community 361]]
+- [[_COMMUNITY_Community 362|Community 362]]
+- [[_COMMUNITY_Community 363|Community 363]]
+- [[_COMMUNITY_Community 364|Community 364]]
+- [[_COMMUNITY_Community 365|Community 365]]
+- [[_COMMUNITY_Community 366|Community 366]]
+- [[_COMMUNITY_Community 367|Community 367]]
+- [[_COMMUNITY_Community 368|Community 368]]
+- [[_COMMUNITY_Community 369|Community 369]]
+- [[_COMMUNITY_Community 370|Community 370]]
+- [[_COMMUNITY_Community 371|Community 371]]
+- [[_COMMUNITY_Community 372|Community 372]]
+- [[_COMMUNITY_Community 373|Community 373]]
+- [[_COMMUNITY_Community 374|Community 374]]
+- [[_COMMUNITY_Community 375|Community 375]]
+- [[_COMMUNITY_Community 376|Community 376]]
+- [[_COMMUNITY_Community 377|Community 377]]
+- [[_COMMUNITY_Community 378|Community 378]]
+- [[_COMMUNITY_Community 379|Community 379]]
+- [[_COMMUNITY_Community 380|Community 380]]
+- [[_COMMUNITY_Community 381|Community 381]]
+- [[_COMMUNITY_Community 382|Community 382]]
+- [[_COMMUNITY_Community 383|Community 383]]
+- [[_COMMUNITY_Community 384|Community 384]]
+- [[_COMMUNITY_Community 385|Community 385]]
+- [[_COMMUNITY_Community 386|Community 386]]
+- [[_COMMUNITY_Community 387|Community 387]]
+- [[_COMMUNITY_Community 388|Community 388]]
+- [[_COMMUNITY_Community 389|Community 389]]
+- [[_COMMUNITY_Community 390|Community 390]]
+- [[_COMMUNITY_Community 391|Community 391]]
+- [[_COMMUNITY_Community 392|Community 392]]
+- [[_COMMUNITY_Community 393|Community 393]]
+- [[_COMMUNITY_Community 394|Community 394]]
+- [[_COMMUNITY_Community 395|Community 395]]
+- [[_COMMUNITY_Community 396|Community 396]]
+- [[_COMMUNITY_Community 397|Community 397]]
+- [[_COMMUNITY_Community 398|Community 398]]
+- [[_COMMUNITY_Community 399|Community 399]]
+- [[_COMMUNITY_Community 400|Community 400]]
+- [[_COMMUNITY_Community 401|Community 401]]
+- [[_COMMUNITY_Community 402|Community 402]]
+- [[_COMMUNITY_Community 403|Community 403]]
+- [[_COMMUNITY_Community 404|Community 404]]
+- [[_COMMUNITY_Community 405|Community 405]]
+- [[_COMMUNITY_Community 406|Community 406]]
+- [[_COMMUNITY_Community 407|Community 407]]
+- [[_COMMUNITY_Community 408|Community 408]]
+- [[_COMMUNITY_Community 409|Community 409]]
+- [[_COMMUNITY_Community 410|Community 410]]
+- [[_COMMUNITY_Community 411|Community 411]]
+- [[_COMMUNITY_Community 412|Community 412]]
+- [[_COMMUNITY_Community 413|Community 413]]
+- [[_COMMUNITY_Community 414|Community 414]]
+- [[_COMMUNITY_Community 415|Community 415]]
+- [[_COMMUNITY_Community 416|Community 416]]
+- [[_COMMUNITY_Community 417|Community 417]]
+- [[_COMMUNITY_Community 418|Community 418]]
+- [[_COMMUNITY_Community 419|Community 419]]
+- [[_COMMUNITY_Community 420|Community 420]]
+- [[_COMMUNITY_Community 421|Community 421]]
+- [[_COMMUNITY_Community 422|Community 422]]
+- [[_COMMUNITY_Community 423|Community 423]]
+- [[_COMMUNITY_Community 424|Community 424]]
+- [[_COMMUNITY_Community 425|Community 425]]
+- [[_COMMUNITY_Community 426|Community 426]]
+- [[_COMMUNITY_Community 427|Community 427]]
+- [[_COMMUNITY_Community 428|Community 428]]
+- [[_COMMUNITY_Community 429|Community 429]]
+- [[_COMMUNITY_Community 430|Community 430]]
+- [[_COMMUNITY_Community 431|Community 431]]
+- [[_COMMUNITY_Community 432|Community 432]]
+- [[_COMMUNITY_Community 433|Community 433]]
+- [[_COMMUNITY_Community 434|Community 434]]
+- [[_COMMUNITY_Community 435|Community 435]]
+- [[_COMMUNITY_Community 436|Community 436]]
+- [[_COMMUNITY_Community 437|Community 437]]
+- [[_COMMUNITY_Community 438|Community 438]]
+- [[_COMMUNITY_Community 439|Community 439]]
+- [[_COMMUNITY_Community 440|Community 440]]
+- [[_COMMUNITY_Community 441|Community 441]]
+- [[_COMMUNITY_Community 442|Community 442]]
+- [[_COMMUNITY_Community 443|Community 443]]
+- [[_COMMUNITY_Community 444|Community 444]]
+- [[_COMMUNITY_Community 445|Community 445]]
+- [[_COMMUNITY_Community 446|Community 446]]
+- [[_COMMUNITY_Community 448|Community 448]]
+- [[_COMMUNITY_Community 449|Community 449]]
+- [[_COMMUNITY_Community 450|Community 450]]
+- [[_COMMUNITY_Community 451|Community 451]]
+- [[_COMMUNITY_Community 452|Community 452]]
+- [[_COMMUNITY_Community 453|Community 453]]
+- [[_COMMUNITY_Community 454|Community 454]]
+- [[_COMMUNITY_Community 455|Community 455]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `WorldManager` - 17 edges
-2. `Phase4 Enemies` - 14 edges
-3. `Gas Material (MAT_GAS)` - 12 edges
-4. `Status Effect System` - 11 edges
-5. `Juicy Melee Hit` - 11 edges
-6. `HitReaction Autoload` - 11 edges
-7. `Gameplay Mechanics Design` - 10 edges
-8. `ProjectileBehavior (base contract)` - 10 edges
-9. `Architecture Deepening` - 10 edges
-10. `Enemy & Status Performance Pass` - 9 edges
+1. `Weapon & Modifier Balancing — Phase 2 (Emergent-Combo Modifiers) Implementation Plan` - 27 edges
+2. `Phase 5: Level System Implementation Plan` - 24 edges
+3. `Part 3: Props & World Boundary — Implementation Plan` - 23 edges
+4. `FPS Performance Pass Implementation Plan` - 20 edges
+5. `Part 2: Set-Piece Rooms — Implementation Plan` - 19 edges
+6. `Organic Set-Piece Rooms Implementation Plan` - 18 edges
+7. `Terrain Collision Coalescing Implementation Plan` - 18 edges
+8. `Status Effect System Implementation Plan` - 18 edges
+9. `SP-A — Data-Driven Runtime (Weapons + Modifiers) Implementation Plan` - 18 edges
+10. `UI Layout System — Implementation Plan` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Floor-Only Decor Placement (MAT_AIR)` --reads_region_from--> `WorldManager`  [EXTRACTED]
   docs/superpowers/plans/2026-06-02-glowing-cave-flora.md → src/core/world_manager.gd
 - `Player Dash Hook` --added_to--> `PlayerController`  [EXTRACTED]
   docs/superpowers/plans/2026-06-05-charge-and-combos.md → src/player/player_controller.gd
+- `NavField Glue Object` --owned_by--> `WorldManager`  [EXTRACTED]
+  docs/superpowers/plans/2026-06-05-enemy-navigation.md → src/core/world_manager.gd
+- `Weapon Base Stats Standardization` --conceptually_related_to--> `MeleeWeapon Class`  [INFERRED]
+  docs/superpowers/plans/2026-04-15-weapon-ui.md → docs/superpowers/plans/2026-04-12-melee-weapon.md
 - `HitReaction Autoload (Merged Juice)` --semantically_similar_to--> `Juicy Melee Hit System (5 Juice Managers)`  [INFERRED] [semantically similar]
   docs/superpowers/plans/2026-04-26-architecture-deepening.md → docs/superpowers/plans/2026-04-26-juicy-melee-hit.md
-- `FloorContainer` --wired_into--> `WorldManager`  [EXTRACTED]
-  docs/superpowers/plans/2026-05-23-floor-background.md → src/core/world_manager.gd
-- `resolve_terrain_overlap Method` --added_to--> `PlayerController`  [EXTRACTED]
-  docs/superpowers/plans/2026-05-23-terrain-overlap-recovery.md → src/player/player_controller.gd
 
 ## Import Cycles
 - None detected.
@@ -278,51 +515,51 @@
 - **UI Juice Pipeline** — specs_2026_05_11_juicy_ui_refactor_design_juicy_ui_refactor_system, specs_2026_05_23_ui_consistency_and_crt_design_ui_consistency_crt_system, specs_2026_05_25_ui_layout_system_design_ui_layout_system [INFERRED 1.00]
 - **Terrain Simulation Ecosystem** — specs_2026_05_14_set_piece_rooms_design_mat_oil, specs_2026_05_14_set_piece_rooms_design_mat_explode_wave, specs_2026_05_09_hit_feedback_blood_design_mat_blood, specs_2026_05_14_props_and_boundary_design_powder_sim, specs_2026_05_14_set_piece_rooms_design_oil_burning_behavior, specs_2026_05_19_oil_explosion_cascade_design_popcorn_cascade_tuning [INFERRED 0.95]
 
-## Communities (223 total, 131 thin omitted)
+## Communities (456 total, 122 thin omitted)
 
 ### Community 0 - "Game Foundation & Docs"
-Cohesion: 0.08
-Nodes (47): 3-Slot Modifier Build System, Elemental Chain Reactions, Gameplay Mechanics Design, Implementation Todo List — Core Systems, Implementation Todo List — Content Expansion & Polish, Material Generation from Weapon Swings, Melee Swing Terrain Modification, Cellular Automata Simulation (+39 more)
+Cohesion: 0.06
+Nodes (59): 3-Slot Modifier Build System, Elemental Chain Reactions, 1. Core Vision & Pacing, 2. Combat & Environmental Interaction, 3. The Build System, 4. The Core Gameplay Loop, Gameplay Mechanics, Material Generation from Weapon Swings (+51 more)
 
 ### Community 1 - "Status Effects & Burn Feedback"
-Cohesion: 0.07
-Nodes (43): resolve_terrain_overlap Method, Terrain Overlap Recovery, Burn Throb Per-Tick Visual, burn_tick Signal, Ember Vignette Channel, Status Clarity & Burn Feedback, StatusDef.icon_path, StatusVisuals Node (+35 more)
+Cohesion: 0.13
+Nodes (19): resolve_terrain_overlap Method, Terrain Overlap Recovery, Burn Throb Per-Tick Visual, burn_tick Signal, Ember Vignette Channel, Status Clarity & Burn Feedback, StatusDef.icon_path, StatusVisuals Node (+11 more)
 
 ### Community 2 - "Floor Rendering & Room Background"
-Cohesion: 0.05
-Nodes (41): BiomeDef Floor + Decor Fields, Floor Background System, FloorChunk, FloorContainer, FeatureFloorOverlay, FeatureLanternCluster, FeaturePlaqueSet, BiomeDef.fixed_anchors (+33 more)
+Cohesion: 0.16
+Nodes (14): BiomeDef Floor + Decor Fields, Floor Background System, FloorChunk, BiomeDef.ui_accent, BiomeDef.fixed_anchors, DecorDef Resource, FlickerLight Script, Floor-Only Decor Placement (MAT_AIR) (+6 more)
 
 ### Community 3 - "Content Expansion & CSV Data Design"
 Cohesion: 0.05
 Nodes (39): Conditional Joker Trigger Modifiers (10), Controlled Vocabulary for Modifier Columns, CsvTable.parse() (header-keyed dict rows), Element IDs (materials and statuses), Emitter Modifiers (7 spawn_material on_swing), Modifier CSV Schema (11-column extended), 46 New Modifiers, Projectile / On-Swing Modifiers (7) (+31 more)
 
 ### Community 4 - "Player Health & World Systems"
-Cohesion: 0.06
-Nodes (38): LavaDamageChecker, MaterialDef Damage Property, GPU Compute Simulation Pipeline, Drop (RigidBody2D), Interactable Component, InteractionController, Outline Shader (Interactable Highlight), WeaponDrop (+30 more)
+Cohesion: 0.15
+Nodes (15): LavaDamageChecker, MaterialDef Damage Property, GPU Compute Simulation Pipeline, TerrainCell Resource, TerrainPhysical Module, spawn_mat Command (Fluid Type), BiomeDef Resource, BiomeRegistry Autoload (+7 more)
 
 ### Community 5 - "Weapon Rarity & Shop Economy"
 Cohesion: 0.07
 Nodes (38): Chest.tier as EnemyTier, Per-Weapon Rarity System, Weapon.rarity Field, WeaponRegistry Flat List Refactor, ShopModifierDrop, ShopPricing Helper, ShopRemoval Card Service, Shop Room Redesign (+30 more)
 
 ### Community 6 - "GPU Performance & Chunk Loading"
-Cohesion: 0.06
-Nodes (37): Chunk Load Lag Fix, Collision Priority Queue (nearest-first), Frame-Budgeted Collision Rebuilds, has_burning (Chunk field), Periodic Burning Re-Check (every 10th rebuild), world_manager.gd (central orchestrator), build_from_segments (function), collider.glsl (+29 more)
+Cohesion: 0.22
+Nodes (10): Player Controller, world_manager.gd (central orchestrator), terrain_collider.gd, Async GPU Readback, Axis-Separated Collision Resolution, camera_controller.gd (removed), ShadowGrid (class), Spawn Finder (find_spawn_position) (+2 more)
 
 ### Community 7 - "Melee Swing Animation"
-Cohesion: 0.07
-Nodes (36): Bouncy Melee Swing, Elastic Easing (overshoot), OVERSHOOT_RATIO (0.15), Return Phase (~30%), Swing-Out Phase (~70%), WeaponVisual (weapon_visual.gd), Drop (RigidBody2D), interact (E key input) (+28 more)
+Cohesion: 0.10
+Nodes (23): Bouncy Melee Swing, Elastic Easing (overshoot), OVERSHOOT_RATIO (0.15), Return Phase (~30%), Swing-Out Phase (~70%), WeaponVisual (weapon_visual.gd), Blade Sprite (Sprite2D), HALF_ARC (PI/4) (+15 more)
 
 ### Community 8 - "Weapon Modifiers & Elemental Spells"
-Cohesion: 0.07
-Nodes (29): SplittingRoundsModifier, ArcVolleyModifier, LightningBoltModifier, PenetratingShockwaveModifier, IcicleVolleyModifier, FireballFanModifier, Modifier (base class), Weapon Modifier System (+21 more)
+Cohesion: 0.25
+Nodes (8): SplittingRoundsModifier, ArcVolleyModifier, IcicleVolleyModifier, FireballFanModifier, ProjectileModifier (cadence base), SplitBehavior, ClusterBombModifier (split+burn), SpectralEchoModifier (delayed ghost)
 
 ### Community 9 - "Projectile Behaviors & Patterns"
-Cohesion: 0.07
-Nodes (28): BouncingBulletsModifier, GleamingProjectileModifier, BounceBehavior, ClearBulletsBehavior, PenetrateBehavior, ProjectileBehavior (base contract), Projectile Behavior Lifecycle Dispatch, AimedBurstWeapon (+20 more)
+Cohesion: 0.17
+Nodes (12): BouncingBulletsModifier, GleamingProjectileModifier, BounceBehavior, ClearBulletsBehavior, PenetrateBehavior, ProjectileBehavior (base contract), Projectile Behavior Lifecycle Dispatch, HomingBehavior (steering) (+4 more)
 
 ### Community 10 - "Melee Weapon Core"
-Cohesion: 0.07
-Nodes (28): disperse_materials_in_arc Method, get_facing_direction Method, MeleeSwingEffect Visual Effect, MeleeWeapon Class, WorldManager (Melee Plan Reference), Soul Knight-Style Trail Effect, WeaponVisual Component, Weapon Visual Attack Animation (+20 more)
+Cohesion: 0.20
+Nodes (11): Weapon Base Stats Standardization, WeaponButton (HUD), WeaponManager Signals (weapon_activated), WeaponPopup (Full-Screen), LavaEmitterModifier, Modifier Base Class (Lifecycle Hooks), Template Method Pattern (Weapon.use/tick), Modifier Full-Slots Feedback (Jitter+Red Outline) (+3 more)
 
 ### Community 11 - "Enemy AI & Boss Design"
 Cohesion: 0.09
@@ -333,40 +570,40 @@ Cohesion: 0.09
 Nodes (24): ChunkManager (passability binding), collider.glsl (passability write), ComputeDevice (passability decode), GPU Passability Buffer, NavField (slimmed GPU path), PassabilityGrid, TerrainCollisionHelper (nav feed), Circular Fog of War (+16 more)
 
 ### Community 13 - "Hit Feedback & Blood VFX"
-Cohesion: 0.09
-Nodes (23): Blood Fluid Simulation (blood.glslinc), Hit Feedback & Blood Design, HitReaction autoload, MAT_BLOOD material, Material Hardness & Carve Scaling, TerrainImpact autoload, Props & World Boundary System, Explode Wave simulation (Manhattan frontier) (+15 more)
+Cohesion: 0.05
+Nodes (38): 1. Wire Existing Flash & Squash, 2. New BLOOD Material, 3. Blood Fluid Simulation (`shaders/include/sim/blood.glslinc`), 4. Simulation Integration (`shaders/compute/simulation.glsl`), 5. Render Integration (`shaders/visual/render_chunk.gdshader`), 6. Blood Placement API, 7. Spawn Blood on Hit, 8. Regenerate Material GLSL (+30 more)
 
 ### Community 14 - "Terrain Carving & Hardness"
-Cohesion: 0.09
-Nodes (23): place_blood API chain, TerrainModifier, Carve radius scaling formula, MaterialDef.hardness field, Melee carve with hardness scaling, Enemy Intent Indicator (Soul Knight style), Animation timeline (flash-in, idle juice, exit), Intent Indicator scene (intent_indicator.tscn) (+15 more)
+Cohesion: 0.06
+Nodes (34): place_blood API chain, TerrainModifier, Carve radius scaling formula, MaterialDef.hardness field, Melee carve with hardness scaling, Enemy Intent Indicator (Soul Knight style), Animation timeline (flash-in, idle juice, exit), Intent Indicator scene (intent_indicator.tscn) (+26 more)
 
 ### Community 15 - "Enemy Intent & Indicators"
-Cohesion: 0.11
-Nodes (21): Main Menu Scene, Pause Menu Scene, Pixel-Art UI Theme (DawnLike Font), SceneManager Autoload, Settings Popup (Shared), DeathScreen (Slay the Spire Style), HealthComponent, HealthUI (HUD Bar) (+13 more)
+Cohesion: 0.16
+Nodes (14): DeathScreen (Slay the Spire Style), HealthComponent, HealthUI (HUD Bar), Balatro-Inspired Dark/Fire UI Design, Hero UI Shaders (Shimmer, Vignette, Glow), CurrencyHUD, ModifierInventory, ShopUI (CanvasLayer) (+6 more)
 
 ### Community 16 - "Set-Piece Rooms & Arena"
 Cohesion: 0.11
 Nodes (19): SpawnDispatcher, Jump-Flood Algorithm (JFA), Walkability Invariant, ArenaComposition, ArenaFeature, ArenaRegion, Perimeter Material, chunk_flags_tex (+11 more)
 
 ### Community 17 - "UI Juice & Animation Refactor"
-Cohesion: 0.11
-Nodes (19): WorldManager, Double-buffered terrain probe SSBOs, FPS Performance Pass, WorldManager explosion wave polling, Coalesced + Double-Buffered Light Output SSBO, ComputeDevice light coalescing changes, Double-buffered light output SSBOs, WorldManager._update_lights rewrite (+11 more)
+Cohesion: 0.22
+Nodes (9): BiomeDef.floor_texture + decor_textures, Floor Background System, FloorChunk class (visual only, no physics), FloorContainer class (manages FloorChunks), Biome accent colors (5 biomes), main_theme.tres (single Godot Theme), UIPalette autoload (biome-reactive accent), AccentOverlay NinePatchRect (biome-tinted border) (+1 more)
 
 ### Community 18 - "Oil & Elemental Cascades"
 Cohesion: 0.17
 Nodes (15): WeaponButton (Balatro restyle), WeaponPopup (Balatro restyle), flash_slots_full() Feedback, Modifier Transfer Flow, Modifier Full Slots, Modifier Transfer, Weapon Modifier, LavaEmitterModifier (+7 more)
 
 ### Community 19 - "Wall-Block & Auto-Facing"
-Cohesion: 0.14
-Nodes (15): Content Expansion - Weapons & Modifiers Design Spec, 28 New Weapons, SP-A: Data-Driven Runtime (Weapons + Modifiers), Free Terrain Carving Native Flag, Lever 1: Fold Native (intrinsic weapon behavior), Lever 2: Stat-Niche (distinct weapon stat shape), Melee Niche Taxonomy (Flurry/Crowd-sweep/Heavy-hit/Crit-engine/Attrition), Weapon/Modifier Separation Redesign (+7 more)
+Cohesion: 0.08
+Nodes (26): Content Expansion - Weapons & Modifiers Design Spec, 28 New Weapons, SP-A: Data-Driven Runtime (Weapons + Modifiers), Free Terrain Carving Native Flag, Lever 1: Fold Native (intrinsic weapon behavior), Lever 2: Stat-Niche (distinct weapon stat shape), Melee Niche Taxonomy (Flurry/Crowd-sweep/Heavy-hit/Crit-engine/Attrition), Weapon/Modifier Separation Redesign (+18 more)
 
 ### Community 20 - "Weapon Info & Popups"
-Cohesion: 0.20
-Nodes (15): Enemy Navigation System, FlowField, NavField, PassabilityGrid, Wall clamp (enemy movement), WorldManager, ComputeDevice, HAS_COLLIDER shader array (+7 more)
+Cohesion: 0.18
+Nodes (17): Enemy Navigation System, FlowField, NavField, PassabilityGrid, Wall clamp (enemy movement), WorldManager, ComputeDevice, HAS_COLLIDER shader array (+9 more)
 
 ### Community 21 - "Parry & Projectile Block"
-Cohesion: 0.16
-Nodes (14): TerrainCell Resource, TerrainPhysical Module, TerrainSurface Autoload, TerrainSurfaceAdapter, Cave Spawning, spawn_mat Command, PNG Channel Encoding (R=material, G=spawn, A=mask), SpawnDispatcher (+6 more)
+Cohesion: 0.08
+Nodes (30): TerrainCell Resource, TerrainPhysical Module, TerrainSurface Autoload, TerrainSurfaceAdapter, Despawn Cycle (2500px), Mob Cap (configurable), Spawn Position Terrain Validation, CaveSpawner (+22 more)
 
 ### Community 22 - "Organic Set-Pieces"
 Cohesion: 0.16
@@ -377,44 +614,44 @@ Cohesion: 0.15
 Nodes (13): Bilibili Indie-Curious Creator Audience, Recruitment as Reverse Devlog Format, Recruitment Video Design Spec, 10-Second Explosion-Meme Montage Hook, Act 1: What Is This? (Destructible World + Living Elements), Act 2: What's Been Built? (Tech Credibility), Act 3: Why Join? (Benefits & Roles), Recruitment Video Outline (75-90s, 4-act structure) (+5 more)
 
 ### Community 24 - "FPS Optimization & Batching"
-Cohesion: 0.18
-Nodes (13): BiomeDef.ui_accent, CrtOverlay Autoload, CRT Post-Process Shader, UI Consistency + CRT Post-Process, UiTheme Autoload Refactor, AccentOverlay NinePatchRect Registry, HUD Redesign (health+gold+weapon), MinSizeApplier Helper (+5 more)
+Cohesion: 0.20
+Nodes (12): CrtOverlay Autoload, CRT Post-Process Shader, UI Consistency + CRT Post-Process, UiTheme Autoload Refactor, AccentOverlay NinePatchRect Registry, HUD Redesign (health+gold+weapon), MinSizeApplier Helper, ModalPanel (+4 more)
 
 ### Community 25 - "Coalesced Light Readback"
 Cohesion: 0.18
 Nodes (12): Authored Room System, FeatureFloorOverlay, FeatureLanternCluster, FeaturePlaqueSet, fixed_anchors map, Guidance Room, Shop Room, ShopModifierDrop (+4 more)
 
 ### Community 26 - "Terrain Collision Coalescing"
-Cohesion: 0.23
-Nodes (12): Five Internal Juice Adapters, HitReaction Autoload, HitSpec Resource, ChromaticFlashManager Autoload, DamageNumberManager Autoload, Juicy Melee Hit, HitSparkManager Autoload, HitStopManager Autoload (+4 more)
+Cohesion: 0.17
+Nodes (15): Five Internal Juice Adapters, HitReaction Autoload, HitSpec Resource, ChromaticFlashManager Autoload, DamageNumberManager Autoload, Juicy Melee Hit, HitSparkManager Autoload, HitStopManager Autoload (+7 more)
 
 ### Community 27 - "Bundled Weapon Modifiers"
-Cohesion: 0.23
-Nodes (12): DropTable Resource, DummyEnemy, RangedEnemy Velocity-Based Movement Fix, BossEnemy, Boss Multi-Phase System, Elite System (data-driven flag), Phase4 Enemies, Enemy-Weapon Tying (duplicate) (+4 more)
+Cohesion: 0.13
+Nodes (19): DropTable Resource, DummyEnemy, Enemy Base Class, Exclamation Mark Telegraph (!), Enemy Ai Improvements, RangedEnemy Velocity-Based Movement Fix, Wander Behavior (rename IDLE), BossEnemy (+11 more)
 
 ### Community 28 - "UI Consistency & CRT Layout"
-Cohesion: 0.17
-Nodes (12): BiomeDef Resource, Boss Ring Distance, Floor Transition Flow, GPU Pixel Scene Stamping, LevelManager Autoload, Phase5 Level System, PoolDef Resource (Material), Portal Scene (+4 more)
+Cohesion: 0.05
+Nodes (42): Arena Compositions, Biome Distinctiveness, Biome & Environment Art, Boss Mechanics & Phases, Boss Presentation, Card UI, CRT & Post-Processing, Difficulty Legend (+34 more)
 
 ### Community 29 - "Floor Background & Biomes"
-Cohesion: 0.20
-Nodes (11): Backdrop + input gating system, Content stagger animation, JuicyPanel base class, Juicy UI Refactor System, Panel open animation (drop-in, squash, stagger), Pixel scale unification (2x source, SDS_8x8 font), UI Consistency + CRT Post-Process System, HUD scene consolidation (HealthUI + WeaponButton → hud.tscn) (+3 more)
+Cohesion: 0.06
+Nodes (31): Animation specification, Architecture, Backdrop, Backdrop + input gating system, Backdrop & input gating, `close()` sequence, Content stagger, Files refactored (+23 more)
 
 ### Community 30 - "Crowd AI & Pursuit"
-Cohesion: 0.33
-Nodes (10): Cave Generation Stage, cave_stage.glsl (carving logic), cave_utils.glsl (hash/noise/connectors), Deterministic Edge Connector System, GenerationContext (struct), generation.glsl, Multi-Chunk Cave Generation (Primary/Secondary pairs), Stage-Based World Generation Pipeline (+2 more)
+Cohesion: 0.05
+Nodes (39): Architecture, Biome storage buffer (set=2, binding=0, std430), `BiomeDef` (Resource), Biomes shipped in Phase 5, Bootstrap content (Phase 5 ships with):, Boss → portal flow, Entry point: `tools/generate_room_templates.gd`, File Plan (+31 more)
 
 ### Community 31 - "NavField & Navigation"
 Cohesion: 0.22
 Nodes (10): AdvancedMeleeWeapon, Charge Controller, Combo Sequencer, Move (weapon move struct), Slash move shape, Spin move shape, Thrust move shape, WeaponManager (+2 more)
 
 ### Community 32 - "Encounter Director & Tokens"
-Cohesion: 0.20
-Nodes (10): PickupContext popup integration, Popup crossfade between adjacent drops, Per-frame popup position tracking (screen space), Weapon Drop Info Popup System, WeaponInfoPopup (CanvasLayer, read-only tooltip), Bundled Weapon + Modifier Drops System, Enemies fight with attached modifiers, Loot declutter (no standalone modifier drops) (+2 more)
+Cohesion: 0.08
+Nodes (24): PickupContext popup integration, Popup crossfade between adjacent drops, Per-frame popup position tracking (screen space), Weapon Drop Info Popup System, WeaponInfoPopup (CanvasLayer, read-only tooltip), 1. `src/enemies/drop_table.gd`, 2. `src/enemies/enemy.gd`, 3. `src/enemies/boss_enemy.gd` (+16 more)
 
 ### Community 33 - "Swarm Grid & Steering"
-Cohesion: 0.24
-Nodes (10): MAT_GAS, MAT_LAVA, MAT_AIR, MAT_STONE, MaterialRegistry (autoload), disperse_materials_in_arc (WorldManager), Velocity Encoding (A channel nibble), LavaDamageChecker (child node) (+2 more)
+Cohesion: 0.28
+Nodes (9): MAT_GAS, try_add_weapon (WeaponManager method), WeaponManager (new node), TestWeapon, Weapon (base class, RefCounted), Weapon Cooldown System, Weapon Slots (Array), Weapon System (+1 more)
 
 ### Community 34 - "Status Visuals & Performance"
 Cohesion: 0.22
@@ -425,8 +662,8 @@ Cohesion: 0.22
 Nodes (9): dust.glslinc, MAT_DUST, Wall-break Dust, Interspersed Boss Rings, Radial-coverage guarantee, BEDROCK material, Noita-Style Boss Wall, SectorGrid (+1 more)
 
 ### Community 36 - "Charge Bar & Combos"
-Cohesion: 0.28
-Nodes (9): Burn Feedback, DamageVignette, Bloody (status), Chilly (status), Frozen (status), Oiled (status), On Fire (status), Stain model (Noita-style) (+1 more)
+Cohesion: 0.16
+Nodes (17): Burn Feedback, DamageVignette, StatusVisuals, Bloody (status), Chilly (status), Crit System, Frozen (status), Oiled (status) (+9 more)
 
 ### Community 37 - "Crit System & CSV Weapons"
 Cohesion: 0.31
@@ -437,36 +674,36 @@ Cohesion: 0.22
 Nodes (8): WeaponRegistry Autoload (auto-generated), EnemyTier (EASY/NORMAL/HARD), ItemTier (COMMON/UNCOMMON/RARE), Enemy Drop Tables, Weapon Resource Expansion (8 weapons), Modifier Base Class, suppresses_base_use Flag, Template Method Pattern (use/tick)
 
 ### Community 39 - "Decor System & Glowing Flora"
-Cohesion: 0.32
-Nodes (8): StatusVisuals, Crit System, Status Effect System, StatusComponent, StatusDef, StatusRegistry, max_physics_steps_per_frame, Status Performance Spiral
+Cohesion: 0.06
+Nodes (35): 1. Enemy State Machine, 2. Enemy Types & Weapon Tying, 3. Weapon Expansion, 4. Spawning Integration, 5. File Inventory, 6. Edge Cases, BiomeDef Extension (`src/terrain/biome_def.gd`), BossEnemy (`src/enemies/boss_enemy.gd`) (+27 more)
 
 ### Community 40 - "Authored Room System"
-Cohesion: 0.32
-Nodes (8): Deep Modules Design Principle, PickupContext, Pickupable Interface, WeaponDelivery, WeaponOfferSpec Resource, Architecture Deepening, Chest (Area2D), Chest System
+Cohesion: 0.28
+Nodes (9): Deep Modules Design Principle, PickupContext, Pickupable Interface, WeaponDelivery, WeaponOfferSpec Resource, Architecture Deepening, Chest (Area2D), ChestUI CanvasLayer (+1 more)
 
 ### Community 41 - "Boss Wall & Rings"
-Cohesion: 0.36
-Nodes (8): Balatro Card Ui, ChestUI CanvasLayer, Enemy Base Class, ModifierInventory, Economy Progression, ShopUI, WalletComponent, Shop Ui Redesign
+Cohesion: 0.06
+Nodes (34): Bosses, Difficulty Legend, Enemy Foundation, Implementation Todo List, Loot, Modifiers, Phase 1: Core Infrastructure, Phase 2: Build System (+26 more)
 
 ### Community 42 - "Guidance Room & Shops"
-Cohesion: 0.25
-Nodes (8): Stochastic Rounding for Low-Density Flows, MaterialDef (class), Burning Wood (state), HEAT_SPREAD (10), IGNITION_TEMP (180), Frame Seed (push constant), hash (GLSL utility), Random Heat Spread
+Cohesion: 0.15
+Nodes (14): Implementation, render_chunk.gdshader, simulation.glsl, world_manager.gd, Gas Density (G channel), Gas Velocity (A channel packed), Pull-Based Advection, Stochastic Rounding for Low-Density Flows (+6 more)
 
 ### Community 43 - "Light & Glowing & Sources"
 Cohesion: 0.33
 Nodes (7): ChunkLights, Light Pack Pipeline, Terrain Probe Pipeline, Double-Buffered Terrain Probe, Hazard Bitmask, Coalesced Light Readback, Coalesced Collider Readback
 
 ### Community 44 - "Csv & Weapon & Table"
-Cohesion: 0.29
-Nodes (7): csv_table.gd, CSV-Driven Weapon Data, WeaponRegistry, ModifierProjectile (spawn helper), Modifiers Design (SP4), on_attack modifier hook, ProjectileModifier
+Cohesion: 0.17
+Nodes (13): csv_table.gd, CSV-Driven Weapon Data, WeaponRegistry, ModifierProjectile (spawn helper), Modifiers Design (SP4), on_attack modifier hook, ProjectileModifier, BounceBehavior (+5 more)
 
 ### Community 45 - "Color & Palette & Hero"
-Cohesion: 0.29
-Nodes (7): Dark/Fire Roguelike Color Palette, Hero Shaders (shimmer, vignette, glow), Balatro Ui Redesign, Shared StyleBoxFlat Panels, UiAnimations (src/ui/ui_animations.gd), UiTheme (resources/ui_theme.tres), jitter_bounce Animation
+Cohesion: 0.21
+Nodes (13): Balatro Card Ui, Dark/Fire Roguelike Color Palette, Hero Shaders (shimmer, vignette, glow), Balatro Ui Redesign, Shared StyleBoxFlat Panels, UiAnimations (src/ui/ui_animations.gd), UiTheme (resources/ui_theme.tres), ModifierInventory (+5 more)
 
 ### Community 46 - "Registry & Material & Has"
-Cohesion: 0.29
-Nodes (7): Lava Heat Source (ignites neighbors), generate_material_glsl.gd (tool), HAS_COLLIDER[] (GLSL array), HAS_WALL_EXTENSION[] (GLSL array), IS_FLAMMABLE[] (GLSL array), MAT_WOOD, materials.glslinc (generated)
+Cohesion: 0.18
+Nodes (13): Lava Heat Source (ignites neighbors), generate_material_glsl.gd (tool), HAS_COLLIDER[] (GLSL array), HAS_WALL_EXTENSION[] (GLSL array), IS_FLAMMABLE[] (GLSL array), MAT_AIR, MAT_STONE, MAT_WOOD (+5 more)
 
 ### Community 47 - "Specs & 2026 & Aggressive"
 Cohesion: 0.40
@@ -481,44 +718,44 @@ Cohesion: 0.53
 Nodes (6): DecorDef, FlickerLight, FloorChunk, Glowing Cave Flora, Baked Decor Lighting, MAX_LIGHTS_PER_ITEM limit
 
 ### Community 50 - "Enemy & Perf & Pass"
-Cohesion: 0.33
-Nodes (6): Enemy Status Performance Pass, SwarmGrid (spatial hash), Aggro contagion, Attack-token budget, EncounterDirector, Surround steering
+Cohesion: 0.29
+Nodes (7): Enemy Status Performance Pass, SwarmGrid (spatial hash), Aggro contagion, Component 1 — Pursuit subsystem (persistent aggro + contagion + rubber-band), Horde soft-cap, Persistent aggro, Rubber-band catch-up ("keep pace, never exceed")
 
 ### Community 51 - "Bounce & Clear & Penetrate"
-Cohesion: 0.40
-Nodes (6): BounceBehavior, ClearBulletsBehavior, PenetrateBehavior, Projectile Behavior System, ProjectileBehavior (base), SplitBehavior
+Cohesion: 0.06
+Nodes (30): Balatro-Inspired UI Redesign Implementation Plan, Dependency Graph, File Structure, Scene Changes, Scene Changes, Scene Changes, Scene Changes, Scene Changes (+22 more)
 
 ### Community 52 - "Card & Scene & Elastic"
 Cohesion: 0.33
 Nodes (6): Card.tscn Reusable Scene, Elastic Hover Animation, fake_3D Perspective Tilt Shader, Mouse-Based Tilt Tracking, Offset Drop Shadow, SubViewport Static Rendering
 
 ### Community 53 - "Telegraph & Exclamation & Improvements"
-Cohesion: 0.33
-Nodes (6): Exclamation Mark Telegraph (!), Enemy Ai Improvements, Wander Behavior (rename IDLE), Enemy Finite State Machine, Separation Steering (min 16px), Wind-Up Attack Telegraphing
+Cohesion: 0.07
+Nodes (29): Architecture, Behavior, Cheat Command System Design, Command Implementations, Command System, Command Tree, CommandContext, ConsoleCommand class (RefCounted) (+21 more)
 
 ### Community 54 - "Material & Gas & Density"
-Cohesion: 0.40
-Nodes (6): Gas Density (G channel), Gas Velocity (A channel packed), Pull-Based Advection, Gas Wall Reflection, Unified Fluid Advection (fluid_advect_pull), simulation.glsl
+Cohesion: 0.07
+Nodes (29): 10. Testing, 11. Acceptance, 1. Problem, 2. Approach: Parallel timed dict in StatusComponent, 3.1 `steam` (stain-based), 3.2 `lightning` (timed), 3.3 `stun` (timed), 3.4 StatusDef schema change (+21 more)
 
 ### Community 55 - "Material & Gas & Injection"
-Cohesion: 0.40
-Nodes (6): gas_injector.gd, Gas Material (MAT_GAS), Gas Density Tint (compositing), Injection Buffer (SSBO), Rigidbody Velocity Injection, Lava Material (MAT_LAVA)
+Cohesion: 0.33
+Nodes (7): gas_injector.gd, Gas Material (MAT_GAS), Gas Density Tint (compositing), Injection Buffer (SSBO), Rigidbody Velocity Injection, Lava Material (MAT_LAVA), MAT_LAVA
 
 ### Community 56 - "Menu & Game & Scene"
 Cohesion: 0.47
 Nodes (6): game.tscn (renamed from main.tscn), Key Rebinding (settings), Main Menu (scene), Menu UI System, Pause Menu (CanvasLayer), Settings Popup (shared)
 
 ### Community 57 - "Health & Death & Scene"
-Cohesion: 0.33
-Nodes (6): SceneManager (autoload), Soft Pause (get_tree().paused), DeathScreen (CanvasLayer), HealthComponent (child node), HealthUI (CanvasLayer), Invincibility Frames (i-frames)
+Cohesion: 0.25
+Nodes (8): SceneManager (autoload), Soft Pause (get_tree().paused), DeathScreen (CanvasLayer), HealthComponent (child node), HealthUI (CanvasLayer), Invincibility Frames (i-frames), LavaDamageChecker (child node), Material Damage Property
 
 ### Community 58 - "Based & World & Generation"
 Cohesion: 0.40
 Nodes (6): generation.glsl, GenerationContext, Push Constants (GPU), Stage-Based World Generation, Stage Files (GLSL), wood_fill_stage.glsl
 
 ### Community 59 - "Tint & Random & Heat"
-Cohesion: 0.33
-Nodes (6): Fire Placement (place_fire), Temperature-Driven Burning, ember_color (shader function), flicker_amount (shader function), Temperature Tint, TIME Uniform
+Cohesion: 0.12
+Nodes (15): Behavior, Burning Wood, Files Changed, Fire Placement, Heat Spread, Overview, Problem, Solution (+7 more)
 
 ### Community 60 - "Specs & 2026 & Native"
 Cohesion: 0.40
@@ -577,8 +814,8 @@ Cohesion: 0.50
 Nodes (4): MAT_VOID_STONE (outer wall), MAT_WARDSTONE (warning ring), MaterialDef.indestructible flag, World Boundary (wardstone ring + void zone)
 
 ### Community 74 - "Spawn & Despawn & Mob"
-Cohesion: 0.50
-Nodes (4): Despawn Cycle (2500px), Mob Cap (configurable), Spawn Position Terrain Validation, CaveSpawner
+Cohesion: 0.07
+Nodes (29): 1. Problem, 2. Goals & decisions, 6. Implementation surface (phased), 7. Tests (in scope), 8. Risks / out of scope, A1 — Effective-DPS model (the spine), A2 — Rarity-to-power curve (melee anchor), A3 — Melee vs ranged (+21 more)
 
 ### Community 75 - "Dawnlike & Readme & Kyrise"
 Cohesion: 0.50
@@ -633,32 +870,996 @@ Cohesion: 0.67
 Nodes (3): Flat weapon registration list (no per-tier bookkeeping), Weapon.rarity export field, WeaponRegistry _build_tier_buckets
 
 ### Community 88 - "Melee & Knockback & Hit"
+Cohesion: 0.07
+Nodes (28): 1. Standardized Base Stats Refactor, 2. Weapon Button (HUD Element), 3. Weapon Popup (Full-Screen Overlay), 4. Integration & Wiring, Active Weapon Tracking, Changes to Game Scene (`scenes/game.tscn`), Changes to WeaponManager (`src/weapons/weapon_manager.gd`), Click Behavior (+20 more)
+
+### Community 150 - "Fps & Perf & Pass"
+Cohesion: 0.06
+Nodes (31): 1. Hazard sub-cell map, 2. Probe pipeline, 3. Melee split, Alternatives Considered, Caller updates, `Chunk.hazard_cells: PackedInt32Array`, Components, `ComputeDevice` changes (+23 more)
+
+### Community 154 - "Terrain & Collision & Coalescing"
+Cohesion: 0.14
+Nodes (13): ComputeDevice light coalescing changes, Coalesced collider output SSBO, Components & dependencies, Dirty tracking, Failure handling, Frame flow, Goal, Latency guarantee (+5 more)
+
+### Community 165 - "Command & Context"
+Cohesion: 0.07
+Nodes (28): 1. Goal, 2.1 Split: GPU material stage + GDScript entity pass, 2.2 Biome assignments (locked), 2. Prop Placement Pipeline, 3.1 Per-cell rules (new `stage_powder` in the sim shader), 3.2 Passability, 3.3 Visuals, 3.4 Performance (+20 more)
+
+### Community 177 - "Wall & Rendering"
+Cohesion: 0.07
+Nodes (28): 1. Goal, 2. Boss Arena, 3.5.1 MAT_OIL, 3.5.2 MAT_EXPLODE_WAVE, 3.5.3 Expected spread pattern, 3.5.4 Console integration (only integration in this iteration), 3.5.5 Tuning constants, 3.5.6 Out of scope (deferred to a later spec) (+20 more)
+
+### Community 181 - "Material"
+Cohesion: 0.07
+Nodes (27): Assumptions (resolved ambiguities in the spec), File structure (Phase 2), Final verification, Out of scope (per spec §8), Task 10: echo_strike (retrigger first slot), Task 11: overclock (retrigger left, disable 5s), Task 12: mirror_slot (copy/delegate left), Task 13: catalyst_bond (link slots 0 and 2) (+19 more)
+
+### Community 182 - "Drop"
+Cohesion: 0.07
+Nodes (27): 1.1 Relationship to the 2026-05-14 set-piece spec, 1. Goal, 2.1 Footprint and sector claiming, 2.2 Procedural carve stage — `stage_cavern_carve`, 2.3.1 Region types, 2.3.2 Feature types, 2.3 Composition resources, 2.4 Boss arena compositions (Claude authors) (+19 more)
+
+### Community 183 - "Material"
+Cohesion: 0.07
+Nodes (26): Created, File Map, Modified, Phase 5: Level System Implementation Plan, Self-Review Checklist, Task 10: Shader stage — biome_cave, Task 11: Shader stage — biome_pools, Task 12: Shader stage — pixel_scene_stamp (+18 more)
+
+### Community 199 - "Inset"
+Cohesion: 0.07
+Nodes (26): 1. Enemy Base & Dummy Enemy, 2. Drop Table, 3. Currency System, 4. Currency HUD, 5. Modifier Inventory, 6. Shop UI, 7. Integration Points, 8. Testing (+18 more)
+
+### Community 202 - "Health & Death & Player"
+Cohesion: 0.08
+Nodes (25): 10. Out-of-scope follow-ups, 1. Problem, 2. Scope, 3.1 `hit_status` CSV column → projectile status, 3.2 `ChargedRangedWeapon extends RangedWeapon` — charge-to-fire base, 3.3 New `ProjectileBehavior.on_expire` hook, 3.4 `CombatUtil.nearest_attackables` static helper, 3. Shared plumbing (+17 more)
+
+### Community 213 - "Based & World & Generation"
+Cohesion: 0.08
+Nodes (24): API, Architecture, Change, Change, Change, Console Command: `gamemode`, Current State, Current State (+16 more)
+
+### Community 216 - "Physics & Player & Controller"
+Cohesion: 0.08
+Nodes (23): Done Criteria, File Structure, Part 3: Props & World Boundary — Implementation Plan, Task 10: PropDef / EntityPropDef resources, Task 11: Populate biome prop pools, Task 12: Wooden pillar scene, Task 13: Material props stage, Task 14: PropDispatcher — entity props (+15 more)
+
+### Community 217 - "Manager & Decoupling"
+Cohesion: 0.08
+Nodes (23): Carving Algorithms, Cave Carving (Single-Chunk), Cave Generation Stage Design, cave_stage.glsl Contents, cave_utils.glsl Contents, Chunk Types, Connector Count, Connector Generation (+15 more)
+
+### Community 218 - "Topic 218"
+Cohesion: 0.09
+Nodes (22): Animations, Balatro-Style Card UI Design, Card Hover Glow (existing, retained), Card Scene Hierarchy, Click Feedback, Exports, `fake_3D.gdshader` (new), Files Added (+14 more)
+
+### Community 221 - "Visual & Attack & Animation"
+Cohesion: 0.09
+Nodes (21): Deleted files, File Structure, Modified files, New files, Organic Set-Piece Rooms Implementation Plan, Out of scope (reminders), Self-review, Task 10: CompositionDispatcher (+13 more)
+
+### Community 223 - "Community 223"
+Cohesion: 0.09
+Nodes (21): 1. Problem, 2. Scope, 3.1 Native hook seams on `Weapon`, 3.2 Free-carve flag, 3.3 `PlayerInventory.get_health_fraction()`, 3.4 Shared radial-knockback helper, 3. Shared plumbing, 4.1 `twin_daggers` — `TwinDaggersWeapon extends AdvancedMeleeWeapon` (+13 more)
+
+### Community 224 - "Community 224"
+Cohesion: 0.10
+Nodes (20): Deferred follow-ups (not in this plan), File Structure, FPS Performance Pass Implementation Plan, Summary of expected outcome, Task 10: Double-buffered terrain probe SSBOs, Task 11: Register attackable_hit physics layer, Task 12: Switch melee enemy hits to PhysicsServer2D.intersect_shape, Task 13: Melee arc compute shader (terrain modification on GPU) (+12 more)
+
+### Community 225 - "Community 225"
+Cohesion: 0.10
+Nodes (20): Architecture, Component Details, Component Overview, Data Flow, Files Changed, Functional Requirements, Implementation Notes, MeleeSwingEffect (+12 more)
+
+### Community 226 - "Community 226"
+Cohesion: 0.10
+Nodes (20): 1. Oil Barrel, 2. Gas Vent, 3. Poisoned Status Effect, 4. TerrainSurface Convenience Method, 5. SpawnDispatcher, 6. Enemy Interaction, Behavior, Behavior (+12 more)
+
+### Community 227 - "Community 227"
+Cohesion: 0.10
+Nodes (19): Done Criteria, File Structure, Part 2: Set-Piece Rooms — Implementation Plan, Task 10: Boss arena PNG authoring — caves biome (4 variants), Task 11: Boss arena PNGs — mines, magma, frozen, vault, Task 12: Pixel scene stamp — perimeter accent material support, Task 13: Elite chest room PNGs — all biomes, Task 14: Secret stamp — solid-validation in shader (+11 more)
+
+### Community 228 - "Community 228"
+Cohesion: 0.10
+Nodes (19): Animation Spec Summary, Approach: Hybrid Theme + Tween Animations + Targeted Shaders, Balatro-Inspired UI Redesign, Card-like Panels (StyleBoxFlat), Color Palette (Dark/Fire Roguelike), Death Screen (`scenes/ui/death_screen.tscn` + `src/ui/death_screen.gd`), Files Changed, Health Bar (`scenes/ui/health_ui.tscn` + `src/ui/health_ui.gd`) (+11 more)
+
+### Community 229 - "Community 229"
+Cohesion: 0.10
+Nodes (19): Bug Fix, Chromatic Flash (`ChromaticFlashManager`), Damage Number (`DamageNumberManager`), Files, Global Juice (one autoload per effect), Goals, Hit Flash, Hit Sparks (`HitSparkManager`) (+11 more)
+
+### Community 230 - "Community 230"
+Cohesion: 0.10
+Nodes (19): Animation specification, Architecture, Content layout, Crossfade (switch between drops), Data flow, Edge cases, Goals, Hide sequence (+11 more)
+
+### Community 231 - "Community 231"
+Cohesion: 0.10
+Nodes (19): 1. Why, 2.1 Parser facts (verified), 2.2 New header, 2.3 Controlled vocabulary, 2.4 Implementation conventions (read once, applies to every modifier), 2. Modifier CSV — schema change, 3. New modifiers (46), 4. New weapons (28) (+11 more)
+
+### Community 232 - "Community 232"
+Cohesion: 0.10
+Nodes (19): 10. Acceptance, 1.1 The seven modifiers (CSV rows, already authored), 1. Problem, 2. Approach: Hybrid (DataModifier + one bespoke script), 3.1 `on_crit` modifier hook, 3.2 `"pickup"` group on drops, 3. Infra additions (2, minimal), 4.1 knockback — shockwave_stomp (on_swing), repulsor_nova (on_charge) (+11 more)
+
+### Community 233 - "Community 233"
+Cohesion: 0.11
+Nodes (18): Constants (used throughout), File Structure, Notes for the implementer, Task 10: Mark dirty after terrain texture writes in TerrainModifier, Task 11: Mark dirty on chunk generation in ChunkManager, Task 12: Mark dirty after compute-shader terrain writes, Task 13: Wire `on_chunk_unloaded` from ChunkManager, Task 14: Manual perf verification (+10 more)
+
+### Community 234 - "Community 234"
+Cohesion: 0.11
+Nodes (18): File structure, Self-review notes (for the implementer), Spec reference, Status Effect System Implementation Plan, Task 10: Melee crit resolution, Task 11: Ranged/projectile crit resolution, Task 12: Status HUD strip, Task 13: On-entity status tint (+10 more)
+
+### Community 235 - "Community 235"
+Cohesion: 0.11
+Nodes (18): Self-Review Notes (addressed), SP-A — Data-Driven Runtime (Weapons + Modifiers) Implementation Plan, Task 10: `DataModifier` — passive stat affixes, Task 11: `DataModifier` — conditional triggers + on-kill + every_n_hits, Task 12: Registry builds DataModifiers + populates all tiers from CSV, Task 13: Extend `weapons.csv` with archetype + tuning columns, Task 14: Data-driven weapon factory (build from row, no `.tres`), Task 15: Delete all `.tres` and migrate tests off preloads (+10 more)
+
+### Community 236 - "Community 236"
+Cohesion: 0.11
+Nodes (18): Architecture, Blade Visual, Component Details, Component Overview, Data Flow, Ease Function, Files Changed, Functional Requirements (+10 more)
+
+### Community 237 - "Community 237"
+Cohesion: 0.11
+Nodes (18): Acceptance, Biome reactivity, Design, Goals, Non-Goals, Out of v1 (deferred), Palette, Pixel scale (+10 more)
+
+### Community 238 - "Community 238"
+Cohesion: 0.11
+Nodes (18): Boss/portal integration, Future room examples (sanity check that the system generalizes), Goals, Guidance Room — Design Spec, Lighting and floor, Non-goals, Open implementation questions (deferred to planning), Piece 1 — Fixed-location anchor map (+10 more)
+
+### Community 239 - "Community 239"
+Cohesion: 0.11
+Nodes (18): AimedBurstWeapon (default — most ranged enemies), Architecture, Component 1 — Burst timeline (in `RangedWeapon`), Component 2 — The three bullet patterns, Component 3 — Sniper (`SniperEnemy` + `SniperWeapon`), Component 4 — Enemy integration, Design Pillars (reference feel), Distribution / content wiring (+10 more)
+
+### Community 240 - "Community 240"
+Cohesion: 0.11
+Nodes (18): 1. Problem, 2. Scope, 3.1 CSV schema extension, 3.2 Archetype registry, 3.3 Build path, 3.4 `duplicate(true)` constraint, 3.5 No behavior change for existing weapons, 3. Weapon factory (fully data-driven, zero `.tres`) (+10 more)
+
+### Community 241 - "Community 241"
+Cohesion: 0.11
+Nodes (17): Self-Review, Task 10: Migrate `weapon_popup.tscn`, Task 11: Migrate `chest_ui.tscn`, Task 12: Migrate `economy/shop_ui.tscn`, Task 13: Build `hud.tscn` and remove `health_ui.tscn` + `weapon_button.tscn`, Task 14: Update `card.tscn` to use shared frame, Task 15: Acceptance grep + final cleanup, Task 1: `UILayout` token class (+9 more)
+
+### Community 242 - "Community 242"
+Cohesion: 0.11
+Nodes (17): Crowd AI & Pursuit Foundation Implementation Plan, File Structure, Self-Review Notes, Task 10: Enemy — token-gated attacks + surround orbit (melee path), Task 11: RangedEnemy — token gating + surround orbit, Task 12: Gauntlet spawning — density multiplier + reinforcement, Task 13: Baseline tuning pass — per-hit damage scaling, Task 14: Full suite run + manual playtest checklist (+9 more)
+
+### Community 243 - "Community 243"
+Cohesion: 0.11
+Nodes (17): Conventions (read once), File Structure, Self-Review (completed during planning), SP-E Native Ranged Mechanics + 10 Ranged Weapons Implementation Plan, Task 10: `tesla_gun` (chain weapon), Task 11: `hailstorm_bow` (native jittered volley), Task 12: CSV `hit_status` column + `frost_repeater` + build test, Task 13: Mark SP-E done + full-suite regression (+9 more)
+
+### Community 244 - "Community 244"
+Cohesion: 0.11
+Nodes (18): [0:00 - 0:10] — 爆炸蒙太奇, 内部一致性, 占位符扫描, 可拍摄性检查, 场景 1.1：可破坏的世界 [0:10 - 0:20], 场景 1.2：活的元素 [0:20 - 0:30], 场景 2.1：引擎 [0:30 - 0:40], 场景 2.2：系统 [0:40 - 0:50] (+10 more)
+
+### Community 245 - "Community 245"
+Cohesion: 0.11
+Nodes (17): Architecture, Checkerboard Pattern, Chunk Lifecycle, Compute Shader: Generation, Compute Shader: Simulation, Cross-Chunk Boundaries, Data Model, Dispatch Details (+9 more)
+
+### Community 246 - "Community 246"
+Cohesion: 0.11
+Nodes (17): 1. GenerationContext (GDScript), 2. Stage Files (GLSL), 3. Main Generation Shader, Adding New Stages, Architecture, Components, Current State, File Structure (+9 more)
+
+### Community 247 - "Community 247"
+Cohesion: 0.11
+Nodes (17): Architecture, Component Details, Component Overview, Data Flow, Error Handling, Files Changed, Functional Requirements, Future Considerations (+9 more)
+
+### Community 248 - "Community 248"
+Cohesion: 0.11
+Nodes (17): 1. Main Menu (`scenes/ui/main_menu.tscn`), 2. Pause Menu (`scenes/ui/pause_menu.tscn`), 3. Settings Popup (`scenes/ui/settings_popup.tscn`), 4. SceneManager Autoload (`src/autoload/scene_manager.gd`), 5. Scene Rename: `main.tscn` → `game.tscn`, Architecture: Scene-per-Menu, Audio, Autoloads (+9 more)
+
+### Community 249 - "Community 249"
+Cohesion: 0.11
+Nodes (17): 1. `MeleeWeapon` — swing-phase exposure, 2. Projectile destruction (Soul Knight), 3. Enemy-melee parry (HK nail clash), Architecture, Data flow, Edge cases & decisions, Enemy swings → parry attempt, Feedback (+9 more)
+
+### Community 250 - "Community 250"
+Cohesion: 0.11
+Nodes (17): Architecture overview, File summary, Goals, Group A — every swing (`period = 1`, `fire_on = [0]`), Group B — cadence-gated, Group C — charge & chance (weapon-agnostic, not hit-counted), `lava_emitter` (existing), Modifiers — Design (+9 more)
+
+### Community 251 - "Community 251"
+Cohesion: 0.11
+Nodes (18): Act 1: What Is This? (0:10 - 0:30), Act 2: What's Been Built? (0:30 - 0:50), Act 3: Why Join? (0:50 - 1:15), Act Structure Overview, Core Concept, CTA & Closing (1:15 - 1:30), Differentiation Check, Duration Budget (+10 more)
+
+### Community 252 - "Community 252"
+Cohesion: 0.12
+Nodes (16): Architecture Deepening Implementation Plan, Task 0: Scaffold test directory, Task 1: HitReaction — Create HitSpec resource and HitReaction autoload, Task 2: TerrainSurface — Create autoload seam for terrain operations, Task 3: TerrainPhysical — Unified terrain query + collision, Task 4: PickupContext + Pickupable — Unified drop detection and interface, Task 5: PlayerInventory — Unified player state, Task 6: WeaponDelivery — Unified pickup flow (+8 more)
+
+### Community 253 - "Community 253"
+Cohesion: 0.12
+Nodes (16): Done Criteria, File Structure, Part 1: Walkable Space — Implementation Plan, Task 10: Widen inter-chunk tunnels, Task 11: Clamp biome cave_threshold ≤ 0.42, Task 12: Walkability invariant unit test, Task 13: Connectivity test, Task 1: Tag pool-deposited cells with alpha bit 7 (+8 more)
+
+### Community 254 - "Community 254"
+Cohesion: 0.12
+Nodes (16): File Structure, Oil & Explode Wave Implementation Plan, Out of scope (per spec §3.5.6), Task 10: Render MAT_EXPLODE_WAVE as white-yellow flash, Task 11: Console seed-and-go for spawn_mat explode_wave, Task 12: Manual playtest checklist, Task 1: Register MAT_OIL in MaterialRegistry, Task 2: Register MAT_EXPLODE_WAVE in MaterialRegistry (+8 more)
+
+### Community 255 - "Community 255"
+Cohesion: 0.12
+Nodes (16): File Structure, Guidance Room Implementation Plan, Self-Review Checklist, Task 0: User provides art assets, Task 10: Author `guidance_room_template.tres` (editor task), Task 11: Register the guidance room on the caves biome (editor task), Task 12: Manual playtest, Task 1: Add `spawn_node` helper to `CompositionDispatcher` (+8 more)
+
+### Community 256 - "Community 256"
+Cohesion: 0.12
+Nodes (16): File Structure, Ranged & Sniper Threat Patterns Implementation Plan, Self-Review, Spec, Task 10: Spawn wiring, Task 11: Full suite + manual playtest, Task 1: Test seam + extract `_emit_shot` on RangedWeapon, Task 2: Burst timeline on RangedWeapon (+8 more)
+
+### Community 257 - "Community 257"
+Cohesion: 0.12
+Nodes (16): Self-Review Notes (for the implementer), SP-D — Native Melee Mechanics + 18 Melee Weapons Implementation Plan, Task 10: `reaper_glaive` archetype (heal-on-kill), Task 11: `berserker_axe` archetype (low-HP damage ramp), Task 12: `soul_reaver` archetype (per-kill stacking), Task 13: Register archetypes + CSV wiring (reach/arc/free_carve), Task 14: Full suite, manual verification, mark todo done, Task 1: Native hook seams on `Weapon` + `resolve_hit` wiring (+8 more)
+
+### Community 258 - "Community 258"
+Cohesion: 0.12
+Nodes (16): File structure, Minimap Implementation Plan, Reference constants (used throughout), Running tests, Self-review notes, Task 10: HUD integration, Task 11: Full verification & manual smoke test, Task 1: `PassabilityGrid.get_tile()` accessor (+8 more)
+
+### Community 259 - "Community 259"
+Cohesion: 0.12
+Nodes (17): [0:00 - 0:10] — Explosion Montage, [1:15 - 1:25] — Call to Action, [1:25 - 1:30] — Final Beat, ACT 1: What Is This? [0:10 - 0:30], ACT 2: What's Been Built? [0:30 - 0:50], ACT 3: Why Join? [0:50 - 1:15], CTA & CLOSING [1:15 - 1:30], Estimated Duration Breakdown (+9 more)
+
+### Community 260 - "Community 260"
+Cohesion: 0.12
+Nodes (16): Adding a New Material, Architecture, Benefits, Build Script, Code Generator, Files Changed/Added, Generated GLSL Output, Material Registry Structure (+8 more)
+
+### Community 261 - "Community 261"
+Cohesion: 0.12
+Nodes (16): Behavior summary, Conservation note, Data layout, Files changed / added, Gas Material Design, Out of scope (possible future work), Overview, Problem (+8 more)
+
+### Community 262 - "Community 262"
+Cohesion: 0.12
+Nodes (16): 1. Chunk Class Extension, 2. Occluder Generation, 3. Light Configuration, 4. Shadow Update Integration, Architecture, Chunk Structure, Error Handling, File Changes Summary (+8 more)
+
+### Community 263 - "Community 263"
+Cohesion: 0.12
+Nodes (16): 1. Interactable System, 2. Drop System, 3. Weapon Drop, 4. WeaponManager Changes, 5. Player Scene Changes, 6. Game Scene Changes, Architecture, Drop (`src/drops/drop.gd`, `class_name Drop`, scene: `scenes/drop.tscn`) (+8 more)
+
+### Community 264 - "Community 264"
+Cohesion: 0.12
+Nodes (16): 1. Shop room template, 2. `ShopStall` — layout + stock spawner, 3. Priced pickups (reuse weapon/modifier drop), 4. `ShopRemoval` — card-removal service, 5. Pricing model, 6. Cleanup, Background — current systems, Components (+8 more)
+
+### Community 265 - "Community 265"
+Cohesion: 0.12
+Nodes (16): 1. `StatusRegistry` (autoload, data-driven), 2. `StatusComponent` (Node, child of player and each enemy), 3. Owner hooks (small additions), Architecture, Crit system, Goal & context, Intensity model: Noita-style stain, Out of scope (later sub-projects) (+8 more)
+
+### Community 266 - "Community 266"
+Cohesion: 0.12
+Nodes (16): 1. GPU buffer layout (`compute_device.gd`), 2. Shader (`shaders/compute/collider.glsl`), 3. Uniform set (`chunk_manager.build_collider_uniform_sets`), 4. Readback & decode (`compute_device.gd`), 5. Consumption (`terrain_collision_helper.gd`), 6. NavField (`src/core/nav/nav_field.gd`), 7. PassabilityGrid (`src/core/nav/passability_grid.gd`), 8. Wiring changes (`world_manager.gd`) (+8 more)
+
+### Community 267 - "Community 267"
+Cohesion: 0.12
+Nodes (16): 2a. Rarity on the modifier resource, 2b. Per-drop card population (deep-module boundary), 2c. Description label must auto-size, 2d. Generalize the popup to any drop, 2e. PickupContext dispatch, Approved content, Data flow, Files touched (+8 more)
+
+### Community 268 - "Community 268"
+Cohesion: 0.12
+Nodes (15): ChunkManager, CollisionManager, ComputeDevice, File Structure, Subsystem Interfaces, Task 1: Create TerrainReader, Task 2: Create TerrainModifier, Task 3: Create CollisionManager (+7 more)
+
+### Community 269 - "Community 269"
+Cohesion: 0.12
+Nodes (15): Phase 4: Enemies & Combat Implementation Plan, Task 10: WeaponRegistry Expansion, Task 11: CaveSpawner — Enemy Variety + Weapon Assignment, Task 12: SpawnDispatcher — Wire New Enemy Scenes, Task 13: Integration Tests, Task 14: Final Integration — Verify in Editor, Task 1: Add `on_hit_impact` to PlayerController, Task 2: Enemy Base — State Machine Foundation (+7 more)
+
+### Community 270 - "Community 270"
+Cohesion: 0.12
+Nodes (15): File Structure, Juicy UI Refactor Implementation Plan, Self-Review Notes, Task 10: Migrate `weapon_popup`, Task 11: Decide on and (maybe) migrate `main_menu`, Task 12: Final smoke test pass + tuning, Task 1: Scaffold `JuicyPanel` with exports, signals, state, Task 2: Implement `open()` animation (without backdrop or stagger) (+7 more)
+
+### Community 271 - "Community 271"
+Cohesion: 0.12
+Nodes (15): 1. GPU Marching Squares Shader, 2. Chunk Class Updates, 3. TerrainCollider Updates, Architecture, Collision Optimization for Burning Wood, Components, Current Flow, Error Handling (+7 more)
+
+### Community 272 - "Community 272"
+Cohesion: 0.12
+Nodes (15): Adding New Weapons, Architecture, Extending Slots, File Changes, Key Bindings, Methods, Modified Files, New Files (+7 more)
+
+### Community 273 - "Community 273"
+Cohesion: 0.12
+Nodes (15): Architecture, Decisions, Existing Weapon Refactoring, File Changes, Lava Emitter Modifier (`src/weapons/lava_emitter_modifier.gd`), Modified Files, Modifier Base Class (`src/weapons/modifier.gd`), New Files (+7 more)
+
+### Community 274 - "Community 274"
+Cohesion: 0.12
+Nodes (15): 1. Hardness Field in MaterialDef, 2. Carve Radius Scaling Formula, 3. Integration Points, 4. Impact Feedback, 5. Modifier Integration (Automatic), Architecture, Data Flow, Edge Cases & Error Handling (+7 more)
+
+### Community 275 - "Community 275"
+Cohesion: 0.12
+Nodes (15): 1. Goals, 2. Shader Constant Tuning, 3. Wave Pre-Burns Oil (Core Cascade Mechanic), 4. Oil Burn Health, 5. Entity Damage, 6.1 Explosion Detection (WorldManager._process), 6.2 Screen Shake Integration, 6.3 Spark Particles (+7 more)
+
+### Community 276 - "Community 276"
+Cohesion: 0.12
+Nodes (15): Acceptance, Design, Goals, Non-Goals, Problem, Risks & open questions, Subsystem 1 — Layout tokens, Subsystem 2 — `ModalPanel` reusable scene (+7 more)
+
+### Community 277 - "Community 277"
+Cohesion: 0.12
+Nodes (15): 1. `DecorDef` resource — `src/core/decor_def.gd`, 2. `BiomeDef` changes — `src/core/biome_def.gd`, 3. Shared flicker — `src/core/flicker_light.gd`, 4. Floor-only placement — `src/terrain/floor_container.gd`, 5. Decoration build — `src/terrain/floor_chunk.gd`, 6. Caves configuration — `assets/biomes/caves.tres`, Architecture, Design Decisions (+7 more)
+
+### Community 278 - "Community 278"
+Cohesion: 0.12
+Nodes (15): 1. New `BEDROCK` material (indestructible), 2. New generation stage `stage_boss_wall`, 3. Single boss ring in `SectorGrid`, 4. Bigger boss chambers, 5. Enemy tier scaling, 6. Tests, Approach (chosen), Components / Changes (+7 more)
+
+### Community 279 - "Community 279"
+Cohesion: 0.12
+Nodes (15): Architecture overview, Charge + Combos — Design, Charge controller, Combo sequencer, Goals, Non-goals, Out of scope / future, Per-weapon hook (+7 more)
+
+### Community 280 - "Community 280"
+Cohesion: 0.12
+Nodes (15): Architecture — GPU "solidity-changed" flag, Components, Data flow (one frame), Edge cases, Files touched, Goal & success criteria, Manual / profiler verification, Out of scope (later sub-projects) (+7 more)
+
+### Community 281 - "Community 281"
+Cohesion: 0.12
+Nodes (15): Components, Coordinate & scale math, Data flow, Edge cases & error handling, Goal, HUD wiring (`hud.gd` / `hud.tscn`), Key facts about the codebase this builds on, Minimap — Design Spec (+7 more)
+
+### Community 282 - "Community 282"
+Cohesion: 0.13
+Nodes (14): File Structure, Gas Material Implementation Plan, Out-of-scope (confirmed in spec), Task 10: End-to-end verification + tuning pass, Task 1: Add `tint_color` to MaterialDef and the GAS entry, Task 2: Emit `MATERIAL_TINT[]` from the GLSL generator, Task 3: Add velocity pack/unpack helpers and stub gas functions in simulation.glsl, Task 4: Wire per-chunk injection buffer (without populating it) (+6 more)
+
+### Community 283 - "Community 283"
+Cohesion: 0.15
+Nodes (15): Drop (RigidBody2D), Interactable Component, InteractionController, Outline Shader (Interactable Highlight), WeaponDrop, DropTable Resource, DummyEnemy, Economy & Progression System (Phase 3) (+7 more)
+
+### Community 284 - "Community 284"
+Cohesion: 0.13
+Nodes (14): CSV-Driven Weapon & Modifier Data Implementation Plan, File structure, Reference: CSV contents (already authored, except the new texture column), Reference: project conventions, Self-review notes, Task 1: CSV parser, Task 2: Add `description` field to Weapon, Task 3: Add `weapon_texture` column to weapons.csv (+6 more)
+
+### Community 285 - "Community 285"
+Cohesion: 0.13
+Nodes (14): Conventions, File Structure, Modifiers Implementation Plan, Self-Review notes, Task 10: Mark Sub-project 4 done + full verification, Task 1: `Projectile.hit_status` — apply status on hit (not just crit), Task 2: `on_attack` hook + `notify_attack` dispatcher, Task 3: Wire `notify_attack` into weapon attack paths (+6 more)
+
+### Community 286 - "Community 286"
+Cohesion: 0.13
+Nodes (14): Action Bar, Animation, Cards Section, Components, Files Modified, Future Considerations (Out of Scope), Header Bar, Layout (+6 more)
+
+### Community 287 - "Community 287"
+Cohesion: 0.13
+Nodes (14): 1. CaveSpawner: `src/core/cave_spawner.gd`, 2. Spawn Cycle (every 1s), 3. Position Validation, 4. Despawn Cycle (every 1s), 5. Parameters, 6. Biome Awareness, 7. Dependency on Existing Systems, Architecture (+6 more)
+
+### Community 288 - "Community 288"
+Cohesion: 0.13
+Nodes (14): 1. FogSprite (`shaders/fog_of_war.gdshader` + scene node), 2. FogManager (`src/core/fog_manager.gd`), 3. Terrain Light Data Exposure, Architecture, Components, Entity Visibility via BackBufferCopy, File Manifest, Fog of War — Design Spec (+6 more)
+
+### Community 289 - "Community 289"
+Cohesion: 0.13
+Nodes (14): 1. Speed Bug Fix, 2. Wander Behavior, 3. Exclamation Mark Telegraph, 4. RangedEnemy Keep-Away Fix, 5. Enemy Subclass Defaults, 6. Edge Cases, Enemy AI Improvements Design, Physics process update (+6 more)
+
+### Community 290 - "Community 290"
+Cohesion: 0.13
+Nodes (14): 1. Goal & Invariant, 2. Generation Pipeline Changes, 3.1 `stage_walkability_probe`, 3.2 `stage_walkability_enforce`, 3. Structural Pass — Algorithm Detail, 4.1 Chunk-type redistribution, 4.2 Biome `cave_threshold` floor, 4.3 Pool deposit policy (+6 more)
+
+### Community 291 - "Community 291"
+Cohesion: 0.13
+Nodes (14): Architecture, Biome resource updates, `BiomeDef` additions (`src/core/biome_def.gd`), Components, Data flow, Error handling, Files touched, Floor Background — Design (+6 more)
+
+### Community 292 - "Community 292"
+Cohesion: 0.13
+Nodes (14): 1. Material registration, 2. Pixel layout for dust, 3. Simulation — `shaders/include/sim/dust.glslinc`, 4. Injection — `shaders/compute/melee_arc.glsl`, 5. Rendering — `shaders/visual/render_chunk.gdshader`, Background — how the existing pipeline works, Components & data flow, Design (+6 more)
+
+### Community 293 - "Community 293"
+Cohesion: 0.13
+Nodes (14): 1. `StatusVisuals` (new shared node), 2. Registry & def changes, 3. Burn throb (per-tick orange sprite flash), 4. Ember vignette (player only), 5. HUD cleanup, Components, Data Flow, Icon Assets (+6 more)
+
+### Community 294 - "Community 294"
+Cohesion: 0.13
+Nodes (14): Architecture overview, `bounce_behavior.gd` — `BounceBehavior`, `clear_bullets_behavior.gd` — `ClearBulletsBehavior`, File summary, Goals, Non-goals, `penetrate_behavior.gd` — `PenetrateBehavior`, Projectile Behaviors — Design (+6 more)
+
+### Community 295 - "Community 295"
+Cohesion: 0.13
+Nodes (14): 1. Base hook — `src/enemies/enemy.gd`, 2. `LungeEnemy` — `src/enemies/lunge_enemy.gd`, 3. Scene — `scenes/enemies/lunge_enemy.tscn`, 4. Spawn wiring — `src/core/spawn_dispatcher.gd`, Architecture, Components, Edge cases & handling, Goals (+6 more)
+
+### Community 296 - "Community 296"
+Cohesion: 0.13
+Nodes (14): CSV changes, Design principle: two levers, Lever 1 — Fold native (for Type 1), Lever 2 — Stat-niche (for Type 2), Melee, Melee niche taxonomy (Lever 2), Native mechanics to implement later (designed ahead), Open follow-ups (+6 more)
+
+### Community 297 - "Community 297"
+Cohesion: 0.14
+Nodes (13): File Structure, Material Registry Implementation Plan, Summary, Task 10: Add .gitignore for Generated Files (Optional), Task 1: Create MaterialRegistry Autoload, Task 2: Create GLSL Code Generator, Task 3: Create Build Script, Task 4: Update Simulation Shader (+5 more)
+
+### Community 298 - "Community 298"
+Cohesion: 0.14
+Nodes (13): File Structure, Lava Material Implementation Plan, Self-Review Checklist, Task 10: Integration Test, Task 1: Add MAT_LAVA to Material Registry, Task 2: Extend GLSL Generator for Lava Tint, Task 3: Add Lava Pack/Unpack Helpers to Simulation Shader, Task 4: Extend is_solid_for_gas to Include Lava (+5 more)
+
+### Community 299 - "Community 299"
+Cohesion: 0.14
+Nodes (13): File Structure, Modified Files, New Files, Task 1: Create Modifier Base Class, Task 2: Update Weapon Base Class with Modifier Support, Task 3: Refactor TestWeapon, Task 4: Refactor MeleeWeapon, Task 5: Create Lava Emitter Modifier (+5 more)
+
+### Community 300 - "Community 300"
+Cohesion: 0.14
+Nodes (13): Hit Feedback & Blood Implementation Plan, Task 10: Wire flash/squash + blood spawn in Enemy, Task 11: Integration verification, Task 12: Final verification & commit, Task 1: Add MAT_BLOOD to MaterialRegistry, Task 2: Regenerate material GLSL files, Task 3: Create blood fluid simulation shader, Task 4: Add THRESHOLD_BECOME_BLOOD to common.glslinc (+5 more)
+
+### Community 301 - "Community 301"
+Cohesion: 0.14
+Nodes (13): File Structure, Self-Review Notes, SP-B.1 Modifier Scripts Implementation Plan, Task 10: Full suite verification + todo update, Task 1: `on_crit` modifier hook, Task 2: `"pickup"` group on drops, Task 3: DataModifier — knockback (shockwave_stomp, repulsor_nova), Task 4: DataModifier — pull (magnet_field) (+5 more)
+
+### Community 302 - "Community 302"
+Cohesion: 0.14
+Nodes (13): Architecture, Chest System Design, Chest Tier (Future), Components, Data Flow, Design Decisions, Files to Create, Files to Modify (+5 more)
+
+### Community 303 - "Community 303"
+Cohesion: 0.14
+Nodes (13): Auto-generated from enemy tier, Current Weapon/Modifier Tiers, Drop Resolution, Drop Table Construction, Drop Tier Distributions, DropEntry Kinds, Enemy Drop Tables Design, Enemy Tiers (+5 more)
+
+### Community 304 - "Community 304"
+Cohesion: 0.14
+Nodes (13): Components, `ComputeDevice` additions, Constants, Data Flow Per Frame, Edge Cases, New shader — `shaders/compute/terrain_probe.glsl`, Out of Scope, Problem (+5 more)
+
+### Community 305 - "Community 305"
+Cohesion: 0.14
+Nodes (13): Boss variants (r=300, 4 per biome), Dimensions, Elite + Boss Arena Rework, Elite variants (r=140, 3 per biome), Generator structure, Goal, Helper changes, Out of scope (+5 more)
+
+### Community 306 - "Community 306"
+Cohesion: 0.14
+Nodes (13): Callers to update, Chest: per-slot tier roll, reusing `_TIER_ITEM_WEIGHTS`, Data flow, Design, Goals, Non-goals, Open questions, Per-weapon rarity + full-pool chests (+5 more)
+
+### Community 307 - "Community 307"
+Cohesion: 0.14
+Nodes (13): 1. `src/util/csv_table.gd` (new), 2. `Weapon.description: String` (new field), 3. `WeaponRegistry` overlay (extend existing autoload), 4. Migrate direct `.tres` call sites, Components, CSV-Driven Weapon & Modifier Data, Data ownership, Error handling (+5 more)
+
+### Community 308 - "Community 308"
+Cohesion: 0.14
+Nodes (13): 1. PassabilityGrid, 2. FlowField (double-buffered, incremental — flat cost), 3. Enemy integration (`enemy.gd`), Approach (chosen), Components, Constraints & context, Enemy Navigation — Flow-Field Pursuit + Grid Clamp — Design, NavField owner & tick order (+5 more)
+
+### Community 309 - "Community 309"
+Cohesion: 0.14
+Nodes (13): 1. Remove per-enemy detection areas, 2. Stop enemies colliding with each other, 3. O(n) crowd steering via a spatial hash, 4. Cache per-frame node lookups in enemy.gd, 5. Gate StatusComponent signal + early-out idle entities, Changes, Decisions (confirmed with user), Enemy & Status Performance Pass — Design (+5 more)
+
+### Community 310 - "Community 310"
+Cohesion: 0.14
+Nodes (13): 1. Break the attack deadlock (decouple permission from range), 2. Wander on the ring (replace "freeze at slot"), 3. Dynamic aggression tokens, 4. Wiring the events, Aggressive Surround & Dynamic Attack Tokens, Design, Goals, Jitter source (+5 more)
+
+### Community 311 - "Community 311"
+Cohesion: 0.15
+Nodes (8): File Structure, Light Occluder Shadow System Implementation Plan, Summary, Task 1: Add occluder_instance field to Chunk class, Task 2: Add build_occluder() function to TerrainCollider, Task 7: Enable shadows on PointLight2D, Task 8: Verify light occluder layer configuration, Task 9: Test and verify
+
+### Community 312 - "Community 312"
+Cohesion: 0.15
+Nodes (12): File Structure, Menu UI Implementation Plan, Self-Review, Task 1: Rename main.tscn to game.tscn and update references, Task 2: Create SceneManager autoload, Task 3: Create Main Menu scene, Task 4: Create Settings Popup scene, Task 5: Create Pause Menu scene (+4 more)
+
+### Community 313 - "Community 313"
+Cohesion: 0.15
+Nodes (12): Economy & Progression Implementation Plan, Task 10: Integration, Task 11: Verify Game Loads, Task 1: Drop Table Resource, Task 2: Shop Offer Resource, Task 3: Wallet Component, Task 4: Modifier Inventory, Task 5: Gold Drop (+4 more)
+
+### Community 314 - "Community 314"
+Cohesion: 0.15
+Nodes (12): Cheat Command System Implementation Plan, File Map, Task 10: Verification, Task 1: Create `src/console/` directory structure, Task 2: ConsoleCommand base class, Task 3: CommandRegistry — tree management, parsing, suggestions, Task 4: WeaponRegistry generation script, Task 5: Spawn commands (`spawn weapon`, `spawn mod`, `spawn enemy`, `spawn gold`) (+4 more)
+
+### Community 315 - "Community 315"
+Cohesion: 0.15
+Nodes (12): File Structure, Juicy Melee Hit Implementation Plan, Notes for Implementer, Task 1: Bug Fix — Melee actually damages enemies (no juice yet), Task 2: Per-Enemy Juice — Knockback, Task 3: Per-Enemy Juice — Hit Flash + Squash-Stretch, Task 4: Global Juice — `HitStopManager` autoload, Task 5: Global Juice — `ScreenShakeManager` autoload (+4 more)
+
+### Community 316 - "Community 316"
+Cohesion: 0.15
+Nodes (12): Enemy AI Improvements Implementation Plan, Task 10: Run full test suite, Task 11: Verification — run the game, Task 1: Fix speed in MeleeEnemy, Task 2: Fix speed in RangedEnemy, Task 3: Change default speed in base Enemy, Task 4: Rename IDLE → WANDER in base Enemy, Task 5: Add wander behavior logic (+4 more)
+
+### Community 317 - "Community 317"
+Cohesion: 0.15
+Nodes (12): File map, Parry & Projectile Block Implementation Plan, Self-review notes, Task 1: `MeleeWeapon` swing-phase exposure, Task 2: Register projectiles in `"projectile"` group, Task 3: `ProjectileBlockFX` helper + scene, Task 4: `MeleeWeapon` per-frame projectile-in-arc destruction, Task 5: `NailClashFX` helper + scene + shockwave shader (+4 more)
+
+### Community 318 - "Community 318"
+Cohesion: 0.15
+Nodes (12): Done criteria, File map, Floor Background Implementation Plan, Task 1: Extend BiomeDef with floor + decor fields, Task 2: Add `chunk_unloaded` signal to WorldManager and emit it, Task 3: Create `FloorChunk` — floor sprite only (no decorations yet), Task 4: Add decoration placement to `FloorChunk`, Task 5: Create `FloorContainer` (+4 more)
+
+### Community 319 - "Community 319"
+Cohesion: 0.15
+Nodes (12): FloorContainer, Dust Fluid Simulation (pull-based), MAT_DUST Material, Melee Arc Dust Injection, Wall-Break Dust System, BEDROCK Material (indestructible), disc_ao Near-Air Density Scan, ring_occlusion 8-Tap Sampler (+4 more)
+
+### Community 320 - "Community 320"
+Cohesion: 0.15
+Nodes (12): Background facts (verified in codebase), File structure, Self-review notes, Shop Room Redesign Implementation Plan, Task 1: Shop room template — sealed wood walls + single marker, Task 2: Register the shop template in every biome, Task 3: ShopPricing helper, Task 4: ShopWeaponDrop (priced weapon pickup) (+4 more)
+
+### Community 321 - "Community 321"
+Cohesion: 0.15
+Nodes (12): Charge + Combos Implementation Plan, File Structure, Notes for the implementer, Task 1: Weapon base charge API, Task 2: Route press + release in WeaponManager, Task 3: Parametrize melee hit + carve helpers, Task 4: AdvancedMeleeWeapon skeleton — Move, factories, charge controller, Task 5: Combo sequencer (tap-chain + auto-flurry) (+4 more)
+
+### Community 322 - "Community 322"
+Cohesion: 0.15
+Nodes (12): Background for the implementer, Done, Enemy & Status Performance Pass Implementation Plan, File structure, Task 1: `SwarmGrid` spatial hash, Task 2: WorldManager owns and rebuilds the SwarmGrid each frame, Task 3: Enemy separation uses the SwarmGrid (O(n)), Task 4: Distance-based player detection (remove per-enemy DetectionArea) (+4 more)
+
+### Community 323 - "Community 323"
+Cohesion: 0.15
+Nodes (12): File Structure, GPU Passability Buffer Implementation Plan, Manual Verification Steps (human-only), Self-Review Notes, Task 1: `PassabilityGrid.set_tile`, Task 2: Passability buffer constants + `decode_passability_slice`, Task 3: Passability buffer lifecycle (create + free), Task 4: Shader writes passability grid + uniform set binds it (+4 more)
+
+### Community 324 - "Community 324"
+Cohesion: 0.15
+Nodes (12): Conventions for every task, Manual verification (after all tasks), Projectile Behaviors Implementation Plan, Self-review notes (coverage map), Task 1: `ProjectileBehavior` base class, Task 2: Wire behaviors into `Projectile` lifecycle + solidity probe, Task 3: `BounceBehavior`, Task 4: `SplitBehavior` (+4 more)
+
+### Community 325 - "Community 325"
+Cohesion: 0.15
+Nodes (12): File structure (Phase 1), Self-review notes, Task 1: Weapon DPS band test + CSV re-tune, Task 2: Charge-weapon release ratio (§A6), Task 3: `gas_emitter` radius 20→16 (§B4), Task 4: De-dup the projectile fans (§B2), Task 5: Stacking caps verification (§B2), Task 6: Status threshold pins (§B5) (+4 more)
+
+### Community 326 - "Community 326"
+Cohesion: 0.15
+Nodes (12): Approach, Asset Requirements, Coordinate System, Fake Wall Rendering Design, Files Added, Files Modified, GDScript Changes, Material Color Functions (+4 more)
+
+### Community 327 - "Community 327"
+Cohesion: 0.15
+Nodes (12): 1. `PlayerInventory.take_damage()` — HitReaction Integration, 2. Player Knockback (`PlayerController`), 3. Player Hit Flash (`PlayerController`), 4. Player Squash/Stretch (`PlayerController`), 5. Camera Zoom Punch (`PlayerController`), 6. Damage Vignette, Architecture, Components (+4 more)
+
+### Community 328 - "Community 328"
+Cohesion: 0.15
+Nodes (12): Ambient Occlusion for Wall Rendering — Design, Chunk-edge handling, Context: current rendering architecture, Files touched, Layer ownership of AO, Out of scope (YAGNI), Overview, Per-surface integration in `fragment()` (+4 more)
+
+### Community 329 - "Community 329"
+Cohesion: 0.15
+Nodes (12): Affected code, Design, Diagnosis, Front A — Status cost & the death-spiral (primary), Front B — Blood / chunk process cost (secondary), Goals, Non-goals, Problem (+4 more)
+
+### Community 330 - "Community 330"
+Cohesion: 0.15
+Nodes (12): Architecture, Component 2 — Surround steering, Component 3 — Attack-token budget, Component 4 — Gauntlet spawning (seasoning, P2), Component 5 — Baseline tuning pass (P2), Design Pillars (reference feel), Goals, Non-goals (this sub-project) (+4 more)
+
+### Community 331 - "Community 331"
+Cohesion: 0.17
+Nodes (11): File Map, Task 1: Create ShadowGrid data structure, Task 2: Add WorldManager readback API, Task 3: Add spawn finder to WorldManager, Task 4: Create player controller with movement (no collision yet), Task 5: Add collision resolution to player controller, Task 6: Wire ShadowGrid sync to WorldManager, Task 7: Add terrain dirty notification to WorldManager (+3 more)
+
+### Community 332 - "Community 332"
+Cohesion: 0.17
+Nodes (11): Material Hardness & Carve Scaling Implementation Plan, Task 10: Final verification, Task 1: Add hardness to MaterialDef, Task 2: Write unit test for hardness values and carve formula, Task 3: Add damage parameter through carve delegation chain, Task 4: Update MeleeWeapon to pass damage and target solids, Task 5: Add projectile terrain carve with hardness, Task 6: Create TerrainImpact autoload (+3 more)
+
+### Community 333 - "Community 333"
+Cohesion: 0.17
+Nodes (11): Done, File map, Task 1: Add `ui_accent` field to BiomeDef, Task 2: Set `ui_accent` on every biome resource, Task 3: Refactor UiTheme — new sizes, palette, biome reactivity, Task 4: Strip per-control overrides from UI scenes, Task 5: Add `crt_enabled` setting, Task 6: CRT shader (+3 more)
+
+### Community 334 - "Community 334"
+Cohesion: 0.17
+Nodes (11): Channel layout (dust), File Structure, Reference: spec, Self-Review Notes, Task 1: Register MAT_DUST and regenerate material includes, Task 2: Create the dust simulation include, Task 3: Wire dust into the simulation dispatch, Task 4: Inject dust on wall break in melee_arc.glsl (+3 more)
+
+### Community 335 - "Community 335"
+Cohesion: 0.17
+Nodes (11): File Structure, Self-Review Notes, Status Clarity & Burn Feedback Implementation Plan, Task 1: Status icon data + alpha-remap on the registry, Task 2: `burn_tick` signal on `StatusComponent`, Task 3: `StatusVisuals` node (icons + flame particles), Task 4: Wire `StatusVisuals` + burn throb into the player, Task 5: Ember vignette channel + player drive (+3 more)
+
+### Community 336 - "Community 336"
+Cohesion: 0.23
+Nodes (12): Entity Status Tint, Axis-Slide Grid Clamp, Enemy Navigation System, FlowField (time-sliced BFS), NavField Glue Object, PassabilityGrid, Sight-to-Acquire Pursuit, Distance-Based Player Detection (+4 more)
+
+### Community 337 - "Community 337"
+Cohesion: 0.20
+Nodes (12): SwarmGrid Spatial Hash (O(n) separation), Chunk Generation Amortization (cap=2), Physics Substep Cap (max=2), Terrain Poll Throttling (POLL_INTERVAL=4), Status Performance Death-Spiral Fix, Status Migration to _process, Blanket Dirty Removal (dispatch_simulation), decode_solidity_flags Decoder (+4 more)
+
+### Community 338 - "Community 338"
+Cohesion: 0.17
+Nodes (11): SP-B — New Statuses & Combat Hooks Implementation Plan, Task 10: Full test suite regression, Task 1: StatusDef — add `mode` and `default_duration` fields, Task 2: Register steam, lightning, stun status definitions + MAT_STEAM stain mapping, Task 3: Timed status model in StatusComponent, Task 4: Reaction rules 7–8 and MAT_STEAM material placement, Task 5: MAT_STEAM shader dispatch (parameterize gas_advect_pull), Task 6: Combat verbs — stun, knockback (entity changes) (+3 more)
+
+### Community 339 - "Community 339"
+Cohesion: 0.17
+Nodes (11): Economy Balancing Implementation Plan, File Structure, Final verification, Self-Review (completed during authoring), Task 1: Income constants + floor multiplier + `effective_gold` helper, Task 2: Per-biome gold multiplier (`BiomeDef` + `.tres` + `DropTable.biome_gold_mult`), Task 3: Wire income scaling into gold resolution + elite multiplier, Task 4: Shop pricing baselines + floor price multiplier + removal cost helper (+3 more)
+
+### Community 340 - "Community 340"
+Cohesion: 0.17
+Nodes (11): 1. Weapon Base Class Changes, 2. MeleeWeapon Implementation, 3. WeaponVisual Refactor, 4. File Changes, 5. Integration Flow, Architecture, Design Details, Implementation Notes (+3 more)
+
+### Community 341 - "Community 341"
+Cohesion: 0.17
+Nodes (11): Animation Detail, Card Layout for Modifier Selection, Edge Cases, Files to Modify, Flow, Modifier Transfer on Weapon Replace, Overview, `src/drops/weapon_drop.gd` (+3 more)
+
+### Community 342 - "Community 342"
+Cohesion: 0.17
+Nodes (11): 1. Compute Shader: `light_pack.glsl`, 2. Light Node Manager: `src/core/chunk_lights.gd`, 3. Compute Device Integration, 4. Material Color Configuration, 5. Performance Profile, Architecture, Design Decisions, Edge Cases (+3 more)
+
+### Community 343 - "Community 343"
+Cohesion: 0.17
+Nodes (11): Animation Timeline, Architecture, Dependencies, Edge Cases, Enemy Intent Indicator Design (Soul Knight Style), Files, Integration in `src/enemies/enemy.gd` (base class), New Scene: `scenes/fx/intent_indicator.tscn` (+3 more)
+
+### Community 344 - "Community 344"
+Cohesion: 0.17
+Nodes (11): 1. Geometry model — `src/core/sector_grid.gd`, 2. Radial-coverage guarantee — new test, Alternatives considered, Approach, Components, Goal, Interspersed Boss Rings — Design, Out of scope (+3 more)
+
+### Community 345 - "Community 345"
+Cohesion: 0.17
+Nodes (11): Architecture, Behavior, Charge Bar + Full-Charge Gate — Design, Components, Data flow, Full-charge cue, Goals, Out of scope (+3 more)
+
+### Community 346 - "Community 346"
+Cohesion: 0.17
+Nodes (11): 1. Shared footprint helper, 2. Nudge-else-skip in spawn_dispatcher, Data flow, Design, Edge cases, Files touched, Goal, Problem (+3 more)
+
+### Community 347 - "Community 347"
+Cohesion: 0.17
+Nodes (11): 1. Problem, 2. Goals & decisions, 3. Income side (floor-1 baseline), 4. Sink side (floor-1 baseline prices), 5. Floor-scaling, 6. Per-biome skew, 7. Implementation surface, 8. Risks / out of scope (+3 more)
+
+### Community 348 - "Community 348"
+Cohesion: 0.18
+Nodes (11): AimedBurstWeapon, FanWeapon, RangedWeapon Burst Timeline, SniperEnemy (aim-line lock), SniperPenetrationBehavior, SniperWeapon, SplitShotWeapon, Enemy Sustained ATTACK State (+3 more)
+
+### Community 349 - "Community 349"
+Cohesion: 0.18
+Nodes (10): Cave Generation Stage Implementation Plan, Task 1: Hash Utilities in cave_utils.glsl, Task 2: Value Noise, Task 3: Chunk Type Detection, Task 4: Connector System, Task 5: Cave Carving in cave_stage.glsl, Task 6: Wire Cave Stage into Generation Pipeline, Task 7: Multi-Cave Carving (+2 more)
+
+### Community 350 - "Community 350"
+Cohesion: 0.18
+Nodes (10): Collision Optimization Implementation Plan, File Structure, Task 1: Add Timing Field to Chunk, Task 2: Create GPU Marching Squares Shader, Task 3: Add build_from_segments to TerrainCollider, Task 4: Initialize Collider Pipeline in WorldManager, Task 5: Add GPU Collision Dispatch and Parsing, Task 6: Integrate Throttling into Collision Rebuild Loop (+2 more)
+
+### Community 351 - "Community 351"
+Cohesion: 0.18
+Nodes (10): File Structure, Player Health & Death System Implementation Plan, Task 1: Add damage property to MaterialDef, Task 2: Create HealthComponent, Task 3: Create LavaDamageChecker, Task 4: Update PlayerController + Modify player.tscn, Task 5: Create HealthUI, Task 6: Create DeathScreen (+2 more)
+
+### Community 352 - "Community 352"
+Cohesion: 0.18
+Nodes (10): Interactable & Drop System Implementation Plan, Task 1: Create Outline Shader, Task 2: Add Interact Input Action, Task 3: Create Interactable Component, Task 4: Create Drop Base Scene, Task 5: Create InteractionController on Player, Task 6: Update WeaponManager API, Task 7: Update WeaponPopup for Pickup Mode (+2 more)
+
+### Community 353 - "Community 353"
+Cohesion: 0.18
+Nodes (10): Task 1: Standardize Base Stats on Weapon Class, Task 2: Update TestWeapon with Base Stats, Task 3: Update MeleeWeapon with Base Stats, Task 4: Add Signals and Swap Method to WeaponManager, Task 5: Create WeaponButton Scene and Script, Task 6: Create WeaponPopup Scene and Script, Task 7: Wire WeaponButton and WeaponPopup into Game Scene, Task 8: Handle Pause Conflict Between WeaponPopup and PauseMenu (+2 more)
+
+### Community 354 - "Community 354"
+Cohesion: 0.18
+Nodes (10): File Map, Self-Review Notes, Task 1: Probe shader, Task 2: ComputeDevice — buffers, init, free, Task 3: ComputeDevice — dispatch and readback, Task 4: TerrainPhysical — rewrite state and query (TDD), Task 5: WorldManager — wire init and per-frame dispatch, Task 6: Integration check — run existing suites (+2 more)
+
+### Community 355 - "Community 355"
+Cohesion: 0.18
+Nodes (10): Coalesced + Double-Buffered Light SSBO Readback — Implementation Plan, File Inventory, Task 1: Add coalesced-buffer constants and storage in `ComputeDevice`, Task 2: Update `light_pack.glsl` to write into a slice, Task 3: Per-chunk uniform sets bind shared buffers (one per index), Task 4: Coalesced dispatch + readback + slice decode in `ComputeDevice`, Task 5: Rewrite `_update_lights` in `WorldManager`, Task 6: Smoke-test in editor (+2 more)
+
+### Community 356 - "Community 356"
+Cohesion: 0.18
+Nodes (10): File Structure, Noita-Style Boss Wall Arena Implementation Plan, Self-Review Notes, Task 1: Add the indestructible BEDROCK material, Task 2: Make explosions skip bedrock, Task 3: Collapse SectorGrid to a single boss ring, Task 4: Add the bedrock-wall generation stage, Task 5: Repoint enemy-tier scaling to the wall radius (+2 more)
+
+### Community 357 - "Community 357"
+Cohesion: 0.18
+Nodes (10): Background for the implementer, File structure, Self-review notes (for the implementer), Task 1: Regression-guard test for the AO uniforms, Task 2: AO uniforms, sampler, and floor AO, Task 3: Wall-face AO, Task 4: Cap AO (corners) via `near_air` → `disc_ao` refactor, Task 5: Wire the AO uniforms from `chunk_manager.gd` (+2 more)
+
+### Community 358 - "Community 358"
+Cohesion: 0.18
+Nodes (10): File Structure, Melee Lunge Variant Implementation Plan, Self-Review (spec coverage), Task 1: Opt-in `_moves_during_attack()` base hook, Task 2: `LungeEnemy` skeleton — class, tunables, `_ready`, dash-begin, Task 3: The dash — movement, body-check, termination, Task 4: Windup reset + telegraph (`_change_state` override), Task 5: Lunge enemy scene (+2 more)
+
+### Community 359 - "Community 359"
+Cohesion: 0.18
+Nodes (10): Oil Barrel & Gas Vent Props + Poisoned Status Implementation Plan, Task 1: Add `place_oil()` convenience method to TerrainSurface, Task 2: Add "poisoned" status definition to StatusRegistry, Task 3: Create the Oil Barrel script, Task 4: Update barrel.tscn scene, Task 5: Create the Gas Vent script, Task 6: Update vent.tscn scene, Task 7: Extend Projectile hit detection for destructible props (+2 more)
+
+### Community 360 - "Community 360"
+Cohesion: 0.18
+Nodes (10): Self-Review Notes, SP-C: New Projectile Behaviors + Projectile Modifiers Implementation Plan, Task 1: Add `shard_hit_status` to `SplitBehavior`, Task 2: `HomingBehavior`, Task 3: `ReturnBehavior`, Task 4: `ricochet_shard` + `piercing_lance` modifiers (reuse behaviors), Task 5: `cluster_bomb` modifier (reuse SplitBehavior + burn), Task 6: `homing_hex` + `boomerang_arc` modifiers (new behaviors) (+2 more)
+
+### Community 361 - "Community 361"
+Cohesion: 0.18
+Nodes (10): Background for the implementer, Enemy Crowd Separation Implementation Plan, File structure, Running tests, Self-review notes, Spec, Task 1: Strengthen separation steering, Task 2: Depenetration safety net (+2 more)
+
+### Community 362 - "Community 362"
+Cohesion: 0.18
+Nodes (10): Architecture Overview, Components, Data Flow, EditorPlugin (New), Files Changed, Implementation Notes, Level Preview Mode Design, PurposeEnable level designers to preview generated terrain in the editor before playing the game. Supports iteration on world generation parameters. (+2 more)
+
+### Community 363 - "Community 363"
+Cohesion: 0.18
+Nodes (11): Air Proximity Check, Fragment Shader Logic, Step 1: Sample current pixel, Step 2: Air pixel — wall face check, Step 3: Solid pixel — wall top or black, Fake Wall Rendering, render_chunk.gdshader, Wall Face Rendering (+3 more)
+
+### Community 364 - "Community 364"
+Cohesion: 0.18
+Nodes (10): 1. Frame-budget the collision rebuilds, 2. Eliminate the `_check_chunk_burning` readback, Approach, Chunk-Load Lag Fix — Design, Diagnosis, Files affected, Goal, Non-goals (+2 more)
+
+### Community 365 - "Community 365"
+Cohesion: 0.18
+Nodes (10): 1. Health Component (`src/player/health_component.gd`), 2. Material Damage Property (`material_registry.gd`) + Lava Damage Checker (`src/player/lava_damage_checker.gd`), 3. Health UI (`src/ui/health_ui.gd`), 4. Death Screen (`src/ui/death_screen.gd`), Files to Create/Modify, Future Considerations, LavaDamageChecker, MaterialDef changes in `material_registry.gd` (+2 more)
+
+### Community 366 - "Community 366"
+Cohesion: 0.18
+Nodes (10): Approach, Background, Design, Files affected, Goal, Remove Attack Tokens — Infinite Enemy Aggression, Section 1: EncounterDirector simplification, Section 2: Enemy chase behavior simplification (+2 more)
+
+### Community 367 - "Community 367"
+Cohesion: 0.18
+Nodes (11): Approach Rationale, Core Concept, Differentiation, Duration Target, Hook (0:00 - 0:10), Key Observations from Landscape, Notes, Structure Overview (+3 more)
+
+### Community 368 - "Community 368"
+Cohesion: 0.18
+Nodes (10): Component 1 — Stronger separation steering, Component 2 — Depenetration safety net, Components, Constraints & interactions, Enemy Crowd Separation — Design, Existing structures this builds on, Goal, Problem (+2 more)
+
+### Community 369 - "Community 369"
+Cohesion: 0.20
+Nodes (9): File Structure, Task 1: Add frame seed to simulation shader push constants, Task 2: Add hash function and randomize heat spread in simulation shader, Task 3: Pass frame seed from world_manager.gd, Task 4: Add TIME uniform to render shader, Task 5: Add ember color and flicker functions to render shader, Task 6: Update material_color to use ember gradient, Task 7: Final verification and cleanup (+1 more)
+
+### Community 370 - "Community 370"
+Cohesion: 0.20
+Nodes (9): File Structure, Modified Files, New Files, Task 1: Create Weapon Base Class, Task 2: Create Test Weapon, Task 3: Integrate Weapons into Player Controller, Task 4: Manual Testing, Verification Commands (+1 more)
+
+### Community 371 - "Community 371"
+Cohesion: 0.20
+Nodes (9): Files, Melee Weapon Implementation Plan, Summary, Task 1: Add disperse_materials_in_arc to WorldManager, Task 2: Create MeleeWeapon class, Task 3: Create MeleeSwingEffect scene and script, Task 4: Add get_facing_direction to PlayerController, Task 5: Equip melee weapon in PlayerController (+1 more)
+
+### Community 372 - "Community 372"
+Cohesion: 0.20
+Nodes (10): disperse_materials_in_arc Method, ChunkManager (Lifecycle), CollisionManager (GPU/CPU Collisions), ComputeDevice (GPU Init/Dispatch), TerrainModifier (Place/Disperse Ops), TerrainReader (Read Queries), WorldManager Refactor (6 Subsystems), Architecture Deepening (6 Tiers) (+2 more)
+
+### Community 373 - "Community 373"
+Cohesion: 0.20
+Nodes (9): File Structure, Soul Knight-Style Melee Weapon with Trail Implementation Plan, Task 1: Create Weapon Sprite Asset, Task 2: Create WeaponVisual Scene, Task 3: Add WeaponVisual to Player Scene, Task 4: Modify MeleeSwingEffect Scene, Task 5: Implement Trail Logic in MeleeSwingEffect, Task 6: Modify MeleeWeapon to Pass Texture (+1 more)
+
+### Community 374 - "Community 374"
+Cohesion: 0.20
+Nodes (9): File Structure, Task 1: Update Weapon Base Class, Task 2: Refactor WeaponVisual for Swing Animation, Task 3: Update MeleeWeapon to Trigger Visual, Task 4: Update WeaponManager to Create Visuals, Task 5: Remove Player Scene's Static WeaponVisual, Task 6: Delete Old MeleeSwingEffect Files, Task 7: Verify Implementation (+1 more)
+
+### Community 375 - "Community 375"
+Cohesion: 0.20
+Nodes (9): Glowing Light Sources Implementation Plan, Task 1: Write the compute shader `light_pack.glsl`, Task 2: Add light_pack pipeline setup in ComputeDevice, Task 3: Add light_pack buffer and uniform set to Chunk, Task 4: Create ChunkLights component, Task 5: Wire ChunkLights into chunk lifecycle, Task 6: Add light dispatch and distributed readback to ComputeDevice, Task 7: Wire light update loop into WorldManager (+1 more)
+
+### Community 376 - "Community 376"
+Cohesion: 0.20
+Nodes (9): Conventions for every test step, Enemy Navigation (Flow-Field Pursuit + Grid Clamp) Implementation Plan, File Structure, Self-Review Notes, Task 1: PassabilityGrid, Task 2: FlowField (double-buffered, time-sliced BFS), Task 3: NavField glue + WorldManager wiring, Task 4: Enemy pursuit + wall clamp (+1 more)
+
+### Community 377 - "Community 377"
+Cohesion: 0.20
+Nodes (9): Charge Bar + Full-Charge Gate Implementation Plan, File Structure, Self-Review Notes, Task 1: Base `Weapon` charge-query API, Task 2: Full-charge gate + query overrides on `AdvancedMeleeWeapon`, Task 3: `ChargeBar` node, Task 4: Wire the `ChargeBar` into `WeaponManager`, Task 5: Raise the player's status-icon anchor (+1 more)
+
+### Community 378 - "Community 378"
+Cohesion: 0.20
+Nodes (9): Background & Key Facts (read before starting), File Structure, Self-Review Notes (addressed during planning), Solidity-Aware Dirtying Implementation Plan, Task 1: Regenerate material shader includes (verify `HAS_COLLIDER`), Task 2: Pure solidity-flag decoder + unit test (TDD), Task 3: GPU plumbing — flag buffer, shader writes, dispatch, readback, wiring, Task 4: Manual gameplay + profiler verification (+1 more)
+
+### Community 379 - "Community 379"
+Cohesion: 0.20
+Nodes (9): Global Constraints, Modifier Placeholder Icons + Modifier Drop Info Card Implementation Plan, Self-Review Notes, Task 1: Rarity field on the Modifier resource, Task 2: Icon fallback + rarity population in the factory, Task 3: Card stat labels auto-wrap to card width, Task 4: `populate_info_card` on drops (base + weapon + modifier), Task 5: Generalize WeaponInfoPopup to any Drop (+1 more)
+
+### Community 380 - "Community 380"
+Cohesion: 0.20
+Nodes (9): Current State, Files, PlayerController Changes, Proposed Changes, Scene Update, Summary, Weapon Base Class, Weapon Manager Decoupling Design (+1 more)
+
+### Community 381 - "Community 381"
+Cohesion: 0.20
+Nodes (9): 1. modifier_drop.gd, 2. weapon_button.gd, 3. ui_animations.gd, Design, Goal, Modifier Full-Slots Visual Feedback — Design Spec, Problem, Scope (+1 more)
+
+### Community 382 - "Community 382"
+Cohesion: 0.20
+Nodes (9): Architecture Deepening — Top-Down Rogue, Execution Order, Files to Create, Files to Delete, Module Dependency Graph (Post-Refactor), Non-Goals, Overview, Risks and Mitigations (+1 more)
+
+### Community 383 - "Community 383"
+Cohesion: 0.20
+Nodes (9): Approach, Coalesced + Double-Buffered Light Output SSBO, Context, Data Flow, Edge cases, Double-buffered light output SSBOs, Non-goals, Sizing (+1 more)
+
+### Community 384 - "Community 384"
+Cohesion: 0.22
+Nodes (8): Modifier Transfer on Weapon Replace Implementation Plan, Task 1: Add `find_empty_modifier_slot()` to Weapon, Task 2: Add modifier transfer state and logic to WeaponPopup, Task 3: Update WeaponDrop callback to handle modifier transfer, Task 4: Handle edge case — new weapon has no empty modifier slots, Task 5: Handle overlay click during transfer mode, Task 6: Update the `_build_cards` call during transfer mode to also skip modifier header, Task 7: Manual testing checklist
+
+### Community 385 - "Community 385"
+Cohesion: 0.22
+Nodes (8): Elite + Boss Arena Rework Implementation Plan, File Structure, Out of scope (not in this plan), Task 1: Create stub barrel + vent prop scenes, Task 2: Update generator helpers and dimensions, Task 3: Rewrite elite variant builders, Task 4: Rewrite boss variant builders, Task 5: Regenerate compositions and verify
+
+### Community 386 - "Community 386"
+Cohesion: 0.22
+Nodes (8): File Structure, Per-weapon Rarity + Full-pool Chests Implementation Plan, Self-Review Notes, Task 1: Add `rarity` field to `Weapon` base class, Task 2: Set per-subclass rarity defaults, Task 3: Refactor `WeaponRegistry` to build tier buckets from `rarity`, Task 4: Switch `Chest.tier` to `EnemyTier` and roll per slot, Task 5: Update chest spawn callers to set `EnemyTier`
+
+### Community 387 - "Community 387"
+Cohesion: 0.22
+Nodes (8): Glowing Cave Flora Implementation Plan, Self-Review, Task 1: `DecorDef` resource, Task 2: `FlickerLight` shared script + lantern refactor, Task 3: BiomeDef `decor_defs` swap + FloorChunk light-aware floor-only scatter, Task 4: FloorContainer reads chunk material region and passes it through, Task 5: Populate the caves biome with glowing flora, Task 6: Full-suite regression + visual verification
+
+### Community 388 - "Community 388"
+Cohesion: 0.22
+Nodes (8): File Structure, Manual verification (after all tasks), Room Enemy Wall-Spawn Fix Implementation Plan, Self-Review Notes, Task 1: Shared `SpawnValidation.footprint_clear` helper, Task 2: Delegate `cave_spawner._is_clear_of_walls` to the shared helper, Task 3: Spiral relocation `_resolve_clear_position` in `spawn_dispatcher`, Task 4: Route enemy markers through validation
+
+### Community 389 - "Community 389"
+Cohesion: 0.22
+Nodes (8): 1. Simulation Shader (`shaders/simulation.glsl`), 2. World Manager (`scripts/world_manager.gd`), 3. Render Shader (`shaders/render_chunk.gdshader`), Behavior Summary, Changes, Files Modified, Summary, Temperature Tint & Random Heat Spread
+
+### Community 390 - "Community 390"
+Cohesion: 0.22
+Nodes (8): Architecture, Collision Resolution, CPU Shadow Grid, Edge Cases, File Organization, Overview, Terrain Physics & Player Controller Design, WorldManager Integration
+
+### Community 391 - "Community 391"
+Cohesion: 0.22
+Nodes (8): Edge Cases, File: `src/physics/terrain_collider.gd`, Implementation Details, Occluder Inset Design, Overview, Problem, Solution, Testing
+
+### Community 392 - "Community 392"
+Cohesion: 0.22
+Nodes (9): Architecture, Occluder Polygon Flow, Vertex Offset Algorithm, Light Occluder Shadows, LightOccluder2D (Godot node), PointLight2D (player light), OCCLUDER_INSET (3.0 pixels), Occluder Inset (+1 more)
+
+### Community 393 - "Community 393"
+Cohesion: 0.22
+Nodes (8): Animation Phases, Bouncy Melee Weapon Swing Animation, Current State, Design, Files Modified, Goal, Implementation Changes, Success Criteria
+
+### Community 394 - "Community 394"
+Cohesion: 0.22
+Nodes (8): Algorithm, Files Changed, Integration Point, New State, Problem, Solution, Terrain Overlap Recovery for Player Controller, What Does Not Change
+
+### Community 395 - "Community 395"
+Cohesion: 0.22
+Nodes (8): Architecture, Baked Per-Chunk Decor Lighting, Compositing, Decisions, Lifecycle & cleanup, Out of scope, Problem, Testing
+
+### Community 396 - "Community 396"
+Cohesion: 0.22
+Nodes (8): Background, Change, Files changed, Goal, New constants, Shop Item Spacing — Design Spec, Spacing analysis, Visual layout
+
+### Community 397 - "Community 397"
+Cohesion: 0.22
+Nodes (9): Chunk Load Lag Fix, Collision Priority Queue (nearest-first), Frame-Budgeted Collision Rebuilds, has_burning (Chunk field), Periodic Burning Re-Check (every 10th rebuild), collider.glsl, Collision Optimization, COLLISION_UPDATE_INTERVAL (0.3s) (+1 more)
+
+### Community 398 - "Community 398"
+Cohesion: 0.25
+Nodes (7): File Structure, Level Preview Mode Implementation Plan, Task1: Add Public API to WorldManager, Task 2: Create WorldPreview @tool Script, Task 3: Create Editor Plugin, Task 4: Register Plugin in Project, Task 5: Add WorldPreview Node to Scene
+
+### Community 399 - "Community 399"
+Cohesion: 0.25
+Nodes (7): File Structure, Noita-Like Pixel Terrain Implementation Plan, Task 1: Project Scaffolding — All Files + Camera, Task 2: WorldManager — Chunk Rendering, Task 3: WorldManager — Simulation Dispatch, Task 4: Input Handler — Fire Placement, Task 5: Debug Manager — Chunk Grid Overlay
+
+### Community 400 - "Community 400"
+Cohesion: 0.25
+Nodes (7): Files Summary, Stage-Based World Generation Implementation Plan, Task 1: Create GenerationContext Struct, Task 2: Create Stages Directory and Wood Fill Stage, Task 3: Refactor generation.glsl to Use Stage, Task 4: Update WorldManager to Use Context and Push Constants, Task 5: Verify Generation Works
+
+### Community 401 - "Community 401"
+Cohesion: 0.25
+Nodes (7): Chunk-Load Lag Fix Implementation Plan, File Structure, Task 1: Add `has_burning` field to `Chunk`, Task 2: Set `has_burning` from `place_fire`, Task 3: Replace `_check_chunk_burning` with `has_burning` flag (no readback in hot path), Task 4: Frame-budget collision rebuilds (one chunk per frame, nearest first), Task 5: Final verification and cleanup check
+
+### Community 402 - "Community 402"
+Cohesion: 0.25
+Nodes (8): HitReaction Autoload (Merged Juice), HitSpec Resource, ChromaticFlashManager, DamageNumberManager, HitSparkManager, HitStopManager, Juicy Melee Hit System (5 Juice Managers), ScreenShakeManager
+
+### Community 403 - "Community 403"
+Cohesion: 0.25
+Nodes (7): Enemy Drop Tables Implementation Plan, Task 1: Refactor DropEntry to support multiple drop kinds, Task 2: Add tier pools and weighted selection to WeaponRegistry, Task 3: Add enemy_tier to Enemy base class, Task 4: Update DummyEnemy to use new drop table API, Task 5: Write unit tests for DropTable and WeaponRegistry, Task 6: Update implementation_todo.md to mark task complete
+
+### Community 404 - "Community 404"
+Cohesion: 0.25
+Nodes (7): GameMode System Implementation Plan, Task 1: Create GameModeManager Autoload, Task 2: Create gamemode Console Command, Task 3: Noclip — PlayerController, Task 4: Undeath — PlayerInventory, Task 5: Instant Kill — Enemy, Task 6: Verification
+
+### Community 405 - "Community 405"
+Cohesion: 0.25
+Nodes (7): Cave Enemy Spawning Implementation Plan, Self-Review, Task 1: Add `cave_spawn_rate` to `BiomeDef`, Task 2: Create `CaveSpawner` node, Task 3: Wire `CaveSpawner` into `LevelManager`, Task 4: Write unit tests, Task 5: Integration test (manual smoke test)
+
+### Community 406 - "Community 406"
+Cohesion: 0.25
+Nodes (7): Bundled Weapon + Modifier Drops Implementation Plan, File Map, Task 1: New DropTable helpers (`roll_modifier_for_enemy`, `roll_should_drop_weapon`), Task 2: Gut `from_enemy_tier` to gold-only and prune dead code, Task 3: Enemy rolls modifier on spawn, gates weapon drop on death, Task 4: Boss overrides — plain weapon, always drops it, Task 5: Manual verification
+
+### Community 407 - "Community 407"
+Cohesion: 0.25
+Nodes (8): FeatureFloorOverlay, FeatureLanternCluster, FeaturePlaqueSet, Guidance Room, LanternSpec Resource, PlaqueSpec Resource, CompositionDispatcher.spawn_node, CompositionDispatcher
+
+### Community 408 - "Community 408"
+Cohesion: 0.29
+Nodes (8): RoomSlot.template_override, Boss Ring Constants [8,10,12], Interspersed Boss Rings, Boss Wall Generation Stage, enemy_tier_for_distance Helper, Noita-Style Boss Wall Arena, WALL_INNER_SECTORS Constant, SectorGrid
+
+### Community 409 - "Community 409"
+Cohesion: 0.25
+Nodes (7): Done criteria, File Structure, Interspersed Boss Rings Implementation Plan, Task 1: Radial-coverage regression test (RED first), Task 2: Generalize ring geometry (make coverage GREEN), Task 3: Repoint existing sector-grid tests to the new layout, Task 4: Point the difficulty-tier divisor at the new edge constant
+
+### Community 410 - "Community 410"
+Cohesion: 0.25
+Nodes (7): File Structure, Status Performance Death-Spiral Fix — Implementation Plan, Task 1: Throttle status updates and move them off `_physics_process`, Task 2: Shrink the footprint sample grid, Task 3: Cap physics substeps (defense-in-depth), Task 4: Amortize chunk generation across frames, Task 5: Full verification
+
+### Community 411 - "Community 411"
+Cohesion: 0.25
+Nodes (7): Data Layout, Lava Material Design, Overview, Problem, Registry Entry, Simulation — Unified Fluid Advection, Solution
+
+### Community 412 - "Community 412"
+Cohesion: 0.29
+Nodes (8): Drop (RigidBody2D), interact (E key input), Interactable (component), Interactable & Drop System, InteractionController (player), outline.gdshader, swap_weapon (WeaponManager method), WeaponDrop (extends Drop)
+
+### Community 413 - "Community 413"
+Cohesion: 0.29
+Nodes (7): LightningBoltModifier, PenetratingShockwaveModifier, Modifier (base class), Weapon Modifier System, Weapon.notify_attack, WeaponRegistry (modifier registration), Data-Driven Weapon Factory
+
+### Community 414 - "Community 414"
+Cohesion: 0.29
+Nodes (7): DataModifier (CSV-driven), Effective Stats Pipeline (add-then-mult), TerrainSurface.place_material (generic), Combat Verbs (knockback/stun/heal/bounty), DataModifier SP-B.1 Verbs, CombatUtil (radial_knockback + nearest_attackables), QuakeHammerWeapon (charged knockback shockwave)
+
+### Community 415 - "Community 415"
+Cohesion: 0.29
+Nodes (7): Projectile.source_weapon, Weapon.resolve_hit Chokepoint, BerserkerAxeWeapon (low-HP damage ramp), Free Carve Flag (melee), Native Weapon Hooks (_native_modify_hit_damage / _native_on_kill), ReaperGlaiveWeapon (heal-on-kill), SoulReaverWeapon (per-kill stacking)
+
+### Community 416 - "Community 416"
+Cohesion: 0.29
+Nodes (6): Fake Wall Rendering Implementation Plan, File Structure, Task 1: Create placeholder wall texture, Task 2: Rewrite the fragment shader with wall rendering logic, Task 3: Pass wall uniforms from world_manager.gd, Task 4: Visual verification
+
+### Community 417 - "Community 417"
+Cohesion: 0.29
+Nodes (6): File Structure, Task 1: Update simulation.glsl - Remove FIRE Material, Task 2: Update render_chunk.gdshader - Remove FIRE Rendering, Task 3: Update world_manager.gd - Modify place_fire, Temperature-Driven Burning Implementation Plan, Testing
+
+### Community 418 - "Community 418"
+Cohesion: 0.29
+Nodes (6): Bouncy Melee Swing Implementation Plan, Task 1: Add Animation Constants, Task 2: Create Elastic Easing Function, Task 3: Implement Two-Phase Swing Animation, Task 4: Update Trail Behavior for Return Phase, Task 5: Test and Verify
+
+### Community 419 - "Community 419"
+Cohesion: 0.29
+Nodes (6): File Structure, Melee Swing Animation Implementation Plan, Self-Review Checklist, Task 1: Update MeleeSwingEffect Scene, Task 2: Rewrite MeleeSwingEffect Script for Swing Animation, Task 3: Test and Verify
+
+### Community 420 - "Community 420"
+Cohesion: 0.29
+Nodes (7): get_facing_direction Method, MeleeSwingEffect Visual Effect, MeleeWeapon Class, WorldManager (Melee Plan Reference), Soul Knight-Style Trail Effect, WeaponVisual Component, Weapon Visual Attack Animation
+
+### Community 421 - "Community 421"
+Cohesion: 0.29
+Nodes (6): Task 1: Create WeaponManager Node, Task 2: Update player.tscn to Include WeaponManager, Task 3: Remove Weapon Code from PlayerController, Task 4: Verify Implementation, Task 5: Final Commit, Weapon Manager Decoupling Implementation Plan
+
+### Community 422 - "Community 422"
+Cohesion: 0.33
+Nodes (7): Main Menu Scene, Pause Menu Scene, Pixel-Art UI Theme (DawnLike Font), SceneManager Autoload, Settings Popup (Shared), UiAnimations (Tween Helpers), UiTheme (Shared Theme Builder)
+
+### Community 423 - "Community 423"
+Cohesion: 0.29
+Nodes (6): Balatro-Style Card UI Implementation Plan, File Structure, Task 1: Add fake_3D shader and shadow stylebox, Task 2: Create Card script (card.gd), Task 3: Create Card scene (card.tscn), Task 4: Integrate Card into weapon_popup.gd
+
+### Community 424 - "Community 424"
+Cohesion: 0.29
+Nodes (6): Enemy Intent Indicator Implementation Plan, File Structure, Task 1: Create intent indicator script, Task 2: Create intent indicator scene, Task 3: Integrate indicator into enemy base class, Task 4: Verify in-game
+
+### Community 425 - "Community 425"
+Cohesion: 0.29
+Nodes (6): Baked Per-Chunk Decor Lighting Implementation Plan, File Structure, Self-Review Notes, Task 1: Bake all decor lights in a chunk into one `PointLight2D`, Task 2: Regression tests — no-light case and determinism, Task 3: Full suite + manual in-engine verification
+
+### Community 426 - "Community 426"
+Cohesion: 0.29
+Nodes (7): Ambiguity Check, Internal Consistency, Pacing Check, Placeholder Scan, Self-Review, Shootability Check, Spec Coverage
+
+### Community 427 - "Community 427"
+Cohesion: 0.29
+Nodes (7): 1. HitReaction — Consolidated Juice Module, Benefits, Interface, Internal Adapters (5 adapters, private to HitReaction), Problem, Solution, What Changes
+
+### Community 428 - "Community 428"
+Cohesion: 0.29
+Nodes (7): 4. TerrainPhysical — Unified Terrain Query, Benefits, Interface, Internal Architecture, Problem, Solution, What Changes
+
+### Community 429 - "Community 429"
+Cohesion: 0.29
+Nodes (7): 6. WeaponDelivery — Unified Pickup Flow, Benefits, Interface, Internal Flow, Problem, Solution, What Changes
+
+### Community 430 - "Community 430"
+Cohesion: 0.29
+Nodes (6): Intro A — UCI VGDC (team-join framing), Intro B — CMU (tech-forward framing), Recruitment Kit, Roles I'm looking for, The video (60–90s, gameplay-first), Timing
+
+### Community 431 - "Community 431"
+Cohesion: 0.33
+Nodes (5): Occluder Inset Implementation Plan, Task 1: Add Occluder Inset Constant, Task 2: Implement shrink_polygon Function, Task 3: Apply Shrink to Occluder Polygons, Task 4: Visual Verification
+
+### Community 432 - "Community 432"
+Cohesion: 0.33
+Nodes (5): Files, Modifier Full-Slots Visual Feedback Implementation Plan, Task 1: Add `jitter_bounce()` to `UiAnimations`, Task 2: Add red outline Panel and `flash_slots_full()` to `WeaponButton`, Task 3: Trigger `flash_slots_full()` from `ModifierDrop`
+
+### Community 433 - "Community 433"
+Cohesion: 0.33
+Nodes (5): Shop UI Redesign Implementation Plan, Task 1: Rewrite shop_ui.tscn scene structure, Task 2: Update shop_ui.gd for new layout, Task 3: Verify everything works, Task 4: Commit
+
+### Community 434 - "Community 434"
+Cohesion: 0.33
+Nodes (5): Task 1: Create WeaponInfoPopup script, Task 2: Integrate with PickupContext, Task 3: Manual verification, Task 4: Commit, Weapon Drop Info Popup — Implementation Plan
+
+### Community 435 - "Community 435"
+Cohesion: 0.33
+Nodes (5): Task 1: Add terrain overlap recovery constants and state, Task 2: Add the `_resolve_terrain_overlap()` method, Task 3: Integrate `_resolve_terrain_overlap()` into `_physics_process()`, Task 4: Manual playtest verification, Terrain Overlap Recovery Implementation Plan
+
+### Community 436 - "Community 436"
+Cohesion: 0.33
+Nodes (6): B-Roll Sourcing List, Crew / Setup Requirements, Meme Sourcing List, Music / SFX Direction, On-Screen Text Master List, PRODUCTION NOTES
+
+### Community 437 - "Community 437"
+Cohesion: 0.33
+Nodes (6): B-Roll 素材清单, 制作说明, 团队/设备需求, 屏幕文字总表, 梗图素材清单, 音乐 / 音效指示
+
+### Community 438 - "Community 438"
+Cohesion: 0.33
+Nodes (6): 2. PickupContext + Pickupable — Unified Drop System, Benefits, Interface, Problem, Solution, What Changes
+
+### Community 439 - "Community 439"
+Cohesion: 0.33
+Nodes (6): 3. TerrainSurface — WorldManager Seam, Benefits, Interface, Problem, Solution, What Changes
+
+### Community 440 - "Community 440"
+Cohesion: 0.33
+Nodes (6): 5. PlayerInventory — Unified Player State, Benefits, Interface, Problem, Solution, What Changes
+
+### Community 441 - "Community 441"
+Cohesion: 0.33
+Nodes (6): Architecture, `chunk_manager.gd` (addition), `ComputeDevice` (additions), GPU layout (coalesced SSBO), Shader change (`shaders/compute/collider.glsl`), `TerrainCollisionHelper` (existing, rewritten)
+
+### Community 442 - "Community 442"
+Cohesion: 0.40
+Nodes (3): graphify, Import the project first in fresh worktrees, Running tests (gdUnit4)
+
+### Community 443 - "Community 443"
+Cohesion: 0.40
+Nodes (5): ChainSparkModifier (lightning crit chain), LightningArcFX (self-drawing arc), Modifier.on_crit Hook, ChainBehavior (lightning fork), TeslaGunWeapon (chain weapon)
+
+### Community 444 - "Community 444"
+Cohesion: 0.40
+Nodes (5): WorldManager, Double-buffered terrain probe SSBOs, FPS Performance Pass, WorldManager explosion wave polling, WorldManager._update_lights rewrite
+
+### Community 445 - "Community 445"
+Cohesion: 0.40
+Nodes (5): `Chunk`, Components, `compute_device.gd`, `shaders/light_pack.glsl` (or current equivalent), `world_manager.gd::_update_lights`
+
+### Community 446 - "Community 446"
+Cohesion: 0.50
+Nodes (3): Shop Item Spacing Implementation Plan, Task 1: Update ShopStall position constants, Task 2: Verify test assertions still pass
+
+### Community 448 - "Community 448"
+Cohesion: 0.50
+Nodes (4): Integration (real RenderingDevice), Perf verification (manual), Testing, Unit-ish (helper in isolation, mock ComputeDevice)
+
+### Community 449 - "Community 449"
+Cohesion: 0.50
+Nodes (4): build_from_segments (function), Collider Storage Buffer (R32UI), build_occluder (function), occluder_instance (Chunk field)
+
+### Community 454 - "Community 454"
 Cohesion: 0.67
-Nodes (3): Enemy Knockback System, Enemy.on_hit_impact(), Enemy Squash-Stretch on Hit
+Nodes (3): Scene Changes, `scenes/levels/game.tscn`, `scenes/levels/*.tscn` (all level scenes with enemies)
 
 ## Ambiguous Edges - Review These
 - `Glowing Lights` → `LavaEmitterModifier`  [AMBIGUOUS]
   docs/superpowers/specs/2026-05-02-glowing-light-sources-design.md · relation: semantically_similar
 
 ## Knowledge Gaps
-- **582 isolated node(s):** `MeleeSwingEffect (Polygon2D blade)`, `GenerationContext (struct)`, `MaterialDef (inner class)`, `Noita (Game Reference)`, `Soul Knight (Game Reference)` (+577 more)
+- **3181 isolated node(s):** `Import the project first in fresh worktrees`, `graphify`, `graphify`, `Programming`, `Art` (+3176 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **131 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **122 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `Glowing Lights` and `LavaEmitterModifier`?**
   _Edge tagged AMBIGUOUS (relation: semantically_similar) - confidence is low._
-- **Why does `Status Effect System` connect `Status Effects & Burn Feedback` to `Floor Rendering & Room Background`, `Weapon Rarity & Shop Economy`?**
-  _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `Weapon Crit API` connect `Weapon Rarity & Shop Economy` to `Status Effects & Burn Feedback`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `MAT_GAS` connect `Swarm Grid & Steering` to `Material & Gas & Injection`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Are the 3 inferred relationships involving `Gas Material (MAT_GAS)` (e.g. with `Material Generation from Weapon Swings` and `Lava Material (MAT_LAVA)`) actually correct?**
-  _`Gas Material (MAT_GAS)` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 3 inferred relationships involving `Status Effect System` (e.g. with `Status Clarity & Burn Feedback` and `Enemy & Status Performance Pass`) actually correct?**
-  _`Status Effect System` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 2 inferred relationships involving `Juicy Melee Hit` (e.g. with `Player Hurt Juice` and `Phase4 Enemies`) actually correct?**
-  _`Juicy Melee Hit` has 2 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.001) - this node is a cross-community bridge._
+- **Why does `Status Effect System` connect `Status Effects & Burn Feedback` to `Community 336`, `Community 337`, `Weapon Rarity & Shop Economy`, `Community 319`?**
+  _High betweenness centrality (0.001) - this node is a cross-community bridge._
+- **Why does `Implementation Todo List` connect `Boss Wall & Rings` to `Game Foundation & Docs`?**
+  _High betweenness centrality (0.000) - this node is a cross-community bridge._
+- **What connects `Import the project first in fresh worktrees`, `graphify`, `graphify` to the rest of the system?**
+  _3194 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Game Foundation & Docs` be split into smaller, more focused modules?**
+  _Cohesion score 0.058699101004759384 - nodes in this community are weakly interconnected._
+- **Should `Status Effects & Burn Feedback` be split into smaller, more focused modules?**
+  _Cohesion score 0.1286549707602339 - nodes in this community are weakly interconnected._
