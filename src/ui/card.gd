@@ -19,6 +19,8 @@ signal card_clicked
 @export var hover_scale_target: float = 1.12
 @export var is_selectable: bool = true
 
+const CONTENT_INSET: float = 16.0
+
 @onready var _shadow: Control = $Shadow
 @onready var _shadow_rect: ColorRect = $Shadow/ShadowRect
 @onready var _subviewport_container: SubViewportContainer = $SubViewportContainer
@@ -76,6 +78,8 @@ func populate(icon_texture: Texture2D, card_name: String, stats: Array[String] =
 			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
 			label.add_theme_font_size_override("font_size", 14)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			label.custom_minimum_size.x = card_size.x - CONTENT_INSET
 			_stats_container.add_child(label)
 	else:
 		_stats_container.hide()
