@@ -31,3 +31,12 @@ func _pickup(player: Node) -> void:
 func _on_delivery_result(accepted: bool, _slot: int) -> void:
 	if accepted:
 		queue_free()
+
+
+func populate_info_card(card: Card) -> void:
+	var stats: Array[String] = []
+	if modifier:
+		stats.append(modifier.description)
+	card.populate(modifier.icon_texture if modifier else null, modifier.name if modifier else "", stats, [])
+	if modifier:
+		card.set_rarity(modifier.rarity)
