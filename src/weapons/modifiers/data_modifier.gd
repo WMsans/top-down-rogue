@@ -6,8 +6,8 @@ const KNOCKBACK_RADIUS_FACTOR := 1.8
 const PULL_IMPULSE := 220.0
 const STEAM_BURST_RADIUS := 14.0
 const STEAM_BURST_DENSITY := 180
+const GOLD_STEP := 50.0
 
-var category: String = ""
 var trigger: String = ""
 var condition: String = ""
 var effect: String = ""
@@ -122,12 +122,23 @@ func modify_hit_damage(_weapon: Weapon, user: Node, target: Node, dmg: float) ->
 				return dmg * lerpf(1.0, magnitude, frac)
 			if magnitude2 > 0.0:
 				return dmg + _hit_streak
+		elif condition == "self_gold":
+			return dmg * _self_gold_mult(user)
 		elif condition == "self_full_hp":
 			if _self_full_hp(user):
 				return dmg * magnitude
 		elif _condition_met(target):
 			return dmg * magnitude
 	return dmg
+
+
+func _self_gold_mult(user: Node) -> float:
+	var inv = user.get_node_or_null("PlayerInventory") if user != null else null
+	if inv == null or not ("gold" in inv):
+		return 1.0
+	var gold: float = float(inv.gold)
+	var bonus: float = floor(gold / GOLD_STEP) * magnitude
+	return 1.0 + minf(bonus, magnitude2)
 
 
 func _speed_fraction(user: Node) -> float:
@@ -156,6 +167,20 @@ func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
 			var scs = target.get_node_or_null("StatusComponent")
 			if scs != null:
 				scs.add_timed_status("stun", magnitude)
+	if trigger == "on_hit" and effect == "knockback_and_status" and _condition_met(target):
+		if target != null and target is Node2D and target.has_method("apply_knockback"):
+			var user2 := _weapon_current_user(_weapon)
+			var dir: Vector2 = Vector2.DOWN
+			if user2 is Node2D:
+				var d: Vector2 = (target.global_position - (user2 as Node2D).global_position)
+				if d.length_squared() > 0.0001:
+					dir = d.normalized()
+			target.apply_knockback(dir, magnitude)
+		var sc2 = target.get_node_or_null("StatusComponent") if target else null
+		if sc2 != null:
+			sc2.add_stain(element, magnitude2)
+	if trigger == "on_hit" and effect == "spread_status" and _condition_met(target):
+		_spread_status(_weapon, target, element, magnitude, magnitude2)
 	if name == "Rampage":
 		_hit_streak = minf(_hit_streak + magnitude, magnitude2)
 		_time_since_event = 0.0
@@ -210,3 +235,30 @@ func on_tick(_weapon: Weapon, delta: float) -> void:
 		_time_since_event = 0.0
 	if name == "Rampage" and _time_since_event >= 1.5:
 		_hit_streak = 0.0
+
+
+func _weapon_current_user(weapon: Weapon) -> Node:
+	if weapon != null and "_current_user" in weapon:
+		return weapon._current_user
+	return null
+
+
+func _spread_status(weapon: Weapon, source_target: Node, status_id: String,
+		radius: float, stain: float) -> void:
+	if source_target == null or not (source_target is Node2D):
+		return
+	var tree := source_target.get_tree()
+	if tree == null:
+		return
+	var origin: Vector2 = (source_target as Node2D).global_position
+	var near: Array = CombatUtil.nearest_attackables(tree, origin, [source_target], 8, radius)
+	for foe in near:
+		var sc = foe.get_node_or_null("StatusComponent") if foe != null else null
+		if sc != null:
+			sc.add_stain(status_id, stain)
+
+
+func modify_crit_chance_for_target(_weapon: Weapon, base: float, target: Node) -> float:
+	if trigger == "on_hit" and effect == "stat_add" and element == "crit_chance" and _condition_met(target):
+		return base + magnitude
+	return base

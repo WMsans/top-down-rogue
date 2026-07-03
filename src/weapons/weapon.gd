@@ -20,17 +20,18 @@ var _cooldown_timer: float = 0.0
 const COOLDOWN_FLOOR := 0.1
 var _effective_cache: Dictionary = {}
 var _hit_count: int = 0
+const RETRIGGER_DEPTH_LIMIT := 2
+var _retrigger_depth: int = 0
 
 
 func use(user: Node) -> void:
 	if not is_ready():
 		return
-	for modifier in modifiers:
-		if modifier != null:
-			modifier.on_use(self, user)
+	for modifier in _iter_active_modifiers():
+		modifier.on_use(self, user)
 	var suppress: bool = false
-	for modifier in modifiers:
-		if modifier != null and modifier.suppresses_base_use:
+	for modifier in _iter_active_modifiers():
+		if modifier.suppresses_base_use:
 			suppress = true
 			break
 	if not suppress:
@@ -39,9 +40,8 @@ func use(user: Node) -> void:
 
 
 func notify_attack(user: Node, ctx: Dictionary) -> void:
-	for modifier in modifiers:
-		if modifier != null:
-			modifier.on_attack(self, user, ctx)
+	for modifier in _iter_active_modifiers():
+		modifier.on_attack(self, user, ctx)
 
 
 func on_press(user: Node) -> void:
@@ -103,6 +103,7 @@ func add_modifier(slot_index: int, modifier: Modifier) -> void:
 		return
 	modifiers.resize(max(modifiers.size(), modifier_slot_count))
 	modifiers[slot_index] = modifier
+	modifier.slot_index = slot_index
 	modifier.on_equip(self)
 	invalidate_effective_stats()
 
@@ -111,6 +112,79 @@ func get_modifier_at(slot_index: int) -> Modifier:
 	if slot_index < 0 or slot_index >= modifiers.size():
 		return null
 	return modifiers[slot_index]
+
+
+func get_first_modifier() -> Modifier:
+	for i in range(modifier_slot_count):
+		var m: Modifier = get_modifier_at(i)
+		if m != null and not m.is_disabled:
+			return m
+	return null
+
+
+func get_left_modifier(of_slot: int) -> Modifier:
+	return get_modifier_at(of_slot - 1)
+
+
+func get_right_modifier(of_slot: int) -> Modifier:
+	return get_modifier_at(of_slot + 1)
+
+
+func get_other_slots(of_slot: int) -> Array:
+	var out: Array = []
+	for i in range(modifier_slot_count):
+		if i != of_slot:
+			var m: Modifier = get_modifier_at(i)
+			if m != null:
+				out.append(m)
+	return out
+
+
+func retrigger_modifier(mod: Modifier, hook: String, args: Array) -> Variant:
+	if mod == null or not is_instance_valid(mod) or mod.is_disabled:
+		return args[2] if hook == "modify_hit_damage" else null
+	if mod.is_retrigger_modifier:
+		return args[2] if hook == "modify_hit_damage" else null
+	if _retrigger_depth >= RETRIGGER_DEPTH_LIMIT:
+		return args[2] if hook == "modify_hit_damage" else null
+	_retrigger_depth += 1
+	var result: Variant = null
+	match hook:
+		"on_attack":
+			mod.on_attack(self, args[0], args[1])
+		"on_hit_target":
+			mod.on_hit_target(self, args[0], args[1])
+		"on_kill":
+			mod.on_kill(self, args[0], args[1])
+		"on_crit":
+			mod.on_crit(self, args[0], args[1])
+		"modify_hit_damage":
+			result = mod.modify_hit_damage(self, args[0], args[1], args[2])
+			if result == null:
+				result = args[2]
+	_retrigger_depth -= 1
+	return result
+
+
+func _iter_active_modifiers() -> Array:
+	var out: Array = []
+	var keystone_focus := _has_keystone()
+	for i in range(modifier_slot_count):
+		var m: Modifier = get_modifier_at(i)
+		if m == null or m.is_disabled:
+			continue
+		if keystone_focus and i != 1:
+			continue
+		out.append(m)
+	return out
+
+
+func _has_keystone() -> bool:
+	for i in range(modifier_slot_count):
+		var m: Modifier = get_modifier_at(i)
+		if m != null and m.has_method("is_keystone") and m.is_keystone():
+			return true
+	return false
 
 
 func find_empty_modifier_slot() -> int:
@@ -139,14 +213,14 @@ func get_effective_stats() -> Dictionary:
 	var s := _seed_effective_stats()
 	for stat in s.keys():
 		var v: float = s[stat]
-		for m in modifiers:
-			if m != null:
-				v += m.get_stat_add(stat)
-		for m in modifiers:
-			if m != null:
-				v *= m.get_stat_mult(stat)
+		for m in _iter_active_modifiers():
+			v += m.get_stat_add(stat)
+		for m in _iter_active_modifiers():
+			v *= m.get_stat_mult(stat)
 		s[stat] = v
 	s["cooldown"] = maxf(COOLDOWN_FLOOR, s["cooldown"])
+	if _has_keystone():
+		s["damage"] *= 2.0
 	_effective_cache = s
 	return s
 
@@ -159,9 +233,8 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 	var dmg: float = base_dmg
 	if is_crit:
 		dmg *= get_effective_stats()["crit_multiplier"]
-	for m in modifiers:
-		if m != null:
-			dmg = m.modify_hit_damage(self, user, target, dmg)
+	for m in _iter_active_modifiers():
+		dmg = m.modify_hit_damage(self, user, target, dmg)
 	dmg = _native_modify_hit_damage(user, target, dmg)
 	var had_hp: bool = ("health" in target)
 	var pre_hp: float = target.health if had_hp else 1.0
@@ -170,19 +243,16 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 		if target is Node2D and user is Node2D:
 			hit_dir = (target.global_position - user.global_position).normalized()
 		target.on_hit_impact(target.global_position if target is Node2D else Vector2.ZERO, hit_dir, int(dmg))
-	for m in modifiers:
-		if m != null:
-			m.on_hit_target(self, user, target)
+	for m in _iter_active_modifiers():
+		m.on_hit_target(self, user, target)
 	if is_crit:
 		_on_crit(target)
-		for m in modifiers:
-			if m != null:
-				m.on_crit(self, user, target)
+		for m in _iter_active_modifiers():
+			m.on_crit(self, user, target)
 	_hit_count += 1
 	if had_hp and pre_hp > 0.0 and target.health <= 0.0:
-		for m in modifiers:
-			if m != null:
-				m.on_kill(self, user, target)
+		for m in _iter_active_modifiers():
+			m.on_kill(self, user, target)
 		_native_on_kill(user, target)
 
 
@@ -204,14 +274,44 @@ func get_base_stats() -> Dictionary:
 
 func get_effective_crit_chance() -> float:
 	var c: float = crit_chance
-	for modifier in modifiers:
-		if modifier != null and modifier.has_method("modify_crit_chance"):
+	for modifier in _iter_active_modifiers():
+		if modifier.has_method("modify_crit_chance"):
 			c = modifier.modify_crit_chance(self, c)
 	return clampf(c, 0.0, 1.0)
 
 
 func roll_crit() -> bool:
 	return randf() < get_effective_crit_chance()
+
+
+func get_effective_crit_chance_for_target(target: Node) -> float:
+	var c: float = crit_chance
+	for m in _iter_active_modifiers():
+		c = m.modify_crit_chance_for_target(self, c, target)
+	return clampf(c, 0.0, 1.0)
+
+
+func roll_crit_for_target(target: Node) -> bool:
+	return randf() < get_effective_crit_chance_for_target(target)
+
+
+func reset_cooldown() -> void:
+	_cooldown_timer = 0.0
+
+
+func _apply_burst(user: Node, target: Node, amount: float) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	if not target.has_method("on_hit_impact"):
+		return
+	var dir: Vector2 = Vector2.DOWN
+	if target is Node2D and user is Node2D:
+		var d: Vector2 = (target.global_position - user.global_position)
+		if d.length_squared() > 0.0001:
+			dir = d.normalized()
+	target.on_hit_impact(
+		(target.global_position if target is Node2D else Vector2.ZERO),
+		dir, int(amount))
 
 
 func _on_crit(target: Node) -> void:
