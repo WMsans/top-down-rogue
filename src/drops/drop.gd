@@ -36,3 +36,7 @@ func _pickup(_player: Node) -> void:
 func set_highlighted(enabled: bool) -> void:
 	if _sprite and _sprite.material is ShaderMaterial:
 		(_sprite.material as ShaderMaterial).set_shader_parameter("outline_width", 1.0 if enabled else 0.0)
+
+
+func populate_info_card(_card: Card) -> void:
+	pass
