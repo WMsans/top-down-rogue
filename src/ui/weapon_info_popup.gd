@@ -12,7 +12,7 @@ const HIDE_DURATION: float = 0.18
 var _card: Card
 var _scale_tween: Tween
 var _fade_tween: Tween
-var _current_drop: WeaponDrop = null
+var _current_drop: Drop = null
 var _shown: bool = false
 var _hiding: bool = false
 var _viewport_scale: float = 1.0
@@ -34,22 +34,22 @@ func _ready() -> void:
 	svc.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
 
-func show_for(drop: WeaponDrop) -> void:
-	if not is_instance_valid(drop) or drop.weapon == null:
+func show_for(drop: Drop) -> void:
+	if not is_instance_valid(drop):
 		dismiss()
 		return
 	if _current_drop == drop and _shown and not _hiding:
 		return
 	_current_drop = drop
 	_update_viewport_scale(drop)
-	_populate(drop.weapon)
+	_populate(drop)
 	_shown = true
 	_hiding = false
 	_card.visible = true
 	_animate_show()
 
 
-func _update_viewport_scale(drop: WeaponDrop) -> void:
+func _update_viewport_scale(drop: Drop) -> void:
 	var svp := drop.get_viewport() as SubViewport
 	if svp == null:
 		_viewport_scale = 1.0
@@ -74,7 +74,7 @@ func is_shown() -> bool:
 	return _shown
 
 
-func update_position(drop: WeaponDrop, player: Node2D = null) -> void:
+func update_position(drop: Drop, player: Node2D = null) -> void:
 	var svp := drop.get_viewport() as SubViewport
 	if svp == null:
 		return
@@ -118,23 +118,8 @@ func update_position(drop: WeaponDrop, player: Node2D = null) -> void:
 	_card.position = pivot_screen - _card.pivot_offset
 
 
-func _populate(weapon: Weapon) -> void:
-	var stats: Array[String] = []
-	if weapon.has_method("get_base_stats"):
-		var base_stats: Dictionary = weapon.get_base_stats()
-		stats.append("Cooldown: %.2fs" % float(base_stats.get("cooldown", weapon.cooldown)))
-		stats.append("Damage: %.0f" % float(base_stats.get("damage", weapon.damage)))
-	else:
-		stats.append("Cooldown: %.2fs" % weapon.cooldown)
-		stats.append("Damage: %.0f" % weapon.damage)
-
-	var mod_icons: Array[Texture2D] = []
-	for i in range(weapon.modifier_slot_count):
-		var mod: Modifier = weapon.get_modifier_at(i)
-		mod_icons.append(mod.icon_texture if mod else null)
-
-	_card.populate(weapon.icon_texture, weapon.name, stats, mod_icons)
-	_card.set_rarity(weapon.rarity)
+func _populate(drop: Drop) -> void:
+	drop.populate_info_card(_card)
 
 
 func _animate_show() -> void:
