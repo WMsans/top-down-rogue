@@ -312,8 +312,11 @@ func _make_modifier(id: String) -> _Modifier:
 		mod.name = data.get("name", mod.name)
 		mod.description = data.get("description", mod.description)
 		mod.suppresses_base_use = String(data.get("suppresses_base_use", "No")).strip_edges() == "Yes"
+		mod.rarity = _map_rarity(data.get("rarity", "Common"))
 		return mod
 	if data.is_empty():
 		push_warning("WeaponRegistry: unknown modifier id '%s'" % id)
 		return null
-	return _DataModifier.new(data)
+	var dmod := _DataModifier.new(data)
+	dmod.rarity = _map_rarity(data.get("rarity", "Common"))
+	return dmod

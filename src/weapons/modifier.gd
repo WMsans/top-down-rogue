@@ -9,6 +9,7 @@ var slot_index: int = -1
 var category: String = ""
 var is_retrigger_modifier: bool = false
 var is_disabled: bool = false
+var rarity: int = DropTable.ItemTier.COMMON
 
 
 func on_equip(_weapon: Weapon) -> void:
