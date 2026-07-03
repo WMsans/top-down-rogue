@@ -42,7 +42,7 @@ func _process(_delta: float) -> void:
 	if get_tree().paused:
 		_info_popup.dismiss()
 		return
-	if _highlighted is WeaponDrop:
+	if _highlighted and _highlighted.has_method("populate_info_card"):
 		_info_popup.show_for(_highlighted)
 		_info_popup.update_position(_highlighted, _player)
 	else:
