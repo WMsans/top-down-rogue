@@ -12,7 +12,7 @@ splitting_rounds,Splitting Rounds,"Follow-up thrust scatters three rounds that s
 penetrating_shockwave,Penetrating Shockwave,"Full charge fires a massive penetrating shockwave that deletes enemy projectiles as it travels.",Rare,projectile,on_charge,,spawn_projectile,,1,0,No
 oil_emitter,Oil Emitter,"Each swing leaves a slick of flammable oil — ignite it for a firestorm.",Common,emitter,on_swing,,spawn_material,oil,24,0,No
 water_emitter,Aqua Font,"Swings spray water, dousing flames and soaking the ground for freeze combos.",Common,emitter,on_swing,,spawn_material,water,24,0,No
-gas_emitter,Miasma Vent,"Belches a cloud of toxic gas with each swing, poisoning anything inside.",Uncommon,emitter,on_swing,,spawn_material,gas,20,0,No
+gas_emitter,Miasma Vent,"Belches a cloud of toxic gas with each swing, poisoning anything inside.",Uncommon,emitter,on_swing,,spawn_material,gas,16,0,No
 frost_emitter,Frost Emitter,"Lays a patch of ice underfoot — slick footing that chills the careless.",Uncommon,emitter,on_swing,,spawn_material,ice,18,0,No
 blood_emitter,Sanguine Spray,"Sprays blood across the floor, fuel for blood-soaked synergies.",Common,emitter,on_swing,,spawn_material,blood,20,0,No
 coal_seeder,Coal Seeder,"Scatters lumps of flammable coal that smolder into lingering fire.",Uncommon,emitter,on_swing,,spawn_material,coal,12,0,No
@@ -56,3 +56,27 @@ repulsor_nova,Repulsor Nova,"A full charge releases a nova that flings enemies a
 concussive_edge,Concussive Edge,"Hits have a chance to stun, briefly halting foes.",Uncommon,trigger,on_hit,,stun,,0.5,0.2,No
 midas_touch,Midas Touch,"Slain enemies spill extra gold.",Uncommon,utility,on_kill,,bounty,,5,0,No
 steam_burst,Steam Burst,"Striking a wet foe erupts in scalding steam, spreading the burn.",Rare,trigger,on_hit,target_status:wet,apply_status,steam,3,0,No
+spark_plug,Spark Plug,"Strikes ignite oiled foes — one spark sets them ablaze.",Common,status,on_hit,target_status:oiled,apply_status,on_fire,2.0,0,No
+deepfreeze,Deepfreeze,"Hits against chilled foes drive them toward a deep freeze twice as fast.",Common,status,on_hit,target_status:chilly,apply_status,frozen,2.0,0,No
+hemophilia,Hemophilia,"+25% critical chance versus bleeding foes.",Common,trigger,on_hit,target_status:bloody,stat_add,crit_chance,0.25,0,No
+backdraft,Backdraft,"Hitting a burning foe spreads the fire to nearby enemies.",Uncommon,trigger,on_hit,target_status:on_fire,spread_status,on_fire,40,2.0,No
+riptide,Riptide,"Hits knock back wet foes and leave them chilled.",Uncommon,trigger,on_hit,target_status:wet,knockback_and_status,chilly,60,2.0,No
+plague_carrier,Plague Carrier,"Strikes spread a foe's poison to those nearby.",Uncommon,trigger,on_hit,target_status:poisoned,spread_status,poisoned,40,2.0,No
+greedy_edge,Greedy Edge,"Deal up to +40% damage based on gold held (+1% per 50 gold).",Common,trigger,on_hit,self_gold,stat_mult,damage,0.01,0.40,No
+frostshatter,Frostshatter,"Consume Frozen to burst for stacks×8 and shatter nearby foes.",Rare,trigger,on_hit,,,0,0,No
+combustion,Combustion,"Consume On-Fire for an instant burst equal to the remaining burn ×3.",Rare,trigger,on_hit,,,0,0,No
+necrosis,Necrosis,"Consume Poison stacks for an instant burst of ×2 that damage.",Uncommon,trigger,on_hit,,,0,0,No
+rupture,Rupture,"Bleeding accumulates; at 5 stacks the target bursts for 5× a hit.",Uncommon,trigger,on_hit,,,0,0,No
+echo_strike,Echo Strike,"Retrigger your first modifier once per swing.",Rare,trigger,on_hit,,,0,0,No
+overclock,Overclock,"Retrigger the modifier to your left, then disable it for 5 seconds.",Rare,trigger,on_hit,,,0,0,No
+mirror_slot,Mirror Slot,"Become a copy of the modifier to your left.",Rare,trigger,on_hit,,,0,0,No
+catalyst_bond,Catalyst Bond,"Link slots 1 and 3: either fires and both fire.",Rare,trigger,on_hit,,,0,0,No
+keystone,Keystone,"Slot 2 modifier +100%; slots 1 and 3 disabled (focus build).",Rare,trigger,on_hit,,,0,0,No
+twin_trigger,Twin Trigger,"Every 3rd swing, all modifiers trigger twice.",Uncommon,trigger,on_hit,,,0,0,No
+flywheel,Flywheel,"Untriggered modifiers charge; at 5, fire ×3 then empty.",Uncommon,trigger,on_hit,,,0,0,No
+last_stand,Last Stand,"+60% damage on your first hit after taking damage.",Uncommon,trigger,on_hit,,,0,0,No
+overkill,Overkill,"Damage exceeding an enemy's HP carries to the next enemy hit.",Uncommon,trigger,on_hit,,,0,0,No
+evolving_edge,Evolving Edge,"After 15 hits, this modifier's own bonus doubles.",Uncommon,trigger,on_hit,,,0,0,No
+pendulum,Pendulum,"Odd swings ×2 your left modifier, even swings ×2 your right.",Uncommon,trigger,on_hit,,,0,0,No
+headsman,Headsman,"One-shotting an enemy above 50% HP refunds the swing.",Uncommon,trigger,on_hit,,,0,0,No
+slot_harmony,Slot Harmony,"+20% damage while all 3 slots are different categories.",Uncommon,trigger,on_hit,,,0,0,No

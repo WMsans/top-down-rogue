@@ -30,6 +30,7 @@ var modifier_tiers: Dictionary = {}
 const WEAPON_RESOURCE_DIR := "res://resources/weapons"
 const WEAPON_CSV_PATH := "res://docs/design_docs/weapons.csv"
 const MODIFIER_CSV_PATH := "res://docs/design_docs/modifiers.csv"
+const PLACEHOLDER_ICON = preload("res://textures/wall.png")
 
 var _all_weapons: Array = []
 var _modifier_data: Dictionary = {}  # id -> full CSV row
@@ -93,6 +94,23 @@ func _ready() -> void:
 	modifier_scripts["homing_hex"] = preload("res://src/weapons/modifiers/homing_hex_modifier.gd")
 	modifier_scripts["boomerang_arc"] = preload("res://src/weapons/modifiers/boomerang_arc_modifier.gd")
 	modifier_scripts["spectral_echo"] = preload("res://src/weapons/modifiers/spectral_echo_modifier.gd")
+	modifier_scripts["frostshatter"] = preload("res://src/weapons/modifiers/frostshatter_modifier.gd")
+	modifier_scripts["combustion"] = preload("res://src/weapons/modifiers/combustion_modifier.gd")
+	modifier_scripts["necrosis"] = preload("res://src/weapons/modifiers/necrosis_modifier.gd")
+	modifier_scripts["rupture"] = preload("res://src/weapons/modifiers/rupture_modifier.gd")
+	modifier_scripts["echo_strike"] = preload("res://src/weapons/modifiers/echo_strike_modifier.gd")
+	modifier_scripts["overclock"] = preload("res://src/weapons/modifiers/overclock_modifier.gd")
+	modifier_scripts["mirror_slot"] = preload("res://src/weapons/modifiers/mirror_slot_modifier.gd")
+	modifier_scripts["catalyst_bond"] = preload("res://src/weapons/modifiers/catalyst_bond_modifier.gd")
+	modifier_scripts["keystone"] = preload("res://src/weapons/modifiers/keystone_modifier.gd")
+	modifier_scripts["twin_trigger"] = preload("res://src/weapons/modifiers/twin_trigger_modifier.gd")
+	modifier_scripts["flywheel"] = preload("res://src/weapons/modifiers/flywheel_modifier.gd")
+	modifier_scripts["last_stand"] = preload("res://src/weapons/modifiers/last_stand_modifier.gd")
+	modifier_scripts["overkill"] = preload("res://src/weapons/modifiers/overkill_modifier.gd")
+	modifier_scripts["evolving_edge"] = preload("res://src/weapons/modifiers/evolving_edge_modifier.gd")
+	modifier_scripts["slot_harmony"] = preload("res://src/weapons/modifiers/slot_harmony_modifier.gd")
+	modifier_scripts["pendulum"] = preload("res://src/weapons/modifiers/pendulum_modifier.gd")
+	modifier_scripts["headsman"] = preload("res://src/weapons/modifiers/headsman_modifier.gd")
 	_load_modifier_data()
 
 	_load_weapon_resources()
@@ -295,8 +313,15 @@ func _make_modifier(id: String) -> _Modifier:
 		mod.name = data.get("name", mod.name)
 		mod.description = data.get("description", mod.description)
 		mod.suppresses_base_use = String(data.get("suppresses_base_use", "No")).strip_edges() == "Yes"
+		mod.rarity = _map_rarity(data.get("rarity", "Common"))
+		if mod.icon_texture == null:
+			mod.icon_texture = PLACEHOLDER_ICON
 		return mod
 	if data.is_empty():
 		push_warning("WeaponRegistry: unknown modifier id '%s'" % id)
 		return null
-	return _DataModifier.new(data)
+	var dmod := _DataModifier.new(data)
+	dmod.rarity = _map_rarity(data.get("rarity", "Common"))
+	if dmod.icon_texture == null:
+		dmod.icon_texture = PLACEHOLDER_ICON
+	return dmod

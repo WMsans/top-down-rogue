@@ -7,4 +7,6 @@ func _setup_moves() -> void:
 	tap_threshold = 0.12
 	charged_flurry_max = 1
 	light_moves = [_slash()]
-	charged_moves = [_thrust(true, false, 0.0)]   # guaranteed-crit thrust
+	var th := _thrust(true, false, 0.0)   # guaranteed-crit thrust
+	th.damage_mult = 2.0
+	charged_moves = [th]
