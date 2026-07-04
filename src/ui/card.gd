@@ -2,6 +2,8 @@ class_name Card
 extends Control
 
 signal card_clicked
+signal icon_mouse_entered
+signal icon_mouse_exited
 
 @export var card_size: Vector2 = Vector2(160, 240):
 	set(v):
@@ -42,6 +44,10 @@ var _click_tween: Tween
 var _current_tilt: Vector2 = Vector2.ZERO
 var _orig_z_index: int = 0
 var _tilt_was_active: bool = false
+var _tooltip_title: String = ""
+var _tooltip_description: String = ""
+var _weapon_tooltip: PanelContainer = null
+var _icon_hovered: bool = false
 
 func _ready() -> void:
 	custom_minimum_size = card_size
@@ -210,6 +216,10 @@ func _make_sparkle_texture() -> Texture2D:
 			img.set_pixel(x, y, Color(1, 1, 1, a))
 	return ImageTexture.create_from_image(img)
 
+func set_icon_tooltip_text(title: String, description: String) -> void:
+	_tooltip_title = title
+	_tooltip_description = description
+
 func _process(delta: float) -> void:
 	var mouse_pos := get_local_mouse_position()
 	var mouse_in_card := mouse_pos.x >= 0.0 and mouse_pos.x <= card_size.x and mouse_pos.y >= 0.0 and mouse_pos.y <= card_size.y
@@ -225,6 +235,20 @@ func _process(delta: float) -> void:
 			_animate_hover_exit()
 			_update_border_color()
 		_tilt_was_active = true
+
+	var icon_rect := Rect2(_icon.global_position, _icon.size)
+	var mouse_in_icon := _icon.visible and icon_rect.has_point(mouse_pos)
+	if mouse_in_icon != _icon_hovered:
+		_icon_hovered = mouse_in_icon
+		if _icon_hovered:
+			icon_mouse_entered.emit()
+		else:
+			icon_mouse_exited.emit()
+
+	if _icon_hovered and _tooltip_title != "":
+		_ensure_weapon_tooltip()
+	else:
+		_cancel_weapon_tooltip()
 
 	var target_tilt: Vector2
 	if _is_hovered:
@@ -296,3 +320,63 @@ func _update_subviewport() -> void:
 			_subviewport_container.material.set_shader_parameter("rect_size", card_size)
 		_shadow_rect.custom_minimum_size = card_size
 		_subviewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+func _ensure_weapon_tooltip() -> void:
+	if _weapon_tooltip != null:
+		return
+	_weapon_tooltip = PanelContainer.new()
+	_weapon_tooltip.theme = UiTheme.get_theme()
+	_weapon_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_tooltip.top_level = true
+	_weapon_tooltip.z_index = 100
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	_weapon_tooltip.add_child(vbox)
+
+	var name_label := Label.new()
+	name_label.text = _tooltip_title
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_color_override("font_color", UiTheme.ACCENT_GOLD)
+	vbox.add_child(name_label)
+
+	if _tooltip_description != "":
+		var separator := HSeparator.new()
+		vbox.add_child(separator)
+
+		var desc_label := Label.new()
+		desc_label.text = _tooltip_description
+		desc_label.custom_minimum_size.x = 180.0
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_label.add_theme_color_override("font_color", UiTheme.TEXT_SECONDARY)
+		desc_label.add_theme_font_size_override("font_size", 14)
+		vbox.add_child(desc_label)
+
+	add_child(_weapon_tooltip)
+	_position_weapon_tooltip()
+
+
+func _position_weapon_tooltip() -> void:
+	if _weapon_tooltip == null:
+		return
+	await get_tree().process_frame
+	if _weapon_tooltip == null or not is_instance_valid(self):
+		return
+	var card_rect := get_global_rect()
+	var tooltip_size := _weapon_tooltip.get_combined_minimum_size()
+	var pos_x := card_rect.position.x + card_rect.size.x / 2.0 - tooltip_size.x / 2.0
+	var viewport_width := get_viewport().get_visible_rect().size.x
+	pos_x = clampf(pos_x, 4.0, viewport_width - tooltip_size.x - 4.0)
+	_weapon_tooltip.global_position = Vector2(pos_x, card_rect.position.y - tooltip_size.y - 4.0)
+	_weapon_tooltip.size = tooltip_size
+
+
+func _cancel_weapon_tooltip() -> void:
+	if _weapon_tooltip != null:
+		_weapon_tooltip.queue_free()
+		_weapon_tooltip = null
+
+
+func _exit_tree() -> void:
+	_cancel_weapon_tooltip()
