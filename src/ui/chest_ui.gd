@@ -97,6 +97,7 @@ func _build_cards() -> void:
 			stats.append("Damage: %.0f" % base_stats["damage"])
 			card.populate(weapon.icon_texture, weapon.name, stats)
 			card.set_rarity(weapon.rarity)
+			card.set_icon_tooltip_text(weapon.name, weapon.description)
 		, CONNECT_ONE_SHOT)
 		_card_container.add_child(slot)
 		_card_slots.append(slot)
