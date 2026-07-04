@@ -6,11 +6,16 @@ extends MeleeEnemy
 @export var dash_duration: float = 0.22
 @export var contact_radius: float = 18.0
 @export var recovery_duration: float = 1.0
+@export var dash_damage: float = 5.0
 
 var _lock_dir: Vector2 = Vector2.DOWN
 var _dash_timer: float = 0.0
 var _dash_hit: bool = false
 var _dash_done: bool = false
+
+
+func _init() -> void:
+	carries_weapon = false
 
 
 func _ready() -> void:
@@ -71,5 +76,5 @@ func _check_body_contact() -> void:
 		return
 	_dash_hit = true
 	if _player_ref.has_method("on_hit_impact"):
-		var dmg: int = int(weapon.damage) if weapon else 0
+		var dmg: int = int(dash_damage * damage_scale)
 		_player_ref.on_hit_impact(global_position, _lock_dir, dmg)
