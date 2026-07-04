@@ -22,6 +22,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var crowd_spacing_scale: float = 1.0
 @export var leash_radius: float = 280.0
 @export var damage_scale: float = 1.0
+@export var carries_weapon: bool = true
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
