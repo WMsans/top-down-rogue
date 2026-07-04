@@ -22,6 +22,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var crowd_spacing_scale: float = 1.0
 @export var leash_radius: float = 280.0
 @export var damage_scale: float = 1.0
+@export var carries_weapon: bool = true
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
@@ -196,6 +197,8 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if _state == State.DEATH:
 		return
+	if not is_finite(velocity.x) or not is_finite(velocity.y):
+		velocity = Vector2.ZERO
 	var tint_status := _status_component
 	if tint_status:
 		_base_modulate = tint_status.get_blended_tint()
@@ -288,10 +291,13 @@ func _process_chase(_delta: float) -> void:
 
 	var move_dir: Vector2
 	if sees:
-		move_dir = to_player.normalized()
+		move_dir = _safe_normalized(to_player)
 	else:
 		var fd := _nav_field_dir()
-		move_dir = fd if fd != Vector2.ZERO else to_player.normalized()
+		if fd != Vector2.ZERO:
+			move_dir = fd
+		else:
+			move_dir = _safe_normalized(to_player)
 
 	move_dir = _apply_separation(move_dir)
 	velocity = move_dir * _get_effective_speed()
@@ -332,7 +338,10 @@ func _moves_during_attack() -> bool:
 
 func _process_cooldown(delta: float) -> void:
 	_state_timer -= delta
-	velocity = velocity.lerp(Vector2.ZERO, 5.0 * delta)
+	if not is_finite(velocity.x) or not is_finite(velocity.y):
+		velocity = Vector2.ZERO
+	else:
+		velocity = velocity.lerp(Vector2.ZERO, 5.0 * delta)
 	if _state_timer <= 0.0:
 		if _player_ref and is_instance_valid(_player_ref) and _player_in_range:
 			_change_state(State.CHASE)
@@ -342,7 +351,10 @@ func _process_cooldown(delta: float) -> void:
 
 func _process_hurt(delta: float) -> void:
 	_state_timer -= delta
-	_knockback_velocity = _knockback_velocity.lerp(Vector2.ZERO, 3.0 * delta)
+	if not is_finite(_knockback_velocity.x) or not is_finite(_knockback_velocity.y):
+		_knockback_velocity = Vector2.ZERO
+	else:
+		_knockback_velocity = _knockback_velocity.lerp(Vector2.ZERO, 3.0 * delta)
 	velocity = _knockback_velocity
 	if _state_timer <= 0.0:
 		velocity = Vector2.ZERO
@@ -388,10 +400,10 @@ func _apply_separation(move_dir: Vector2) -> Vector2:
 		var to_other: Vector2 = global_position - enemy.global_position
 		var dist: float = to_other.length()
 		if dist < separation_radius and dist > 0.001:
-			sep += to_other.normalized() * ((separation_radius - dist) / separation_radius)
+			sep += to_other / dist * ((separation_radius - dist) / separation_radius)
 	if sep == Vector2.ZERO:
 		return move_dir
-	return (move_dir + sep * separation_weight).normalized()
+	return _safe_normalized(move_dir + sep * separation_weight)
 
 
 ## Push this body out of any neighbor it overlaps. Each body resolves HALF of a
@@ -428,8 +440,9 @@ func _resolve_crowd_overlap() -> void:
 		push += dir * ((min_dist - dist) * 0.5)
 	if push == Vector2.ZERO:
 		return
-	if push.length() > CROWD_PUSH_CAP:
-		push = push.normalized() * CROWD_PUSH_CAP
+	var push_len := push.length()
+	if push_len > CROWD_PUSH_CAP:
+		push = push / push_len * CROWD_PUSH_CAP
 	_apply_crowd_push(push)
 
 
@@ -442,6 +455,15 @@ func _apply_crowd_push(offset: Vector2) -> void:
 		global_position.x += offset.x
 	if offset.y != 0.0 and not _edge_blocked(Vector2(0.0, offset.y)):
 		global_position.y += offset.y
+
+
+func _safe_normalized(v: Vector2) -> Vector2:
+	if not is_finite(v.x) or not is_finite(v.y):
+		return Vector2.ZERO
+	var l := v.length()
+	if l > 0.001:
+		return v / l
+	return Vector2.ZERO
 
 
 func _nav_field_dir() -> Vector2:
@@ -487,7 +509,10 @@ func _move_with_clamp(delta: float) -> void:
 ## put part of the body inside a solid cell. Samples the leading face's centre
 ## and both corners so the body half-width can't sink into a wall.
 func _edge_blocked(step: Vector2) -> bool:
-	var axis := step.normalized()
+	var len_sq := step.length_squared()
+	if len_sq < 0.0001:
+		return false
+	var axis := step / sqrt(len_sq)
 	var perp := Vector2(-axis.y, axis.x)
 	var lead := global_position + axis * _body_radius + step
 	for t in [-1.0, 0.0, 1.0]:
@@ -669,6 +694,9 @@ func _update_player_in_range() -> void:
 
 
 func _tick_knockback(delta: float) -> void:
+	if not is_finite(_knockback_velocity.x) or not is_finite(_knockback_velocity.y):
+		_knockback_velocity = Vector2.ZERO
+		return
 	if _knockback_velocity.length_squared() < 1.0:
 		_knockback_velocity = Vector2.ZERO
 		return
@@ -676,7 +704,10 @@ func _tick_knockback(delta: float) -> void:
 
 
 func apply_knockback(direction: Vector2, strength: float) -> void:
-	_knockback_velocity += direction.normalized() * strength
+	if not is_finite(direction.x) or not is_finite(direction.y):
+		return
+	if direction.length_squared() > 0.0001:
+		_knockback_velocity += direction / direction.length() * strength
 
 
 func _set_base_modulate(c: Color) -> void:

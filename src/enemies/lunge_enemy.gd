@@ -6,11 +6,20 @@ extends MeleeEnemy
 @export var dash_duration: float = 0.22
 @export var contact_radius: float = 18.0
 @export var recovery_duration: float = 1.0
+@export var dash_damage: float = 5.0
 
 var _lock_dir: Vector2 = Vector2.DOWN
 var _dash_timer: float = 0.0
 var _dash_hit: bool = false
 var _dash_done: bool = false
+
+const DASH_FIRE_VFX_SCENE: PackedScene = preload("res://scenes/fx/dash_fire_vfx.tscn")
+
+var _fire_vfx: DashFireVfx = null
+
+
+func _init() -> void:
+	carries_weapon = false
 
 
 func _ready() -> void:
@@ -18,6 +27,9 @@ func _ready() -> void:
 	_attack_range = lunge_range
 	windup_duration = 0.45
 	cooldown_duration = recovery_duration
+	scale = Vector2(1.6, 1.6)
+	_fire_vfx = DASH_FIRE_VFX_SCENE.instantiate()
+	add_child(_fire_vfx)
 
 
 func _change_state(new_state: int) -> void:
@@ -36,6 +48,7 @@ func _begin_dash() -> void:
 	_lock_dir = get_facing_direction()
 	_dash_timer = dash_duration
 	_dash_hit = false
+	_fire_vfx.start(_lock_dir)
 
 
 func _moves_during_attack() -> bool:
@@ -59,6 +72,7 @@ func _tick_dash(delta: float) -> void:
 	if _dash_timer <= 0.0:
 		_dash_done = true
 		velocity = Vector2.ZERO
+		_fire_vfx.stop()
 		_change_state(State.COOLDOWN)
 
 
@@ -71,5 +85,5 @@ func _check_body_contact() -> void:
 		return
 	_dash_hit = true
 	if _player_ref.has_method("on_hit_impact"):
-		var dmg: int = int(weapon.damage) if weapon else 0
+		var dmg: int = int(dash_damage * damage_scale)
 		_player_ref.on_hit_impact(global_position, _lock_dir, dmg)

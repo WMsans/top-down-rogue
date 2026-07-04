@@ -241,7 +241,10 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 	if target.has_method("on_hit_impact"):
 		var hit_dir: Vector2 = Vector2.ZERO
 		if target is Node2D and user is Node2D:
-			hit_dir = (target.global_position - user.global_position).normalized()
+			var raw_dir: Vector2 = target.global_position - user.global_position
+			var rlen_sq: float = raw_dir.length_squared()
+			if rlen_sq > 0.0001:
+				hit_dir = raw_dir / sqrt(rlen_sq)
 		target.on_hit_impact(target.global_position if target is Node2D else Vector2.ZERO, hit_dir, int(dmg))
 	for m in _iter_active_modifiers():
 		m.on_hit_target(self, user, target)
@@ -308,7 +311,7 @@ func _apply_burst(user: Node, target: Node, amount: float) -> void:
 	if target is Node2D and user is Node2D:
 		var d: Vector2 = (target.global_position - user.global_position)
 		if d.length_squared() > 0.0001:
-			dir = d.normalized()
+			dir = d / d.length()
 	target.on_hit_impact(
 		(target.global_position if target is Node2D else Vector2.ZERO),
 		dir, int(amount))
