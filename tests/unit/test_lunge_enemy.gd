@@ -89,7 +89,7 @@ func test_dash_terminates_into_cooldown() -> void:
 
 func test_body_check_hits_once_within_contact_radius() -> void:
 	var e := _lunge_to_recording(Vector2.ZERO, Vector2(5, 0))
-	e.weapon.damage = 7.0
+	e.dash_damage = 7.0
 	e._state = Enemy.State.ATTACK
 	e._attack_started = false
 	e._dash_done = false
@@ -146,3 +146,29 @@ func test_scene_instantiates_as_lunge_enemy() -> void:
 	add_child(e)
 	assert_bool(e is LungeEnemy).is_true()
 	assert_float(e._attack_range).is_equal(e.lunge_range)
+
+
+# --- Task 3: weaponless dash damage ---
+
+func test_lunge_enemy_has_no_weapon() -> void:
+	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
+	assert_object(e.weapon).is_null()
+
+func test_lunge_enemy_carries_weapon_is_false() -> void:
+	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
+	assert_bool(e.carries_weapon).is_false()
+
+func test_body_check_uses_dash_damage_scaled_by_damage_scale() -> void:
+	var e := _lunge_to_recording(Vector2.ZERO, Vector2(5, 0))
+	e.dash_damage = 7.0
+	e.damage_scale = 2.0
+	e._state = Enemy.State.ATTACK
+	e._attack_started = false
+	e._dash_done = false
+	for i in range(20):
+		if e._state != Enemy.State.ATTACK:
+			break
+		e._process_attack(0.05)
+	var hits: Array = e._player_ref.hits
+	assert_int(hits.size()).is_equal(1)
+	assert_int(hits[0]["dmg"]).is_equal(14)
