@@ -23,6 +23,7 @@ func _ready() -> void:
 	_attack_range = lunge_range
 	windup_duration = 0.45
 	cooldown_duration = recovery_duration
+	scale = Vector2(1.6, 1.6)
 
 
 func _change_state(new_state: int) -> void:

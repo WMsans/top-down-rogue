@@ -158,6 +158,12 @@ func test_lunge_enemy_carries_weapon_is_false() -> void:
 	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
 	assert_bool(e.carries_weapon).is_false()
 
+# --- Task 4: larger scale ---
+
+func test_lunge_enemy_scales_up() -> void:
+	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
+	assert_vector(e.scale).is_equal(Vector2(1.6, 1.6))
+
 func test_body_check_uses_dash_damage_scaled_by_damage_scale() -> void:
 	var e := _lunge_to_recording(Vector2.ZERO, Vector2(5, 0))
 	e.dash_damage = 7.0
