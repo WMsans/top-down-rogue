@@ -13,6 +13,10 @@ var _dash_timer: float = 0.0
 var _dash_hit: bool = false
 var _dash_done: bool = false
 
+const DASH_FIRE_VFX_SCENE: PackedScene = preload("res://scenes/fx/dash_fire_vfx.tscn")
+
+var _fire_vfx: DashFireVfx = null
+
 
 func _init() -> void:
 	carries_weapon = false
@@ -24,6 +28,8 @@ func _ready() -> void:
 	windup_duration = 0.45
 	cooldown_duration = recovery_duration
 	scale = Vector2(1.6, 1.6)
+	_fire_vfx = DASH_FIRE_VFX_SCENE.instantiate()
+	add_child(_fire_vfx)
 
 
 func _change_state(new_state: int) -> void:
@@ -42,6 +48,7 @@ func _begin_dash() -> void:
 	_lock_dir = get_facing_direction()
 	_dash_timer = dash_duration
 	_dash_hit = false
+	_fire_vfx.start(_lock_dir)
 
 
 func _moves_during_attack() -> bool:
@@ -65,6 +72,7 @@ func _tick_dash(delta: float) -> void:
 	if _dash_timer <= 0.0:
 		_dash_done = true
 		velocity = Vector2.ZERO
+		_fire_vfx.stop()
 		_change_state(State.COOLDOWN)
 
 
