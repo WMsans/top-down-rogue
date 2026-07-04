@@ -41,7 +41,10 @@ var _burn_flash: float = 0.0
 
 
 func apply_knockback(direction: Vector2, strength: float) -> void:
-	_knockback_velocity = direction.normalized() * strength
+	if not is_finite(direction.x) or not is_finite(direction.y):
+		return
+	if direction.length_squared() > 0.0001:
+		_knockback_velocity = direction / direction.length() * strength
 
 
 func _enter_tree() -> void:
@@ -104,7 +107,9 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var input_dir := _get_input_direction()
-	if _knockback_velocity.length_squared() > 0.01:
+	if not is_finite(_knockback_velocity.x) or not is_finite(_knockback_velocity.y):
+		_knockback_velocity = Vector2.ZERO
+	elif _knockback_velocity.length_squared() > 0.01:
 		_knockback_velocity *= exp(-KNOCKBACK_DECAY * delta)
 	_decay_dash(delta)
 	_update_target()
@@ -131,6 +136,7 @@ func _physics_process(delta: float) -> void:
 		speed_mult = status.get_move_speed_multiplier()
 		input_dir *= speed_mult
 	_apply_movement(input_dir, delta, speed_mult)
+	_sanitize_velocity()
 	velocity += _knockback_velocity + _dash_velocity
 	var tint_status := get_node_or_null("StatusComponent")
 	if tint_status and _color_rect:
@@ -247,18 +253,33 @@ func _resolve_terrain_overlap() -> void:
 	global_position = _last_safe_position
 
 
+func _sanitize_velocity() -> void:
+	if not is_finite(velocity.x) or not is_finite(velocity.y):
+		velocity = Vector2.ZERO
+	if not is_finite(_knockback_velocity.x) or not is_finite(_knockback_velocity.y):
+		_knockback_velocity = Vector2.ZERO
+	if not is_finite(_dash_velocity.x) or not is_finite(_dash_velocity.y):
+		_dash_velocity = Vector2.ZERO
+
+
 func _apply_movement(input_dir: Vector2, delta: float, speed_mult: float = 1.0) -> void:
 	if input_dir != Vector2.ZERO:
 		velocity += input_dir * acceleration * delta
 	else:
 		var friction_amount: float = friction * delta
-		if velocity.length() <= friction_amount:
+		var vel_len := velocity.length()
+		if vel_len <= friction_amount:
 			velocity = Vector2.ZERO
+		elif is_finite(vel_len) and vel_len > 0.001:
+			velocity -= velocity / vel_len * friction_amount
 		else:
-			velocity -= velocity.normalized() * friction_amount
+			velocity = Vector2.ZERO
 	var effective_max := max_speed * speed_mult
-	if velocity.length() > effective_max:
-		velocity = velocity.normalized() * effective_max
+	var vel_len2 := velocity.length()
+	if is_finite(vel_len2) and vel_len2 > effective_max:
+		velocity = velocity / vel_len2 * effective_max
+	elif not is_finite(vel_len2):
+		velocity = Vector2.ZERO
 
 
 func _can_see_enemy(enemy: Node2D) -> bool:
@@ -318,11 +339,15 @@ func is_facing_left() -> bool:
 func request_dash(direction: Vector2, speed: float) -> void:
 	if direction.length_squared() < 0.0001:
 		return
-	_dash_velocity = direction.normalized() * speed
+	if not is_finite(direction.x) or not is_finite(direction.y):
+		return
+	_dash_velocity = direction / direction.length() * speed
 
 
 func _decay_dash(delta: float) -> void:
-	if _dash_velocity.length_squared() > 0.01:
+	if not is_finite(_dash_velocity.x) or not is_finite(_dash_velocity.y):
+		_dash_velocity = Vector2.ZERO
+	elif _dash_velocity.length_squared() > 0.01:
 		_dash_velocity *= exp(-DASH_DECAY * delta)
 	else:
 		_dash_velocity = Vector2.ZERO

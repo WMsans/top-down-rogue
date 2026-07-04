@@ -17,8 +17,11 @@ static func radial_knockback(source: Node, radius: float, strength: float) -> vo
 		var to_n: Vector2 = (n as Node2D).global_position - origin
 		if to_n.length_squared() > r2:
 			continue
-		var dir: Vector2 = to_n.normalized()
-		if dir == Vector2.ZERO:
+		var dir: Vector2
+		var len_sq := to_n.length_squared()
+		if len_sq > 0.0001:
+			dir = to_n / sqrt(len_sq)
+		else:
 			dir = Vector2.DOWN
 		n.apply_knockback(dir, strength)
 
