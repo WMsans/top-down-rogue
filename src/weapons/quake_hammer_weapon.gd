@@ -14,7 +14,7 @@ func _setup_moves() -> void:
 	charge_time_full = 0.8
 	charged_flurry_max = 1
 	light_moves = [_slash()]
-	charged_moves = [_slash(0.0, 1.0)]   # heavy slam hit; shockwave added below
+	charged_moves = [_slash(0.0, 2.0)]   # heavy slam hit; shockwave added below
 
 func _do_charged_attack(user: Node, ratio: float) -> void:
 	super._do_charged_attack(user, ratio)

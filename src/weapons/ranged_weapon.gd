@@ -112,6 +112,10 @@ func _emit_shot(user: Node, base_dir: Vector2) -> void:
 	})
 
 
+func _get_projectile_damage() -> float:
+	return get_effective_stats()["damage"]
+
+
 func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	if shot_sink.is_valid():
 		shot_sink.call(direction.normalized())
@@ -119,7 +123,7 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	var proj := PROJECTILE_SCENE.instantiate()
 	proj.behaviors = _make_behaviors()
 	proj.global_position = user.global_position
-	proj.damage = get_effective_stats()["damage"]
+	proj.damage = _get_projectile_damage()
 	proj.crit_chance = get_effective_crit_chance()
 	proj.crit_multiplier = crit_multiplier
 	proj.crit_status = crit_status

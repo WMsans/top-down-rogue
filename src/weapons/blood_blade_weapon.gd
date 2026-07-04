@@ -7,6 +7,6 @@ func _setup_moves() -> void:
 	charged_flurry_max = 4
 	flurry_step_time = 0.12
 	light_moves = [_slash()]
-	var lunge := _slash()
+	var lunge := _slash(0.0, 0.5)
 	lunge.dash_distance = 36.0
 	charged_moves = [lunge]
