@@ -282,6 +282,7 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 				mod_icons.append(mod.icon_texture if mod else null)
 			card.populate(weapon.icon_texture, weapon.name, stats, mod_icons)
 			card.set_rarity(weapon.rarity)
+			card.set_icon_tooltip_text(weapon.name, weapon.description)
 			_add_modifier_slots_to_card(card, weapon)
 	, CONNECT_ONE_SHOT)
 	return card
