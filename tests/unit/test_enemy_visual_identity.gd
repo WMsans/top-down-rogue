@@ -67,3 +67,33 @@ func test_set_textures_assigns_both_fields() -> void:
 	a.set_textures(n, b)
 	assert_object(a.texture_normal).is_equal(n)
 	assert_object(a.texture_breathe).is_equal(b)
+
+
+class MockAnimatorEnemy extends Enemy:
+	func _execute_attack() -> void:
+		pass
+
+
+func test_enemy_ticks_animator_when_present() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	var animator := EnemyAnimator.new()
+	animator.name = "EnemyAnimator"
+	animator.texture_normal = PlaceholderTexture2D.new()
+	animator.texture_breathe = PlaceholderTexture2D.new()
+	e.add_child(animator)
+	add_child(e)
+	await get_tree().process_frame
+	e.speed = 60.0
+	e.velocity = Vector2.ZERO
+	e._physics_process(EnemyAnimator.IDLE_INTERVAL + 0.01)
+	assert_object(sprite.texture).is_equal(animator.texture_breathe)
+
+
+func test_enemy_without_animator_does_not_error() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	add_child(e)
+	await get_tree().process_frame
+	e._physics_process(0.5)
