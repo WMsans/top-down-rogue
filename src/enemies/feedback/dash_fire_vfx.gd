@@ -22,20 +22,29 @@ var _particles: GPUParticles2D = null
 var _bullet_outer: Polygon2D = null
 var _bullet_inner: Polygon2D = null
 var _fade_tween: Tween = null
+var _intensity: float = 0.0
+var _time: float = 0.0
 
 
 func _ready() -> void:
 	z_index = 6
 	z_as_relative = false
-	_bullet_outer = _build_bullet_polygon(body_length, body_width, FIRE_COLOR)
+	_bullet_outer = _build_bullet_polygon(FIRE_COLOR)
 	_bullet_outer.name = "BulletOuter"
 	add_child(_bullet_outer)
-	_bullet_inner = _build_bullet_polygon(body_length * 0.65, body_width * 0.55, CORE_COLOR)
+	_bullet_inner = _build_bullet_polygon(CORE_COLOR)
 	_bullet_inner.name = "BulletInner"
 	add_child(_bullet_inner)
 	_particles = _build_particles()
 	add_child(_particles)
-	_set_bullet_alpha(0.0)
+	set_process(true)
+	_apply_visual()
+
+
+func _process(delta: float) -> void:
+	_time += delta
+	if _intensity > 0.001:
+		_apply_visual()
 
 
 func start(direction: Vector2) -> void:
@@ -45,39 +54,52 @@ func start(direction: Vector2) -> void:
 		position = dir * offset_distance
 	_particles.restart()
 	_particles.emitting = true
-	_animate_bullet_alpha(1.0, 0.05)
+	_animate_intensity(1.0, 0.05)
 
 
 func stop() -> void:
 	_particles.emitting = false
-	_animate_bullet_alpha(0.0, 0.12)
+	_animate_intensity(0.0, 0.12)
 
 
-func _animate_bullet_alpha(target: float, duration: float) -> void:
+func _animate_intensity(target: float, duration: float) -> void:
 	if _fade_tween:
 		_fade_tween.kill()
 	_fade_tween = create_tween()
-	_fade_tween.set_parallel(true)
-	_fade_tween.tween_property(_bullet_outer, "color:a", target * FIRE_COLOR.a, duration)
-	_fade_tween.tween_property(_bullet_inner, "color:a", target * CORE_COLOR.a, duration)
+	_fade_tween.tween_method(_set_intensity, _intensity, target, duration)
 
 
-func _set_bullet_alpha(a: float) -> void:
-	var oc := _bullet_outer.color
-	oc.a = a
+func _set_intensity(v: float) -> void:
+	_intensity = v
+	_apply_visual()
+
+
+func _apply_visual() -> void:
+	var flicker := 1.0 + sin(_time * 22.0) * 0.08 + sin(_time * 35.0 + 1.3) * 0.05
+	_bullet_outer.polygon = _wobble_points(body_length, body_width, 1.0, 0.0)
+	_bullet_inner.polygon = _wobble_points(body_length * 0.65, body_width * 0.55, 1.4, 0.6)
+	var oc := FIRE_COLOR
+	oc.a = clampf(FIRE_COLOR.a * _intensity * flicker, 0.0, 1.0)
 	_bullet_outer.color = oc
-	var ic := _bullet_inner.color
-	ic.a = a
+	var ic := CORE_COLOR
+	ic.a = clampf(CORE_COLOR.a * _intensity * (1.0 + sin(_time * 30.0 + 0.4) * 0.12), 0.0, 1.0)
 	_bullet_inner.color = ic
 
 
-func _build_bullet_polygon(length: float, width: float, color: Color) -> Polygon2D:
+func _wobble_points(length: float, width: float, freq_mult: float, phase_offset: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in BULLET_UNIT_POINTS.size():
+		var p := BULLET_UNIT_POINTS[i]
+		var phase := i * 0.9 + phase_offset
+		var wob := 1.0 + sin(_time * 18.0 * freq_mult + phase) * 0.09 + sin(_time * 27.0 * freq_mult + phase * 1.7) * 0.05
+		pts.append(Vector2(p.x * length * (1.0 + (wob - 1.0) * 0.4), p.y * width * wob))
+	return pts
+
+
+func _build_bullet_polygon(color: Color) -> Polygon2D:
 	var poly := Polygon2D.new()
 	poly.color = color
-	var pts := PackedVector2Array()
-	for p in BULLET_UNIT_POINTS:
-		pts.append(Vector2(p.x * length, p.y * width))
-	poly.polygon = pts
+	poly.polygon = PackedVector2Array(BULLET_UNIT_POINTS)
 	return poly
 
 
@@ -97,12 +119,17 @@ func _build_particles() -> GPUParticles2D:
 func _build_process_material() -> ParticleProcessMaterial:
 	var m := ParticleProcessMaterial.new()
 	m.direction = Vector3(-1.0, 0.0, 0.0)
-	m.spread = 14.0
+	m.spread = 16.0
 	m.gravity = Vector3.ZERO
-	m.initial_velocity_min = 40.0
-	m.initial_velocity_max = 80.0
-	m.scale_min = 1.0
-	m.scale_max = 2.0
+	m.initial_velocity_min = 55.0
+	m.initial_velocity_max = 100.0
+	m.scale_min = 1.2
+	m.scale_max = 2.4
+	m.turbulence_enabled = true
+	m.turbulence_noise_strength = 1.8
+	m.turbulence_noise_scale = 2.5
+	m.turbulence_influence_min = 0.3
+	m.turbulence_influence_max = 0.6
 	m.color = FIRE_COLOR
 	m.color_ramp = EnemyVfxShared.fade_gradient(FIRE_COLOR, FIRE_COLOR_FADE)
 	return m
