@@ -19,10 +19,6 @@ var _fire_vfx: DashFireVfx = null
 var _dash_windup_vfx: DashWindupVfx = null
 
 
-func _init() -> void:
-	carries_weapon = false
-
-
 func _ready() -> void:
 	super._ready()
 	_attack_range = lunge_range
