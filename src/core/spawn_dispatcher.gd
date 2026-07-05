@@ -214,7 +214,7 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 					enemy = LUNGE_ENEMY_SCENE.instantiate()
 				else:
 					enemy = MELEE_ENEMY_SCENE.instantiate()
-				enemy.weapon_resource = _pick_melee_weapon()
+					enemy.weapon_resource = _pick_melee_weapon()
 			elif randf() < 0.15:
 				enemy = SNIPER_ENEMY_SCENE.instantiate()
 			else:
