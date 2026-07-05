@@ -97,3 +97,31 @@ func test_enemy_without_animator_does_not_error() -> void:
 	add_child(e)
 	await get_tree().process_frame
 	e._physics_process(0.5)
+
+
+func test_melee_enemy_scene_uses_grunt_sprites() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/melee_enemy.tscn")
+	var e: Node = auto_free(scene.instantiate())
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
+	assert_str(sprite.texture.resource_path).contains("caves_grunt1")
+	assert_str(animator.texture_normal.resource_path).contains("caves_grunt1")
+	assert_str(animator.texture_breathe.resource_path).contains("caves_grunt2")
+
+
+func test_lunge_enemy_scene_uses_brute_sprites() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/lunge_enemy.tscn")
+	var e: Node = auto_free(scene.instantiate())
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
+	assert_str(sprite.texture.resource_path).contains("caves_brute1")
+	assert_str(animator.texture_breathe.resource_path).contains("caves_brute2")
+
+
+func test_sniper_enemy_scene_uses_mage_sprites() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/sniper_enemy.tscn")
+	var e: Node = auto_free(scene.instantiate())
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
+	assert_str(sprite.texture.resource_path).contains("caves_mage1")
+	assert_str(animator.texture_breathe.resource_path).contains("caves_mage2")
