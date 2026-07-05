@@ -2,11 +2,18 @@
 
 [ext_resource type="PackedScene" uid="uid://enemybase01" path="res://scenes/enemies/enemy.tscn" id="1"]
 [ext_resource type="Script" uid="uid://2p0rviaql6ea" path="res://src/enemies/melee_enemy.gd" id="2"]
-[ext_resource type="Texture2D" uid="uid://dmbgucc3swig" path="res://textures/Enemies/melee_test.png" id="3_ghbxi"]
+[ext_resource type="Texture2D" path="res://textures/Enemies/caves/grunt/caves_grunt1.png" id="3_grunt1"]
+[ext_resource type="Texture2D" path="res://textures/Enemies/caves/grunt/caves_grunt2.png" id="4_grunt2"]
+[ext_resource type="Script" path="res://src/enemies/feedback/enemy_animator.gd" id="5"]
 
 [node name="MeleeEnemy" unique_id=1872446034 instance=ExtResource("1")]
 script = ExtResource("2")
 weapon_resource = null
 
 [node name="Sprite2D" parent="." index="0"]
-texture = ExtResource("3_ghbxi")
+texture = ExtResource("3_grunt1")
+
+[node name="EnemyAnimator" type="Node" parent="."]
+script = ExtResource("5")
+texture_normal = ExtResource("3_grunt1")
+texture_breathe = ExtResource("4_grunt2")

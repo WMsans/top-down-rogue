@@ -38,6 +38,10 @@ const BURN_FLASH_MAX := 0.7
 const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
+const ELITE_OUTLINE_SHADER: Shader = preload("res://shaders/visual/outline.gdshader")
+const ELITE_OUTLINE_WIDTH: float = 1.5
+const ELITE_TINT_BLEND: float = 0.35
+const FOOTSTEP_MIN_SPEED_SQ: float = 100.0
 
 const TARGETED_SPEED_MULT: float = 1.3
 const TARGETED_COOLDOWN_MULT: float = 0.6
@@ -51,10 +55,12 @@ var weapon: Weapon = null
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _body_radius: float = DEFAULT_BODY_RADIUS
 var _base_modulate: Color = Color.WHITE
+var _elite_tint_color: Color = Color.WHITE
 var _burn_flash: float = 0.0
 var _flash_tween: Tween = null
 var _squash_tween: Tween = null
 var _death_tween: Tween = null
+var _death_vfx: DeathDissolveVfx = null
 
 var _state: int = State.WANDER
 var _state_timer: float = 0.0
@@ -71,6 +77,12 @@ var _teleport_cooldown: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
+var _animator: EnemyAnimator = null
+var _hurt_vfx: HurtSparkVfx = null
+var _footstep_vfx: FootstepDustVfx = null
+var _footstep_timer: float = 0.0
+var _windup_vfx: WindupTelegraphVfx = null
+var _attack_vfx: AttackSlashVfx = null
 var _director = null
 
 var _attack_started: bool = false
@@ -94,6 +106,7 @@ func _ready() -> void:
 
 	if is_elite:
 		_apply_elite_scaling()
+	_animator = get_node_or_null("EnemyAnimator")
 	if is_inside_tree():
 		_player_ref = get_tree().get_first_node_in_group("player")
 		_world_manager = get_tree().get_first_node_in_group("world_manager")
@@ -114,6 +127,31 @@ func _ready() -> void:
 	_exclaim_label.add_theme_color_override("font_color", Color.RED)
 	_exclaim_label.scale = Vector2.ZERO
 	add_child(_exclaim_label)
+
+	var hurt_vfx := HurtSparkVfx.new()
+	hurt_vfx.name = "HurtSparkVfx"
+	add_child(hurt_vfx)
+	_hurt_vfx = hurt_vfx
+
+	var footstep_vfx := FootstepDustVfx.new()
+	footstep_vfx.name = "FootstepDustVfx"
+	add_child(footstep_vfx)
+	_footstep_vfx = footstep_vfx
+
+	var windup_vfx := WindupTelegraphVfx.new()
+	windup_vfx.name = "WindupTelegraphVfx"
+	add_child(windup_vfx)
+	_windup_vfx = windup_vfx
+
+	var attack_vfx := AttackSlashVfx.new()
+	attack_vfx.name = "AttackSlashVfx"
+	add_child(attack_vfx)
+	_attack_vfx = attack_vfx
+
+	var death_vfx := DeathDissolveVfx.new()
+	death_vfx.name = "DeathDissolveVfx"
+	add_child(death_vfx)
+	_death_vfx = death_vfx
 
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
@@ -148,6 +186,32 @@ func _apply_elite_scaling() -> void:
 			speed = _speed_base * 0.7
 		EliteAbility.ENRAGE:
 			pass  # dynamically applied in _process
+	_apply_elite_visuals()
+
+
+func _apply_elite_visuals() -> void:
+	_elite_tint_color = _elite_outline_tint(elite_ability)
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite == null:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = ELITE_OUTLINE_SHADER
+	mat.set_shader_parameter("outline_width", ELITE_OUTLINE_WIDTH)
+	mat.set_shader_parameter("outline_color", _elite_tint_color)
+	sprite.material = mat
+
+
+static func _elite_outline_tint(ability: int) -> Color:
+	match ability:
+		EliteAbility.FAST:
+			return Color(0.3, 0.9, 1.0)
+		EliteAbility.TANK:
+			return Color(0.6, 0.6, 0.65)
+		EliteAbility.TELEPORT:
+			return Color(0.7, 0.3, 1.0)
+		EliteAbility.ENRAGE:
+			return Color(1.0, 0.2, 0.2)
+	return Color(1.0, 0.85, 0.3)
 
 
 func _apply_damage_scale() -> void:
@@ -202,6 +266,8 @@ func _physics_process(delta: float) -> void:
 	var tint_status := _status_component
 	if tint_status:
 		_base_modulate = tint_status.get_blended_tint()
+		if is_elite:
+			_base_modulate = _base_modulate.lerp(_elite_tint_color, ELITE_TINT_BLEND)
 		if _burn_flash > 0.0:
 			_burn_flash = maxf(0.0, _burn_flash - delta * BURN_FLASH_DECAY)
 		if not (_flash_tween and _flash_tween.is_valid()):
@@ -215,6 +281,20 @@ func _physics_process(delta: float) -> void:
 			or (_state == State.ATTACK and _moves_during_attack()):
 		_move_with_clamp(delta)
 	_resolve_crowd_overlap()
+	if _animator:
+		var moving := velocity.length_squared() > 4.0
+		var ratio := 0.0
+		if speed > 0.001:
+			ratio = clampf(velocity.length() / speed, 0.0, 1.0)
+		_animator.tick(delta, moving, ratio)
+	if _uses_footstep_vfx() and _state == State.CHASE and velocity.length_squared() > FOOTSTEP_MIN_SPEED_SQ:
+		_footstep_timer -= delta
+		if _footstep_timer <= 0.0:
+			_footstep_timer = FootstepDustVfx.FOOTSTEP_INTERVAL
+			if _footstep_vfx:
+				_footstep_vfx.puff()
+	else:
+		_footstep_timer = 0.0
 
 
 func _apply_enrage_if_needed() -> void:
@@ -324,6 +404,8 @@ func _process_attack(_delta: float) -> void:
 	if not _attack_started:
 		_attack_started = true
 		_execute_attack()
+		if _uses_attack_slash_vfx() and _attack_vfx:
+			_attack_vfx.play(get_facing_direction())
 	if not _attack_in_progress():
 		_change_state(State.COOLDOWN)
 
@@ -334,6 +416,18 @@ func _attack_in_progress() -> bool:
 
 func _moves_during_attack() -> bool:
 	return false
+
+
+func _uses_footstep_vfx() -> bool:
+	return false
+
+
+func _uses_windup_telegraph_vfx() -> bool:
+	return true
+
+
+func _uses_attack_slash_vfx() -> bool:
+	return true
 
 
 func _process_cooldown(delta: float) -> void:
@@ -367,9 +461,16 @@ func _process_death(delta: float) -> void:
 	var sprite := get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.scale = Vector2.ONE * maxf(0.0, 1.0 - t)
+		sprite.rotation = lerp_angle(sprite.rotation, _death_rotation_target(), t)
 	if _state_timer <= 0.0:
 		_spawn_drops()
 		queue_free()
+
+
+func _death_rotation_target() -> float:
+	if _knockback_velocity.length_squared() > 0.0:
+		return _knockback_velocity.angle()
+	return get_facing_direction().angle()
 
 
 func _spawn_drops() -> void:
@@ -564,6 +665,8 @@ func _change_state(new_state: int) -> void:
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
+			if _death_vfx:
+				_death_vfx.burst(_base_modulate)
 
 
 func _show_exclaim() -> void:
@@ -577,6 +680,8 @@ func _show_exclaim() -> void:
 	_exclaim_tween.set_ease(Tween.EASE_OUT)
 	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2(1.2, 1.2), 0.05)
 	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ONE, 0.05)
+	if _uses_windup_telegraph_vfx() and _windup_vfx:
+		_windup_vfx.play()
 
 
 func _hide_exclaim() -> void:
@@ -748,6 +853,8 @@ func _play_squash() -> void:
 func _on_hit() -> void:
 	_play_hit_flash()
 	_play_squash()
+	if _hurt_vfx:
+		_hurt_vfx.burst()
 
 
 func _setup_weapon_visual() -> void:

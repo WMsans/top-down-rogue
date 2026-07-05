@@ -35,3 +35,7 @@ func _setup_drop_table() -> void:
 func _execute_attack() -> void:
 	if weapon and _player_ref and is_instance_valid(_player_ref):
 		weapon.use(self)
+
+
+func _uses_footstep_vfx() -> bool:
+	return true

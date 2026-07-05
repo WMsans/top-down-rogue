@@ -7,6 +7,11 @@ extends Enemy
 @export var strafe_speed: float = 40.0
 @export var back_away_acceleration: float = 200.0
 
+const ARCHER_NORMAL: Texture2D = preload("res://textures/Enemies/caves/archer/caves_archer1.png")
+const ARCHER_BREATHE: Texture2D = preload("res://textures/Enemies/caves/archer/caves_archer2.png")
+const LOBBER_NORMAL: Texture2D = preload("res://textures/Enemies/caves/lobber/caves_lobber1.png")
+const LOBBER_BREATHE: Texture2D = preload("res://textures/Enemies/caves/lobber/caves_lobber2.png")
+
 var _strafe_direction: float = 1.0
 var _strafe_re_roll: float = 0.0
 
@@ -32,6 +37,7 @@ func _ready() -> void:
 	windup_duration = 0.4
 	super._ready()
 	_setup_drop_table()
+	_apply_sprite_variant()
 
 
 func _setup_drop_table() -> void:
@@ -81,3 +87,20 @@ func _process_chase(delta: float) -> void:
 func _execute_attack() -> void:
 	if weapon and _player_ref and is_instance_valid(_player_ref):
 		weapon.use(self)
+
+
+func _select_sprite_textures() -> Array:
+	if weapon_resource is SplitShotWeapon or weapon_resource is FanWeapon:
+		return [LOBBER_NORMAL, LOBBER_BREATHE]
+	return [ARCHER_NORMAL, ARCHER_BREATHE]
+
+
+func _apply_sprite_variant() -> void:
+	var textures := _select_sprite_textures()
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.texture = textures[0]
+	var animator := get_node_or_null("EnemyAnimator")
+	if animator:
+		animator.set_textures(textures[0], textures[1])
+		animator._timer = EnemyAnimator.IDLE_INTERVAL

@@ -55,11 +55,11 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Enemy Visual Identity
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P1 | High | Enemy sprite art — melee set | Commission/create distinct sprites for ~5 melee enemy variants (grunt, brute, fast skirmisher, armored, cultist). Currently placeholder sprites. Each variant has two sprites: normal and breath out (a little shorter than normal). When idle, play the two sprite animation slowly. When moving, play the animation quickly (dynamic, depending on the speed). When preparing to dash (lunge enemies), no animation (stay at shorter). When dashing, no animation (stay at normal). |
-|  | P1 | High | Enemy sprite art — ranged set | Distinct sprites for ~3 ranged enemy variants (archer, mage, lobber). Must read as "ranged" at a glance. |
-|  | P2 | Medium | Enemy sprite art — elite set | Visually-upgraded variants of base enemies: glowing outlines, larger scale, distinct color palette. |
-|  | P2 | Medium | Per-biome enemy palettes | Caves: earthy browns. Magma: reds/oranges. Frozen: blues/whites. Mines: greys. Vault: golds/metallics. Skin existing sprites per biome. |
-|  | P2 | Low | Enemy death animations | Sprites scale-to-zero over 0.3s (exists). Add: directional knockback rotation, dissolve-to-particles. |
+| x | P1 | High | Enemy sprite art — melee set | Commission/create distinct sprites for ~5 melee enemy variants (grunt, brute, fast skirmisher, armored, cultist). Currently placeholder sprites. Each variant has two sprites: normal and breath out (a little shorter than normal). When idle, play the two sprite animation slowly. When moving, play the animation quickly (dynamic, depending on the speed). When preparing to dash (lunge enemies), no animation (stay at shorter). When dashing, no animation (stay at normal). |
+| x | P1 | High | Enemy sprite art — ranged set | Distinct sprites for ~3 ranged enemy variants (archer, mage, lobber). Must read as "ranged" at a glance. |
+| x | P2 | Medium | Enemy sprite art — elite set | Visually-upgraded variants of base enemies: glowing outlines, larger scale, distinct color palette. |
+| x | P2 | Medium | Per-biome enemy palettes | Caves: earthy browns. Magma: reds/oranges. Frozen: blues/whites. Mines: greys. Vault: golds/metallics. Skin existing sprites per biome. |
+| x | P2 | Low | Enemy death animations | Sprites scale-to-zero over 0.3s (exists). Add: directional knockback rotation, dissolve-to-particles. |
 
 ### Enemy Behavior Depth
 | Done | Priority | Difficulty | Task | Description |
