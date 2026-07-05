@@ -241,3 +241,25 @@ func test_windup_does_not_play_telegraph_vfx_for_lunge() -> void:
 	e._change_state(Enemy.State.WINDUP)
 	var particles: GPUParticles2D = e._windup_vfx.get_node("Particles")
 	assert_bool(particles.emitting).is_false()
+
+
+func test_base_enemy_uses_attack_slash_vfx() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	assert_bool(e._uses_attack_slash_vfx()).is_true()
+
+
+func test_lunge_enemy_does_not_use_attack_slash_vfx() -> void:
+	var e: LungeEnemy = auto_free(LungeEnemy.new())
+	assert_bool(e._uses_attack_slash_vfx()).is_false()
+
+
+func test_attack_plays_slash_vfx_for_melee() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/melee_enemy.tscn")
+	var e: MeleeEnemy = auto_free(scene.instantiate())
+	add_child(e)
+	await get_tree().process_frame
+	e._state = Enemy.State.ATTACK
+	e._attack_started = false
+	e._process_attack(0.01)
+	var particles: GPUParticles2D = e._attack_vfx.get_node("Particles")
+	assert_bool(particles.emitting).is_true()
