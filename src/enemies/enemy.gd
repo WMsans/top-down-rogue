@@ -38,6 +38,9 @@ const BURN_FLASH_MAX := 0.7
 const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
+const ELITE_OUTLINE_SHADER: Shader = preload("res://shaders/visual/outline.gdshader")
+const ELITE_OUTLINE_WIDTH: float = 1.5
+const ELITE_TINT_BLEND: float = 0.35
 const FOOTSTEP_MIN_SPEED_SQ: float = 100.0
 
 const TARGETED_SPEED_MULT: float = 1.3
@@ -52,6 +55,7 @@ var weapon: Weapon = null
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _body_radius: float = DEFAULT_BODY_RADIUS
 var _base_modulate: Color = Color.WHITE
+var _elite_tint_color: Color = Color.WHITE
 var _burn_flash: float = 0.0
 var _flash_tween: Tween = null
 var _squash_tween: Tween = null
@@ -176,6 +180,32 @@ func _apply_elite_scaling() -> void:
 			speed = _speed_base * 0.7
 		EliteAbility.ENRAGE:
 			pass  # dynamically applied in _process
+	_apply_elite_visuals()
+
+
+func _apply_elite_visuals() -> void:
+	_elite_tint_color = _elite_outline_tint(elite_ability)
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite == null:
+		return
+	var mat := ShaderMaterial.new()
+	mat.shader = ELITE_OUTLINE_SHADER
+	mat.set_shader_parameter("outline_width", ELITE_OUTLINE_WIDTH)
+	mat.set_shader_parameter("outline_color", _elite_tint_color)
+	sprite.material = mat
+
+
+static func _elite_outline_tint(ability: int) -> Color:
+	match ability:
+		EliteAbility.FAST:
+			return Color(0.3, 0.9, 1.0)
+		EliteAbility.TANK:
+			return Color(0.6, 0.6, 0.65)
+		EliteAbility.TELEPORT:
+			return Color(0.7, 0.3, 1.0)
+		EliteAbility.ENRAGE:
+			return Color(1.0, 0.2, 0.2)
+	return Color(1.0, 0.85, 0.3)
 
 
 func _apply_damage_scale() -> void:
@@ -230,6 +260,8 @@ func _physics_process(delta: float) -> void:
 	var tint_status := _status_component
 	if tint_status:
 		_base_modulate = tint_status.get_blended_tint()
+		if is_elite:
+			_base_modulate = _base_modulate.lerp(_elite_tint_color, ELITE_TINT_BLEND)
 		if _burn_flash > 0.0:
 			_burn_flash = maxf(0.0, _burn_flash - delta * BURN_FLASH_DECAY)
 		if not (_flash_tween and _flash_tween.is_valid()):

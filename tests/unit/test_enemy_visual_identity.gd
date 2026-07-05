@@ -263,3 +263,46 @@ func test_attack_plays_slash_vfx_for_melee() -> void:
 	e._process_attack(0.01)
 	var particles: GPUParticles2D = e._attack_vfx.get_node("Particles")
 	assert_bool(particles.emitting).is_true()
+
+
+func test_elite_outline_tint_fast_is_cyan() -> void:
+	assert_that(Enemy._elite_outline_tint(Enemy.EliteAbility.FAST)).is_equal(Color(0.3, 0.9, 1.0))
+
+
+func test_elite_outline_tint_tank_is_steel() -> void:
+	assert_that(Enemy._elite_outline_tint(Enemy.EliteAbility.TANK)).is_equal(Color(0.6, 0.6, 0.65))
+
+
+func test_elite_outline_tint_teleport_is_purple() -> void:
+	assert_that(Enemy._elite_outline_tint(Enemy.EliteAbility.TELEPORT)).is_equal(Color(0.7, 0.3, 1.0))
+
+
+func test_elite_outline_tint_enrage_is_red() -> void:
+	assert_that(Enemy._elite_outline_tint(Enemy.EliteAbility.ENRAGE)).is_equal(Color(1.0, 0.2, 0.2))
+
+
+func test_elite_outline_tint_none_is_gold() -> void:
+	assert_that(Enemy._elite_outline_tint(Enemy.EliteAbility.NONE)).is_equal(Color(1.0, 0.85, 0.3))
+
+
+func test_elite_visuals_apply_shader_and_tint() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	e.is_elite = true
+	e.elite_ability = Enemy.EliteAbility.ENRAGE
+	add_child(e)
+	await get_tree().process_frame
+	assert_bool(sprite.material is ShaderMaterial).is_true()
+	assert_that(e._elite_tint_color).is_equal(Color(1.0, 0.2, 0.2))
+
+
+func test_non_elite_has_no_outline_material() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	add_child(e)
+	await get_tree().process_frame
+	assert_object(sprite.material).is_null()
