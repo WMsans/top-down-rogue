@@ -7,7 +7,7 @@ extends Node2D
 
 const FIRE_COLOR := Color(1.0, 0.55, 0.15, 0.85)
 const FIRE_COLOR_FADE := Color(1.0, 0.2, 0.05, 0.0)
-const CORE_COLOR := Color(1.0, 0.85, 0.4, 0.9)
+const FLAME_FILL_COUNT := 50
 
 const BULLET_UNIT_POINTS: Array[Vector2] = [
 	Vector2(-0.5, -0.32), Vector2(-0.5, 0.32),
@@ -18,33 +18,17 @@ const BULLET_UNIT_POINTS: Array[Vector2] = [
 	Vector2(-0.15, -0.5), Vector2(-0.38, -0.46),
 ]
 
-var _particles: GPUParticles2D = null
-var _bullet_outer: Polygon2D = null
-var _bullet_inner: Polygon2D = null
-var _fade_tween: Tween = null
-var _intensity: float = 0.0
-var _time: float = 0.0
+var _tail: GPUParticles2D = null
+var _flame_fill: CPUParticles2D = null
 
 
 func _ready() -> void:
 	z_index = 6
 	z_as_relative = false
-	_bullet_outer = _build_bullet_polygon(FIRE_COLOR)
-	_bullet_outer.name = "BulletOuter"
-	add_child(_bullet_outer)
-	_bullet_inner = _build_bullet_polygon(CORE_COLOR)
-	_bullet_inner.name = "BulletInner"
-	add_child(_bullet_inner)
-	_particles = _build_particles()
-	add_child(_particles)
-	set_process(true)
-	_apply_visual()
-
-
-func _process(delta: float) -> void:
-	_time += delta
-	if _intensity > 0.001:
-		_apply_visual()
+	_flame_fill = _build_flame_fill()
+	add_child(_flame_fill)
+	_tail = _build_tail()
+	add_child(_tail)
 
 
 func start(direction: Vector2) -> void:
@@ -52,71 +36,100 @@ func start(direction: Vector2) -> void:
 		var dir := direction.normalized()
 		rotation = dir.angle()
 		position = dir * offset_distance
-	_particles.restart()
-	_particles.emitting = true
-	_animate_intensity(1.0, 0.05)
+	_flame_fill.restart()
+	_flame_fill.emitting = true
+	_tail.restart()
+	_tail.emitting = true
 
 
 func stop() -> void:
-	_particles.emitting = false
-	_animate_intensity(0.0, 0.12)
+	_flame_fill.emitting = false
+	_tail.emitting = false
 
 
-func _animate_intensity(target: float, duration: float) -> void:
-	if _fade_tween:
-		_fade_tween.kill()
-	_fade_tween = create_tween()
-	_fade_tween.tween_method(_set_intensity, _intensity, target, duration)
+func _build_flame_fill() -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.name = "FlameFill"
+	p.emitting = false
+	p.amount = FLAME_FILL_COUNT
+	p.lifetime = 0.15
+	p.texture = EnemyVfxShared.soft_dot_texture()
+	p.z_as_relative = false
+	p.z_index = 6
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_POINTS
+	p.emission_points = _sample_bullet_points(FLAME_FILL_COUNT)
+	p.direction = Vector2.RIGHT
+	p.spread = 180.0
+	p.gravity = Vector2.ZERO
+	p.initial_velocity_min = 6.0
+	p.initial_velocity_max = 22.0
+	p.damping_min = 6.0
+	p.damping_max = 10.0
+	p.scale_amount_min = 0.6
+	p.scale_amount_max = 1.3
+	p.scale_amount_curve = _build_pop_curve()
+	p.hue_variation_min = -0.05
+	p.hue_variation_max = 0.05
+	p.color_ramp = _build_gradient(FIRE_COLOR, FIRE_COLOR_FADE)
+	return p
 
 
-func _set_intensity(v: float) -> void:
-	_intensity = v
-	_apply_visual()
+func _build_pop_curve() -> Curve:
+	var c := Curve.new()
+	c.add_point(Vector2(0.0, 0.3))
+	c.add_point(Vector2(0.25, 1.0))
+	c.add_point(Vector2(1.0, 0.0))
+	return c
 
 
-func _apply_visual() -> void:
-	var flicker := 1.0 + sin(_time * 22.0) * 0.08 + sin(_time * 35.0 + 1.3) * 0.05
-	_bullet_outer.polygon = _wobble_points(body_length, body_width, 1.0, 0.0)
-	_bullet_inner.polygon = _wobble_points(body_length * 0.65, body_width * 0.55, 1.4, 0.6)
-	var oc := FIRE_COLOR
-	oc.a = clampf(FIRE_COLOR.a * _intensity * flicker, 0.0, 1.0)
-	_bullet_outer.color = oc
-	var ic := CORE_COLOR
-	ic.a = clampf(CORE_COLOR.a * _intensity * (1.0 + sin(_time * 30.0 + 0.4) * 0.12), 0.0, 1.0)
-	_bullet_inner.color = ic
+func _build_gradient(hot: Color, fade: Color) -> Gradient:
+	var g := Gradient.new()
+	g.set_color(0, hot)
+	g.set_color(1, fade)
+	return g
 
 
-func _wobble_points(length: float, width: float, freq_mult: float, phase_offset: float) -> PackedVector2Array:
+func _sample_bullet_points(count: int) -> PackedVector2Array:
 	var pts := PackedVector2Array()
-	for i in BULLET_UNIT_POINTS.size():
-		var p := BULLET_UNIT_POINTS[i]
-		var phase := i * 0.9 + phase_offset
-		var wob := 1.0 + sin(_time * 18.0 * freq_mult + phase) * 0.09 + sin(_time * 27.0 * freq_mult + phase * 1.7) * 0.05
-		pts.append(Vector2(p.x * length * (1.0 + (wob - 1.0) * 0.4), p.y * width * wob))
+	var attempts := 0
+	var max_attempts := count * 50
+	while pts.size() < count and attempts < max_attempts:
+		attempts += 1
+		var candidate := Vector2(randf_range(-0.5, 0.5), randf_range(-0.5, 0.5))
+		if _point_in_bullet_polygon(candidate):
+			pts.append(Vector2(candidate.x * body_length, candidate.y * body_width))
 	return pts
 
 
-func _build_bullet_polygon(color: Color) -> Polygon2D:
-	var poly := Polygon2D.new()
-	poly.color = color
-	poly.polygon = PackedVector2Array(BULLET_UNIT_POINTS)
-	return poly
+func _point_in_bullet_polygon(pt: Vector2) -> bool:
+	var inside := false
+	var n := BULLET_UNIT_POINTS.size()
+	var j := n - 1
+	for i in n:
+		var pi: Vector2 = BULLET_UNIT_POINTS[i]
+		var pj: Vector2 = BULLET_UNIT_POINTS[j]
+		if (pi.y > pt.y) != (pj.y > pt.y):
+			var x_intersect := (pj.x - pi.x) * (pt.y - pi.y) / (pj.y - pi.y) + pi.x
+			if pt.x < x_intersect:
+				inside = not inside
+		j = i
+	return inside
 
 
-func _build_particles() -> GPUParticles2D:
+func _build_tail() -> GPUParticles2D:
 	var p := GPUParticles2D.new()
 	p.name = "Particles"
 	p.emitting = false
 	p.amount = 14
 	p.lifetime = 0.2
 	p.texture = EnemyVfxShared.soft_dot_texture()
-	p.process_material = _build_process_material()
+	p.process_material = _build_tail_process_material()
 	p.z_as_relative = false
 	p.z_index = 5
 	return p
 
 
-func _build_process_material() -> ParticleProcessMaterial:
+func _build_tail_process_material() -> ParticleProcessMaterial:
 	var m := ParticleProcessMaterial.new()
 	m.direction = Vector3(-1.0, 0.0, 0.0)
 	m.spread = 16.0
