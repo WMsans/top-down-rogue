@@ -78,7 +78,6 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 |  | P1 | High | 5+ melee enemy variants | Author stats + behaviors for grunt (balanced), brute (slow/heavy), skirmisher (fast/weak), armored (tanky/anti-knockback), cultist (recover HP for ally (and yells "Caw cawww" when doing so)). |
 |  | P1 | High | 3+ ranged enemy variants | Author stats + behaviors for archer (straight projectile), mage (slow homing orb), lobber (arcing AoE shot). |
 |  | P2 | Medium | Per-biome enemy roster | Each biome gets 2–4 unique enemy types. Caves: bats + crawlers. Magma: fire imps + lava slugs. Frozen: ice wraiths + frost giants. Mines: constructs + miners. Vault: guardians + sentinels. |
-|  | P2 | Medium | Elite ability variants | Author + balance the 5 elite abilities (FAST, TANK, TELEPORT, ENRAGE). Add 2 more: SUMMONER (spawns minions on hit), SHIELD (periodic invuln bubble). |
 |  | P3 | Low | Rare spawn enemies | 1–2 special enemies per biome with unique drops (e.g., Golden Slime drops extra gold, Crystal Golem drops guaranteed modifier). |
 
 ---
