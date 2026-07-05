@@ -241,3 +241,18 @@ func test_cooldown_releases_hold() -> void:
 	e._change_state(Enemy.State.COOLDOWN)
 	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
 	assert_int(animator._hold).is_equal(EnemyAnimator.Hold.NONE)
+
+
+# --- Task 11: dash windup swirl VFX ---
+
+func test_lunge_has_dash_windup_vfx_child() -> void:
+	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
+	assert_object(e._dash_windup_vfx).is_not_null()
+	assert_bool(e._dash_windup_vfx is DashWindupVfx).is_true()
+
+
+func test_windup_plays_dash_windup_vfx() -> void:
+	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
+	e._change_state(Enemy.State.WINDUP)
+	var particles: GPUParticles2D = e._dash_windup_vfx.get_node("Particles")
+	assert_bool(particles.emitting).is_true()
