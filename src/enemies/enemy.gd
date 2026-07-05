@@ -76,6 +76,7 @@ var _animator: EnemyAnimator = null
 var _hurt_vfx: HurtSparkVfx = null
 var _footstep_vfx: FootstepDustVfx = null
 var _footstep_timer: float = 0.0
+var _windup_vfx: WindupTelegraphVfx = null
 var _director = null
 
 var _attack_started: bool = false
@@ -130,6 +131,11 @@ func _ready() -> void:
 	footstep_vfx.name = "FootstepDustVfx"
 	add_child(footstep_vfx)
 	_footstep_vfx = footstep_vfx
+
+	var windup_vfx := WindupTelegraphVfx.new()
+	windup_vfx.name = "WindupTelegraphVfx"
+	add_child(windup_vfx)
+	_windup_vfx = windup_vfx
 
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
@@ -368,6 +374,10 @@ func _moves_during_attack() -> bool:
 
 func _uses_footstep_vfx() -> bool:
 	return false
+
+
+func _uses_windup_telegraph_vfx() -> bool:
+	return true
 
 
 func _process_cooldown(delta: float) -> void:
@@ -611,6 +621,8 @@ func _show_exclaim() -> void:
 	_exclaim_tween.set_ease(Tween.EASE_OUT)
 	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2(1.2, 1.2), 0.05)
 	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ONE, 0.05)
+	if _uses_windup_telegraph_vfx() and _windup_vfx:
+		_windup_vfx.play()
 
 
 func _hide_exclaim() -> void:
