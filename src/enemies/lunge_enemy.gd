@@ -16,6 +16,7 @@ var _dash_done: bool = false
 const DASH_FIRE_VFX_SCENE: PackedScene = preload("res://scenes/fx/dash_fire_vfx.tscn")
 
 var _fire_vfx: DashFireVfx = null
+var _dash_windup_vfx: DashWindupVfx = null
 
 
 func _init() -> void:
@@ -30,6 +31,9 @@ func _ready() -> void:
 	scale = Vector2(1.6, 1.6)
 	_fire_vfx = DASH_FIRE_VFX_SCENE.instantiate()
 	add_child(_fire_vfx)
+	_dash_windup_vfx = DashWindupVfx.new()
+	_dash_windup_vfx.name = "DashWindupVfx"
+	add_child(_dash_windup_vfx)
 
 
 func _change_state(new_state: int) -> void:
@@ -53,6 +57,8 @@ func _set_animator_hold(mode: int) -> void:
 func _play_windup_telegraph() -> void:
 	_play_hit_flash()
 	_play_squash()
+	if _dash_windup_vfx:
+		_dash_windup_vfx.play()
 
 
 func _begin_dash() -> void:
