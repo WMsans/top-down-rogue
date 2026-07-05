@@ -71,6 +71,7 @@ var _teleport_cooldown: float = 0.0
 var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
+var _animator: EnemyAnimator = null
 var _director = null
 
 var _attack_started: bool = false
@@ -94,6 +95,7 @@ func _ready() -> void:
 
 	if is_elite:
 		_apply_elite_scaling()
+	_animator = get_node_or_null("EnemyAnimator")
 	if is_inside_tree():
 		_player_ref = get_tree().get_first_node_in_group("player")
 		_world_manager = get_tree().get_first_node_in_group("world_manager")
@@ -215,6 +217,12 @@ func _physics_process(delta: float) -> void:
 			or (_state == State.ATTACK and _moves_during_attack()):
 		_move_with_clamp(delta)
 	_resolve_crowd_overlap()
+	if _animator:
+		var moving := velocity.length_squared() > 4.0
+		var ratio := 0.0
+		if speed > 0.001:
+			ratio = clampf(velocity.length() / speed, 0.0, 1.0)
+		_animator.tick(delta, moving, ratio)
 
 
 func _apply_enrage_if_needed() -> void:
