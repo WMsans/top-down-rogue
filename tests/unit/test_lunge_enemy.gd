@@ -204,3 +204,40 @@ func test_body_check_uses_dash_damage_scaled_by_damage_scale() -> void:
 	var hits: Array = e._player_ref.hits
 	assert_int(hits.size()).is_equal(1)
 	assert_int(hits[0]["dmg"]).is_equal(14)
+
+
+# --- Enemy Visual Identity: dash-hold frame ---
+
+func _lunge_from_scene() -> LungeEnemy:
+	var scene: PackedScene = load("res://scenes/enemies/lunge_enemy.tscn")
+	var e: LungeEnemy = auto_free(scene.instantiate())
+	add_child(e)
+	return e
+
+func test_windup_holds_breathe_frame() -> void:
+	var e := _lunge_from_scene()
+	await get_tree().process_frame
+	e._change_state(Enemy.State.WINDUP)
+	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
+	assert_int(animator._hold).is_equal(EnemyAnimator.Hold.BREATHE)
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	assert_str(sprite.texture.resource_path).contains("caves_brute2")
+
+func test_attack_holds_normal_frame() -> void:
+	var e := _lunge_from_scene()
+	await get_tree().process_frame
+	e._change_state(Enemy.State.WINDUP)
+	e._change_state(Enemy.State.ATTACK)
+	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
+	assert_int(animator._hold).is_equal(EnemyAnimator.Hold.NORMAL)
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	assert_str(sprite.texture.resource_path).contains("caves_brute1")
+
+func test_cooldown_releases_hold() -> void:
+	var e := _lunge_from_scene()
+	await get_tree().process_frame
+	e._change_state(Enemy.State.WINDUP)
+	e._change_state(Enemy.State.ATTACK)
+	e._change_state(Enemy.State.COOLDOWN)
+	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
+	assert_int(animator._hold).is_equal(EnemyAnimator.Hold.NONE)

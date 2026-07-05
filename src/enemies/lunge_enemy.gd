@@ -36,7 +36,18 @@ func _change_state(new_state: int) -> void:
 	if new_state == State.WINDUP:
 		_dash_done = false
 		_play_windup_telegraph()
+		_set_animator_hold(EnemyAnimator.Hold.BREATHE)
+	elif new_state == State.ATTACK:
+		_set_animator_hold(EnemyAnimator.Hold.NORMAL)
+	elif new_state != State.HURT:
+		_set_animator_hold(EnemyAnimator.Hold.NONE)
 	super._change_state(new_state)
+
+
+func _set_animator_hold(mode: int) -> void:
+	var animator := get_node_or_null("EnemyAnimator")
+	if animator:
+		animator.set_hold(mode)
 
 
 func _play_windup_telegraph() -> void:
