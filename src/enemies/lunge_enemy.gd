@@ -106,3 +106,7 @@ func _uses_footstep_vfx() -> bool:
 
 func _uses_windup_telegraph_vfx() -> bool:
 	return false
+
+
+func _uses_attack_slash_vfx() -> bool:
+	return false

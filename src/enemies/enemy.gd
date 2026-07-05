@@ -77,6 +77,7 @@ var _hurt_vfx: HurtSparkVfx = null
 var _footstep_vfx: FootstepDustVfx = null
 var _footstep_timer: float = 0.0
 var _windup_vfx: WindupTelegraphVfx = null
+var _attack_vfx: AttackSlashVfx = null
 var _director = null
 
 var _attack_started: bool = false
@@ -136,6 +137,11 @@ func _ready() -> void:
 	windup_vfx.name = "WindupTelegraphVfx"
 	add_child(windup_vfx)
 	_windup_vfx = windup_vfx
+
+	var attack_vfx := AttackSlashVfx.new()
+	attack_vfx.name = "AttackSlashVfx"
+	add_child(attack_vfx)
+	_attack_vfx = attack_vfx
 
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
@@ -360,6 +366,8 @@ func _process_attack(_delta: float) -> void:
 	if not _attack_started:
 		_attack_started = true
 		_execute_attack()
+		if _uses_attack_slash_vfx() and _attack_vfx:
+			_attack_vfx.play(get_facing_direction())
 	if not _attack_in_progress():
 		_change_state(State.COOLDOWN)
 
@@ -377,6 +385,10 @@ func _uses_footstep_vfx() -> bool:
 
 
 func _uses_windup_telegraph_vfx() -> bool:
+	return true
+
+
+func _uses_attack_slash_vfx() -> bool:
 	return true
 
 
