@@ -102,3 +102,7 @@ func _check_body_contact() -> void:
 
 func _uses_footstep_vfx() -> bool:
 	return false
+
+
+func _uses_windup_telegraph_vfx() -> bool:
+	return false

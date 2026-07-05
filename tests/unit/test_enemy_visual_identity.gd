@@ -211,3 +211,33 @@ func test_chasing_melee_enemy_puffs_footstep_dust() -> void:
 	e._physics_process(FootstepDustVfx.FOOTSTEP_INTERVAL + 0.01)
 	var particles: GPUParticles2D = e._footstep_vfx.get_node("Particles")
 	assert_bool(particles.emitting).is_true()
+
+
+func test_base_enemy_uses_windup_telegraph_vfx() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	assert_bool(e._uses_windup_telegraph_vfx()).is_true()
+
+
+func test_lunge_enemy_does_not_use_windup_telegraph_vfx() -> void:
+	var e: LungeEnemy = auto_free(LungeEnemy.new())
+	assert_bool(e._uses_windup_telegraph_vfx()).is_false()
+
+
+func test_windup_plays_telegraph_vfx_for_melee() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/melee_enemy.tscn")
+	var e: MeleeEnemy = auto_free(scene.instantiate())
+	add_child(e)
+	await get_tree().process_frame
+	e._change_state(Enemy.State.WINDUP)
+	var particles: GPUParticles2D = e._windup_vfx.get_node("Particles")
+	assert_bool(particles.emitting).is_true()
+
+
+func test_windup_does_not_play_telegraph_vfx_for_lunge() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/lunge_enemy.tscn")
+	var e: LungeEnemy = auto_free(scene.instantiate())
+	add_child(e)
+	await get_tree().process_frame
+	e._change_state(Enemy.State.WINDUP)
+	var particles: GPUParticles2D = e._windup_vfx.get_node("Particles")
+	assert_bool(particles.emitting).is_false()
