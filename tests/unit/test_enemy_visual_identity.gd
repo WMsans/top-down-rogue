@@ -125,3 +125,44 @@ func test_sniper_enemy_scene_uses_mage_sprites() -> void:
 	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
 	assert_str(sprite.texture.resource_path).contains("caves_mage1")
 	assert_str(animator.texture_breathe.resource_path).contains("caves_mage2")
+
+
+func test_ranged_enemy_defaults_to_archer_sprite() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/ranged_enemy.tscn")
+	var e: RangedEnemy = auto_free(scene.instantiate())
+	add_child(e)
+	await get_tree().process_frame
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	assert_str(sprite.texture.resource_path).contains("caves_archer1")
+
+
+func test_ranged_enemy_with_aimed_burst_uses_archer_sprite() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/ranged_enemy.tscn")
+	var e: RangedEnemy = auto_free(scene.instantiate())
+	e.weapon_resource = AimedBurstWeapon.new()
+	add_child(e)
+	await get_tree().process_frame
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	assert_str(sprite.texture.resource_path).contains("caves_archer1")
+
+
+func test_ranged_enemy_with_splitshot_uses_lobber_sprite() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/ranged_enemy.tscn")
+	var e: RangedEnemy = auto_free(scene.instantiate())
+	e.weapon_resource = SplitShotWeapon.new()
+	add_child(e)
+	await get_tree().process_frame
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
+	assert_str(sprite.texture.resource_path).contains("caves_lobber1")
+	assert_str(animator.texture_breathe.resource_path).contains("caves_lobber2")
+
+
+func test_ranged_enemy_with_fan_uses_lobber_sprite() -> void:
+	var scene: PackedScene = load("res://scenes/enemies/ranged_enemy.tscn")
+	var e: RangedEnemy = auto_free(scene.instantiate())
+	e.weapon_resource = FanWeapon.new()
+	add_child(e)
+	await get_tree().process_frame
+	var sprite: Sprite2D = e.get_node("Sprite2D")
+	assert_str(sprite.texture.resource_path).contains("caves_lobber1")
