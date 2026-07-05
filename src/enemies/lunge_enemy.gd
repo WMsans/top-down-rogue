@@ -98,3 +98,7 @@ func _check_body_contact() -> void:
 	if _player_ref.has_method("on_hit_impact"):
 		var dmg: int = int(dash_damage * damage_scale)
 		_player_ref.on_hit_impact(global_position, _lock_dir, dmg)
+
+
+func _uses_footstep_vfx() -> bool:
+	return false

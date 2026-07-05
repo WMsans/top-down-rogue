@@ -38,6 +38,7 @@ const BURN_FLASH_MAX := 0.7
 const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
+const FOOTSTEP_MIN_SPEED_SQ: float = 100.0
 
 const TARGETED_SPEED_MULT: float = 1.3
 const TARGETED_COOLDOWN_MULT: float = 0.6
@@ -73,6 +74,8 @@ var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 var _animator: EnemyAnimator = null
 var _hurt_vfx: HurtSparkVfx = null
+var _footstep_vfx: FootstepDustVfx = null
+var _footstep_timer: float = 0.0
 var _director = null
 
 var _attack_started: bool = false
@@ -122,6 +125,11 @@ func _ready() -> void:
 	hurt_vfx.name = "HurtSparkVfx"
 	add_child(hurt_vfx)
 	_hurt_vfx = hurt_vfx
+
+	var footstep_vfx := FootstepDustVfx.new()
+	footstep_vfx.name = "FootstepDustVfx"
+	add_child(footstep_vfx)
+	_footstep_vfx = footstep_vfx
 
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
@@ -229,6 +237,14 @@ func _physics_process(delta: float) -> void:
 		if speed > 0.001:
 			ratio = clampf(velocity.length() / speed, 0.0, 1.0)
 		_animator.tick(delta, moving, ratio)
+	if _uses_footstep_vfx() and _state == State.CHASE and velocity.length_squared() > FOOTSTEP_MIN_SPEED_SQ:
+		_footstep_timer -= delta
+		if _footstep_timer <= 0.0:
+			_footstep_timer = FootstepDustVfx.FOOTSTEP_INTERVAL
+			if _footstep_vfx:
+				_footstep_vfx.puff()
+	else:
+		_footstep_timer = 0.0
 
 
 func _apply_enrage_if_needed() -> void:
@@ -347,6 +363,10 @@ func _attack_in_progress() -> bool:
 
 
 func _moves_during_attack() -> bool:
+	return false
+
+
+func _uses_footstep_vfx() -> bool:
 	return false
 
 
