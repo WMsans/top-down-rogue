@@ -18,7 +18,7 @@ func test_start_faces_direction_and_offsets_forward() -> void:
 func test_start_sets_emitting_true() -> void:
 	var v := _make_vfx()
 	v.start(Vector2.RIGHT)
-	var particles: CPUParticles2D = v.get_node("Particles")
+	var particles: GPUParticles2D = v.get_node("Particles")
 	assert_bool(particles.emitting).is_true()
 
 
@@ -26,7 +26,7 @@ func test_stop_sets_emitting_false() -> void:
 	var v := _make_vfx()
 	v.start(Vector2.RIGHT)
 	v.stop()
-	var particles: CPUParticles2D = v.get_node("Particles")
+	var particles: GPUParticles2D = v.get_node("Particles")
 	assert_bool(particles.emitting).is_false()
 
 
