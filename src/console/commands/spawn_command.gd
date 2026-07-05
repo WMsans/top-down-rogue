@@ -4,6 +4,7 @@ const WEAPON_DROP_SCENE := preload("res://scenes/weapon_drop.tscn")
 const MODIFIER_DROP_SCENE := preload("res://scenes/modifier_drop.tscn")
 const GOLD_DROP_SCENE := preload("res://scenes/gold_drop.tscn")
 const DUMMY_ENEMY_SCENE := preload("res://scenes/enemies/dummy_enemy.tscn")
+const LUNGE_ENEMY_SCENE := preload("res://scenes/enemies/lunge_enemy.tscn")
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const PARDUMMY_SCENE := preload("res://scenes/enemies/parry_dummy.tscn")
 const VENT_SCENE := preload("res://scenes/props/vent.tscn")
@@ -28,6 +29,7 @@ static func register(registry: CommandRegistry) -> void:
 		registry.register("spawn mod " + type, "Spawn a " + type + " modifier drop", _spawn_mod.bind(type))
 
 	registry.register("spawn enemy dummy", "Spawn a dummy enemy", _spawn_enemy)
+	registry.register("spawn enemy lunge", "Spawn a lunge enemy", _spawn_enemy_lunge)
 	registry.register("spawn gold", "Spawn a gold drop (default 10)", _spawn_gold)
 	registry.register("spawn chest", "Spawn a chest", _spawn_chest)
 	registry.register("spawn gas_emitter", "Spawn a gas vent that periodically emits gas", _spawn_gas_emitter)
@@ -124,6 +126,16 @@ static func _spawn_enemy(_args: Array[String], ctx: Dictionary) -> String:
 	parent.add_child(enemy)
 	enemy.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned dummy enemy"
+
+
+static func _spawn_enemy_lunge(_args: Array[String], ctx: Dictionary) -> String:
+	var parent := _get_spawn_parent(ctx)
+	if parent == null:
+		return "error: no spawn parent available"
+	var enemy: LungeEnemy = LUNGE_ENEMY_SCENE.instantiate()
+	parent.add_child(enemy)
+	enemy.global_position = ctx.get("world_pos", Vector2.ZERO)
+	return "Spawned lunge enemy"
 
 
 static func _spawn_gold(args: Array[String], ctx: Dictionary) -> String:
