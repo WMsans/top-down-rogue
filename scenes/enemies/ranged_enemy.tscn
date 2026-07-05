@@ -2,7 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://enemybase01" path="res://scenes/enemies/enemy.tscn" id="1"]
 [ext_resource type="Script" uid="uid://clhtbu0k0sbp0" path="res://src/enemies/ranged_enemy.gd" id="2"]
-[ext_resource type="Texture2D" uid="uid://jf368i2hd33h" path="res://textures/Enemies/ranged_test.png" id="3_d5ppq"]
+[ext_resource type="Texture2D" path="res://textures/Enemies/caves/archer/caves_archer1.png" id="3_archer1"]
+[ext_resource type="Script" path="res://src/enemies/feedback/enemy_animator.gd" id="4"]
 
 [node name="RangedEnemy" unique_id=1792751980 instance=ExtResource("1")]
 script = ExtResource("2")
@@ -12,4 +13,7 @@ strafe_speed = 40.0
 back_away_acceleration = 200.0
 
 [node name="Sprite2D" parent="." index="0"]
-texture = ExtResource("3_d5ppq")
+texture = ExtResource("3_archer1")
+
+[node name="EnemyAnimator" type="Node" parent="."]
+script = ExtResource("4")
