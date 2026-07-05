@@ -60,6 +60,7 @@ var _burn_flash: float = 0.0
 var _flash_tween: Tween = null
 var _squash_tween: Tween = null
 var _death_tween: Tween = null
+var _death_vfx: DeathDissolveVfx = null
 
 var _state: int = State.WANDER
 var _state_timer: float = 0.0
@@ -146,6 +147,11 @@ func _ready() -> void:
 	attack_vfx.name = "AttackSlashVfx"
 	add_child(attack_vfx)
 	_attack_vfx = attack_vfx
+
+	var death_vfx := DeathDissolveVfx.new()
+	death_vfx.name = "DeathDissolveVfx"
+	add_child(death_vfx)
+	_death_vfx = death_vfx
 
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
@@ -455,9 +461,16 @@ func _process_death(delta: float) -> void:
 	var sprite := get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.scale = Vector2.ONE * maxf(0.0, 1.0 - t)
+		sprite.rotation = lerp_angle(sprite.rotation, _death_rotation_target(), t)
 	if _state_timer <= 0.0:
 		_spawn_drops()
 		queue_free()
+
+
+func _death_rotation_target() -> float:
+	if _knockback_velocity.length_squared() > 0.0:
+		return _knockback_velocity.angle()
+	return get_facing_direction().angle()
 
 
 func _spawn_drops() -> void:
@@ -652,6 +665,8 @@ func _change_state(new_state: int) -> void:
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
+			if _death_vfx:
+				_death_vfx.burst(_base_modulate)
 
 
 func _show_exclaim() -> void:

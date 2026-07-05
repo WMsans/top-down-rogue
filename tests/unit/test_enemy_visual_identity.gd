@@ -306,3 +306,29 @@ func test_non_elite_has_no_outline_material() -> void:
 	add_child(e)
 	await get_tree().process_frame
 	assert_object(sprite.material).is_null()
+
+
+func test_death_rotation_target_uses_knockback_direction() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	e._knockback_velocity = Vector2(1, 0)
+	assert_float(e._death_rotation_target()).is_equal_approx(0.0, 0.01)
+
+
+func test_death_rotation_target_falls_back_to_facing_direction() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	e._knockback_velocity = Vector2.ZERO
+	var player: Node2D = auto_free(Node2D.new())
+	add_child(player)
+	player.global_position = Vector2(0, 1)
+	e._player_ref = player
+	e.global_position = Vector2.ZERO
+	assert_float(e._death_rotation_target()).is_equal_approx(Vector2.DOWN.angle(), 0.01)
+
+
+func test_entering_death_bursts_dissolve_vfx() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	add_child(e)
+	await get_tree().process_frame
+	e._change_state(Enemy.State.DEATH)
+	var particles: GPUParticles2D = e._death_vfx.get_node("Particles")
+	assert_bool(particles.emitting).is_true()
