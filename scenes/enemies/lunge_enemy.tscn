@@ -8,6 +8,7 @@
 
 [node name="LungeEnemy" instance=ExtResource("1")]
 script = ExtResource("2")
+carries_weapon = false
 weapon_resource = null
 
 [node name="Sprite2D" parent="." index="0"]
