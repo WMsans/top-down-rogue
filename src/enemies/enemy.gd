@@ -39,7 +39,8 @@ const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
 const ELITE_OUTLINE_SHADER: Shader = preload("res://shaders/visual/outline.gdshader")
-const ELITE_OUTLINE_WIDTH: float = 1.5
+const ELITE_OUTLINE_WIDTH: float = 1.0
+const ELITE_GLOW_INTENSITY: float = 2.0
 const ELITE_TINT_BLEND: float = 0.35
 const FOOTSTEP_MIN_SPEED_SQ: float = 100.0
 
@@ -198,6 +199,7 @@ func _apply_elite_visuals() -> void:
 	mat.shader = ELITE_OUTLINE_SHADER
 	mat.set_shader_parameter("outline_width", ELITE_OUTLINE_WIDTH)
 	mat.set_shader_parameter("outline_color", _elite_tint_color)
+	mat.set_shader_parameter("glow_intensity", ELITE_GLOW_INTENSITY)
 	sprite.material = mat
 
 
