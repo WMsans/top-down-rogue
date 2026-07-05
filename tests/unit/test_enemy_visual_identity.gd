@@ -166,3 +166,21 @@ func test_ranged_enemy_with_fan_uses_lobber_sprite() -> void:
 	await get_tree().process_frame
 	var sprite: Sprite2D = e.get_node("Sprite2D")
 	assert_str(sprite.texture.resource_path).contains("caves_lobber1")
+
+
+func test_enemy_has_hurt_vfx_child() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	add_child(e)
+	await get_tree().process_frame
+	assert_object(e._hurt_vfx).is_not_null()
+	assert_bool(e._hurt_vfx is HurtSparkVfx).is_true()
+
+
+func test_on_hit_bursts_hurt_vfx() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	e.health = 100
+	add_child(e)
+	await get_tree().process_frame
+	e.hit(5)
+	var particles: GPUParticles2D = e._hurt_vfx.get_node("Particles")
+	assert_bool(particles.emitting).is_true()

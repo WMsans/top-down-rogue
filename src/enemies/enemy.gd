@@ -72,6 +72,7 @@ var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 var _animator: EnemyAnimator = null
+var _hurt_vfx: HurtSparkVfx = null
 var _director = null
 
 var _attack_started: bool = false
@@ -116,6 +117,11 @@ func _ready() -> void:
 	_exclaim_label.add_theme_color_override("font_color", Color.RED)
 	_exclaim_label.scale = Vector2.ZERO
 	add_child(_exclaim_label)
+
+	var hurt_vfx := HurtSparkVfx.new()
+	hurt_vfx.name = "HurtSparkVfx"
+	add_child(hurt_vfx)
+	_hurt_vfx = hurt_vfx
 
 	_setup_weapon_visual.call_deferred()
 	_roll_weapon_modifier()
@@ -756,6 +762,8 @@ func _play_squash() -> void:
 func _on_hit() -> void:
 	_play_hit_flash()
 	_play_squash()
+	if _hurt_vfx:
+		_hurt_vfx.burst()
 
 
 func _setup_weapon_visual() -> void:
