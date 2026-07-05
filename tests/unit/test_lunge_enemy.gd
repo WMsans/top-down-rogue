@@ -174,7 +174,7 @@ func test_lunge_enemy_has_fire_vfx_child() -> void:
 func test_begin_dash_starts_fire_vfx_along_lock_dir() -> void:
 	var e := _lunge_at(Vector2.ZERO, Vector2(100, 0))
 	e._begin_dash()
-	var particles: CPUParticles2D = e._fire_vfx.get_node("Particles")
+	var particles: GPUParticles2D = e._fire_vfx.get_node("Particles")
 	assert_bool(particles.emitting).is_true()
 	assert_float(e._fire_vfx.rotation).is_equal_approx(e._lock_dir.angle(), 0.01)
 
@@ -187,7 +187,7 @@ func test_dash_end_stops_fire_vfx() -> void:
 		if e._state != Enemy.State.ATTACK:
 			break
 		e._process_attack(0.05)
-	var particles: CPUParticles2D = e._fire_vfx.get_node("Particles")
+	var particles: GPUParticles2D = e._fire_vfx.get_node("Particles")
 	assert_bool(particles.emitting).is_false()
 
 func test_body_check_uses_dash_damage_scaled_by_damage_scale() -> void:
