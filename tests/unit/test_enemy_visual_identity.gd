@@ -14,3 +14,56 @@ func test_fade_gradient_interpolates_hot_to_fade() -> void:
 	var tex := EnemyVfxShared.fade_gradient(hot, fade)
 	assert_that(tex.gradient.get_color(0)).is_equal(hot)
 	assert_that(tex.gradient.get_color(1)).is_equal(fade)
+
+
+func test_flicker_interval_idle_is_slow() -> void:
+	var a: EnemyAnimator = auto_free(EnemyAnimator.new())
+	assert_float(a._flicker_interval(false, 0.0)).is_equal(EnemyAnimator.IDLE_INTERVAL)
+
+
+func test_flicker_interval_moving_fast_is_quick() -> void:
+	var a: EnemyAnimator = auto_free(EnemyAnimator.new())
+	assert_float(a._flicker_interval(true, 1.0)).is_equal(EnemyAnimator.MIN_MOVING_INTERVAL)
+
+
+func test_flicker_interval_moving_scales_with_speed() -> void:
+	var a: EnemyAnimator = auto_free(EnemyAnimator.new())
+	var slow := a._flicker_interval(true, 0.2)
+	var fast := a._flicker_interval(true, 0.8)
+	assert_float(fast).is_less(slow)
+
+
+func test_set_hold_breathe_forces_frame_and_blocks_tick() -> void:
+	var a: EnemyAnimator = auto_free(EnemyAnimator.new())
+	a.texture_normal = PlaceholderTexture2D.new()
+	a.texture_breathe = PlaceholderTexture2D.new()
+	a.set_hold(EnemyAnimator.Hold.BREATHE)
+	assert_bool(a._showing_breathe).is_true()
+	a.tick(1.0, true, 1.0)
+	assert_bool(a._showing_breathe).is_true()
+
+
+func test_set_hold_normal_forces_frame() -> void:
+	var a: EnemyAnimator = auto_free(EnemyAnimator.new())
+	a.texture_normal = PlaceholderTexture2D.new()
+	a.texture_breathe = PlaceholderTexture2D.new()
+	a.set_hold(EnemyAnimator.Hold.BREATHE)
+	a.set_hold(EnemyAnimator.Hold.NORMAL)
+	assert_bool(a._showing_breathe).is_false()
+
+
+func test_tick_toggles_frame_after_interval() -> void:
+	var a: EnemyAnimator = auto_free(EnemyAnimator.new())
+	a.texture_normal = PlaceholderTexture2D.new()
+	a.texture_breathe = PlaceholderTexture2D.new()
+	a.tick(EnemyAnimator.IDLE_INTERVAL + 0.01, false, 0.0)
+	assert_bool(a._showing_breathe).is_true()
+
+
+func test_set_textures_assigns_both_fields() -> void:
+	var a: EnemyAnimator = auto_free(EnemyAnimator.new())
+	var n := PlaceholderTexture2D.new()
+	var b := PlaceholderTexture2D.new()
+	a.set_textures(n, b)
+	assert_object(a.texture_normal).is_equal(n)
+	assert_object(a.texture_breathe).is_equal(b)
