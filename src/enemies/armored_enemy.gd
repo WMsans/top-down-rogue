@@ -15,6 +15,8 @@ func _ready() -> void:
 	_speed_base = speed
 	windup_duration *= WINDUP_MULT
 	wander_enabled = false
+	separation_radius = 22.0 * 1.3
+	crowd_spacing_scale = 1.3
 
 
 func apply_knockback(direction: Vector2, strength: float) -> void:
