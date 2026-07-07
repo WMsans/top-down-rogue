@@ -1,13 +1,8 @@
 extends GdUnitTestSuite
 
-const SpawnDispatcher = preload("res://src/core/spawn_dispatcher.gd")
 
-func test_pick_ranged_weapon_returns_a_pattern_weapon() -> void:
-	var d = SpawnDispatcher.new()
-	var seen_aimed := false
-	for i in range(200):
-		var w = d._pick_ranged_weapon()
-		assert_bool(w is RangedWeapon).is_true()
-		if w is AimedBurstWeapon:
-			seen_aimed = true
-	assert_bool(seen_aimed).is_true()
+func test_pick_pooled_weapon_archer_returns_valid_weapon() -> void:
+	var d := SpawnDispatcher.new()
+	for i in range(20):
+		var w := d._pick_pooled_weapon("archer", false, 1, 0)
+		assert_object(w).is_not_null()

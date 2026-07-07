@@ -1,3 +1,4 @@
+class_name SpawnDispatcher
 extends Node
 
 const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
@@ -5,6 +6,30 @@ const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
 const SNIPER_ENEMY_SCENE := preload("res://scenes/enemies/sniper_enemy.tscn")
 const LUNGE_ENEMY_SCENE := preload("res://scenes/enemies/lunge_enemy.tscn")
+const BRUTE_ENEMY_SCENE := preload("res://scenes/enemies/brute_enemy.tscn")
+const SKIRMISHER_ENEMY_SCENE := preload("res://scenes/enemies/skirmisher_enemy.tscn")
+const ARMORED_ENEMY_SCENE := preload("res://scenes/enemies/armored_enemy.tscn")
+const CULTIST_ENEMY_SCENE := preload("res://scenes/enemies/cultist_enemy.tscn")
+const ARCHER_ENEMY_SCENE := preload("res://scenes/enemies/archer_enemy.tscn")
+const MAGE_ENEMY_SCENE := preload("res://scenes/enemies/mage_enemy.tscn")
+const LOBBER_ENEMY_SCENE := preload("res://scenes/enemies/lobber_enemy.tscn")
+
+const MELEE_ARCHETYPE_SCENES := {
+	"grunt": MELEE_ENEMY_SCENE,
+	"brute": BRUTE_ENEMY_SCENE,
+	"skirmisher": SKIRMISHER_ENEMY_SCENE,
+	"armored": ARMORED_ENEMY_SCENE,
+	"cultist": CULTIST_ENEMY_SCENE,
+}
+const MELEE_ARCHETYPE_WEIGHTS := {
+	"grunt": 40.0, "brute": 15.0, "skirmisher": 20.0, "armored": 15.0, "cultist": 10.0,
+}
+const RANGED_ARCHETYPE_SCENES := {
+	"archer": ARCHER_ENEMY_SCENE, "mage": MAGE_ENEMY_SCENE, "lobber": LOBBER_ENEMY_SCENE,
+}
+const RANGED_ARCHETYPE_WEIGHTS := {
+	"archer": 45.0, "mage": 25.0, "lobber": 30.0,
+}
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const SHOP_STALL_SCENE := preload("res://scenes/economy/shop_stall.tscn")
 const PORTAL_SCENE := preload("res://scenes/portal.tscn")
@@ -204,22 +229,25 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 		enemy.weapon_resource = WeaponRegistry.get_weapon_by_id("boss_staff")
 	else:
 		if is_elite:
-			enemy = MELEE_ENEMY_SCENE.instantiate()
+			var elite_archetype := _weighted_pick(MELEE_ARCHETYPE_WEIGHTS)
+			enemy = MELEE_ARCHETYPE_SCENES[elite_archetype].instantiate()
 			enemy.is_elite = true
 			enemy.elite_ability = randi() % 4 + 1
-			enemy.weapon_resource = _pick_melee_weapon()
+			enemy.weapon_resource = _pick_pooled_weapon(elite_archetype, true, floor_num, sector_dist)
 		else:
 			if randf() < 0.8:
 				if roll_melee_is_lunge(randf()):
 					enemy = LUNGE_ENEMY_SCENE.instantiate()
 				else:
-					enemy = MELEE_ENEMY_SCENE.instantiate()
-					enemy.weapon_resource = _pick_melee_weapon()
+					var melee_archetype := _weighted_pick(MELEE_ARCHETYPE_WEIGHTS)
+					enemy = MELEE_ARCHETYPE_SCENES[melee_archetype].instantiate()
+					enemy.weapon_resource = _pick_pooled_weapon(melee_archetype, true, floor_num, sector_dist)
 			elif randf() < 0.15:
 				enemy = SNIPER_ENEMY_SCENE.instantiate()
 			else:
-				enemy = RANGED_ENEMY_SCENE.instantiate()
-				enemy.weapon_resource = _pick_ranged_weapon()
+				var ranged_archetype := _weighted_pick(RANGED_ARCHETYPE_WEIGHTS)
+				enemy = RANGED_ARCHETYPE_SCENES[ranged_archetype].instantiate()
+				enemy.weapon_resource = _pick_pooled_weapon(ranged_archetype, false, floor_num, sector_dist)
 
 	var tier_index: int = SectorGrid.enemy_tier_for_distance(sector_dist)
 	if "enemy_tier" in enemy:
@@ -252,19 +280,31 @@ static func roll_melee_is_lunge(r: float) -> bool:
 	return r < LUNGE_MELEE_CHANCE
 
 
-func _pick_melee_weapon() -> Weapon:
-	if randf() < 0.5:
-		return WeaponRegistry.get_weapon_by_id("rusty_sword")
-	return WeaponRegistry.get_weapon_by_id("bone_dagger")
+static func _weighted_pick(weights: Dictionary) -> String:
+	var total := 0.0
+	for w in weights.values():
+		total += w
+	var roll := randf() * total
+	var cumulative := 0.0
+	for key in weights.keys():
+		cumulative += weights[key]
+		if roll <= cumulative:
+			return key
+	return weights.keys()[0]
 
 
-func _pick_ranged_weapon() -> Weapon:
-	var roll := randf()
-	if roll < 0.6:
-		return AimedBurstWeapon.new()
-	elif roll < 0.8:
-		return SplitShotWeapon.new()
-	return FanWeapon.new()
+func _pick_pooled_weapon(archetype: String, is_melee: bool, floor_num: int, sector_dist: int) -> Weapon:
+	var pool: Array[Dictionary] = EnemyWeaponPools.build_melee_pool(archetype) if is_melee else EnemyWeaponPools.build_ranged_pool(archetype)
+	var sector_tier := SectorGrid.enemy_tier_for_distance(sector_dist)
+	var kill_streak := 0
+	if _world_manager != null and is_instance_valid(_world_manager):
+		var dir = _world_manager.get("encounter_director")
+		if dir != null and "kill_streak" in dir:
+			kill_streak = dir.kill_streak
+	var id := EnemyWeaponPools.pick_weapon_id(pool, floor_num, kill_streak, sector_tier)
+	if id == "":
+		return WeaponRegistry.get_weapon_by_id("rusty_sword") if is_melee else WeaponRegistry.get_weapon_by_id("throwing_knife")
+	return WeaponRegistry.get_weapon_by_id(id)
 
 
 func _spawn_chest(world_pos: Vector2, is_secret_loot: bool) -> void:
