@@ -74,3 +74,46 @@ func test_ranged_pool_ids_resolve_via_weapon_registry() -> void:
 		for entry in EnemyWeaponPools.build_ranged_pool(archetype):
 			var w := WeaponRegistry.get_weapon_by_id(entry["id"])
 			assert_object(w).is_not_null()
+
+
+func test_base_weights_floor_1_is_common_heavy() -> void:
+	var w := EnemyWeaponPools.base_weights_for_floor(1)
+	assert_float(w["Common"]).is_equal_approx(0.85, 0.001)
+	assert_float(w["Uncommon"]).is_equal_approx(0.15, 0.001)
+	assert_float(w["Rare"]).is_equal_approx(0.0, 0.001)
+
+
+func test_base_weights_floor_5_unlocks_rare() -> void:
+	var w := EnemyWeaponPools.base_weights_for_floor(5)
+	assert_float(w["Common"]).is_equal_approx(0.50, 0.001)
+	assert_float(w["Uncommon"]).is_equal_approx(0.35, 0.001)
+	assert_float(w["Rare"]).is_equal_approx(0.15, 0.001)
+
+
+func test_rarity_weights_sum_to_one() -> void:
+	var w := EnemyWeaponPools.rarity_weights(5, 4, DropTable.EnemyTier.HARD)
+	var total: float = w["Common"] + w["Uncommon"] + w["Rare"]
+	assert_float(total).is_equal_approx(1.0, 0.001)
+
+
+func test_kill_streak_shifts_weight_toward_rare() -> void:
+	var base := EnemyWeaponPools.rarity_weights(1, 0, DropTable.EnemyTier.EASY)
+	var boosted := EnemyWeaponPools.rarity_weights(1, 4, DropTable.EnemyTier.EASY)
+	assert_float(boosted["Rare"]).is_greater(base["Rare"])
+
+
+func test_hard_sector_tier_shifts_weight_toward_rare() -> void:
+	var easy := EnemyWeaponPools.rarity_weights(1, 0, DropTable.EnemyTier.EASY)
+	var hard := EnemyWeaponPools.rarity_weights(1, 0, DropTable.EnemyTier.HARD)
+	assert_float(hard["Rare"]).is_greater(easy["Rare"])
+
+
+func test_pick_weapon_id_returns_empty_for_empty_pool() -> void:
+	var id := EnemyWeaponPools.pick_weapon_id([], 1, 0, DropTable.EnemyTier.EASY)
+	assert_str(id).is_equal("")
+
+
+func test_pick_weapon_id_returns_id_from_pool() -> void:
+	var pool: Array[Dictionary] = [{"id": "only_option", "rarity": "Common"}]
+	var id := EnemyWeaponPools.pick_weapon_id(pool, 1, 0, DropTable.EnemyTier.EASY)
+	assert_str(id).is_equal("only_option")
