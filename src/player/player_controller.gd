@@ -361,6 +361,12 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 	_play_squash()
 	_play_zoom_punch(damage)
 
+	var wm := get_tree().get_first_node_in_group("world_manager")
+	if wm != null and wm.has_method("get"):
+		var dir = wm.get("encounter_director")
+		if dir != null and dir.has_method("register_player_hit"):
+			dir.register_player_hit()
+
 	var inventory := get_node_or_null("PlayerInventory")
 	if inventory:
 		inventory.take_damage(damage, hit_dir)
