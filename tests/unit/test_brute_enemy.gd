@@ -44,3 +44,13 @@ func test_scene_instantiates_as_brute_enemy() -> void:
 	var e = auto_free(scene.instantiate())
 	add_child(e)
 	assert_bool(e is BruteEnemy).is_true()
+
+
+func test_brute_has_wider_separation_radius() -> void:
+	var e := _brute()
+	assert_float(e.separation_radius).is_greater(22.0)
+
+
+func test_brute_has_wider_crowd_spacing() -> void:
+	var e := _brute()
+	assert_float(e.crowd_spacing_scale).is_greater(1.0)

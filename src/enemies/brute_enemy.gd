@@ -22,3 +22,5 @@ func _ready() -> void:
 	wander_move_time_max = 0.8
 	wander_pause_time_min = 3.0
 	wander_pause_time_max = 6.0
+	separation_radius = 22.0 * 1.3
+	crowd_spacing_scale = 1.3
