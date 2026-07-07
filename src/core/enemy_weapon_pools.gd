@@ -31,3 +31,23 @@ static func build_melee_pool(archetype: String) -> Array[Dictionary]:
 		if melee_weapon_fits(row, archetype):
 			pool.append({"id": id, "rarity": row.get("rarity", "Common")})
 	return pool
+
+
+const RANGED_POOL_IDS := {
+	"archer": ["throwing_knife", "frost_repeater", "heavy_crossbow", "spread_shot", "scatter_blunderbuss", "tesla_gun", "arc_railgun", "chakram_launcher"],
+	"mage": ["seeker_launcher", "fire_orb"],
+	"lobber": ["flame_lobber", "venom_spitter", "hailstorm_bow"],
+}
+
+
+static func build_ranged_pool(archetype: String) -> Array[Dictionary]:
+	var pool: Array[Dictionary] = []
+	var ids: Array = RANGED_POOL_IDS.get(archetype, [])
+	if ids.is_empty():
+		return pool
+	var rarity_by_id: Dictionary = {}
+	for row in CsvTable.parse(WeaponRegistry.WEAPON_CSV_PATH):
+		rarity_by_id[row.get("id", "")] = row.get("rarity", "Common")
+	for id in ids:
+		pool.append({"id": id, "rarity": rarity_by_id.get(id, "Common")})
+	return pool
