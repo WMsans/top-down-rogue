@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://bruteenemy01"]
+
+[ext_resource type="PackedScene" uid="uid://enemybase01" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Script" path="res://src/enemies/brute_enemy.gd" id="2"]
+[ext_resource type="Texture2D" path="res://textures/Enemies/caves/brute/caves_brute1.png" id="3_brute1"]
+[ext_resource type="Texture2D" path="res://textures/Enemies/caves/brute/caves_brute2.png" id="4_brute2"]
+[ext_resource type="Script" path="res://src/enemies/feedback/enemy_animator.gd" id="5"]
+
+[node name="BruteEnemy" instance=ExtResource("1")]
+script = ExtResource("2")
+weapon_resource = null
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("3_brute1")
+
+[node name="EnemyAnimator" type="Node" parent="."]
+script = ExtResource("5")
+texture_normal = ExtResource("3_brute1")
+texture_breathe = ExtResource("4_brute2")
