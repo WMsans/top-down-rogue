@@ -1,3 +1,4 @@
+class_name CaveSpawner
 extends Node
 
 const CHUNK_SIZE := 256
@@ -67,26 +68,40 @@ func _count_live_enemies() -> int:
 
 func _pick_enemy_scene() -> PackedScene:
 	if randf() < 0.8:
-		return MELEE_ENEMY_SCENE
-	return RANGED_ENEMY_SCENE
+		var archetype := SpawnDispatcher._weighted_pick(SpawnDispatcher.MELEE_ARCHETYPE_WEIGHTS)
+		return SpawnDispatcher.MELEE_ARCHETYPE_SCENES[archetype]
+	var archetype := SpawnDispatcher._weighted_pick(SpawnDispatcher.RANGED_ARCHETYPE_WEIGHTS)
+	return SpawnDispatcher.RANGED_ARCHETYPE_SCENES[archetype]
 
 
-func _pick_melee_weapon() -> Weapon:
-	if randf() < 0.5:
-		return WeaponRegistry.get_weapon_by_id("rusty_sword")
-	return WeaponRegistry.get_weapon_by_id("bone_dagger")
+func _archetype_for_scene(scene: PackedScene) -> String:
+	for archetype in SpawnDispatcher.MELEE_ARCHETYPE_SCENES:
+		if SpawnDispatcher.MELEE_ARCHETYPE_SCENES[archetype] == scene:
+			return archetype
+	for archetype in SpawnDispatcher.RANGED_ARCHETYPE_SCENES:
+		if SpawnDispatcher.RANGED_ARCHETYPE_SCENES[archetype] == scene:
+			return archetype
+	return "grunt"
 
 
-func _pick_ranged_weapon() -> Weapon:
-	if randf() < 0.7:
-		return WeaponRegistry.get_weapon_by_id("throwing_knife")
-	return WeaponRegistry.get_weapon_by_id("fire_orb")
-
-
-func _pick_elite_melee_weapon() -> Weapon:
-	if randf() < 0.5:
-		return WeaponRegistry.get_weapon_by_id("broad_axe")
-	return WeaponRegistry.get_weapon_by_id("flame_blade")
+func _pick_pooled_weapon(archetype: String, is_melee: bool) -> Weapon:
+	var pool: Array[Dictionary] = EnemyWeaponPools.build_melee_pool(archetype) if is_melee else EnemyWeaponPools.build_ranged_pool(archetype)
+	var floor_num: int = LevelManager.floor_number
+	var sector_tier := DropTable.EnemyTier.NORMAL
+	var grid: SectorGrid = LevelManager.get_grid()
+	if grid != null and _world_manager != null and is_instance_valid(_world_manager):
+		var sector := grid.world_to_sector(_world_manager.tracking_position)
+		var dist := grid.chebyshev_distance(sector, Vector2i.ZERO)
+		sector_tier = SectorGrid.enemy_tier_for_distance(dist)
+	var kill_streak := 0
+	if _world_manager != null and is_instance_valid(_world_manager):
+		var dir = _world_manager.get("encounter_director")
+		if dir != null and "kill_streak" in dir:
+			kill_streak = dir.kill_streak
+	var id := EnemyWeaponPools.pick_weapon_id(pool, floor_num, kill_streak, sector_tier)
+	if id == "":
+		return WeaponRegistry.get_weapon_by_id("rusty_sword") if is_melee else WeaponRegistry.get_weapon_by_id("throwing_knife")
+	return WeaponRegistry.get_weapon_by_id(id)
 
 
 func _on_spawn_tick() -> void:
@@ -180,19 +195,15 @@ func _spawn_enemy(world_pos: Vector2) -> void:
 		return
 	var scene := _pick_enemy_scene()
 	var enemy := scene.instantiate()
+	var archetype := _archetype_for_scene(scene)
+	var is_melee: bool = SpawnDispatcher.MELEE_ARCHETYPE_SCENES.has(archetype)
 
 	var is_elite_roll := randf() < elite_chance
 	if is_elite_roll:
 		enemy.is_elite = true
 		enemy.elite_ability = randi() % 4 + 1
 
-	if scene == MELEE_ENEMY_SCENE:
-		if is_elite_roll:
-			enemy.weapon_resource = _pick_elite_melee_weapon()
-		else:
-			enemy.weapon_resource = _pick_melee_weapon()
-	else:
-		enemy.weapon_resource = _pick_ranged_weapon()
+	enemy.weapon_resource = _pick_pooled_weapon(archetype, is_melee)
 
 	enemy.global_position = world_pos
 	enemy.add_to_group("cave_spawned")
