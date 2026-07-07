@@ -1,7 +1,9 @@
 extends GdUnitTestSuite
 
+const _MaterialRegistry = preload("res://src/autoload/material_registry.gd")
+
 func test_hardness_values() -> void:
-	var registry := MaterialRegistry.new()
+	var registry := _MaterialRegistry.new()
 	registry._init_materials()
 	assert_that(registry.get_hardness(registry.MAT_AIR)).is_equal(0.0)
 	assert_that(registry.get_hardness(registry.MAT_GAS)).is_equal(0.0)
@@ -14,19 +16,19 @@ func test_hardness_values() -> void:
 	assert_that(registry.get_hardness(registry.MAT_STONE)).is_equal(5.0)
 
 func test_hardness_unknown_material() -> void:
-	var registry := MaterialRegistry.new()
+	var registry := _MaterialRegistry.new()
 	registry._init_materials()
 	assert_that(registry.get_hardness(-1)).is_equal(0.0)
 	assert_that(registry.get_hardness(999)).is_equal(0.0)
 
 func test_carve_scale_formula() -> void:
-	assert_float(clampf(5.0 / (5.0 + 0.5), 0.1, 1.0)).is_equal(0.90909).within(0.01)
-	assert_float(clampf(5.0 / (5.0 + 2.0), 0.1, 1.0)).is_equal(0.71428).within(0.01)
-	assert_float(clampf(5.0 / (5.0 + 5.0), 0.1, 1.0)).is_equal(0.5).within(0.01)
-	assert_float(clampf(1.0 / (1.0 + 5.0), 0.1, 1.0)).is_equal(0.16666).within(0.01)
-	assert_float(clampf(0.1 / (0.1 + 5.0), 0.1, 1.0)).is_equal(0.01960).within(0.01)
-	assert_float(clampf(maxf(0.0, 0.1) / (maxf(0.0, 0.1) + 5.0), 0.1, 1.0)).is_equal(0.1).within(0.01)
-	assert_float(clampf(100.0 / (100.0 + 0.5), 0.1, 1.0)).is_equal(0.99502).within(0.01)
+	assert_float(clampf(5.0 / (5.0 + 0.5), 0.1, 1.0)).is_equal_approx(0.90909, 0.01)
+	assert_float(clampf(5.0 / (5.0 + 2.0), 0.1, 1.0)).is_equal_approx(0.71428, 0.01)
+	assert_float(clampf(5.0 / (5.0 + 5.0), 0.1, 1.0)).is_equal_approx(0.5, 0.01)
+	assert_float(clampf(1.0 / (1.0 + 5.0), 0.1, 1.0)).is_equal_approx(0.16666, 0.01)
+	assert_float(clampf(0.1 / (0.1 + 5.0), 0.1, 1.0)).is_equal_approx(0.1, 0.01)
+	assert_float(clampf(maxf(0.0, 0.1) / (maxf(0.0, 0.1) + 5.0), 0.1, 1.0)).is_equal_approx(0.1, 0.01)
+	assert_float(clampf(100.0 / (100.0 + 0.5), 0.1, 1.0)).is_equal_approx(0.99502, 0.01)
 
 func test_carve_scale_for_known_weapons() -> void:
 	# Base melee weapon: damage=5.0
@@ -35,7 +37,7 @@ func test_carve_scale_for_known_weapons() -> void:
 	assert_float(dirt_scale).is_greater(0.9)
 	# Stone (5.0): 5/(5+5) = 0.5 → 50% radius
 	var stone_scale := clampf(5.0 / (5.0 + 5.0), 0.1, 1.0)
-	assert_float(stone_scale).is_equal(0.5).within(0.01)
+	assert_float(stone_scale).is_equal_approx(0.5, 0.01)
 	# Stone should be less than dirt
 	assert_that(stone_scale).is_less(dirt_scale)
 

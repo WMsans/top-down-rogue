@@ -23,27 +23,39 @@ func test_spend_gold_fails_with_insufficient_gold() -> void:
 
 
 func test_take_damage_reduces_health() -> void:
-	var inv := PlayerInventory.new()
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var inv: PlayerInventory = auto_free(PlayerInventory.new())
+	parent.add_child(inv)
 	inv.take_damage(30)
 	assert_that(inv.get_health()).is_equal(inv.max_health - 30)
 
 
 func test_take_damage_does_not_go_below_zero() -> void:
-	var inv := PlayerInventory.new()
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var inv: PlayerInventory = auto_free(PlayerInventory.new())
+	parent.add_child(inv)
 	inv.take_damage(9999)
 	assert_that(inv.get_health()).is_equal(0)
 	assert_that(inv.is_dead()).is_true()
 
 
 func test_invincibility_prevents_double_damage() -> void:
-	var inv := PlayerInventory.new()
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var inv: PlayerInventory = auto_free(PlayerInventory.new())
+	parent.add_child(inv)
 	inv.take_damage(10)
 	inv.take_damage(10)  # blocked by invincibility
 	assert_that(inv.get_health()).is_equal(inv.max_health - 10)
 
 
 func test_heal_restores_health() -> void:
-	var inv := PlayerInventory.new()
+	var parent: Node2D = auto_free(Node2D.new())
+	add_child(parent)
+	var inv: PlayerInventory = auto_free(PlayerInventory.new())
+	parent.add_child(inv)
 	var half := inv.max_health / 2
 	inv.take_damage(half)
 	inv.heal(20)

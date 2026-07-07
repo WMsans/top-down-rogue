@@ -53,8 +53,7 @@ func test_ranged_weapon_lives_in_uncommon_bucket() -> void:
 	var entries: Array = WeaponRegistry.weapon_tiers.get(DropTable.ItemTier.UNCOMMON, [])
 	var found := false
 	for entry in entries:
-		var probe: Weapon = entry.weapon_script.new()
-		if probe is RangedWeapon:
+		if entry.weapon_resource is RangedWeapon:
 			found = true
 			break
 	assert_that(found).is_true()
@@ -64,8 +63,7 @@ func test_melee_weapon_lives_in_common_bucket() -> void:
 	var entries: Array = WeaponRegistry.weapon_tiers.get(DropTable.ItemTier.COMMON, [])
 	var found := false
 	for entry in entries:
-		var probe: Weapon = entry.weapon_script.new()
-		if probe is MeleeWeapon:
+		if entry.weapon_resource is MeleeWeapon:
 			found = true
 			break
 	assert_that(found).is_true()

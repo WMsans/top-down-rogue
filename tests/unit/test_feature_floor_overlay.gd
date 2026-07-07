@@ -20,15 +20,15 @@ func test_floor_overlay_spawns_sprite_at_offset() -> void:
 
 	var feature := _Feature.new()
 	feature.texture = PlaceholderTexture2D.new()
-	feature.size = Vector2(1024, 1024)
+	feature.radius = 120.0
 	feature.offset = Vector2(0, 0)
 	feature.z_index_value = -5
 
 	feature.apply(_make_ctx(dispatcher, Vector2(200, 300)))
 
 	assert_that(parent.get_child_count()).is_equal(1)
-	var spr := parent.get_child(0) as Sprite2D
-	assert_that(spr).is_not_null()
-	assert_that(spr.global_position).is_equal(Vector2(200, 300))
-	assert_that(spr.z_index).is_equal(-5)
-	assert_that(spr.texture).is_not_null()
+	var poly := parent.get_child(0) as Polygon2D
+	assert_that(poly).is_not_null()
+	assert_that(poly.global_position).is_equal(Vector2(200, 300))
+	assert_that(poly.z_index).is_equal(-5)
+	assert_that(poly.texture).is_not_null()

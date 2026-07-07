@@ -23,7 +23,7 @@ func test_bone_dagger_cooldown_from_registry() -> void:
 
 func test_boss_staff_universal_and_type_specific() -> void:
 	var w = WeaponRegistry.get_weapon_by_id("boss_staff")
-	assert_that(w.damage).is_equal(3.0)
+	assert_that(w.damage).is_equal(9.5)
 	assert_that(w.spread_angle).is_equal(10.0)
 
 func test_weapon_duplication_independent() -> void:

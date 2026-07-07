@@ -3,6 +3,14 @@ extends GdUnitTestSuite
 const _CaveSpawner = preload("res://src/core/cave_spawner.gd")
 const _DummyEnemy = preload("res://scenes/enemies/dummy_enemy.tscn")
 
+class _FakeWorldManager extends Node2D:
+	var tracking_position: Vector2 = Vector2.ZERO
+	func read_region(rect: Rect2i) -> PackedByteArray:
+		var data := PackedByteArray()
+		data.resize(rect.size.x * rect.size.y)
+		data.fill(MaterialRegistry.MAT_AIR)
+		return data
+
 
 func test_mob_cap_enforcement() -> void:
 	var spawner := _CaveSpawner.new()
@@ -13,6 +21,7 @@ func test_mob_cap_enforcement() -> void:
 
 	for _i in range(3):
 		var enemy := _DummyEnemy.instantiate()
+		enemy.add_to_group("cave_spawned")
 		add_child(enemy)
 
 	spawner._on_spawn_tick()
@@ -44,6 +53,7 @@ func test_distance_validation_rejects_too_far() -> void:
 func test_distance_validation_accepts_in_range() -> void:
 	var spawner := _CaveSpawner.new()
 	add_child(spawner)
+	spawner._world_manager = auto_free(_FakeWorldManager.new())
 
 	spawner.spawn_min_dist = 600.0
 	spawner.spawn_max_dist = 2000.0
@@ -76,6 +86,7 @@ func test_despawn_removes_far_enemy() -> void:
 	spawner.despawn_dist = 2500.0
 
 	var enemy := _DummyEnemy.instantiate()
+	enemy.add_to_group("cave_spawned")
 	add_child(enemy)
 	enemy.global_position = Vector2(3000, 0)
 
@@ -91,6 +102,7 @@ func test_despawn_keeps_nearby_enemy() -> void:
 	spawner.despawn_dist = 2500.0
 
 	var enemy := _DummyEnemy.instantiate()
+	enemy.add_to_group("cave_spawned")
 	add_child(enemy)
 	enemy.global_position = Vector2(100, 0)
 

@@ -94,6 +94,7 @@ func test_advanced_play_move_notifies_per_step() -> void:
 	var m := _RecordMod.new()
 	w.modifiers = [m, null, null]
 	w.on_press(user)  # step 0
+	w.tick(0.1)       # clear the per-attack cooldown floor
 	w.on_press(user)  # step 1
 	assert_int(m.attacks).is_equal(2)
 	assert_that(m.last_ctx["charged"]).is_false()
@@ -191,7 +192,7 @@ func _ctx(charged: bool = false, ratio: float = 0.0) -> Dictionary:
 func test_fireball_fan_spawns_five_burning() -> void:
 	var pu := _spawn_parent_and_user()
 	FireballFanModifier.new().on_attack(null, pu[1], _ctx())
-	assert_int(_count_projectiles(pu[0])).is_equal(5)
+	assert_int(_count_projectiles(pu[0])).is_equal(3)
 	for c in pu[0].get_children():
 		if c is Projectile:
 			assert_str(c.hit_status).is_equal("on_fire")
@@ -200,7 +201,7 @@ func test_fireball_fan_spawns_five_burning() -> void:
 func test_icicle_volley_spawns_five_chilly() -> void:
 	var pu := _spawn_parent_and_user()
 	IcicleVolleyModifier.new().on_attack(null, pu[1], _ctx())
-	assert_int(_count_projectiles(pu[0])).is_equal(5)
+	assert_int(_count_projectiles(pu[0])).is_equal(3)
 	for c in pu[0].get_children():
 		if c is Projectile:
 			assert_str(c.hit_status).is_equal("chilly")

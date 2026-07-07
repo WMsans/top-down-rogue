@@ -28,8 +28,11 @@ func _tap_probe() -> TapChainProbe:
 func test_tap_chain_advances_then_wraps() -> void:
 	var w := _tap_probe()
 	w.on_press(null)   # step 0 slash
+	w.tick(0.1)  # clear the per-attack cooldown floor
 	w.on_press(null)   # step 1 slash
+	w.tick(0.1)
 	w.on_press(null)   # step 2 thrust -> wraps to 0
+	w.tick(0.1)
 	w.on_press(null)   # step 0 slash again
 	assert_array(w.played).is_equal([
 		AdvancedMeleeWeapon.MoveShape.SLASH,
@@ -41,7 +44,7 @@ func test_tap_chain_advances_then_wraps() -> void:
 func test_tap_chain_resets_after_window() -> void:
 	var w := _tap_probe()
 	w.on_press(null)            # step 0
-	w._tick_impl(0.6)           # window (0.5) elapses -> index resets to 0
+	w.tick(0.6)                 # window (0.5) elapses -> index resets to 0
 	w.on_press(null)            # step 0 again, not step 1
 	assert_array(w.played).is_equal([
 		AdvancedMeleeWeapon.MoveShape.SLASH,
@@ -57,8 +60,8 @@ func test_auto_flurry_plays_all_and_locks_input() -> void:
 	assert_int(w.played.size()).is_equal(1)
 	w.on_press(null)            # ignored: flurry active
 	assert_int(w.played.size()).is_equal(1)
-	w._tick_impl(0.1)           # move 2
-	w._tick_impl(0.1)           # move 3
+	w.tick(0.1)           # move 2
+	w.tick(0.1)           # move 3
 	assert_int(w.played.size()).is_equal(3)
-	w._tick_impl(0.1)           # queue drained -> flurry ends
+	w.tick(0.1)           # queue drained -> flurry ends
 	assert_bool(w._flurry_active).is_false()
