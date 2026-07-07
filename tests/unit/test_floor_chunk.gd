@@ -45,7 +45,7 @@ func _floor_sprite(chunk: _FloorChunk) -> Sprite2D:
 func _decor_sprites(chunk: _FloorChunk) -> Array[Sprite2D]:
 	var out: Array[Sprite2D] = []
 	for child in chunk.get_children():
-		if child.name.begins_with("Decor"):
+		if child is Sprite2D and child.name.begins_with("Decor"):
 			out.append(child as Sprite2D)
 	return out
 

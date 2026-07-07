@@ -34,12 +34,12 @@ func test_plaque_set_spawns_sprite_per_spec() -> void:
 	feature.apply(_make_ctx(dispatcher, Vector2(50, 50)))
 
 	assert_that(parent.get_child_count()).is_equal(2)
-	var first := parent.get_child(0) as Sprite2D
-	var second := parent.get_child(1) as Sprite2D
+	var first := parent.get_child(0) as StaticBody2D
+	var second := parent.get_child(1) as StaticBody2D
 	assert_that(first.global_position).is_equal(Vector2(50, -250))
 	assert_that(second.global_position).is_equal(Vector2(-250, 50))
-	assert_that(first.texture).is_not_null()
-	assert_that(second.texture).is_not_null()
+	assert_that((first.get_child(0) as Sprite2D).texture).is_not_null()
+	assert_that((second.get_child(0) as Sprite2D).texture).is_not_null()
 
 func test_plaque_set_skips_spec_with_null_texture() -> void:
 	var dispatcher = _Dispatcher.new()

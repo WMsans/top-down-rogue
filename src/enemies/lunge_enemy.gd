@@ -20,6 +20,7 @@ var _dash_windup_vfx: DashWindupVfx = null
 
 
 func _ready() -> void:
+	carries_weapon = false
 	super._ready()
 	_attack_range = lunge_range
 	windup_duration = 0.45

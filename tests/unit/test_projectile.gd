@@ -13,6 +13,7 @@ func test_projectile_expires() -> void:
 	var p: Projectile = auto_free(Projectile.new())
 	p.lifetime = 0.05
 	p._process(0.1)
+	await get_tree().process_frame
 	assert_that(is_instance_valid(p)).is_false()
 
 func test_enemy_projectile_hits_player() -> void:
@@ -20,9 +21,10 @@ func test_enemy_projectile_hits_player() -> void:
 	p.is_enemy_projectile = true
 	p.damage = 10.0
 	p.direction = Vector2.RIGHT
-	var player := Node2D.new()
+	var player: Node2D = auto_free(Node2D.new())
 	player.add_to_group("player", true)
 	p._handle_hit(player)
+	await get_tree().process_frame
 	assert_that(is_instance_valid(p)).is_false()
 
 func test_projectile_ignores_self() -> void:
@@ -40,7 +42,9 @@ func test_projectile_hits_attackable() -> void:
 	p.damage = 10.0
 	p.source_node = null
 	var target: Enemy = auto_free(Enemy.new())
+	add_child(target)
 	p._handle_hit(target)
+	await get_tree().process_frame
 	assert_that(is_instance_valid(p)).is_false()
 
 func test_projectile_registers_in_group() -> void:
