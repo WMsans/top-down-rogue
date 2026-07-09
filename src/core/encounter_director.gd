@@ -7,6 +7,12 @@ const SPEED_CAP_FRACTION := 0.95
 const TETHER_DISTANCE := 80.0
 const RAMP_BAND := 120.0
 
+const KILL_STREAK_MIN := -2
+const KILL_STREAK_MAX := 4
+const KILL_STREAK_GAIN := 2
+const KILL_STREAK_LOSS := 1
+
+var kill_streak: int = 0
 var _active: Array = []
 
 
@@ -55,3 +61,11 @@ func update(player_pos: Vector2, attackable: Array) -> void:
 
 func unregister(enemy) -> void:
 	_active.erase(enemy)
+
+
+func register_kill() -> void:
+	kill_streak = clampi(kill_streak + KILL_STREAK_GAIN, KILL_STREAK_MIN, KILL_STREAK_MAX)
+
+
+func register_player_hit() -> void:
+	kill_streak = clampi(kill_streak - KILL_STREAK_LOSS, KILL_STREAK_MIN, KILL_STREAK_MAX)

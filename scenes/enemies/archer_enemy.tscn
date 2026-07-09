@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://rcherenemy01"]
+
+[ext_resource type="PackedScene" uid="uid://enemybase01" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Script" path="res://src/enemies/archer_enemy.gd" id="2"]
+[ext_resource type="Texture2D" path="res://textures/Enemies/caves/archer/caves_archer1.png" id="3_archer1"]
+[ext_resource type="Texture2D" path="res://textures/Enemies/caves/archer/caves_archer2.png" id="4_archer2"]
+[ext_resource type="Script" path="res://src/enemies/feedback/enemy_animator.gd" id="5"]
+
+[node name="ArcherEnemy" instance=ExtResource("1")]
+script = ExtResource("2")
+weapon_resource = null
+preferred_distance = 120.0
+strafe_speed = 40.0
+back_away_acceleration = 200.0
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("3_archer1")
+
+[node name="EnemyAnimator" type="Node" parent="."]
+script = ExtResource("5")
+texture_normal = ExtResource("3_archer1")
+texture_breathe = ExtResource("4_archer2")

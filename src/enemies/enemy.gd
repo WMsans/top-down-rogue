@@ -20,12 +20,19 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var separation_radius: float = 22.0
 @export var separation_weight: float = 1.2
 @export var crowd_spacing_scale: float = 1.0
+@export var wander_enabled: bool = true
+@export var wander_move_time_min: float = 1.0
+@export var wander_move_time_max: float = 3.0
+@export var wander_pause_time_min: float = 0.5
+@export var wander_pause_time_max: float = 1.5
+@export var wander_speed_mult: float = 0.5
 @export var leash_radius: float = 280.0
 @export var damage_scale: float = 1.0
 @export var carries_weapon: bool = true
 
 const KNOCKBACK_SPEED: float = 180.0
 const KNOCKBACK_DECAY: float = 12.0
+const ELITE_KNOCKBACK_RESIST_MULT: float = 0.4
 const DEFAULT_BODY_RADIUS: float = 8.0
 # Max distance moved per collision sub-step. Matches NavField.CELL so a single
 # step never skips over a solid cell (prevents knockback tunneling through walls).
@@ -127,6 +134,8 @@ func _ready() -> void:
 	_exclaim_label.add_theme_font_size_override("font_size", 22)
 	_exclaim_label.add_theme_color_override("font_color", Color.RED)
 	_exclaim_label.scale = Vector2.ZERO
+	_exclaim_label.z_index = 10
+	_exclaim_label.z_as_relative = false
 	add_child(_exclaim_label)
 
 	var hurt_vfx := HurtSparkVfx.new()
@@ -330,20 +339,24 @@ func _process_idle(delta: float) -> void:
 				_change_state(State.CHASE)
 				return
 
+	if not wander_enabled:
+		velocity = Vector2.ZERO
+		return
+
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
 		if _wander_is_paused:
 			_wander_is_paused = false
 			_wander_direction = Vector2.RIGHT.rotated(randf() * TAU)
-			_wander_timer = randf_range(1.0, 3.0)
+			_wander_timer = randf_range(wander_move_time_min, wander_move_time_max)
 		else:
 			_wander_is_paused = true
 			velocity = Vector2.ZERO
-			_wander_timer = randf_range(0.5, 1.5)
+			_wander_timer = randf_range(wander_pause_time_min, wander_pause_time_max)
 			return
 
 	if not _wander_is_paused:
-		velocity = _wander_direction * _get_effective_speed() * 0.5
+		velocity = _wander_direction * _get_effective_speed() * wander_speed_mult
 
 
 func _process_chase(_delta: float) -> void:
@@ -671,17 +684,22 @@ func _change_state(new_state: int) -> void:
 				_death_vfx.burst(_base_modulate)
 
 
+func _telegraph_scale() -> float:
+	return clampf(windup_duration / 0.35, 0.6, 1.8)
+
+
 func _show_exclaim() -> void:
 	if _exclaim_label == null:
 		return
 	if _exclaim_tween and _exclaim_tween.is_valid():
 		_exclaim_tween.kill()
 	_exclaim_label.scale = Vector2.ZERO
+	var t: float = _telegraph_scale()
 	_exclaim_tween = create_tween()
 	_exclaim_tween.set_trans(Tween.TRANS_BACK)
 	_exclaim_tween.set_ease(Tween.EASE_OUT)
-	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2(1.2, 1.2), 0.05)
-	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ONE, 0.05)
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2(1.2, 1.2), 0.05 * t)
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ONE, 0.05 * t)
 	if _uses_windup_telegraph_vfx() and _windup_vfx:
 		_windup_vfx.play()
 
@@ -692,7 +710,7 @@ func _hide_exclaim() -> void:
 	if _exclaim_tween and _exclaim_tween.is_valid():
 		_exclaim_tween.kill()
 	_exclaim_tween = create_tween()
-	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ZERO, 0.05)
+	_exclaim_tween.tween_property(_exclaim_label, "scale", Vector2.ZERO, 0.05 * _telegraph_scale())
 
 
 func _execute_attack() -> void:
@@ -787,6 +805,7 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 func die() -> void:
 	var dir = _get_director()
 	if dir != null:
+		dir.register_kill()
 		dir.unregister(self)
 	died.emit()
 	_on_death()
@@ -814,7 +833,8 @@ func apply_knockback(direction: Vector2, strength: float) -> void:
 	if not is_finite(direction.x) or not is_finite(direction.y):
 		return
 	if direction.length_squared() > 0.0001:
-		_knockback_velocity += direction / direction.length() * strength
+		var actual_strength: float = strength * ELITE_KNOCKBACK_RESIST_MULT if is_elite else strength
+		_knockback_velocity += direction / direction.length() * actual_strength
 
 
 func _set_base_modulate(c: Color) -> void:

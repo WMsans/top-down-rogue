@@ -1,14 +1,13 @@
-[gd_scene format=3 uid="uid://lungeenemy01"]
+[gd_scene format=3 uid="uid://b52a04pm4thyy"]
 
 [ext_resource type="PackedScene" uid="uid://enemybase01" path="res://scenes/enemies/enemy.tscn" id="1"]
-[ext_resource type="Script" path="res://src/enemies/lunge_enemy.gd" id="2"]
+[ext_resource type="Script" path="res://src/enemies/armored_enemy.gd" id="2"]
 [ext_resource type="Texture2D" path="res://textures/Enemies/caves/armered/caves_armored1.png" id="3_armored1"]
 [ext_resource type="Texture2D" path="res://textures/Enemies/caves/armered/caves_armored2.png" id="4_armored2"]
 [ext_resource type="Script" path="res://src/enemies/feedback/enemy_animator.gd" id="5"]
 
-[node name="LungeEnemy" instance=ExtResource("1")]
+[node name="ArmoredEnemy" instance=ExtResource("1")]
 script = ExtResource("2")
-carries_weapon = false
 weapon_resource = null
 
 [node name="Sprite2D" parent="." index="0"]
