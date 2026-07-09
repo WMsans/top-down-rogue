@@ -221,7 +221,7 @@ func test_windup_holds_breathe_frame() -> void:
 	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
 	assert_int(animator._hold).is_equal(EnemyAnimator.Hold.BREATHE)
 	var sprite: Sprite2D = e.get_node("Sprite2D")
-	assert_str(sprite.texture.resource_path).contains("caves_brute2")
+	assert_str(sprite.texture.resource_path).contains("caves_armored2")
 
 func test_attack_holds_normal_frame() -> void:
 	var e := _lunge_from_scene()
@@ -231,7 +231,7 @@ func test_attack_holds_normal_frame() -> void:
 	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
 	assert_int(animator._hold).is_equal(EnemyAnimator.Hold.NORMAL)
 	var sprite: Sprite2D = e.get_node("Sprite2D")
-	assert_str(sprite.texture.resource_path).contains("caves_brute1")
+	assert_str(sprite.texture.resource_path).contains("caves_armored1")
 
 func test_cooldown_releases_hold() -> void:
 	var e := _lunge_from_scene()

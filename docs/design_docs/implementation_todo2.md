@@ -64,19 +64,19 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Enemy Behavior Depth
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P1 | High | Melee enemy sub-behaviors | Add 2–3 distinct melee AI patterns beyond CHASE→WINDUP: flanker (strafes before engaging), rusher (shorter settle timer), ambusher (no wander, waits then lunges). |
-|  | P1 | Medium | Ranged enemy sub-behaviors | Add: kiter (retreats more aggressively), turret (stops moving to fire faster), skirmisher (fires then repositions). |
-|  | P1 | Medium | Exclamation telegraph polish | "!" popup on WINDUP: ensure it's visible through terrain/VFX. Tune scale/fade timing to feel consistent with Soul Knight / Dead Cells. |
-|  | P2 | Medium | Enemy-environment interaction | Enemies react to hazards: avoid lava/fire, path around gas clouds, get slowed in ice. |
-|  | P2 | Medium | Enemy separation steering tuning | Min gap 16px. Tune repulsion force to prevent stacking without pushing enemies through walls. |
-|  | P2 | Low | Wander behavior variety | Wander patterns vary by enemy type: patrols (grunt), random drift (skirmisher), stationary guard (turret). |
-|  | P3 | Low | Enemy hurt reactions | Enemies stagger/knockback on hit (exists). Add: directional knockback based on hit angle, elite stagger resistance. |
+| x | P1 | High | Melee enemy sub-behaviors | Add 2–3 distinct melee AI patterns beyond CHASE→WINDUP: flanker (strafes before engaging), rusher (shorter settle timer), ambusher (no wander, waits then lunges). |
+| x | P1 | Medium | Ranged enemy sub-behaviors | Add: kiter (retreats more aggressively), turret (stops moving to fire faster), skirmisher (fires then repositions). |
+| x | P1 | Medium | Exclamation telegraph polish | "!" popup on WINDUP: ensure it's visible through terrain/VFX. Tune scale/fade timing to feel consistent with Soul Knight / Dead Cells. |
+| x | P2 | Medium | Enemy-environment interaction | Enemies react to hazards: avoid lava/fire, path around gas clouds, get slowed in ice. |
+| x | P2 | Medium | Enemy separation steering tuning | Min gap 16px. Tune repulsion force to prevent stacking without pushing enemies through walls. |
+| x | P2 | Low | Wander behavior variety | Wander patterns vary by enemy type: patrols (grunt), random drift (skirmisher), stationary guard (turret). |
+| x | P3 | Low | Enemy hurt reactions | Enemies stagger/knockback on hit (exists). Add: directional knockback based on hit angle, elite stagger resistance. |
 
 ### Enemy Content Expansion
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P1 | High | 5+ melee enemy variants | Author stats + behaviors for grunt (balanced), brute (slow/heavy), skirmisher (fast/weak), armored (tanky/anti-knockback), cultist (recover HP for ally (and yells "Caw cawww" when doing so)). |
-|  | P1 | High | 3+ ranged enemy variants | Author stats + behaviors for archer (straight projectile), mage (slow homing orb), lobber (arcing AoE shot). |
+| x | P1 | High | 5+ melee enemy variants | Author stats + behaviors for grunt (balanced), brute (slow/heavy), skirmisher (fast/weak), armored (tanky/anti-knockback), cultist (recover HP for ally (and yells "Caw cawww" when doing so)). |
+| x | P1 | High | 3+ ranged enemy variants | Author stats + behaviors for archer (straight projectile), mage (slow homing orb), lobber (arcing AoE shot). |
 |  | P2 | Medium | Per-biome enemy roster | Each biome gets 2–4 unique enemy types. Caves: bats + crawlers. Magma: fire imps + lava slugs. Frozen: ice wraiths + frost giants. Mines: constructs + miners. Vault: guardians + sentinels. |
 |  | P3 | Low | Rare spawn enemies | 1–2 special enemies per biome with unique drops (e.g., Golden Slime drops extra gold, Crystal Golem drops guaranteed modifier). |
 
