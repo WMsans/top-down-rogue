@@ -126,15 +126,17 @@ func _pick_pooled_weapon(archetype: String, is_melee: bool) -> Weapon:
 
 
 func _on_spawn_tick() -> void:
-	_current_density_mult = origin_density_mult(_player_origin_dist())
-	var effective_cap := int(mob_cap * _current_density_mult)
-
-	if _count_live_enemies() >= effective_cap:
+	if _count_live_enemies() >= int(mob_cap * _current_density_mult):
 		return
 
 	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
 		_resolve_dependencies()
 	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
+		return
+
+	_current_density_mult = origin_density_mult(_player_origin_dist())
+	var effective_cap := int(mob_cap * _current_density_mult)
+	if _count_live_enemies() >= effective_cap:
 		return
 
 	var surface := get_node_or_null("/root/TerrainSurface")
