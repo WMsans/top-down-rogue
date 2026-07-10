@@ -1,16 +1,16 @@
-# Graph Report - top-down-rogue  (2026-07-07)
+# Graph Report - top-down-rogue  (2026-07-10)
 
 ## Corpus Check
-- 246 files · ~583,683 words
+- 250 files · ~591,857 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4694 nodes · 3291 edges · 1418 communities (255 shown, 1163 thin omitted)
+- 4750 nodes · 3343 edges · 1421 communities (258 shown, 1163 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `06f58528`
+- Built from commit: `01f9e639`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1423,6 +1423,9 @@
 - [[_COMMUNITY_Ghost Trail (during swing)|Ghost Trail (during swing)]]
 - [[_COMMUNITY_trigger_visual (Weapon base method)|trigger_visual (Weapon base method)]]
 - [[_COMMUNITY_Weapon Visual Attack Animation|Weapon Visual Attack Animation]]
+- [[_COMMUNITY_Global Constraints|Global Constraints]]
+- [[_COMMUNITY_Self-Review|Self-Review]]
+- [[_COMMUNITY_PRODUCTION NOTES|PRODUCTION NOTES]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `Weapon & Modifier Balancing — Phase 2 (Emergent-Combo Modifiers) Implementation Plan` - 27 edges
@@ -1465,11 +1468,11 @@
 - **UI Juice Pipeline** — docs_superpowers_specs_2026_05_11_juicy_ui_refactor_design_juicy_ui_refactor_system, docs_superpowers_specs_2026_05_23_ui_consistency_and_crt_design_ui_consistency_crt_system, docs_superpowers_specs_2026_05_25_ui_layout_system_design_ui_layout_system [INFERRED 1.00]
 - **Terrain Simulation Ecosystem** — docs_superpowers_specs_2026_05_14_set_piece_rooms_design_mat_oil, docs_superpowers_specs_2026_05_14_set_piece_rooms_design_mat_explode_wave, docs_superpowers_specs_2026_05_09_hit_feedback_blood_design_mat_blood, docs_superpowers_specs_2026_05_14_props_and_boundary_design_powder_sim, docs_superpowers_specs_2026_05_14_set_piece_rooms_design_oil_burning_behavior, docs_superpowers_specs_2026_05_19_oil_explosion_cascade_design_popcorn_cascade_tuning [INFERRED 0.95]
 
-## Communities (1418 total, 1163 thin omitted)
+## Communities (1421 total, 1163 thin omitted)
 
 ### Community 12 - "GPU Passability & Nav Field"
 Cohesion: 0.08
-Nodes (23): Carving Algorithms, Cave Carving (Single-Chunk), Cave Generation Stage Design, cave_stage.glsl Contents, cave_utils.glsl Contents, Chunk Type System (Cave/Multi/Tunnel), Connector Count, Connector Generation (+15 more)
+Nodes (23): Carving Algorithms, Cave Carving (Single-Chunk), Cave Generation Stage Design, cave_stage.glsl Contents, cave_utils.glsl Contents, Chunk Types, Connector Count, Connector Generation (+15 more)
 
 ### Community 28 - "UI Consistency & CRT Layout"
 Cohesion: 0.05
@@ -1496,8 +1499,8 @@ Cohesion: 0.06
 Nodes (30): Balatro-Inspired UI Redesign Implementation Plan, Dependency Graph, File Structure, Scene Changes, Scene Changes, Scene Changes, Scene Changes, Scene Changes (+22 more)
 
 ### Community 54 - "Material & Gas & Density"
-Cohesion: 0.07
-Nodes (30): [0:00 - 0:10] — Explosion Montage, [1:15 - 1:25] — Call to Action, [1:25 - 1:30] — Final Beat, ACT 1: What Is This? [0:10 - 0:30], ACT 2: What's Been Built? [0:30 - 0:50], ACT 3: Why Join? [0:50 - 1:15], Ambiguity Check, B-Roll Sourcing List (+22 more)
+Cohesion: 0.12
+Nodes (17): [0:00 - 0:10] — Explosion Montage, [1:15 - 1:25] — Call to Action, [1:25 - 1:30] — Final Beat, ACT 1: What Is This? [0:10 - 0:30], ACT 2: What's Been Built? [0:30 - 0:50], ACT 3: Why Join? [0:50 - 1:15], CTA & CLOSING [1:15 - 1:30], Estimated Duration Breakdown (+9 more)
 
 ### Community 74 - "Spawn & Despawn & Mob"
 Cohesion: 0.07
@@ -2084,8 +2087,8 @@ Cohesion: 0.17
 Nodes (11): 1. Shared footprint helper, 2. Nudge-else-skip in spawn_dispatcher, Data flow, Design, Edge cases, Files touched, Goal, Problem (+3 more)
 
 ### Community 358 - "Community 358"
-Cohesion: 0.17
-Nodes (12): Act 2: What's Been Built? (0:30 - 0:50), Act Structure Overview, Core Concept, CTA & Closing (1:15 - 1:30), Differentiation Check, Duration Budget, Hook & Cold Open (0:00 - 0:10), Open Questions (+4 more)
+Cohesion: 0.11
+Nodes (18): Act 1: What Is This? (0:10 - 0:30), Act 2: What's Been Built? (0:30 - 0:50), Act 3: Why Join? (0:50 - 1:15), Act Structure Overview, Core Concept, CTA & Closing (1:15 - 1:30), Differentiation Check, Duration Budget (+10 more)
 
 ### Community 359 - "Community 359"
 Cohesion: 0.17
@@ -2144,8 +2147,8 @@ Cohesion: 0.18
 Nodes (10): Background for the implementer, Enemy Crowd Separation Implementation Plan, File structure, Running tests, Self-review notes, Spec, Task 1: Strengthen separation steering, Task 2: Depenetration safety net (+2 more)
 
 ### Community 375 - "Community 375"
-Cohesion: 0.18
-Nodes (11): [0:00 - 0:10] — 爆炸蒙太奇, 场景 1.1：可破坏的世界 [0:10 - 0:20], 场景 1.2：活的元素 [0:20 - 0:30], 场景 2.1：引擎 [0:30 - 0:40], 场景 2.2：系统 [0:40 - 0:50], 拍摄脚本：Godot 动作肉鸽招募视频, 第一幕：这是什么？ [0:10 - 0:30], 第二幕：做出了什么？ [0:30 - 0:50] (+3 more)
+Cohesion: 0.11
+Nodes (18): [0:00 - 0:10] — 爆炸蒙太奇, 内部一致性, 占位符扫描, 可拍摄性检查, 场景 1.1：可破坏的世界 [0:10 - 0:20], 场景 1.2：活的元素 [0:20 - 0:30], 场景 2.1：引擎 [0:30 - 0:40], 场景 2.2：系统 [0:40 - 0:50] (+10 more)
 
 ### Community 376 - "Community 376"
 Cohesion: 0.18
@@ -2360,8 +2363,8 @@ Cohesion: 0.29
 Nodes (6): Baked Per-Chunk Decor Lighting Implementation Plan, File Structure, Self-Review Notes, Task 1: Bake all decor lights in a chunk into one `PointLight2D`, Task 2: Regression tests — no-light case and determinism, Task 3: Full suite + manual in-engine verification
 
 ### Community 441 - "Community 441"
-Cohesion: 0.29
-Nodes (7): 内部一致性, 占位符扫描, 可拍摄性检查, 大纲覆盖, 歧义检查, 自查, 节奏检查
+Cohesion: 0.12
+Nodes (16): 1. Squash-stretch (elastic spring) — replaces `_play_squash()`, 2. Directional snap + spring settle — new `_play_recoil(hit_dir: Vector2)`, Animation Spec, Death Coordination, Direction Plumbing, Exaggerated Enemy Hurt Animation — Design, Files, Goals (+8 more)
 
 ### Community 442 - "Community 442"
 Cohesion: 0.33
@@ -2440,15 +2443,27 @@ Cohesion: 0.67
 Nodes (3): Scene Changes, `scenes/levels/game.tscn`, `scenes/levels/*.tscn` (all level scenes with enemies)
 
 ### Community 470 - "Act 1: What Is This? (0:10 - 0:30)"
-Cohesion: 0.67
-Nodes (3): Act 1: What Is This? (0:10 - 0:30), Scene 1.1: The Destructible World (0:10 - 0:20), Scene 1.2: The Living Elements (0:20 - 0:30)
+Cohesion: 0.12
+Nodes (15): Early-Floor Pacing & Risk/Reward Rooms — Implementation Plan, Global Constraints, Roadmap — Phases 2 & 3 (separate plans), Scope note, Self-Review, Task 10: In-editor verification + graph refresh, Task 1: CaveSpawner origin-distance density multiplier (pure math), Task 2: Apply the density ramp to cap, spawn probability, and group size (+7 more)
 
 ### Community 471 - "Act 3: Why Join? (0:50 - 1:15)"
-Cohesion: 0.67
-Nodes (3): Act 3: Why Join? (0:50 - 1:15), Scene 3.1: The Canvas (0:50 - 1:02), Scene 3.2: The Roles (1:02 - 1:15)
+Cohesion: 0.12
+Nodes (15): Diegetic interaction + Signs, Early-Floor Pacing & Procedural Risk/Reward Rooms — Design, Goals, Implementation phases (single plan, ordered by dependency), Non-goals, Pillar 1 — Gentle global crowd reduction near spawn, Pillar 2 — Elites gated out of the early zone, Pillar 3 — Procedural risk/reward rooms (+7 more)
+
+### Community 1418 - "Global Constraints"
+Cohesion: 0.29
+Nodes (6): Exaggerated Enemy Hurt Animation Implementation Plan, Global Constraints, Task 1: Amplified squash-stretch (elastic spring), Task 2: Directional recoil (snap + spring settle), Task 3: Death coordination (kill hurt tweens + reset transform), Verification
+
+### Community 1419 - "Self-Review"
+Cohesion: 0.29
+Nodes (7): Ambiguity Check, Internal Consistency, Pacing Check, Placeholder Scan, Self-Review, Shootability Check, Spec Coverage
+
+### Community 1420 - "PRODUCTION NOTES"
+Cohesion: 0.33
+Nodes (6): B-Roll Sourcing List, Crew / Setup Requirements, Meme Sourcing List, Music / SFX Direction, On-Screen Text Master List, PRODUCTION NOTES
 
 ## Knowledge Gaps
-- **3842 isolated node(s):** `Import the project first in fresh worktrees`, `Preferred: use `addons/gdUnit4/runtest.sh``, `graphify`, `graphify`, `Programming` (+3837 more)
+- **3886 isolated node(s):** `Import the project first in fresh worktrees`, `Preferred: use `addons/gdUnit4/runtest.sh``, `graphify`, `graphify`, `Programming` (+3881 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **1163 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -2456,7 +2471,7 @@ Nodes (3): Act 3: Why Join? (0:50 - 1:15), Scene 3.1: The Canvas (0:50 - 1:02), 
 _Questions this graph is uniquely positioned to answer:_
 
 - **What connects `Import the project first in fresh worktrees`, `Preferred: use `addons/gdUnit4/runtest.sh``, `graphify` to the rest of the system?**
-  _3878 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3922 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `GPU Passability & Nav Field` be split into smaller, more focused modules?**
   _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
 - **Should `UI Consistency & CRT Layout` be split into smaller, more focused modules?**

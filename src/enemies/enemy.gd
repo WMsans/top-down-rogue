@@ -43,8 +43,10 @@ const FLASH_DECAY: float = 0.12
 const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
 const BURN_FLASH_MAX := 0.7
 const BURN_FLASH_DECAY := 6.0
-const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
-const SQUASH_DURATION: float = 0.18
+const SQUASH_STRETCH: Vector2 = Vector2(1.65, 0.6)
+const SETTLE_DURATION: float = 0.32
+const RECOIL_ANGLE: float = 0.4
+const RECOIL_OFFSET: float = 5.0
 const ELITE_OUTLINE_SHADER: Shader = preload("res://shaders/visual/outline.gdshader")
 const ELITE_OUTLINE_WIDTH: float = 1.0
 const ELITE_GLOW_INTENSITY: float = 2.0
@@ -68,6 +70,10 @@ var _burn_flash: float = 0.0
 var _flash_tween: Tween = null
 var _squash_tween: Tween = null
 var _death_tween: Tween = null
+var _recoil_tween: Tween = null
+var _last_hit_dir: Vector2 = Vector2.ZERO
+var _sprite_base_position: Vector2 = Vector2.ZERO
+var _sprite_base_rotation: float = 0.0
 var _death_vfx: DeathDissolveVfx = null
 
 var _state: int = State.WANDER
@@ -115,6 +121,10 @@ func _ready() -> void:
 	if is_elite:
 		_apply_elite_scaling()
 	_animator = get_node_or_null("EnemyAnimator")
+	var base_sprite := get_node_or_null("Sprite2D")
+	if base_sprite:
+		_sprite_base_position = base_sprite.position
+		_sprite_base_rotation = base_sprite.rotation
 	if is_inside_tree():
 		_player_ref = get_tree().get_first_node_in_group("player")
 		_world_manager = get_tree().get_first_node_in_group("world_manager")
@@ -680,6 +690,7 @@ func _change_state(new_state: int) -> void:
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
+			_reset_hurt_transform()
 			if _death_vfx:
 				_death_vfx.burst(_base_modulate)
 
@@ -799,6 +810,7 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 		global_position += Vector2(cos(angle), sin(angle)) * 64.0
 		_teleport_cooldown = 0.5
 
+	_last_hit_dir = hit_dir
 	hit(damage)
 
 
@@ -865,18 +877,52 @@ func _play_squash() -> void:
 		return
 	if _squash_tween and _squash_tween.is_valid():
 		_squash_tween.kill()
-	sprite.scale = SQUASH_SCALE
+	sprite.scale = SQUASH_STRETCH
 	_squash_tween = create_tween()
 	_squash_tween.set_trans(Tween.TRANS_ELASTIC)
 	_squash_tween.set_ease(Tween.EASE_OUT)
-	_squash_tween.tween_property(sprite, "scale", Vector2.ONE, SQUASH_DURATION)
+	_squash_tween.tween_property(sprite, "scale", Vector2.ONE, SETTLE_DURATION)
+
+
+func _play_recoil(hit_dir: Vector2) -> void:
+	if hit_dir.length_squared() <= 0.0001:
+		return
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite == null:
+		return
+	if _recoil_tween and _recoil_tween.is_valid():
+		_recoil_tween.kill()
+	var lean_sign := 1.0 if hit_dir.x >= 0.0 else -1.0
+	sprite.rotation = _sprite_base_rotation + lean_sign * RECOIL_ANGLE
+	sprite.position = _sprite_base_position + hit_dir.normalized() * RECOIL_OFFSET
+	_recoil_tween = create_tween()
+	_recoil_tween.set_parallel(true)
+	_recoil_tween.set_trans(Tween.TRANS_ELASTIC)
+	_recoil_tween.set_ease(Tween.EASE_OUT)
+	_recoil_tween.tween_property(sprite, "rotation", _sprite_base_rotation, SETTLE_DURATION)
+	_recoil_tween.tween_property(sprite, "position", _sprite_base_position, SETTLE_DURATION)
+
+
+func _reset_hurt_transform() -> void:
+	if _squash_tween and _squash_tween.is_valid():
+		_squash_tween.kill()
+	if _recoil_tween and _recoil_tween.is_valid():
+		_recoil_tween.kill()
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite == null:
+		return
+	sprite.scale = Vector2.ONE
+	sprite.rotation = _sprite_base_rotation
+	sprite.position = _sprite_base_position
 
 
 func _on_hit() -> void:
 	_play_hit_flash()
 	_play_squash()
+	_play_recoil(_last_hit_dir)
 	if _hurt_vfx:
 		_hurt_vfx.burst()
+	_last_hit_dir = Vector2.ZERO
 
 
 func _setup_weapon_visual() -> void:
