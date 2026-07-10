@@ -11,7 +11,7 @@ const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 @export var spawn_min_dist: float = 600.0
 @export var spawn_max_dist: float = 2000.0
 @export var despawn_dist: float = 2500.0
-@export var mob_cap: int = 70
+@export var mob_cap: int = 50
 @export var spawn_rate: float = 1.0
 @export var group_size_min: int = 3
 @export var group_size_max: int = 5
@@ -122,7 +122,10 @@ func _pick_pooled_weapon(archetype: String, is_melee: bool) -> Weapon:
 
 
 func _on_spawn_tick() -> void:
-	if _count_live_enemies() >= mob_cap:
+	_current_density_mult = origin_density_mult(_player_origin_dist())
+	var effective_cap := int(mob_cap * _current_density_mult)
+
+	if _count_live_enemies() >= effective_cap:
 		return
 
 	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
@@ -152,9 +155,11 @@ func _on_spawn_tick() -> void:
 			var world_pos := world_base + Vector2(local_x, local_y)
 
 			if _validate_position(world_pos):
-				var size := randi_range(group_size_min, group_size_max)
-				if _count_live_enemies() + size > mob_cap:
-					size = mob_cap - _count_live_enemies()
+				var gmin := maxi(1, int(group_size_min * _current_density_mult))
+				var gmax := maxi(gmin, int(group_size_max * _current_density_mult))
+				var size := randi_range(gmin, gmax)
+				if _count_live_enemies() + size > effective_cap:
+					size = effective_cap - _count_live_enemies()
 					if size <= 0:
 						return
 				_spawn_group(world_pos, size)
@@ -174,7 +179,7 @@ func _validate_position(world_pos: Vector2) -> bool:
 	if dist < spawn_min_dist or dist > spawn_max_dist:
 		return false
 
-	if randf() > spawn_rate * BASE_SPAWN_CHANCE:
+	if randf() > spawn_rate * BASE_SPAWN_CHANCE * _current_density_mult:
 		return false
 
 	if not _is_clear_of_walls(world_pos):
