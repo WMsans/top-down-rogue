@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="Script" uid="uid://tf853rhnmxly" path="res://src/core/arena_composition.gd" id="1_comp"]
+[ext_resource type="Script" uid="uid://cbmixb2xnospk" path="res://src/core/features/feature_interactable.gd" id="2_feat"]
+[ext_resource type="Script" uid="uid://c6m44nxqylgog" path="res://src/core/features/feature_room_sign.gd" id="3_sign"]
+[ext_resource type="Script" uid="uid://23s8lfnixmgt" path="res://src/core/interactables/mimic_chest.gd" id="4_shrine"]
+
+[sub_resource type="Resource" id="Res_feat"]
+script = ExtResource("2_feat")
+shrine_script = ExtResource("4_shrine")
+offset = Vector2(0, 0)
+
+[sub_resource type="Resource" id="Res_sign"]
+script = ExtResource("3_sign")
+title = "Mimic?"
+body = "Too good to be true? Open for loot — but 2 in 5 bite back with an ambush."
+offset = Vector2(0, -32)
+
+[resource]
+script = ExtResource("1_comp")
+arena_kind = &"event"
+nominal_radius = 288
+inner_disc_radius = 224
+features = [SubResource("Res_feat"), SubResource("Res_sign")]

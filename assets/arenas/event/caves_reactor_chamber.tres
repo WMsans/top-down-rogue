@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="Script" uid="uid://tf853rhnmxly" path="res://src/core/arena_composition.gd" id="1_comp"]
+[ext_resource type="Script" uid="uid://bm22fgjclichv" path="res://src/core/features/feature_hazard_flood.gd" id="2_flood"]
+[ext_resource type="Script" uid="uid://y3hmt5fymuwy" path="res://src/core/features/feature_chest_spawn.gd" id="3_chest"]
+[ext_resource type="Script" uid="uid://c6m44nxqylgog" path="res://src/core/features/feature_room_sign.gd" id="4_sign"]
+
+[sub_resource type="Resource" id="Res_flood"]
+script = ExtResource("2_flood")
+hazard = 0
+radius = 56.0
+edge_jitter = 0.4
+
+[sub_resource type="Resource" id="Res_chest"]
+script = ExtResource("3_chest")
+rare = true
+
+[sub_resource type="Resource" id="Res_sign"]
+script = ExtResource("4_sign")
+title = "Reactor Chamber"
+body = "Volatile ground. A rich chest waits within, but the hazard reacts with you and every enemy."
+offset = Vector2(0, -40)
+
+[resource]
+script = ExtResource("1_comp")
+arena_kind = &"event"
+nominal_radius = 320
+inner_disc_radius = 256
+features = [SubResource("Res_flood"), SubResource("Res_chest"), SubResource("Res_sign")]
