@@ -21,6 +21,23 @@ const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 const BASE_SPAWN_CHANCE: float = 0.5
 const MAX_VALIDATION_RETRIES: int = 3
 
+const NEAR_ORIGIN_MULT: float = 0.45
+
+var _current_density_mult: float = 1.0
+
+
+static func origin_density_mult(sector_dist: int) -> float:
+	var t := clampf(float(sector_dist) / float(SectorGrid.WALL_INNER_SECTORS), 0.0, 1.0)
+	return lerpf(NEAR_ORIGIN_MULT, 1.0, t)
+
+
+func _player_origin_dist() -> int:
+	var grid: SectorGrid = LevelManager.get_grid()
+	if grid == null or not is_instance_valid(_world_manager):
+		return SectorGrid.WALL_INNER_SECTORS
+	var sector := grid.world_to_sector(_world_manager.tracking_position)
+	return grid.chebyshev_distance(sector, Vector2i.ZERO)
+
 var _world_manager: Node2D = null
 var _terrain_physical: TerrainPhysical = null
 var _spawn_parent: Node2D = null
