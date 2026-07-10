@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ArenaComposition" format=3]
+
+[ext_resource type="Script" uid="uid://tf853rhnmxly" path="res://src/core/arena_composition.gd" id="1_comp"]
+[ext_resource type="Script" uid="uid://y3hmt5fymuwy" path="res://src/core/features/feature_chest_spawn.gd" id="2_chest"]
+[ext_resource type="Script" uid="uid://c6m44nxqylgog" path="res://src/core/features/feature_room_sign.gd" id="3_sign"]
+
+[sub_resource type="Resource" id="Res_chest"]
+script = ExtResource("2_chest")
+rare = false
+
+[sub_resource type="Resource" id="Res_sign"]
+script = ExtResource("3_sign")
+title = "Treasure"
+body = "A safe chest. No catch."
+offset = Vector2(0, -24)
+
+[resource]
+script = ExtResource("1_comp")
+arena_kind = &"reward"
+nominal_radius = 256
+features = [SubResource("Res_chest"), SubResource("Res_sign")]
