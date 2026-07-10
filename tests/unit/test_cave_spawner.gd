@@ -109,3 +109,17 @@ func test_despawn_keeps_nearby_enemy() -> void:
 	spawner._on_despawn_tick()
 
 	assert_bool(enemy.is_queued_for_deletion()).is_false()
+
+
+func test_origin_density_mult_is_low_at_origin() -> void:
+	assert_float(_CaveSpawner.origin_density_mult(0)).is_equal_approx(0.45, 0.001)
+
+func test_origin_density_mult_is_full_at_wall() -> void:
+	assert_float(_CaveSpawner.origin_density_mult(8)).is_equal_approx(1.0, 0.001)
+
+func test_origin_density_mult_is_monotonic() -> void:
+	var prev := -1.0
+	for d in range(0, 9):
+		var m := _CaveSpawner.origin_density_mult(d)
+		assert_bool(m >= prev).is_true()
+		prev = m
