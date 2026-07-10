@@ -9,6 +9,7 @@ const BOSS_RING_ANCHOR_COUNT := 12   # boss chambers spread around the wall face
 const BOSS_RING_PHASES := [0.0]
 const BOSS_CLAIM_RADIUS := 3
 const ELITE_CLAIM_RADIUS := 1
+const ELITE_MIN_DIST := 3   # elite rooms only appear at Chebyshev sector dist >= this
 const EMPTY_WEIGHT := 1.5
 
 class RoomSlot:
@@ -133,8 +134,11 @@ func resolve_sector(coord: Vector2i) -> RoomSlot:
 	for i in range(_biome.room_templates.size()):
 		cumulative += (_biome.room_templates[i] as RoomTemplate).weight
 		if roll < cumulative:
-			slot.template_index = i
 			var tmpl: RoomTemplate = _biome.room_templates[i]
+			if tmpl.is_elite_chest and dist < ELITE_MIN_DIST:
+				slot.is_empty = true
+				return slot
+			slot.template_index = i
 			slot.rotation = (rng2.randi() % 4) * 90 if tmpl.rotatable else 0
 			slot.template_size = tmpl.size_class
 			if tmpl.cavern_carve:
