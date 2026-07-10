@@ -4,6 +4,8 @@
 
 **Goal:** Make the area near spawn gentler (fewer ambient enemies, no elites), and build the reusable substrate for procedural diegetic risk/reward rooms, proven end-to-end with a Treasure room.
 
+> **⚠️ SUBAGENT HANDOFF (read first):** The room substrate and 6 rooms are **already built, tested, and committed** (see **Progress** below). Your remaining work is **Tasks 1–5** (the `CaveSpawner` / `SectorGrid` numeric changes — fully independent of the rooms) and then **Task 10** (in-game verification). **Tasks 6–9 are marked ✅ DONE — do not re-implement them.** Execute Tasks 1→5 in order (each is standalone), then Task 10.
+
 **Architecture:** Three small, independent changes to existing systems (`CaveSpawner` density ramp, `SectorGrid` elite gating + room-weight tuning) plus a new interactable substrate (`RoomSign` info node + `InteractableShrine` base + `FeatureRoomSign` placer) that reuses the existing `PickupContext`/`WeaponInfoPopup` proximity-popup pipeline. A Treasure room composition wires it together and proves procedural placement of a room with a readable Sign.
 
 **Tech Stack:** Godot 4 / GDScript, gdUnit4 tests, `ArenaComposition`/`ArenaFeature` room system, `PickupContext` pickup pipeline.
@@ -21,6 +23,16 @@
 ## Scope note
 
 This plan implements **Phase 1** of the spec (`docs/superpowers/specs/2026-07-10-early-floor-pacing-risk-reward-rooms-design.md`): the pacing/elite changes and the room substrate, ending with a working Treasure room. The 10 risk/reward rooms (Phases 2–3 of the spec) are a **roadmap at the end of this document** — each becomes its own bite-sized plan once this substrate lands and its interfaces (`InteractableShrine`, `FeatureRoomSign`, curse status) are real rather than speculative.
+
+## Progress — already built & committed (as of 2026-07-10)
+
+The **room layer** was hand-authored ahead of the numeric tasks (Godot resource/composition wiring is error-prone for automated implementers) and is committed & unit-tested:
+
+- **Substrate** (`ba19278f`): `src/core/interactables/room_sign.gd` (`RoomSign`), `interactable_shrine.gd` (`InteractableShrine` base — one-shot `interact`→`_on_interact`, visible sprite, shared `_spawn_chest_here`/`_spawn_melee`/`_inventory` helpers), `src/core/features/feature_room_sign.gd` (`FeatureRoomSign`). Tests: `test_room_sign.gd`, `test_interactable_shrine.gd`, `test_feature_room_sign.gd`.
+- **Treasure room** (`01f9e639`): `assets/arenas/reward/caves_treasure.tres`, wired into `assets/biomes/caves.tres`. Test: `test_treasure_room.gd`.
+- **5 event rooms** (`fa26e305`): `src/core/interactables/{blood_altar,mimic_chest,greed_vault,trial_gauntlet}.gd`, placer features `src/core/features/{feature_interactable,feature_hazard_flood}.gd`, compositions in `assets/arenas/event/`, all wired into `caves.tres`. Tests: `test_blood_altar.gd`, `test_event_rooms.gd`.
+
+**16 unit tests pass.** These correspond to **Tasks 6–9 (✅ DONE below)** plus the Phase-2 rooms from the roadmap. What remains for subagents: **Tasks 1–5** (numeric `CaveSpawner`/`SectorGrid` changes — do NOT touch the rooms) and **Task 10** (verification). The curse/forge/idol rooms (Phase 3) are still deferred.
 
 ---
 
@@ -401,7 +413,9 @@ git commit -m "feat(grid): lower empty weight to raise room frequency"
 
 ---
 
-### Task 6: RoomSign — proximity info node reusing PickupContext
+### Task 6: RoomSign — proximity info node reusing PickupContext ✅ DONE
+
+> **✅ COMPLETE — committed in `ba19278f`. Do NOT re-implement.** `src/core/interactables/room_sign.gd` exists and `test_room_sign.gd` passes. Steps below are kept as reference only.
 
 A script-only node (builds its own `CollisionShape2D` in `_ready`, like `PickupContext`) that the player can stand near to read a room's risk/reward in the existing `WeaponInfoPopup`. It implements the pickup contract but has **no** `interact()`, so the interact key does nothing on it.
 
@@ -508,7 +522,9 @@ git commit -m "feat(rooms): add RoomSign proximity info node"
 
 ---
 
-### Task 7: InteractableShrine — base for room interactables
+### Task 7: InteractableShrine — base for room interactables ✅ DONE
+
+> **✅ COMPLETE — committed in `ba19278f` (extended in `fa26e305` with a visible sprite + shared `_spawn_chest_here`/`_spawn_melee`/`_inventory` helpers). Do NOT re-implement.** `test_interactable_shrine.gd` passes. Steps below are kept as reference only.
 
 The base every risk/reward interactable (Phase 2/3) subclasses: it wires the pickup contract and turns the interact key into a virtual `_on_interact(player)` hook. Not placed in any room yet — this task delivers the reusable base + its contract test so later room plans reference a real type.
 
@@ -633,7 +649,9 @@ git commit -m "feat(rooms): add InteractableShrine base for room interactables"
 
 ---
 
-### Task 8: FeatureRoomSign — ArenaFeature that places a RoomSign
+### Task 8: FeatureRoomSign — ArenaFeature that places a RoomSign ✅ DONE
+
+> **✅ COMPLETE — committed in `ba19278f`. Do NOT re-implement.** `src/core/features/feature_room_sign.gd` exists and `test_feature_room_sign.gd` passes. Also built: `feature_interactable.gd` (places an `InteractableShrine` subclass by script) and `feature_hazard_flood.gd`. Steps below are kept as reference only.
 
 An `ArenaFeature` (like `FeatureChestSpawn`) that spawns a configured `RoomSign` at the room anchor via the dispatcher.
 
@@ -719,7 +737,9 @@ git commit -m "feat(rooms): add FeatureRoomSign placer"
 
 ---
 
-### Task 9: Treasure room composition + wire into the Caves biome
+### Task 9: Treasure room composition + wire into the Caves biome ✅ DONE
+
+> **✅ COMPLETE — committed in `01f9e639`. Do NOT re-implement.** `assets/arenas/reward/caves_treasure.tres` exists, wired into `caves.tres`, `test_treasure_room.gd` passes. The 5 event rooms (Blood Altar, Mimic Chest, Greed Vault, Trial Gauntlet, Reactor Chamber) were also authored on this same pattern (`fa26e305`) and wired into `caves.tres`. Steps below are kept as reference only.
 
 Author a Treasure `ArenaComposition` (chest + sign) as a `.tres`, add it as a `cavern_carve` room template in `caves.tres`, and prove it loads with both features. This is the end-to-end substrate proof.
 
@@ -822,17 +842,31 @@ GODOT_BIN=$(which godot) ./addons/gdUnit4/runtest.sh -a tests/unit
 ```
 Expected: all green.
 
-- [ ] **Step 2: Manual smoke test in-game**
+- [ ] **Step 2: Manual smoke test in-game — pacing (Tasks 1–5)**
 
-Launch the project (`mcp__godot__run_project` or the editor). Confirm, near spawn: noticeably fewer ambient enemies and no elites; walking outward increases density and elites reappear. Find a Treasure room, stand by its Sign → the info popup shows "Treasure / A safe chest. No catch.", and the chest is present.
+Launch the project (`mcp__godot__run_project` or the editor). Confirm, near spawn: noticeably fewer ambient enemies and no elites; walking outward increases density and elites reappear.
 
-- [ ] **Step 3: Refresh the knowledge graph**
+- [ ] **Step 3: Manual smoke test in-game — rooms (already built; verifies carve + runtime paths)**
+
+The rooms are committed and unit-tested, but their **in-game behaviour is not yet verified**. Confirm each:
+- **Carving:** `arena_kind = &"event"` templates carve open cavern space (not embedded in rock). If they don't carve, inspect how the shader/generator selects carve templates for compositions (`shaders/include/cavern_carve_stage.glslinc`, `LevelManager.build_stamp_bytes`) — the `nominal_radius`/`inner_disc_radius` on each `assets/arenas/event/*.tres` drive the carve.
+- **Signs:** standing by a room's Sign shows its description in the info popup.
+- **Treasure:** chest present, no catch.
+- **Blood Altar:** interacting drops ~25% current HP and spawns a rich chest.
+- **Mimic Chest:** interacting either opens a chest or triggers an ambush.
+- **Greed Vault:** interacting spawns a chest and then waves of enemies.
+- **Trial Gauntlet:** interacting spawns 5 elites; clearing them spawns a chest.
+- **Reactor Chamber:** floor is flooded with lava hazard; a rare chest is present.
+
+Report any room that fails; fixes to a room are content edits (`.tres` radius, interactable script), independent of Tasks 1–5.
+
+- [ ] **Step 4: Refresh the knowledge graph**
 
 ```bash
 graphify update .
 ```
 
-- [ ] **Step 4: Commit any doc/graph updates**
+- [ ] **Step 5: Commit any doc/graph updates**
 
 ```bash
 git add -A && git commit -m "chore: refresh graph after early-floor pacing + room substrate" || echo "nothing to commit"
@@ -844,15 +878,17 @@ git add -A && git commit -m "chore: refresh graph after early-floor pacing + roo
 
 Once this plan lands, each room below becomes its own short bite-sized plan built on the substrate above (`InteractableShrine`, `FeatureRoomSign`, chest/enemy dispatcher APIs). Expand these in dependency order; the interfaces they need now exist and can be referenced concretely.
 
-**Phase 2 — easy diegetic rooms (no new subsystems):**
-- **Treasure** — done (Task 9), the template for the rest.
-- **Mimic Chest** — chest variant that rolls loot-vs-ambush on open; ambush uses `ctx.dispatcher.spawn_enemy`.
-- **Greed Vault** — loot + a trigger volume that starts continuous `spawn_enemy` waves until the player leaves.
-- **Reactor Chamber** — composition that `stamp_material_*` floods the room with a status material + places loot.
-- **Trial Gauntlet** — sealed-door interactable (`InteractableShrine`) that spawns an elite wave, then a rare chest on clear.
-- **Blood Altar** — `InteractableShrine` whose `_on_interact` deducts HP/max-HP and spawns a rare `WeaponDrop`/`ModifierDrop`.
+**Phase 2 — easy diegetic rooms (no new subsystems): ✅ ALL DONE (`fa26e305`, `01f9e639`)**
+- **Treasure** ✅ — `caves_treasure.tres`; plain HARD-less chest.
+- **Mimic Chest** ✅ — `mimic_chest.gd`; interact → 60% HARD chest / 40% 6-enemy ambush.
+- **Greed Vault** ✅ — `greed_vault.gd`; interact → HARD chest + 3 waves × 4 melee (1.5s apart).
+- **Reactor Chamber** ✅ — `caves_reactor_chamber.tres`; `feature_hazard_flood.gd` floods lava + rare chest.
+- **Trial Gauntlet** ✅ — `trial_gauntlet.gd`; interact → 5 elite melee, HARD chest on clear.
+- **Blood Altar** ✅ — `blood_altar.gd`; interact → −25% current HP (min 5) → HARD chest.
 
-**Phase 3 — subsystem rooms:**
+Balance values above are first-pass; tune in the `.tres`/interactable scripts. Remaining polish (not blocking): replace placeholder RPG-pack icons with bespoke art; confirm in-game carve (Task 10, Step 3).
+
+**Phase 3 — subsystem rooms (still to build):**
 - **Curse status** (shared) — a lasting negative status on the existing status system; cleared on cure and in `LevelManager.advance_floor()`. Prerequisite for the next three.
 - **Devil's Bargain** — a `ModifierDrop` that also applies a curse on pickup.
 - **Wheel of Fortune** — `InteractableShrine` spending gold → weighted jackpot / nothing / spawn-elite (may apply a curse on backfire).
@@ -864,7 +900,7 @@ Once this plan lands, each room below becomes its own short bite-sized plan buil
 
 ## Self-Review
 
-**Spec coverage:** Pillar 1 (density ramp + mob_cap trim) → Tasks 1–2; ambient elite scaling → Task 3. Pillar 2 (elite room gating dist ≥ 3) → Task 4. Pillar 3 placement/frequency (EMPTY_WEIGHT + boosted weight) → Tasks 5 & 9; Sign → Task 6; InteractableShrine substrate → Task 7; FeatureRoomSign → Task 8; procedural reward room proof → Task 9. The 10 rooms + curse status are explicitly deferred to the roadmap (separate plans), as the spec's phasing intends.
+**Spec coverage:** Pillar 1 (density ramp + mob_cap trim) → Tasks 1–2 (TODO); ambient elite scaling → Task 3 (TODO). Pillar 2 (elite room gating dist ≥ 3) → Task 4 (TODO). Pillar 3 placement/frequency (EMPTY_WEIGHT + boosted weight) → Task 5 (TODO) & Task 9 (✅); Sign → Task 6 (✅); InteractableShrine substrate → Task 7 (✅); FeatureRoomSign → Task 8 (✅); procedural room proof + 5 event rooms → Task 9 & roadmap Phase 2 (✅). Curse status + the 4 Phase-3 rooms remain deferred. **Subagent scope = Tasks 1–5 + Task 10.**
 
 **Placeholder scan:** none — every code step shows full code; the one `.tres` step names the exact pattern file to mirror and the exact fields.
 
