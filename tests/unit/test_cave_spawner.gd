@@ -123,3 +123,24 @@ func test_origin_density_mult_is_monotonic() -> void:
 		var m := _CaveSpawner.origin_density_mult(d)
 		assert_bool(m >= prev).is_true()
 		prev = m
+
+
+func test_density_mult_scales_validation_gate() -> void:
+	var spawner := _CaveSpawner.new()
+	add_child(spawner)
+	spawner._world_manager = auto_free(_FakeWorldManager.new())
+	spawner.spawn_min_dist = 0.0
+	spawner.spawn_max_dist = 100000.0
+	spawner.spawn_rate = 1.0  # gate = randf() > 0.5 * mult
+	# Near origin: multiplier suppresses spawns hard.
+	spawner._current_density_mult = 0.0
+	var accepted := 0
+	for _i in range(200):
+		if spawner._validate_position(Vector2(500, 0)):
+			accepted += 1
+	assert_int(accepted).is_equal(0)
+
+
+func test_mob_cap_default_is_trimmed() -> void:
+	var spawner: _CaveSpawner = auto_free(_CaveSpawner.new())
+	assert_int(spawner.mob_cap).is_equal(50)
