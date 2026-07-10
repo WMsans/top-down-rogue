@@ -13,6 +13,11 @@
 [ext_resource type="Texture2D" uid="uid://dm32nab0jw4aq" path="res://textures/Environments/Floors/cave_floor.png" id="11_floor"]
 [ext_resource type="Resource" path="res://assets/rooms/guidance/guidance_room_template.tres" id="12_guidance"]
 [ext_resource type="Resource" path="res://assets/arenas/reward/caves_treasure.tres" id="13_treasure"]
+[ext_resource type="Resource" path="res://assets/arenas/event/caves_blood_altar.tres" id="14_blood"]
+[ext_resource type="Resource" path="res://assets/arenas/event/caves_mimic_chest.tres" id="15_mimic"]
+[ext_resource type="Resource" path="res://assets/arenas/event/caves_greed_vault.tres" id="16_greed"]
+[ext_resource type="Resource" path="res://assets/arenas/event/caves_trial_gauntlet.tres" id="17_trial"]
+[ext_resource type="Resource" path="res://assets/arenas/event/caves_reactor_chamber.tres" id="18_reactor"]
 [ext_resource type="Script" uid="uid://dbv0e06omogho" path="res://src/core/decor_def.gd" id="20_decordef"]
 [ext_resource type="Texture2D" uid="uid://dst0ofg3cneqx" path="res://textures/Environments/Decors/grass1.png" id="21_grass1"]
 [ext_resource type="Texture2D" uid="uid://c5d1q3s3cq4st" path="res://textures/Environments/Decors/grass2.png" id="22_grass2"]
@@ -99,11 +104,41 @@ weight = 2.5
 cavern_carve = true
 composition = ExtResource("13_treasure")
 
+[sub_resource type="Resource" id="Resource_blood"]
+script = ExtResource("1_iq0d2")
+weight = 2.0
+cavern_carve = true
+composition = ExtResource("14_blood")
+
+[sub_resource type="Resource" id="Resource_mimic"]
+script = ExtResource("1_iq0d2")
+weight = 2.0
+cavern_carve = true
+composition = ExtResource("15_mimic")
+
+[sub_resource type="Resource" id="Resource_greed"]
+script = ExtResource("1_iq0d2")
+weight = 1.5
+cavern_carve = true
+composition = ExtResource("16_greed")
+
+[sub_resource type="Resource" id="Resource_trial"]
+script = ExtResource("1_iq0d2")
+weight = 1.5
+cavern_carve = true
+composition = ExtResource("17_trial")
+
+[sub_resource type="Resource" id="Resource_reactor"]
+script = ExtResource("1_iq0d2")
+weight = 1.5
+cavern_carve = true
+composition = ExtResource("18_reactor")
+
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
 pool_materials = Array[ExtResource("2_7cf3p")]([SubResource("Resource_xxuj2")])
-room_templates = Array[ExtResource("1_iq0d2")]([SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop"), SubResource("Resource_treasure")])
+room_templates = Array[ExtResource("1_iq0d2")]([SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop"), SubResource("Resource_treasure"), SubResource("Resource_blood"), SubResource("Resource_mimic"), SubResource("Resource_greed"), SubResource("Resource_trial"), SubResource("Resource_reactor")])
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 ui_accent = Color(0.851, 0.467, 0.259, 1)
 floor_texture = ExtResource("11_floor")
