@@ -1416,8 +1416,5 @@
   "1414": "_do_visual (virtual override)",
   "1415": "Ghost Trail (during swing)",
   "1416": "trigger_visual (Weapon base method)",
-  "1417": "Weapon Visual Attack Animation",
-  "1418": "Global Constraints",
-  "1419": "Self-Review",
-  "1420": "PRODUCTION NOTES"
+  "1417": "Weapon Visual Attack Animation"
 }
