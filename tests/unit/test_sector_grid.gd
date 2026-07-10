@@ -129,6 +129,31 @@ func test_elite_room_gated_near_origin() -> void:
 			assert_bool(tmpl != null and tmpl.is_elite_chest).is_false()
 
 
+func test_empty_fraction_matches_lowered_weight() -> void:
+	var b := _BiomeDef.new()
+	var rt := _RoomTemplate.new()
+	rt.png_path = "rt"
+	rt.weight = 2.0
+	var templates: Array[RoomTemplate] = [rt]
+	b.room_templates = templates
+	var comp := _ArenaComposition.new()
+	comp.arena_kind = &"boss"
+	b.boss_compositions = [comp]
+	var grid := _SectorGrid.new(777, b)
+	var empty := 0
+	var total := 0
+	for x in range(-6, 7):
+		for y in range(-6, 7):
+			var c := Vector2i(x, y)
+			if grid.chebyshev_distance(c, Vector2i.ZERO) >= 5:
+				continue
+			total += 1
+			if grid.resolve_sector(c).is_empty:
+				empty += 1
+	var frac := float(empty) / float(total)
+	assert_float(frac).is_equal_approx(0.333, 0.08)
+
+
 func test_elite_room_allowed_beyond_min_dist() -> void:
 	var grid := _SectorGrid.new(4242, _make_elite_biome())
 	var found_elite := false

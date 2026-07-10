@@ -10,7 +10,7 @@ const BOSS_RING_PHASES := [0.0]
 const BOSS_CLAIM_RADIUS := 3
 const ELITE_CLAIM_RADIUS := 1
 const ELITE_MIN_DIST := 3   # elite rooms only appear at Chebyshev sector dist >= this
-const EMPTY_WEIGHT := 1.5
+const EMPTY_WEIGHT := 1.0
 
 class RoomSlot:
 	var is_empty: bool = false
