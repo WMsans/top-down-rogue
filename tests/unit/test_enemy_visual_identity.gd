@@ -109,13 +109,13 @@ func test_melee_enemy_scene_uses_grunt_sprites() -> void:
 	assert_str(animator.texture_breathe.resource_path).contains("caves_grunt2")
 
 
-func test_lunge_enemy_scene_uses_brute_sprites() -> void:
+func test_lunge_enemy_scene_uses_armored_sprites() -> void:
 	var scene: PackedScene = load("res://scenes/enemies/lunge_enemy.tscn")
 	var e: Node = auto_free(scene.instantiate())
 	var sprite: Sprite2D = e.get_node("Sprite2D")
 	var animator: EnemyAnimator = e.get_node("EnemyAnimator")
-	assert_str(sprite.texture.resource_path).contains("caves_brute1")
-	assert_str(animator.texture_breathe.resource_path).contains("caves_brute2")
+	assert_str(sprite.texture.resource_path).contains("caves_armored1")
+	assert_str(animator.texture_breathe.resource_path).contains("caves_armored2")
 
 
 func test_sniper_enemy_scene_uses_mage_sprites() -> void:
@@ -332,3 +332,73 @@ func test_entering_death_bursts_dissolve_vfx() -> void:
 	e._change_state(Enemy.State.DEATH)
 	var particles: GPUParticles2D = e._death_vfx.get_node("Particles")
 	assert_bool(particles.emitting).is_true()
+
+
+func test_hit_snaps_squash_to_stretch() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	add_child(e)
+	await get_tree().process_frame
+	e.health = 100
+	e.hit(5)
+	assert_that(sprite.scale).is_equal(Enemy.SQUASH_STRETCH)
+
+
+func test_hit_leans_sprite_toward_right_hit() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	add_child(e)
+	await get_tree().process_frame
+	e.health = 100
+	e._last_hit_dir = Vector2.RIGHT
+	e.hit(5)
+	assert_float(sprite.rotation - e._sprite_base_rotation).is_greater(0.0)
+
+
+func test_hit_leans_sprite_toward_left_hit() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	add_child(e)
+	await get_tree().process_frame
+	e.health = 100
+	e._last_hit_dir = Vector2.LEFT
+	e.hit(5)
+	assert_float(sprite.rotation - e._sprite_base_rotation).is_less(0.0)
+
+
+func test_zero_direction_hit_does_not_lean() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	add_child(e)
+	await get_tree().process_frame
+	e.health = 100
+	e.hit(5)
+	assert_float(sprite.rotation).is_equal_approx(e._sprite_base_rotation, 0.0001)
+	assert_that(sprite.position).is_equal(e._sprite_base_position)
+	assert_that(sprite.scale).is_equal(Enemy.SQUASH_STRETCH)
+
+
+func test_death_resets_hurt_transform_and_kills_tweens() -> void:
+	var e: MockAnimatorEnemy = auto_free(MockAnimatorEnemy.new())
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	e.add_child(sprite)
+	add_child(e)
+	await get_tree().process_frame
+	e.health = 100
+	e._last_hit_dir = Vector2.RIGHT
+	e.hit(5)
+	e._change_state(Enemy.State.DEATH)
+	assert_that(sprite.scale).is_equal(Vector2.ONE)
+	assert_float(sprite.rotation).is_equal_approx(e._sprite_base_rotation, 0.0001)
+	assert_that(sprite.position).is_equal(e._sprite_base_position)
+	assert_bool(e._squash_tween.is_valid()).is_false()
+	assert_bool(e._recoil_tween.is_valid()).is_false()

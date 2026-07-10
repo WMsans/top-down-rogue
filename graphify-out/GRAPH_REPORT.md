@@ -1,16 +1,16 @@
 # Graph Report - top-down-rogue  (2026-07-10)
 
 ## Corpus Check
-- 250 files · ~591,857 words
+- 250 files · ~592,394 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4750 nodes · 3343 edges · 1421 communities (258 shown, 1163 thin omitted)
+- 4751 nodes · 3344 edges · 1421 communities (258 shown, 1163 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `01f9e639`
+- Built from commit: `971a5541`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -2444,7 +2444,7 @@ Nodes (3): Scene Changes, `scenes/levels/game.tscn`, `scenes/levels/*.tscn` (all
 
 ### Community 470 - "Act 1: What Is This? (0:10 - 0:30)"
 Cohesion: 0.12
-Nodes (15): Early-Floor Pacing & Risk/Reward Rooms — Implementation Plan, Global Constraints, Roadmap — Phases 2 & 3 (separate plans), Scope note, Self-Review, Task 10: In-editor verification + graph refresh, Task 1: CaveSpawner origin-distance density multiplier (pure math), Task 2: Apply the density ramp to cap, spawn probability, and group size (+7 more)
+Nodes (16): Early-Floor Pacing & Risk/Reward Rooms — Implementation Plan, Global Constraints, Progress — already built & committed (as of 2026-07-10), Roadmap — Phases 2 & 3 (separate plans), Scope note, Self-Review, Task 10: In-editor verification + graph refresh, Task 1: CaveSpawner origin-distance density multiplier (pure math) (+8 more)
 
 ### Community 471 - "Act 3: Why Join? (0:50 - 1:15)"
 Cohesion: 0.12
@@ -2463,7 +2463,7 @@ Cohesion: 0.33
 Nodes (6): B-Roll Sourcing List, Crew / Setup Requirements, Meme Sourcing List, Music / SFX Direction, On-Screen Text Master List, PRODUCTION NOTES
 
 ## Knowledge Gaps
-- **3886 isolated node(s):** `Import the project first in fresh worktrees`, `Preferred: use `addons/gdUnit4/runtest.sh``, `graphify`, `graphify`, `Programming` (+3881 more)
+- **3887 isolated node(s):** `Import the project first in fresh worktrees`, `Preferred: use `addons/gdUnit4/runtest.sh``, `graphify`, `graphify`, `Programming` (+3882 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **1163 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -2471,7 +2471,7 @@ Nodes (6): B-Roll Sourcing List, Crew / Setup Requirements, Meme Sourcing List, 
 _Questions this graph is uniquely positioned to answer:_
 
 - **What connects `Import the project first in fresh worktrees`, `Preferred: use `addons/gdUnit4/runtest.sh``, `graphify` to the rest of the system?**
-  _3922 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3923 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `GPU Passability & Nav Field` be split into smaller, more focused modules?**
   _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
 - **Should `UI Consistency & CRT Layout` be split into smaller, more focused modules?**
