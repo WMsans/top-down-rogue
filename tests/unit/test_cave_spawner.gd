@@ -144,3 +144,10 @@ func test_density_mult_scales_validation_gate() -> void:
 func test_mob_cap_default_is_trimmed() -> void:
 	var spawner: _CaveSpawner = auto_free(_CaveSpawner.new())
 	assert_int(spawner.mob_cap).is_equal(50)
+
+
+func test_effective_elite_chance_scales_with_density() -> void:
+	var spawner: _CaveSpawner = auto_free(_CaveSpawner.new())
+	spawner.elite_chance = 0.4
+	spawner._current_density_mult = 0.5
+	assert_float(spawner._effective_elite_chance()).is_equal_approx(0.2, 0.001)
