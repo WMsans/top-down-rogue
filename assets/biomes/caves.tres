@@ -12,6 +12,7 @@
 [ext_resource type="Resource" uid="uid://cga2nrsy6qcu" path="res://assets/arenas/elite/caves_c.tres" id="10_elitec"]
 [ext_resource type="Texture2D" uid="uid://dm32nab0jw4aq" path="res://textures/Environments/Floors/cave_floor.png" id="11_floor"]
 [ext_resource type="Resource" path="res://assets/rooms/guidance/guidance_room_template.tres" id="12_guidance"]
+[ext_resource type="Resource" path="res://assets/arenas/reward/caves_treasure.tres" id="13_treasure"]
 [ext_resource type="Script" uid="uid://dbv0e06omogho" path="res://src/core/decor_def.gd" id="20_decordef"]
 [ext_resource type="Texture2D" uid="uid://dst0ofg3cneqx" path="res://textures/Environments/Decors/grass1.png" id="21_grass1"]
 [ext_resource type="Texture2D" uid="uid://c5d1q3s3cq4st" path="res://textures/Environments/Decors/grass2.png" id="22_grass2"]
@@ -92,11 +93,17 @@ size_class = 256
 rotatable = false
 no_spawn = true
 
+[sub_resource type="Resource" id="Resource_treasure"]
+script = ExtResource("1_iq0d2")
+weight = 2.5
+cavern_carve = true
+composition = ExtResource("13_treasure")
+
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
 pool_materials = Array[ExtResource("2_7cf3p")]([SubResource("Resource_xxuj2")])
-room_templates = Array[ExtResource("1_iq0d2")]([SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop")])
+room_templates = Array[ExtResource("1_iq0d2")]([SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop"), SubResource("Resource_treasure")])
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
 ui_accent = Color(0.851, 0.467, 0.259, 1)
 floor_texture = ExtResource("11_floor")
