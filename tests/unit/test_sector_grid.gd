@@ -145,7 +145,7 @@ func test_empty_fraction_matches_lowered_weight() -> void:
 	for x in range(-6, 7):
 		for y in range(-6, 7):
 			var c := Vector2i(x, y)
-			if grid.chebyshev_distance(c, Vector2i.ZERO) >= 5:
+			if grid.chebyshev_distance(c, Vector2i.ZERO) >= _SectorGrid.WALL_INNER_SECTORS - _SectorGrid.BOSS_CLAIM_RADIUS:
 				continue
 			total += 1
 			if grid.resolve_sector(c).is_empty:
