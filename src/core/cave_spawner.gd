@@ -91,6 +91,10 @@ func _pick_enemy_scene() -> PackedScene:
 	return SpawnDispatcher.RANGED_ARCHETYPE_SCENES[archetype]
 
 
+func _effective_elite_chance() -> float:
+	return elite_chance * _current_density_mult
+
+
 func _archetype_for_scene(scene: PackedScene) -> String:
 	for archetype in SpawnDispatcher.MELEE_ARCHETYPE_SCENES:
 		if SpawnDispatcher.MELEE_ARCHETYPE_SCENES[archetype] == scene:
@@ -220,7 +224,7 @@ func _spawn_enemy(world_pos: Vector2) -> void:
 	var archetype := _archetype_for_scene(scene)
 	var is_melee: bool = SpawnDispatcher.MELEE_ARCHETYPE_SCENES.has(archetype)
 
-	var is_elite_roll := randf() < elite_chance
+	var is_elite_roll := randf() < _effective_elite_chance()
 	if is_elite_roll:
 		enemy.is_elite = true
 		enemy.elite_ability = randi() % 4 + 1
