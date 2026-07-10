@@ -11,7 +11,7 @@ const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 @export var spawn_min_dist: float = 600.0
 @export var spawn_max_dist: float = 2000.0
 @export var despawn_dist: float = 2500.0
-@export var mob_cap: int = 70
+@export var mob_cap: int = 50
 @export var spawn_rate: float = 1.0
 @export var group_size_min: int = 3
 @export var group_size_max: int = 5
@@ -20,6 +20,23 @@ const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
 
 const BASE_SPAWN_CHANCE: float = 0.5
 const MAX_VALIDATION_RETRIES: int = 3
+
+const NEAR_ORIGIN_MULT: float = 0.45
+
+var _current_density_mult: float = 1.0
+
+
+static func origin_density_mult(sector_dist: int) -> float:
+	var t := clampf(float(sector_dist) / float(SectorGrid.WALL_INNER_SECTORS), 0.0, 1.0)
+	return lerpf(NEAR_ORIGIN_MULT, 1.0, t)
+
+
+func _player_origin_dist() -> int:
+	var grid: SectorGrid = LevelManager.get_grid()
+	if grid == null or not is_instance_valid(_world_manager):
+		return SectorGrid.WALL_INNER_SECTORS
+	var sector := grid.world_to_sector(_world_manager.tracking_position)
+	return grid.chebyshev_distance(sector, Vector2i.ZERO)
 
 var _world_manager: Node2D = null
 var _terrain_physical: TerrainPhysical = null
@@ -74,6 +91,10 @@ func _pick_enemy_scene() -> PackedScene:
 	return SpawnDispatcher.RANGED_ARCHETYPE_SCENES[archetype]
 
 
+func _effective_elite_chance() -> float:
+	return elite_chance * _current_density_mult
+
+
 func _archetype_for_scene(scene: PackedScene) -> String:
 	for archetype in SpawnDispatcher.MELEE_ARCHETYPE_SCENES:
 		if SpawnDispatcher.MELEE_ARCHETYPE_SCENES[archetype] == scene:
@@ -105,12 +126,17 @@ func _pick_pooled_weapon(archetype: String, is_melee: bool) -> Weapon:
 
 
 func _on_spawn_tick() -> void:
-	if _count_live_enemies() >= mob_cap:
+	if _count_live_enemies() >= int(mob_cap * _current_density_mult):
 		return
 
 	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
 		_resolve_dependencies()
 	if not is_instance_valid(_world_manager) or not is_instance_valid(_terrain_physical) or _spawn_parent == null:
+		return
+
+	_current_density_mult = origin_density_mult(_player_origin_dist())
+	var effective_cap := int(mob_cap * _current_density_mult)
+	if _count_live_enemies() >= effective_cap:
 		return
 
 	var surface := get_node_or_null("/root/TerrainSurface")
@@ -135,9 +161,11 @@ func _on_spawn_tick() -> void:
 			var world_pos := world_base + Vector2(local_x, local_y)
 
 			if _validate_position(world_pos):
-				var size := randi_range(group_size_min, group_size_max)
-				if _count_live_enemies() + size > mob_cap:
-					size = mob_cap - _count_live_enemies()
+				var gmin := maxi(1, int(group_size_min * _current_density_mult))
+				var gmax := maxi(gmin, int(group_size_max * _current_density_mult))
+				var size := randi_range(gmin, gmax)
+				if _count_live_enemies() + size > effective_cap:
+					size = effective_cap - _count_live_enemies()
 					if size <= 0:
 						return
 				_spawn_group(world_pos, size)
@@ -157,7 +185,7 @@ func _validate_position(world_pos: Vector2) -> bool:
 	if dist < spawn_min_dist or dist > spawn_max_dist:
 		return false
 
-	if randf() > spawn_rate * BASE_SPAWN_CHANCE:
+	if randf() > spawn_rate * BASE_SPAWN_CHANCE * _current_density_mult:
 		return false
 
 	if not _is_clear_of_walls(world_pos):
@@ -198,7 +226,7 @@ func _spawn_enemy(world_pos: Vector2) -> void:
 	var archetype := _archetype_for_scene(scene)
 	var is_melee: bool = SpawnDispatcher.MELEE_ARCHETYPE_SCENES.has(archetype)
 
-	var is_elite_roll := randf() < elite_chance
+	var is_elite_roll := randf() < _effective_elite_chance()
 	if is_elite_roll:
 		enemy.is_elite = true
 		enemy.elite_ability = randi() % 4 + 1
