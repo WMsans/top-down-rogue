@@ -31,6 +31,7 @@ TerrainSurface="*res://src/core/terrain_surface.gd"
 TerrainImpact="*res://src/core/juice/terrain_impact.gd"
 GameModeManager="*res://src/autoload/game_mode_manager.gd"
 CompositionDispatcher="*res://src/core/composition_dispatcher.gd"
+FX="*uid://c1f2iiaucnvnh"
 
 [display]
 
@@ -41,7 +42,7 @@ window/stretch/mode="viewport"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/saltmire_fx/plugin.cfg")
 
 [input]
 
