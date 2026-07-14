@@ -3,7 +3,6 @@ extends Node
 
 const MELEE_ENEMY_SCENE := preload("res://scenes/enemies/melee_enemy.tscn")
 const RANGED_ENEMY_SCENE := preload("res://scenes/enemies/ranged_enemy.tscn")
-const BOSS_ENEMY_SCENE := preload("res://scenes/enemies/boss_enemy.tscn")
 const SNIPER_ENEMY_SCENE := preload("res://scenes/enemies/sniper_enemy.tscn")
 const LUNGE_ENEMY_SCENE := preload("res://scenes/enemies/lunge_enemy.tscn")
 const BRUTE_ENEMY_SCENE := preload("res://scenes/enemies/brute_enemy.tscn")
@@ -32,7 +31,6 @@ const RANGED_ARCHETYPE_WEIGHTS := {
 }
 const CHEST_SCENE := preload("res://scenes/chest.tscn")
 const SHOP_STALL_SCENE := preload("res://scenes/economy/shop_stall.tscn")
-const PORTAL_SCENE := preload("res://scenes/portal.tscn")
 const LANTERN_SCENE := preload("res://scenes/props/lantern.tscn")
 const SHOP_FLOOR_TEXTURE := preload("res://textures/Guidance/wooden_planks.png")
 
@@ -225,8 +223,12 @@ func _spawn_enemy_validated(world_pos: Vector2, sector_dist: int, floor_num: int
 func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss: bool, is_elite: bool) -> void:
 	var enemy: Enemy
 	if is_boss:
-		enemy = BOSS_ENEMY_SCENE.instantiate()
-		enemy.weapon_resource = WeaponRegistry.get_weapon_by_id("boss_staff")
+		var boss_scene: PackedScene = LevelManager.current_biome.boss_scene if (LevelManager.current_biome != null) else null
+		if boss_scene == null:
+			push_warning("SpawnDispatcher: no boss_scene on current biome; skipping boss spawn.")
+			return
+		enemy = boss_scene.instantiate()
+		enemy.boss_name = LevelManager.current_biome.display_name + " Boss"
 	else:
 		if is_elite:
 			var elite_archetype := _weighted_pick(MELEE_ARCHETYPE_WEIGHTS)
@@ -257,20 +259,23 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 	var damage_mult := 1.0 + (floor_num - 1) * 0.15
 	var speed_mult  := 1.0 + (floor_num - 1) * 0.10
 
-	enemy.max_health = int(float(enemy.max_health) * health_mult * (2.0 if is_elite else 1.0) * (5.0 if is_boss else 1.0))
-	enemy.speed = enemy.speed * speed_mult * (1.5 if is_boss else 1.0)
+	enemy.max_health = int(float(enemy.max_health) * health_mult * (2.0 if is_elite else 1.0))
+	enemy.speed = enemy.speed * speed_mult
 
 	if not is_boss and "damage_scale" in enemy:
 		enemy.damage_scale = damage_mult
 
 	if is_boss:
-		if "weapon_resource" in enemy and enemy.weapon_resource:
-			enemy.weapon_resource.damage *= damage_mult
+		enemy._apply_floor_scaling(floor_num)
 
 	if is_boss:
 		enemy.modulate = LevelManager.current_biome.tint
-		if enemy.has_signal("died"):
-			enemy.died.connect(_on_boss_died.bind(world_pos))
+		enemy.global_position = world_pos
+		_spawn_parent.add_child(enemy)
+		var enc := get_tree().get_first_node_in_group("boss_encounter")
+		if enc and enc.has_method("notify_spawned"):
+			enc.notify_spawned(enemy, world_pos)
+		return
 
 	enemy.global_position = world_pos
 	_spawn_parent.add_child(enemy)
@@ -346,7 +351,3 @@ func _spawn_lantern(world_pos: Vector2) -> void:
 	_spawn_parent.add_child(lantern)
 
 
-func _on_boss_died(arena_center: Vector2) -> void:
-	var portal := PORTAL_SCENE.instantiate()
-	portal.global_position = arena_center
-	_spawn_parent.add_child(portal)
