@@ -14,6 +14,11 @@ func test_set_phase_lights_pip() -> void:
 	hud.setup("Boss", 100, 3, [100, 66, 33])
 	hud.set_phase(2)
 	assert_int(hud.get_public_phase()).is_equal(2)
+	var pips := hud.get_node("Pips").get_children()
+	assert_int(pips.size()).is_equal(3)
+	assert_that(pips[0].self_modulate).is_equal(Color(0.3, 0.3, 0.3, 0.5))
+	assert_that(pips[1].self_modulate).is_equal(Color.WHITE)
+	assert_that(pips[2].self_modulate).is_equal(Color(0.3, 0.3, 0.3, 0.5))
 
 func test_update_health_clamps_bar() -> void:
 	var hud: BossHud = auto_free(BossHudScene.instantiate())
