@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ArenaComposition" format=3 uid="uid://cwbibxc0p46q4"]
 
-[ext_resource type="PackedScene" uid="uid://d2jnf72pty04p" path="res://scenes/enemies/boss_enemy.tscn" id="1_3yd23"]
+[ext_resource type="PackedScene" uid="uid://d2jnf72pty04p" path="res://scenes/enemies/bosses/glacier_boss.tscn" id="1_3yd23"]
 [ext_resource type="Script" uid="uid://uh0pptmob43x" path="res://src/core/regions/region_point.gd" id="2_r2fok"]
 [ext_resource type="Script" uid="uid://dp6k3ofy63gcv" path="res://src/core/features/feature_boss_spawn.gd" id="3_rt7y1"]
 [ext_resource type="Script" uid="uid://b63xjq7daak1m" path="res://src/core/regions/region_ring.gd" id="4_fmpfs"]

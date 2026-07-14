@@ -10,6 +10,7 @@
 [ext_resource type="Resource" uid="uid://c70al60kah7bf" path="res://assets/arenas/elite/caves_a.tres" id="8_elitea"]
 [ext_resource type="Resource" uid="uid://civqiyfwicpje" path="res://assets/arenas/elite/caves_b.tres" id="9_eliteb"]
 [ext_resource type="Resource" uid="uid://cga2nrsy6qcu" path="res://assets/arenas/elite/caves_c.tres" id="10_elitec"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/bosses/burrower_boss.tscn" id="99_bossscene"]
 [ext_resource type="Texture2D" uid="uid://dm32nab0jw4aq" path="res://textures/Environments/Floors/cave_floor.png" id="11_floor"]
 [ext_resource type="Resource" path="res://assets/rooms/guidance/guidance_room_template.tres" id="12_guidance"]
 [ext_resource type="Resource" path="res://assets/arenas/reward/caves_treasure.tres" id="13_treasure"]
@@ -137,6 +138,7 @@ composition = ExtResource("18_reactor")
 [resource]
 script = ExtResource("3_5ujno")
 display_name = "Caves"
+boss_scene = ExtResource("99_bossscene")
 pool_materials = Array[ExtResource("2_7cf3p")]([SubResource("Resource_xxuj2")])
 room_templates = Array[ExtResource("1_iq0d2")]([SubResource("Resource_aw3ws"), SubResource("Resource_5taqv"), SubResource("Resource_kxn1b"), SubResource("Resource_yk633"), SubResource("Resource_elite_a"), SubResource("Resource_elite_b"), SubResource("Resource_elite_c"), SubResource("Resource_shop"), SubResource("Resource_treasure"), SubResource("Resource_blood"), SubResource("Resource_mimic"), SubResource("Resource_greed"), SubResource("Resource_trial"), SubResource("Resource_reactor")])
 boss_compositions = Array[Resource]([ExtResource("4_bossa"), ExtResource("5_bossb"), ExtResource("6_bossc"), ExtResource("7_bossd")])
