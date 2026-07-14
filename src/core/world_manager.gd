@@ -86,6 +86,10 @@ func _ready() -> void:
 	TerrainSurface.register_adapter(self)
 	nav_field = preload("res://src/core/nav/nav_field.gd").new(self)
 
+	var be := BossEncounter.new()
+	be.name = "BossEncounter"
+	add_child(be)
+
 func mark_terrain_dirty(coord: Vector2i) -> void:
 	# Nav grid is now fed by the collider dispatch's passability output (via
 	# TerrainCollisionHelper), so only the collision helper is marked here.

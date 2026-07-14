@@ -45,6 +45,9 @@ func advance_floor() -> void:
 		_spawn_dispatcher.clear()
 	if CompositionDispatcher and CompositionDispatcher.has_method("clear"):
 		CompositionDispatcher.clear()
+	var enc := get_tree().get_first_node_in_group("boss_encounter")
+	if enc and enc.has_method("clear"):
+		enc.clear()
 	if _cave_spawner and _cave_spawner.has_method("set_biome_params"):
 		_cave_spawner.set_biome_params(current_biome.cave_spawn_rate)
 	var wm := get_tree().get_first_node_in_group("world_manager")
