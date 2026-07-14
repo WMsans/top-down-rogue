@@ -104,15 +104,18 @@ func spawn_boss(world_pos: Vector2, boss_scene: PackedScene) -> void:
 		return
 	var inst := boss_scene.instantiate()
 	inst.global_position = world_pos
-	if inst.has_signal("died"):
-		inst.died.connect(_on_boss_died.bind(world_pos))
 	_spawn_parent.add_child(inst)
+	var enc := get_tree().get_first_node_in_group("boss_encounter")
+	if enc and enc.has_method("notify_spawned"):
+		enc.notify_spawned(inst, world_pos)
+	if inst.has_signal("died"):
+		inst.died.connect(func(): _notify_boss_died(world_pos))
 
-func _on_boss_died(arena_center: Vector2) -> void:
-	const PORTAL_SCENE = preload("res://scenes/portal.tscn")
-	var portal := PORTAL_SCENE.instantiate()
-	portal.global_position = arena_center
-	_spawn_parent.add_child(portal)
+
+func _notify_boss_died(arena_center: Vector2) -> void:
+	var enc := get_tree().get_first_node_in_group("boss_encounter")
+	if enc and enc.has_method("notify_died"):
+		enc.notify_died(null, arena_center)
 
 func spawn_enemy(world_pos: Vector2, enemy_scene: PackedScene, is_elite: bool) -> void:
 	if enemy_scene == null:
