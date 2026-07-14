@@ -11,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://dj8e5qud0vn8w" path="res://assets/arenas/elite/mines_a.tres" id="8_elitea"]
 [ext_resource type="Resource" uid="uid://b1gy1for73gq" path="res://assets/arenas/elite/mines_b.tres" id="9_eliteb"]
 [ext_resource type="Resource" uid="uid://btfpudpp6g24g" path="res://assets/arenas/elite/mines_c.tres" id="10_elitec"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/bosses/drill_boss.tscn" id="99_bossscene"]
 [ext_resource type="Texture2D" uid="uid://y2wnuvmeebvy" path="res://textures/Environments/Floors/mines_floor.png" id="11_floor"]
 
 [sub_resource type="Resource" id="Resource_o2tgn"]
@@ -79,6 +80,7 @@ no_spawn = true
 [resource]
 script = ExtResource("3_53h6i")
 display_name = "Mines"
+boss_scene = ExtResource("99_bossscene")
 cave_noise_scale = 0.01
 cave_threshold = 0.45
 ridge_weight = 0.4

@@ -11,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://b6lmln1daplpk" path="res://assets/arenas/elite/magma_a.tres" id="8_elitea"]
 [ext_resource type="Resource" uid="uid://c1nlw4u4fxq02" path="res://assets/arenas/elite/magma_b.tres" id="9_eliteb"]
 [ext_resource type="Resource" uid="uid://l45132x0anv3" path="res://assets/arenas/elite/magma_c.tres" id="10_elitec"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/bosses/pyrelord_boss.tscn" id="99_bossscene"]
 [ext_resource type="Texture2D" uid="uid://dn3ytgb51cvqo" path="res://textures/Environments/Floors/magma_floor.png" id="11_floor"]
 
 [sub_resource type="Resource" id="Resource_sajre"]
@@ -71,6 +72,7 @@ no_spawn = true
 [resource]
 script = ExtResource("3_silhp")
 display_name = "Magma Caverns"
+boss_scene = ExtResource("99_bossscene")
 gold_multiplier = 0.9
 cave_noise_scale = 0.012
 cave_threshold = 0.5
