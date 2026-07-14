@@ -61,6 +61,8 @@ func setup(boss_name: String, max_health: int, phase_count: int, _thresholds: Ar
 		pip.custom_minimum_size = Vector2(12, 8)
 		pips.add_child(pip)
 		_phase_buttons.append(pip)
+	if _banner != null:
+		_banner.queue_free()
 	_banner = Label.new()
 	_banner.name = "Banner"
 	_banner.position = Vector2(get_viewport().get_visible_rect().size.x * 0.5 - 60, 8)
@@ -75,6 +77,8 @@ func update_health(current: int) -> void:
 
 func set_phase(phase: int) -> void:
 	_phase = phase
+	for i in _phase_buttons.size():
+		_phase_buttons[i].self_modulate = Color.WHITE if i + 1 == phase else Color(0.3, 0.3, 0.3, 0.5)
 	if _banner:
 		_banner.text = "PHASE %d" % phase
 		var t := create_tween()
