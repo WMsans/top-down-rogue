@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://enemybase01" path="res://scenes/enemies/enemy.tscn" id="1"]
+[ext_resource type="Script" path="res://src/enemies/bosses/pyrelord_boss.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://coptlukjq2bxk" path="res://textures/Enemies/boss_test.png" id="3"]
+
+[node name="PyrelordBoss" instance=ExtResource("1")]
+script = ExtResource("2")
+boss_name = "Pyrelord"
+phase_count = 3
+weapon_resource = null
+attack_interval = 1.2
+hazard_interval = 5.0
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("3")
