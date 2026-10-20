@@ -7,4 +7,3 @@ Main program by Jeremy
 [DawnLike](https://opengameart.org/content/dawnlike-16x16-universal-rogue-like-tileset-v181) by DawnBringer
 Player concept art by Jiman
 
-All credits belong to them! 
