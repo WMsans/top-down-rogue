@@ -51,7 +51,8 @@ An enemy must hold a token to enter `WINDUP`. Tokens limit how many enemies atta
 - `request_token(enemy) -> bool`, `release_token(enemy)`, `has_token(enemy) -> bool`.
 - **Capacity:** `max_tokens = 4` at the start of a floor (tier band EASY), `6` from the second tier band onward (NORMAL/HARD — derived from the highest `enemy_tier` among active enemies), `+1` per elite currently in `_active`. No other cap.
 - **Cost:** melee and lunge cost 1.0; ranged and sniper cost 0.5. The pool is a float sum against `max_tokens`.
-- **Priority:** when more enemies request than the pool can admit in a tick, enemies **outside the player's aim cone (±45° of `PlayerController.get_facing_direction()`)** are admitted first; ties go to the closest enemy.
+- **Player facing (sampled):** the director keeps a cached `_player_facing: Vector2`, refreshed from `PlayerController.get_facing_direction()` only every `FACING_POLL_INTERVAL = 2.0`s (ticked in `update()`). The live facing flips too often to steer the group; everything below that says "player facing" means this cached value.
+- **Priority:** when more enemies request than the pool can admit in a tick, enemies **outside the player's aim cone (±45° of the cached player facing)** are admitted first; ties go to the closest enemy.
 - **Release:** on death, stun/frozen, entering `HURT`, losing aggro, finishing `RECOVER`, or **timeout** (token held 3.0s without entering `ATTACK`).
 - `update()` (already called every tick by `WorldManager`) also prunes tokens and slots owned by invalid or non-pursuing enemies and ticks token timeouts.
 - **Bosses** don't use tokens: they always may attack and don't count against the pool.
@@ -71,7 +72,7 @@ Subclasses keep overriding the same hooks (`_process_chase`, `_execute_attack`, 
 ### 4.1 Engagement ring (melee and lunge without a token)
 
 - Ring radius = the enemy's `_attack_range + 24px` around the player.
-- `EncounterDirector.assign_slot(enemy) -> Vector2` hands out angle slots: slots are spaced evenly by angle across the enemies currently on the ring; each enemy gets the free slot nearest its current angle. With **3 or more** enemies on the ring, one slot is fixed directly **behind the player** (`get_facing_direction()` + 180°).
+- `EncounterDirector.assign_slot(enemy) -> Vector2` hands out angle slots: slots are spaced evenly by angle across the enemies currently on the ring; each enemy gets the free slot nearest its current angle. With **3 or more** enemies on the ring, one slot is fixed directly **behind the player** (cached player facing + 180°, see 3.2).
 - Slots are re-evaluated every 0.5s and when ring membership changes.
 - On the ring an enemy moves toward its slot at **normal effective speed** along the ring, with ±8px radial jitter re-rolled every 0.4s, so it never freezes.
 - Every 0.6s it re-requests a token; on success it leaves the ring and attacks (Section 5).
@@ -149,6 +150,7 @@ Console command `ai_debug` (new `AiDebugCommands`, registered in `console_manage
 New unit tests (gdUnit4):
 
 - `EnemyProfile.for_tier` values per tier; elite step-up.
+- Cached player facing refreshes only every 2.0s and ignores facing changes in between.
 - Token capacity (4 / 6 / +1 per elite), 0.5 cost for ranged, aim-cone priority, release on death/stun/hurt/timeout, pruning in `update()`, bosses bypass tokens.
 - Slot assignment: distinct slots for N enemies; with N ≥ 3 one slot is behind the player; solid slots skipped.
 - Ranged spot picker: distance band, 40px spacing, solid rejection.
