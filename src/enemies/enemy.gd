@@ -653,7 +653,6 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2) -> void:
 	var spec := HitSpec.new()
 	spec.position = impact_point
 	spec.direction = hit_dir
-	spec.damage = 1.0
 	spec.is_kill = lethal
 	spec.source_color = Color.WHITE
 	spec.source_radius = 8.0

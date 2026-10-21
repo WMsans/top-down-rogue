@@ -1,10 +1,15 @@
 extends CanvasLayer
 
-## Single HUD: TL = health + gold (one framed cluster), TR = weapon
+## Single HUD: TL = hearts + shields + gold (one framed cluster), TR = weapon
 ## (matching framed cluster). Replaces health_ui.gd + weapon_button.gd.
 
-@onready var _health_bar_fill: ColorRect = %BarFill
-@onready var _health_label: RichTextLabel = %HealthLabel
+const PIP_SIZE := Vector2(12, 12)
+const HEART_COLOR := Color(0.9, 0.2, 0.2)
+const SHIELD_COLOR := Color(0.35, 0.65, 1.0)
+const PIP_EMPTY_ALPHA := 0.2
+
+@onready var _hearts: HBoxContainer = %Hearts
+@onready var _shields: HBoxContainer = %Shields
 @onready var _gold_label: Label = %GoldLabel
 @onready var _weapon_icon: TextureButton = %WeaponIconButton
 @onready var _weapon_fallback: ColorRect = %WeaponFallback
@@ -32,9 +37,11 @@ func _ready() -> void:
 		_inventory = player.get_node_or_null("PlayerInventory")
 		if _inventory:
 			_inventory.health_changed.connect(_on_health_changed)
+			_inventory.armor_changed.connect(_on_armor_changed)
 			_inventory.player_died.connect(_on_died)
 			_inventory.gold_changed.connect(_on_gold_changed)
 			_on_health_changed(_inventory.get_health(), _inventory.get_max_health())
+			_on_armor_changed(_inventory.get_armor(), _inventory.get_max_armor())
 			_on_gold_changed(_inventory.gold)
 		_weapon_manager = player.get_node_or_null("WeaponManager")
 		if _weapon_manager:
@@ -78,9 +85,28 @@ func flash_slots_full() -> void:
 	_flash_tween.tween_callback(func() -> void: _outline_panel.visible = false)
 
 func _on_health_changed(current: int, maximum: int) -> void:
-	var ratio := clampf(float(current) / float(maximum), 0.0, 1.0) if maximum > 0 else 0.0
-	_health_bar_fill.anchor_right = ratio
-	_health_label.text = "%d / %d" % [current, maximum]
+	set_pips(_hearts, current, maximum, HEART_COLOR)
+
+
+func _on_armor_changed(current: int, maximum: int) -> void:
+	set_pips(_shields, current, maximum, SHIELD_COLOR)
+
+
+# One square per point of `maximum`; the first `current` are lit, the rest dimmed.
+func set_pips(container: HBoxContainer, current: int, maximum: int, color: Color) -> void:
+	while container.get_child_count() < maximum:
+		var pip := ColorRect.new()
+		pip.custom_minimum_size = PIP_SIZE
+		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		container.add_child(pip)
+	while container.get_child_count() > maximum:
+		var last: Node = container.get_child(container.get_child_count() - 1)
+		container.remove_child(last)
+		last.queue_free()
+	for i in range(container.get_child_count()):
+		var pip: ColorRect = container.get_child(i)
+		pip.color = color
+		pip.modulate.a = 1.0 if i < current else PIP_EMPTY_ALPHA
 
 func _on_died() -> void:
 	if _inventory:

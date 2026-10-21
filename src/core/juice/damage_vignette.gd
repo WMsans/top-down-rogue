@@ -5,7 +5,6 @@ const DAMAGE_PULSE_STRENGTH := 0.5
 const DAMAGE_PULSE_UP := 0.07
 const DAMAGE_PULSE_DOWN := 0.18
 const LOW_HEALTH_STRENGTH := 0.18
-const LOW_HEALTH_RATIO := 0.25
 const LOW_HEALTH_PULSE_SPEED := 1.2
 const LOW_HEALTH_TRANSITION := 0.4
 
@@ -54,7 +53,7 @@ func _ready() -> void:
 	ember_rect.material = _ember_material
 
 
-func pulse(damage: float) -> void:
+func pulse() -> void:
 	if _pulse_tween and _pulse_tween.is_valid():
 		_pulse_tween.kill()
 	_pulse_tween = create_tween()
@@ -95,17 +94,15 @@ func _on_health_changed(current: int, maximum: int) -> void:
 		_is_low_health = false
 		_current_baseline = 0.0
 		return
-	var ratio := float(current) / float(maximum)
-	if ratio <= LOW_HEALTH_RATIO and not _is_low_health:
+	# The player has 3 HP, so "low health" means one heart left.
+	if current <= 1 and not _is_low_health:
 		_is_low_health = true
 		_current_baseline = LOW_HEALTH_STRENGTH
 		_interpolate_to_baseline(LOW_HEALTH_TRANSITION)
-	elif ratio > LOW_HEALTH_RATIO and _is_low_health:
+	elif current > 1 and _is_low_health:
 		_is_low_health = false
 		_current_baseline = 0.0
 		_interpolate_to_baseline(0.3)
-	elif ratio <= LOW_HEALTH_RATIO and _is_low_health:
-		pass
 
 
 func _interpolate_to_baseline(duration: float) -> void:

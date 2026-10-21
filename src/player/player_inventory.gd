@@ -110,12 +110,11 @@ func take_hit(hit_direction: Vector2 = Vector2.ZERO) -> void:
 		var spec := HitSpec.new()
 		spec.position = (player as Node2D).global_position
 		spec.direction = hit_direction
-		spec.damage = 1.0
 		spec.is_kill = _current_armor == 0 and _current_health <= 1
 		spec.source_color = DAMAGE_COLOR
 		HitReaction.play(spec)
 		if HitReaction.vignette:
-			HitReaction.vignette.pulse(1.0)
+			HitReaction.vignette.pulse()
 	_lose_point()
 
 

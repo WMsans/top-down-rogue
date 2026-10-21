@@ -19,21 +19,10 @@ const SPARK_LIFETIME: float = 0.15
 const SPARK_CONE_HALF_ANGLE: float = PI / 6.0
 const SPARK_SIZE: Vector2 = Vector2(2, 2)
 
-# DamageNumber constants
-const DAMAGE_NUMBER_LIFETIME: float = 0.6
-const HOLD_FRACTION: float = 2.0 / 3.0
-const POP_DURATION: float = 0.12
-const POP_SCALE: Vector2 = Vector2(1.2, 1.2)
-const INITIAL_VELOCITY_Y: float = -80.0
-const INITIAL_VELOCITY_X_RANGE: float = 30.0
-const GRAVITY: float = 200.0
-const SPAWN_OFFSET: Vector2 = Vector2(0, -8)
-
 # ChromaticFlash constants
 const CHROMATIC_STRENGTH: float = 0.6
 const CHROMATIC_DURATION: float = 0.12
 
-const DAMAGE_NUMBER_SCENE := preload("res://scenes/fx/damage_number.tscn")
 const CHROMATIC_FLASH_SCENE := preload("res://scenes/fx/chromatic_flash.tscn")
 
 # Screen shake state
@@ -64,12 +53,10 @@ func _ready() -> void:
 
 
 func play(spec: HitSpec) -> void:
-	var dmg_int: int = floori(spec.damage)
 	_spawn_sparks(spec.position, spec.direction, spec.source_color)
-	_spawn_damage_number(spec.position, dmg_int)
-	_do_screen_shake(spec.damage, spec.is_kill, spec.direction)
-	_do_chromatic_flash(spec.damage, spec.is_kill)
-	_do_hit_stop(spec.damage, spec.is_kill)
+	_do_screen_shake(spec.is_kill, spec.direction)
+	_do_chromatic_flash(spec.is_kill)
+	_do_hit_stop(spec.is_kill)
 
 
 # ---- HitSpark adapter ----
@@ -107,44 +94,6 @@ func _spawn_sparks(point: Vector2, dir: Vector2, color: Color) -> void:
 		tween.chain().tween_callback(spark.queue_free)
 
 
-# ---- DamageNumber adapter ----
-
-func _spawn_damage_number(pos: Vector2, amount: int) -> void:
-	var scene_root := _find_game_viewport()
-	if scene_root == null:
-		return
-	var label: Label = DAMAGE_NUMBER_SCENE.instantiate()
-	label.text = str(amount)
-	label.position = pos + SPAWN_OFFSET
-	label.scale = Vector2(0.5, 0.5)
-	label.z_index = 100
-	label.z_as_relative = false
-	scene_root.add_child(label)
-
-	var hold_time: float = DAMAGE_NUMBER_LIFETIME * HOLD_FRACTION
-	var fade_time: float = DAMAGE_NUMBER_LIFETIME - hold_time
-	var velocity := Vector2(randf_range(-INITIAL_VELOCITY_X_RANGE, INITIAL_VELOCITY_X_RANGE), INITIAL_VELOCITY_Y)
-
-	var pop := label.create_tween()
-	pop.tween_property(label, "scale", POP_SCALE, POP_DURATION * 0.5)
-	pop.tween_property(label, "scale", Vector2.ONE, POP_DURATION * 0.5)
-
-	var motion := label.create_tween()
-	motion.tween_method(_drive_damage_motion.bind(label, velocity, pos + SPAWN_OFFSET), 0.0, DAMAGE_NUMBER_LIFETIME, DAMAGE_NUMBER_LIFETIME)
-
-	var fade := label.create_tween()
-	fade.tween_interval(hold_time)
-	fade.tween_property(label, "modulate:a", 0.0, fade_time)
-	fade.tween_callback(label.queue_free)
-
-
-func _drive_damage_motion(t: float, label: Label, initial_vel: Vector2, start_pos: Vector2) -> void:
-	if not is_instance_valid(label):
-		return
-	var pos := start_pos + initial_vel * t + Vector2(0, 0.5 * GRAVITY * t * t)
-	label.global_position = pos
-
-
 # ---- ScreenShake adapter ----
 
 func _find_active_camera() -> Camera2D:
@@ -161,7 +110,7 @@ func _find_active_camera() -> Camera2D:
 	return get_viewport().get_camera_2d()
 
 
-func _do_screen_shake(damage: float, is_kill: bool, dir: Vector2) -> void:
+func _do_screen_shake(is_kill: bool, dir: Vector2) -> void:
 	var amount := SHAKE_AMOUNT
 	var duration := SHAKE_DURATION
 	# kill bonus: stronger shake on killing blows
@@ -217,7 +166,7 @@ func _setup_chromatic_flash() -> void:
 	_chromatic_material.set_shader_parameter("strength", 0.0)
 
 
-func _do_chromatic_flash(damage: float, is_kill: bool) -> void:
+func _do_chromatic_flash(is_kill: bool) -> void:
 	if _chromatic_material == null:
 		return
 	var strength := CHROMATIC_STRENGTH
@@ -239,7 +188,7 @@ func _set_chromatic_strength(value: float) -> void:
 
 # ---- HitStop adapter ----
 
-func _do_hit_stop(damage: float, is_kill: bool) -> void:
+func _do_hit_stop(is_kill: bool) -> void:
 	var duration: float = HIT_STOP_BASE
 	if is_kill:
 		duration += HIT_STOP_KILL_BONUS
