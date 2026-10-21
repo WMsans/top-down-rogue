@@ -72,6 +72,7 @@ var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 var _director = null
+var uses_tokens: bool = true
 
 var _attack_started: bool = false
 
@@ -163,7 +164,12 @@ func _process(delta: float) -> void:
 		_process_death(delta)
 		return
 
-	if _status_component != null and _status_component.is_stunned():
+	if _is_disabled():
+		if _state == State.WINDUP or _state == State.ATTACK:
+			_cancel_attack()
+			_change_state(State.CHASE)
+		else:
+			_release_token()
 		velocity = Vector2.ZERO
 		return
 
@@ -284,7 +290,8 @@ func _process_chase(_delta: float) -> void:
 
 	if sees and dist <= _attack_range:
 		velocity = Vector2.ZERO
-		_change_state(State.WINDUP)
+		if _try_take_token():
+			_change_state(State.WINDUP)
 		return
 
 	var move_dir: Vector2
@@ -302,13 +309,14 @@ func _process_chase(_delta: float) -> void:
 
 
 func _process_windup(delta: float) -> void:
-	if _status_component != null and _status_component.is_stunned():
+	if _is_disabled():
+		_cancel_attack()
 		_change_state(State.CHASE)
 		return
 	_state_timer -= delta
 	if not _can_see_player():
-		_hide_exclaim()
-		_change_state(State.WANDER)
+		_cancel_attack()
+		_change_state(State.CHASE)
 		return
 	if _state_timer <= 0.0:
 		_hide_exclaim()
@@ -316,7 +324,8 @@ func _process_windup(delta: float) -> void:
 
 
 func _process_attack(_delta: float) -> void:
-	if _status_component != null and _status_component.is_stunned():
+	if _is_disabled():
+		_cancel_attack()
 		_change_state(State.CHASE)
 		return
 	if not _attack_started:
@@ -554,6 +563,8 @@ func _measure_body_radius() -> float:
 
 
 func _change_state(new_state: int) -> void:
+	if new_state != State.WINDUP and new_state != State.ATTACK and new_state != State.RECOVER:
+		_release_token()
 	if new_state == State.HURT:
 		_prev_state = _state
 		_state = new_state
@@ -564,6 +575,9 @@ func _change_state(new_state: int) -> void:
 	match new_state:
 		State.ATTACK:
 			_attack_started = false
+			var dir = _get_director()
+			if dir != null and uses_tokens:
+				dir.mark_attacking(self)
 		State.WINDUP:
 			_state_timer = windup_duration * _get_profile().telegraph_mult
 			_show_exclaim()
@@ -624,6 +638,12 @@ func take_hit() -> void:
 		return
 	if _state != State.HURT:
 		_prev_state = _state
+	# A hit interrupts an elite's attack: it recovers into CHASE and gives its
+	# token back. Bosses keep attacking through hits.
+	if is_elite and (_prev_state == State.WINDUP or _prev_state == State.ATTACK):
+		_cancel_attack()
+		_prev_state = State.CHASE
+		_release_token()
 	_state = State.HURT
 	_state_timer = hurt_duration
 
@@ -812,6 +832,45 @@ func _get_director():
 	if _world_manager != null and is_instance_valid(_world_manager):
 		_director = _world_manager.get("encounter_director")
 	return _director
+
+
+func token_cost() -> float:
+	return 1.0
+
+
+## True when this enemy may enter WINDUP now. Without a director (tests, menus)
+## or with tokens disabled (bosses) the answer is always yes.
+func _try_take_token() -> bool:
+	if _is_disabled():
+		return false
+	if not uses_tokens:
+		return true
+	var dir = _get_director()
+	if dir == null:
+		return true
+	return dir.request_token(self)
+
+
+func _release_token() -> void:
+	var dir = _get_director()
+	if dir != null:
+		dir.release_token(self)
+
+
+func _is_disabled() -> bool:
+	if _status_component == null:
+		return false
+	return _status_component.is_stunned() or _status_component.get_stain("frozen") > 0.0
+
+
+func _cancel_attack() -> void:
+	_hide_exclaim()
+	_on_attack_cancelled()
+
+
+## Subclasses stop attack-specific motion or VFX here (lunge dash).
+func _on_attack_cancelled() -> void:
+	pass
 
 
 func get_facing_direction() -> Vector2:
