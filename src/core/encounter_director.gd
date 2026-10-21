@@ -34,6 +34,9 @@ var _ring: Dictionary = {}
 var _ring_dirty: bool = true
 var _ring_timer: float = 0.0
 
+# enemy -> Vector2 firing spot
+var _spots: Dictionary = {}
+
 
 func is_active(enemy) -> bool:
 	return _active.has(enemy)
@@ -92,6 +95,7 @@ func update(player_pos: Vector2, attackable: Array, delta: float = 0.0, player_f
 	_poll_facing(delta, player_facing)
 	_tick_tokens(delta)
 	_tick_ring(delta)
+	_tick_spots()
 	_grant_requests()
 
 
@@ -99,6 +103,7 @@ func unregister(enemy) -> void:
 	_active.erase(enemy)
 	release_token(enemy)
 	leave_ring(enemy)
+	release_spot(enemy)
 
 
 func request_token(enemy) -> bool:
@@ -168,6 +173,24 @@ func get_slot(enemy) -> Vector2:
 	if _ring_dirty:
 		_assign_slots()
 	return _slot_pos(_ring[enemy])
+
+
+## A firing spot is a position a ranged enemy has claimed to shoot from.
+func claim_spot(enemy, pos: Vector2) -> void:
+	_spots[enemy] = pos
+
+
+func release_spot(enemy) -> void:
+	_spots.erase(enemy)
+
+
+## Firing spots claimed by everyone except `except`.
+func get_taken_spots(except) -> Array:
+	var out: Array = []
+	for e in _spots:
+		if e != except and is_instance_valid(e):
+			out.append(_spots[e])
+	return out
 
 
 func get_ring_slots() -> Array:
@@ -253,6 +276,12 @@ func _tick_ring(delta: float) -> void:
 	if _ring_timer <= 0.0:
 		_ring_timer = RING_REFRESH
 		_ring_dirty = true
+
+
+func _tick_spots() -> void:
+	for e in _spots.keys():
+		if not is_instance_valid(e) or not e.is_pursuing():
+			_spots.erase(e)
 
 
 func _tick_tokens(delta: float) -> void:

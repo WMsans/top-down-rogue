@@ -48,6 +48,7 @@ const TOKEN_RETRY: float = 0.6
 const RING_JITTER: float = 8.0
 const RING_JITTER_INTERVAL: float = 0.4
 const ALERT_RADIUS: float = 120.0
+const REPOSITION_ARRIVE: float = 6.0
 
 
 var hits_remaining: int
@@ -94,6 +95,8 @@ var _attack_started: bool = false
 var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
 var _wander_is_paused: bool = true
+
+var _reposition_target: Vector2 = Vector2.INF
 
 var _exclaim_label: Label = null
 var _exclaim_tween: Tween = null
@@ -449,8 +452,22 @@ func _state_after_attack() -> int:
 	return State.RECOVER
 
 
-func _process_reposition(_delta: float) -> void:
-	_change_state(State.CHASE)
+## Walk to a spot, then hand back to CHASE. The time limit stops a blocked
+## path from parking the enemy in REPOSITION forever.
+func _begin_reposition(target: Vector2, time_limit: float) -> void:
+	_reposition_target = target
+	_change_state(State.REPOSITION)
+	_state_timer = time_limit
+
+
+func _process_reposition(delta: float) -> void:
+	_state_timer -= delta
+	var to_target := _reposition_target - global_position
+	if _reposition_target == Vector2.INF or _state_timer <= 0.0 or to_target.length() <= REPOSITION_ARRIVE:
+		velocity = Vector2.ZERO
+		_change_state(State.CHASE)
+		return
+	velocity = _apply_separation(_safe_normalized(to_target)) * _get_effective_speed()
 
 
 func _attack_in_progress() -> bool:
@@ -729,17 +746,21 @@ func _execute_attack() -> void:
 func _can_see_player() -> bool:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
+	return _has_line_of_sight(global_position, _player_ref.global_position)
+
+
+## True if nothing solid sits between `from` and `to`. Both the enemy's own body
+## and the player are excluded, so the ray can start inside either one.
+func _has_line_of_sight(from: Vector2, to: Vector2) -> bool:
 	if not is_inside_tree():
 		return false
 	var world := get_world_2d()
 	if world == null:
 		return false
-	var space_state := world.direct_space_state
-	var query := PhysicsRayQueryParameters2D.create(global_position, _player_ref.global_position)
+	var query := PhysicsRayQueryParameters2D.create(from, to)
 	query.collision_mask = 1
-	query.exclude = [self, _player_ref]
-	var result := space_state.intersect_ray(query)
-	return result.is_empty()
+	query.exclude = [self, _player_ref] if _player_ref != null else [self]
+	return world.direct_space_state.intersect_ray(query).is_empty()
 
 
 func take_hit() -> void:
