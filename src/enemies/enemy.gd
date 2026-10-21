@@ -47,6 +47,7 @@ const RING_ENTER_MARGIN: float = 32.0
 const TOKEN_RETRY: float = 0.6
 const RING_JITTER: float = 8.0
 const RING_JITTER_INTERVAL: float = 0.4
+const ALERT_RADIUS: float = 120.0
 
 
 var hits_remaining: int
@@ -83,6 +84,10 @@ var uses_tokens: bool = true
 var _token_retry_timer: float = 0.0
 var _ring_jitter: float = 0.0
 var _ring_jitter_timer: float = 0.0
+
+var _reaction_timer: float = 0.0
+var _alert_timer: float = -1.0
+var _debug_aim_point: Vector2 = Vector2.INF
 
 var _attack_started: bool = false
 
@@ -249,7 +254,16 @@ func _apply_enrage_if_needed() -> void:
 
 
 func _process_idle(delta: float) -> void:
+	if _alert_timer >= 0.0:
+		_alert_timer -= delta
+		velocity = Vector2.ZERO
+		if _alert_timer < 0.0:
+			_aggroed = true
+			_change_state(State.CHASE)
+		return
+
 	if _player_ref and is_instance_valid(_player_ref) and _player_in_range:
+		_reaction_timer = _get_profile().reaction_time
 		_change_state(State.CHASE)
 		return
 
@@ -287,11 +301,17 @@ func _process_chase(delta: float) -> void:
 	var to_player := _player_ref.global_position - global_position
 	var dist := to_player.length()
 	var sees := _can_see_player()
-
 	if sees:
-		_aggroed = true
+		if not _aggroed:
+			_aggroed = true
+			_broadcast_alert()
 	elif not _aggroed:
 		_change_state(State.WANDER)
+		return
+
+	if _reaction_timer > 0.0:
+		_reaction_timer -= delta
+		velocity = Vector2.ZERO
 		return
 
 	if dist < 1.0:
@@ -324,6 +344,40 @@ func _process_chase(delta: float) -> void:
 
 	move_dir = _apply_separation(move_dir)
 	velocity = move_dir * _get_effective_speed()
+
+
+func receive_alert() -> void:
+	if _aggroed or _state == State.DEATH or _alert_timer >= 0.0:
+		return
+	_alert_timer = _get_profile().reaction_time
+
+
+func _broadcast_alert() -> void:
+	if not is_inside_tree():
+		return
+	EncounterDirector.alert(global_position, ALERT_RADIUS, get_tree().get_nodes_in_group("attackable"), self)
+
+
+## Where the player will be after `travel_time`, scaled by how well this tier leads.
+func _predict_player_pos(travel_time: float) -> Vector2:
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return global_position
+	var pos := _player_ref.global_position
+	var v = _player_ref.get("velocity")
+	if not (v is Vector2):
+		return pos
+	return pos + (v as Vector2) * maxf(travel_time, 0.0) * _get_profile().lead_factor
+
+
+func _dir_to_predicted(projectile_speed: float) -> Vector2:
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		_debug_aim_point = Vector2.INF
+		return Vector2.DOWN
+	var dist := global_position.distance_to(_player_ref.global_position)
+	var travel := dist / projectile_speed if projectile_speed > 0.0 else 0.0
+	_debug_aim_point = _predict_player_pos(travel)
+	var d := _safe_normalized(_debug_aim_point - global_position)
+	return d if d != Vector2.ZERO else Vector2.DOWN
 
 
 func _ring_radius() -> float:

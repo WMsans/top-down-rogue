@@ -60,6 +60,17 @@ static func should_aggro_from_neighbors(me: Node2D, neighbors: Array) -> bool:
 	return false
 
 
+static func alert(origin: Vector2, radius: float, candidates: Array, source) -> void:
+	var r2 := radius * radius
+	for e in candidates:
+		if e == source or not is_instance_valid(e):
+			continue
+		if not e.has_method("receive_alert"):
+			continue
+		if origin.distance_squared_to(e.global_position) <= r2:
+			e.receive_alert()
+
+
 func update(player_pos: Vector2, attackable: Array, delta: float = 0.0, player_facing: Vector2 = Vector2.ZERO) -> void:
 	var still: Array = []
 	for e in _active:
