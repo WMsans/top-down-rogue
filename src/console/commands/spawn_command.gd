@@ -189,7 +189,7 @@ static func _spawn_static_projectile(_args: Array[String], ctx: Dictionary) -> S
 	proj.is_enemy_projectile = true
 	proj.lifetime = 999.0
 	proj.direction = Vector2.DOWN
-	proj.damage = 10.0
+	proj.dig_power = 10.0
 	var proj_sprite := proj.get_node_or_null("Sprite2D")
 	if proj_sprite:
 		proj_sprite.texture = PROJECTILE_TEX
@@ -214,7 +214,7 @@ static func _spawn_behavior_projectile(_args: Array[String], ctx: Dictionary, ki
 	proj.direction = dir.normalized()
 	proj.speed = 140.0
 	proj.lifetime = 3.0
-	proj.damage = 5.0
+	proj.dig_power = 5.0
 	var proj_sprite := proj.get_node_or_null("Sprite2D")
 	if proj_sprite:
 		proj_sprite.texture = PROJECTILE_TEX

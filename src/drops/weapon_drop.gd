@@ -36,7 +36,7 @@ func populate_info_card(card: Card) -> void:
 	var stats: Array[String] = []
 	var mod_icons: Array[Texture2D] = []
 	if weapon:
-		stats.append("Damage: %.0f" % weapon.damage)
+		stats.append("Dig: %.1f" % weapon.dig_power)
 		stats.append("Cooldown: %.1fs" % weapon.cooldown)
 		for mod in weapon.modifiers:
 			if mod != null and mod.icon_texture:

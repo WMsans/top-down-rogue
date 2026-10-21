@@ -80,7 +80,7 @@ func test_rupture_bursts_after_five_bloody_hits() -> void:
 	var user := _StatusTarget.new()
 	add_child(user)
 	var w := Weapon.new()
-	w.damage = 6.0
+	w.dig_power = 6.0
 	var t := _HpTarget.new(1000.0)
 	add_child(t)
 	t.get_node("StatusComponent").add_stain("bloody", 5.0)
@@ -100,7 +100,7 @@ func test_rupture_ignores_non_bloody_hits() -> void:
 	var user := _StatusTarget.new()
 	add_child(user)
 	var w := Weapon.new()
-	w.damage = 6.0
+	w.dig_power = 6.0
 	var t := _HpTarget.new(1000.0)
 	add_child(t)
 	var m := RuptureModifier.new()

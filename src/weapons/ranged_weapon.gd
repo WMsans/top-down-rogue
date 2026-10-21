@@ -25,7 +25,7 @@ var _burst_user: Node = null
 
 func _init() -> void:
 	cooldown = 1.0
-	damage = 3.0
+	dig_power = 3.0
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
 	rarity = DropTable.ItemTier.UNCOMMON
@@ -111,8 +111,8 @@ func _emit_shot(user: Node, base_dir: Vector2) -> void:
 	})
 
 
-func _get_projectile_damage() -> float:
-	return get_effective_stats()["damage"]
+func _get_projectile_dig_power() -> float:
+	return get_effective_stats()["dig_power"]
 
 
 func _spawn_projectile(user: Node, direction: Vector2) -> void:
@@ -122,7 +122,7 @@ func _spawn_projectile(user: Node, direction: Vector2) -> void:
 	var proj := PROJECTILE_SCENE.instantiate()
 	proj.behaviors = _make_behaviors()
 	proj.global_position = user.global_position
-	proj.damage = _get_projectile_damage()
+	proj.dig_power = _get_projectile_dig_power()
 	proj.hit_status = hit_status
 	proj.speed = projectile_speed
 	proj.lifetime = projectile_lifetime

@@ -16,7 +16,7 @@ func _init() -> void:
 
 func _seed_effective_stats() -> Dictionary:
 	var s := super._seed_effective_stats()
-	s["damage"] += _kill_stacks
+	s["dig_power"] += _kill_stacks
 	return s
 
 func _native_on_kill(_user: Node, _target: Node) -> void:

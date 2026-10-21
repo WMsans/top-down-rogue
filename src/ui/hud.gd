@@ -11,7 +11,7 @@ extends CanvasLayer
 @onready var _weapon_tooltip: PanelContainer = %WeaponTooltip
 @onready var _weapon_tooltip_name: Label = %WeaponTooltipName
 @onready var _weapon_tooltip_cd: Label = %WeaponTooltipCooldown
-@onready var _weapon_tooltip_dmg: Label = %WeaponTooltipDamage
+@onready var _weapon_tooltip_dig: Label = %WeaponTooltipDig
 
 var _inventory: PlayerInventory
 var _weapon_manager: WeaponManager
@@ -56,10 +56,10 @@ func set_weapon_icon(texture: Texture2D) -> void:
 		_weapon_icon.texture_normal = texture
 		_weapon_fallback.visible = false
 
-func set_weapon_tooltip(name: String, cooldown: float, damage: int) -> void:
+func set_weapon_tooltip(name: String, cooldown: float, dig_power: float) -> void:
 	_weapon_tooltip_name.text = name
 	_weapon_tooltip_cd.text = "Cooldown: %.1fs" % cooldown
-	_weapon_tooltip_dmg.text = "Damage: %d" % damage
+	_weapon_tooltip_dig.text = "Dig: %.1f" % dig_power
 
 func show_weapon_tooltip(show: bool) -> void:
 	_weapon_tooltip.visible = show
@@ -119,7 +119,7 @@ func _on_weapon_mouse_entered() -> void:
 		var stats := _current_weapon.get_base_stats()
 		_weapon_tooltip_name.text = str(stats["name"])
 		_weapon_tooltip_cd.text = "Cooldown: %.1fs" % stats["cooldown"]
-		_weapon_tooltip_dmg.text = "Damage: %.0f" % stats["damage"]
+		_weapon_tooltip_dig.text = "Dig: %.1f" % stats["dig_power"]
 		_weapon_tooltip.visible = true
 
 func _on_weapon_mouse_exited() -> void:

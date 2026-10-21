@@ -85,9 +85,9 @@ func test_catalyst_bond_links_slots_zero_and_two() -> void:
 	assert_int(s2.on_hit_calls).is_equal(2)
 
 
-func test_keystone_disables_outer_slots_and_doubles_damage() -> void:
+func test_keystone_disables_outer_slots() -> void:
 	var w := Weapon.new()
-	w.damage = 10.0
+	w.dig_power = 10.0
 	var s0 := _HitCounter.new()
 	var ks := KeystoneModifier.new()
 	var s2 := _HitCounter.new()
@@ -96,15 +96,15 @@ func test_keystone_disables_outer_slots_and_doubles_damage() -> void:
 	w.resolve_hit(null, t)
 	assert_int(s0.on_hit_calls).is_equal(0)
 	assert_int(s2.on_hit_calls).is_equal(0)
-	assert_float(w.get_effective_stats()["damage"]).is_equal(20.0)
+	assert_float(w.get_effective_stats()["dig_power"]).is_equal(10.0)
 
 
 func test_keystone_without_keystone_is_normal() -> void:
 	var w := Weapon.new()
-	w.damage = 10.0
+	w.dig_power = 10.0
 	var s0 := _HitCounter.new()
 	w.add_modifier(0, s0)
-	assert_float(w.get_effective_stats()["damage"]).is_equal(10.0)
+	assert_float(w.get_effective_stats()["dig_power"]).is_equal(10.0)
 
 
 func test_twin_trigger_doubles_all_on_third_swing() -> void:

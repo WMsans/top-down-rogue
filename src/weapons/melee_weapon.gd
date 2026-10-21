@@ -83,7 +83,7 @@ var _pommel_offset: Vector2 = Vector2.ZERO
 
 func _init() -> void:
 	cooldown = 0.35
-	damage = 5.0
+	dig_power = 5.0
 	icon_texture = weapon_texture
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)
@@ -129,11 +129,11 @@ func _use_impl(user: Node) -> void:
 	var eff := get_effective_stats()
 	var reach: float = eff["reach"]
 	var arc: float = eff["arc"]
-	var dmg: float = eff["damage"]
+	var dig: float = eff["dig_power"]
 	var pos: Vector2 = user.global_position
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
-	_carve_and_push(pos, direction, reach * eff["carve_depth"], arc, dmg)
+	_carve_and_push(pos, direction, reach * eff["carve_depth"], arc, dig)
 	_hit_attackables(user, pos, direction, reach, arc, false)
 	notify_attack(user, {
 		"direction": direction,
@@ -143,7 +143,7 @@ func _use_impl(user: Node) -> void:
 	})
 
 
-func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float, dmg: float) -> void:
+func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float, dig: float) -> void:
 	var fluids: Array[int] = MaterialRegistry.get_fluids()
 	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, push_speed, 0.25, fluids)
 	var solids: Array[int] = [
@@ -153,11 +153,11 @@ func _carve_and_push(pos: Vector2, direction: Vector2, reach: float, arc: float,
 		MaterialRegistry.MAT_COAL,
 		MaterialRegistry.MAT_ICE,
 	]
-	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, 0.0, 0.0, solids, _solid_carve_strength(dmg))
+	TerrainSurface.clear_and_push_materials_in_arc(pos, direction, reach, arc, 0.0, 0.0, solids, _solid_carve_strength(dig))
 
 
-func _solid_carve_strength(dmg: float) -> float:
-	return FREE_CARVE_STRENGTH if free_carve else dmg
+func _solid_carve_strength(dig: float) -> float:
+	return FREE_CARVE_STRENGTH if free_carve else dig
 
 
 func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: float, arc: float, ignore_parry: bool) -> void:

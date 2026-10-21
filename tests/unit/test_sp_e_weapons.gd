@@ -8,7 +8,7 @@ func test_heavy_crossbow_pierces_enemies() -> void:
 	# PenetrateBehavior keeps the projectile alive through an enemy.
 	var p: Projectile = auto_free(Projectile.new())
 	p.is_enemy_projectile = false
-	p.damage = 5.0
+	p.dig_power = 5.0
 	p.behaviors = [b[0]]
 	p._handle_hit(auto_free(Enemy.new()))
 	assert_bool(is_instance_valid(p)).is_true()

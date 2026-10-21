@@ -6,7 +6,7 @@ extends RangedWeapon
 @export var speed_jitter: float = 40.0
 
 func _configure() -> void:
-	damage = 2.5
+	dig_power = 2.5
 	cooldown = 1.4
 	projectile_count = 1   # base spread path unused; _emit_shot overridden
 	spread_angle = 0.0

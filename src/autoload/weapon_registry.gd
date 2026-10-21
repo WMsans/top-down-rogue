@@ -147,7 +147,7 @@ func _apply_csv_fields(weapon: Weapon, row: Dictionary) -> void:
 	weapon.name = row.get("name", weapon.name)
 	weapon.description = row.get("description", "")
 	weapon.cooldown = float(row.get("cooldown", weapon.cooldown))
-	weapon.damage = float(row.get("damage", weapon.damage))
+	weapon.dig_power = float(row.get("dig_power", weapon.dig_power))
 	weapon.hit_status = row.get("hit_status", "")
 	weapon.modifier_slot_count = int(row.get("modifier_slots", weapon.modifier_slot_count))
 	weapon.rarity = _map_rarity(row.get("rarity", ""))

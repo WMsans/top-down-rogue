@@ -6,14 +6,14 @@ const DEFAULT_TEXTURE := preload("res://textures/wall.png")
 const DEFAULT_SPEED := 140.0
 const DEFAULT_LIFETIME := 1.5
 
-static func spawn_one(user: Node, origin: Vector2, direction: Vector2, damage: float,
+static func spawn_one(user: Node, origin: Vector2, direction: Vector2, dig_power: float,
 		opts: Dictionary = {}) -> Projectile:
 	var parent := _resolve_parent(user)
 	if parent == null:
 		return null
 	var proj: Projectile = PROJECTILE_SCENE.instantiate()
 	proj.direction = direction.normalized()
-	proj.damage = damage
+	proj.dig_power = dig_power
 	proj.speed = opts.get("speed", DEFAULT_SPEED)
 	proj.lifetime = opts.get("lifetime", DEFAULT_LIFETIME)
 	proj.hit_status = opts.get("hit_status", "")
@@ -30,7 +30,7 @@ static func spawn_one(user: Node, origin: Vector2, direction: Vector2, damage: f
 	proj.global_position = origin
 	return proj
 
-static func spawn_fan(user: Node, origin: Vector2, base_dir: Vector2, damage: float,
+static func spawn_fan(user: Node, origin: Vector2, base_dir: Vector2, dig_power: float,
 		count: int, spread_deg: float, opts: Dictionary = {}) -> void:
 	var base_angle := base_dir.angle()
 	var half := deg_to_rad(spread_deg) / 2.0
@@ -41,7 +41,7 @@ static func spawn_fan(user: Node, origin: Vector2, base_dir: Vector2, damage: fl
 		var per_opts := opts.duplicate()
 		if opts.has("make_behaviors"):
 			per_opts["behaviors"] = opts["make_behaviors"].call()
-		spawn_one(user, origin, dir, damage, per_opts)
+		spawn_one(user, origin, dir, dig_power, per_opts)
 
 static func _resolve_parent(user: Node) -> Node:
 	if user == null:

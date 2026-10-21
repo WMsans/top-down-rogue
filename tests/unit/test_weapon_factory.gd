@@ -6,7 +6,7 @@ func test_factory_builds_existing_melee_from_row() -> void:
 	assert_that(w is MeleeWeapon).is_true()
 	assert_that(w.weapon_reach).is_equal(28.0)
 	assert_that(w.arc_angle).is_equal_approx(deg_to_rad(90.0), 0.001)
-	assert_that(w.damage).is_equal(3.0)
+	assert_that(w.dig_power).is_equal(3.0)
 
 func test_factory_builds_bespoke_archetype() -> void:
 	var w = WeaponRegistry.get_weapon_by_id("void_sword")

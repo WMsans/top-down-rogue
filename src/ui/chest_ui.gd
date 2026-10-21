@@ -94,7 +94,7 @@ func _build_cards() -> void:
 			var stats: Array[String] = []
 			var base_stats := weapon.get_base_stats()
 			stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
-			stats.append("Damage: %.0f" % base_stats["damage"])
+			stats.append("Dig: %.1f" % base_stats["dig_power"])
 			card.populate(weapon.icon_texture, weapon.name, stats)
 			card.set_rarity(weapon.rarity)
 			card.set_icon_tooltip_text(weapon.name, weapon.description)

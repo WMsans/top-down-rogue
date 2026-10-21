@@ -199,7 +199,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Cooldown: 0.5s"
 
-[node name="WeaponTooltipDamage" type="Label" parent="WeaponTooltip/TooltipMargin/TooltipVBox" unique_id=597486116]
+[node name="WeaponTooltipDig" type="Label" parent="WeaponTooltip/TooltipMargin/TooltipVBox" unique_id=597486116]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Damage: 0"
+text = "Dig: 0"

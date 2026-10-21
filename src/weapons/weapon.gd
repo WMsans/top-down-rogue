@@ -7,7 +7,7 @@ const HIT_STATUS_STAIN := 2.0
 @export var description: String = ""
 @export var rarity: int = DropTable.ItemTier.COMMON
 @export var cooldown: float = 0.8
-@export var damage: float = 0.0
+@export var dig_power: float = 0.0
 @export var hit_status: String = ""
 var icon_texture: Texture2D = null
 var visual: Node2D = null
@@ -188,7 +188,7 @@ func find_empty_modifier_slot() -> int:
 
 func _seed_effective_stats() -> Dictionary:
 	return {
-		"damage": damage,
+		"dig_power": dig_power,
 		"cooldown": cooldown,
 		"reach": 0.0,
 		"arc": 0.0,
@@ -209,8 +209,6 @@ func get_effective_stats() -> Dictionary:
 			v *= m.get_stat_mult(stat)
 		s[stat] = v
 	s["cooldown"] = maxf(COOLDOWN_FLOOR, s["cooldown"])
-	if _has_keystone():
-		s["damage"] *= 2.0
 	_effective_cache = s
 	return s
 
@@ -258,7 +256,7 @@ func get_base_stats() -> Dictionary:
 	return {
 		"name": name,
 		"cooldown": cooldown,
-		"damage": damage
+		"dig_power": dig_power
 	}
 
 

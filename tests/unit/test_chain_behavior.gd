@@ -37,7 +37,7 @@ func _proj(weapon: Weapon) -> Projectile:
 	p.global_position = Vector2.ZERO
 	p.source_weapon = weapon
 	p.source_node = null
-	p.damage = 4.0
+	p.dig_power = 4.0
 	return p
 
 func test_forks_to_jumps_nearest_via_resolve_hit() -> void:

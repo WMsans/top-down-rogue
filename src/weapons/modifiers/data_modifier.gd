@@ -140,7 +140,7 @@ func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
 func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 	if trigger != "on_kill":
 		return
-	if effect == "stat_add" and element == "damage":
+	if effect == "stat_add" and element == "dig_power":
 		_kill_stacks = minf(_kill_stacks + magnitude, magnitude2)
 		_time_since_event = 0.0
 	elif effect == "bounty":
@@ -160,7 +160,7 @@ func get_stat_add(stat: String) -> float:
 func get_stat_mult(stat: String) -> float:
 	if effect == "stat_mult" and element == stat and trigger == "passive":
 		return magnitude
-	if effect == "stat_add" and element == "damage" and stat == "cooldown" and magnitude2 > 0.0 and trigger == "passive":
+	if effect == "stat_add" and element == "dig_power" and stat == "cooldown" and magnitude2 > 0.0 and trigger == "passive":
 		return magnitude2
 	return 1.0
 

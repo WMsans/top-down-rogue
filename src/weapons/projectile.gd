@@ -1,7 +1,7 @@
 class_name Projectile
 extends Area2D
 
-@export var damage: float = 0.0
+@export var dig_power: float = 0.0
 @export var speed: float = 120.0
 @export var lifetime: float = 3.0
 @export var is_enemy_projectile: bool = false
@@ -112,7 +112,7 @@ func _carve_terrain() -> void:
 		MaterialRegistry.MAT_ICE,
 	]
 	TerrainSurface.clear_and_push_materials_in_arc(
-		global_position, direction, 3.0, TAU, 0.0, 0.0, solids, damage
+		global_position, direction, 3.0, TAU, 0.0, 0.0, solids, dig_power
 	)
 
 

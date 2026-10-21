@@ -2,7 +2,7 @@ class_name TeslaGunWeapon
 extends RangedWeapon
 
 func _configure() -> void:
-	damage = 3.0
+	dig_power = 3.0
 	cooldown = 1.1
 	projectile_count = 1
 	spread_angle = 0.0

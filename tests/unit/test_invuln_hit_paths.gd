@@ -33,7 +33,7 @@ func test_legacy_projectile_hit_stains_vulnerable_target() -> void:
 	var parent := _parent_with(target)
 	var p: Projectile = Projectile.new()  # frees itself on hit
 	p.is_enemy_projectile = false
-	p.damage = 4.0
+	p.dig_power = 4.0
 	p.hit_status = "on_fire"
 	parent.add_child(p)
 	p._handle_hit(target)
@@ -47,7 +47,7 @@ func test_legacy_projectile_hit_on_invulnerable_target_does_nothing() -> void:
 	var parent := _parent_with(target)
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
-	p.damage = 4.0
+	p.dig_power = 4.0
 	p.hit_status = "on_fire"
 	parent.add_child(p)
 	p._handle_hit(target)

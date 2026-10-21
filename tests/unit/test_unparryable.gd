@@ -32,7 +32,7 @@ func test_parry_skips_damage() -> void:
 
 	var w := MeleeWeapon.new()
 	w.weapon_reach = 36.0
-	w.damage = 10.0
+	w.dig_power = 10.0
 	w._hit_attackables_in_arc(user, user.global_position, Vector2.DOWN)
 
 	assert_that(target.hit_received).is_false()
@@ -51,7 +51,7 @@ func test_unparryable_applies_damage() -> void:
 
 	var w := MeleeWeapon.new()
 	w.weapon_reach = 36.0
-	w.damage = 10.0
+	w.dig_power = 10.0
 	w._hit_attackables_in_arc(user, user.global_position, Vector2.DOWN)
 
 	assert_that(target.hit_received).is_true()

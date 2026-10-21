@@ -112,15 +112,15 @@ func test_disabled_modifier_skipped_in_all_hooks() -> void:
 
 func test_disabled_modifier_excluded_from_effective_stats() -> void:
 	var w := Weapon.new()
-	w.damage = 10.0
+	w.dig_power = 10.0
 	var m := DataModifier.new({
 		"id": "x", "name": "X", "description": "", "rarity": "Common",
 		"category": "stat", "trigger": "passive", "condition": "", "effect": "stat_add",
-		"element": "damage", "magnitude": "5", "magnitude2": "0", "suppresses_base_use": "No",
+		"element": "dig_power", "magnitude": "5", "magnitude2": "0", "suppresses_base_use": "No",
 	})
 	m.is_disabled = true
 	w.add_modifier(0, m)
-	assert_float(w.get_effective_stats()["damage"]).is_equal(10.0)
+	assert_float(w.get_effective_stats()["dig_power"]).is_equal(10.0)
 	m.is_disabled = false
 	w.invalidate_effective_stats()
-	assert_float(w.get_effective_stats()["damage"]).is_equal(15.0)
+	assert_float(w.get_effective_stats()["dig_power"]).is_equal(15.0)

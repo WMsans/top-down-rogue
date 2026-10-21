@@ -2,7 +2,7 @@ class_name HeavyCrossbowWeapon
 extends RangedWeapon
 
 func _configure() -> void:
-	damage = 5.0
+	dig_power = 5.0
 	cooldown = 1.2
 	projectile_count = 1
 	spread_angle = 0.0

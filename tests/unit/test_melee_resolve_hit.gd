@@ -34,7 +34,7 @@ func test_melee_swing_routes_through_resolve_hit_and_applies_edge() -> void:
 	var w := MeleeWeapon.new()
 	w.weapon_reach = 30.0
 	w.arc_angle = PI
-	w.damage = 5.0
+	w.dig_power = 5.0
 	w.modifiers = [_EdgeMod.new(), null, null]
 	await get_tree().physics_frame
 	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, 30.0, PI, true)

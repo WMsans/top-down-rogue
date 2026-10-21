@@ -25,6 +25,6 @@ func test_cooldown_cannot_drop_below_floor() -> void:
 
 func test_additive_then_multiplicative_order() -> void:
 	var w := _weapon_with(["sharpened", "heavy_head"])
-	w.damage = 10.0
+	w.dig_power = 10.0
 	w.invalidate_effective_stats()
-	assert_float(w.get_effective_stats()["damage"]).is_equal(18.0)
+	assert_float(w.get_effective_stats()["dig_power"]).is_equal(18.0)

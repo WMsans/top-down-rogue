@@ -26,9 +26,9 @@ func test_find_empty_modifier_slot_on_fresh_weapon() -> void:
 
 func test_add_then_mult_order() -> void:
 	var w: Weapon = Weapon.new()
-	w.damage = 10.0
-	w.modifiers = [_AddMod.new("damage", 3.0), _MultMod.new("damage", 2.0), null]
-	assert_that(w.get_effective_stats()["damage"]).is_equal(26.0)
+	w.dig_power = 10.0
+	w.modifiers = [_AddMod.new("dig_power", 3.0), _MultMod.new("dig_power", 2.0), null]
+	assert_that(w.get_effective_stats()["dig_power"]).is_equal(26.0)
 
 
 func test_cooldown_floor() -> void:
@@ -40,10 +40,10 @@ func test_cooldown_floor() -> void:
 
 func test_cache_invalidates_on_modifier_change() -> void:
 	var w: Weapon = Weapon.new()
-	w.damage = 5.0
-	assert_that(w.get_effective_stats()["damage"]).is_equal(5.0)
-	w.add_modifier(0, _AddMod.new("damage", 4.0))
-	assert_that(w.get_effective_stats()["damage"]).is_equal(9.0)
+	w.dig_power = 5.0
+	assert_that(w.get_effective_stats()["dig_power"]).is_equal(5.0)
+	w.add_modifier(0, _AddMod.new("dig_power", 4.0))
+	assert_that(w.get_effective_stats()["dig_power"]).is_equal(9.0)
 
 
 func test_use_sets_cooldown_from_effective() -> void:
