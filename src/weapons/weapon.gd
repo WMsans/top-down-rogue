@@ -37,6 +37,10 @@ func use(user: Node) -> void:
 	_cooldown_timer = get_effective_stats()["cooldown"]
 
 
+func reset_cooldown() -> void:
+	_cooldown_timer = 0.0
+
+
 func notify_attack(user: Node, ctx: Dictionary) -> void:
 	for modifier in _iter_active_modifiers():
 		modifier.on_attack(self, user, ctx)
