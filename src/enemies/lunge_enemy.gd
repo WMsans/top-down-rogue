@@ -75,6 +75,9 @@ func _process_attack(delta: float) -> void:
 
 
 func _tick_dash(delta: float) -> void:
+	# a dash that finished or was cancelled stays dead: no motion, no VFX
+	if _dash_done:
+		return
 	if not _redirected and _get_profile().lunge_redirect and _dash_timer <= dash_duration * 0.5:
 		_redirected = true
 		_lock_dir = _steer_toward_player(_lock_dir)

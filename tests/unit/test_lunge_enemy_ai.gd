@@ -60,9 +60,22 @@ func test_cancel_mid_dash_stops_dash() -> void:
 	e._attack_started = false
 	e._dash_done = false
 	e._process_attack(0.016)
+	var particles: CPUParticles2D = e._fire_vfx.get_node("Particles")
+	# the dash is running, so the VFX is live and the stop below is meaningful
+	assert_bool(particles.emitting).is_true()
 	e.take_hit()
 	assert_bool(e._dash_done).is_true()
 	assert_that(e.velocity).is_equal(Vector2.ZERO)
+	assert_bool(particles.emitting).is_false()
 	e._state_timer = 0.0
 	e._process_hurt(0.016)
 	assert_int(e._state).is_equal(Enemy.State.CHASE)
+	# the cancelled dash must not resume: another attack tick must neither
+	# begin a new dash (_begin_dash resets _dash_timer and refires the VFX)
+	# nor re-apply dash motion.
+	var dash_timer_before := e._dash_timer
+	e._process_attack(0.016)
+	assert_float(e._dash_timer).is_equal_approx(dash_timer_before, 0.0001)
+	assert_bool(particles.emitting).is_false()
+	assert_bool(e._dash_done).is_true()
+	assert_that(e.velocity).is_equal(Vector2.ZERO)
