@@ -18,7 +18,7 @@ Under one-hit kills, damage and crit stop meaning anything, so ~30 modifiers and
 
 ## 2. Decisions
 
-- **Every hit is exactly 1**, from any source: swing, projectile, explosion, lava, status tick. Nothing deals 2 hits — not charges, not combos.
+- **Every hit is exactly 1**, from any source: swing, projectile, explosion, status tick. Nothing deals 2 hits — not charges, not combos.
 - **No damage, no crit.** `damage` becomes `dig_power` (terrain only). `crit_chance`, `crit_multiplier`, `crit_status` are deleted.
 - **Charge changes shape** (arc, reach, pierce, shockwave, pull, projectile), never hit count.
 - **Player:** 3 HP, 3 armor. Hits and DoT ticks take armor first, then HP. HP never regenerates.
@@ -78,7 +78,7 @@ Each active ticking status keeps its own timer; each tick calls the owner's `app
 
 ### A3. Lava
 
-Lava currently reaches the player only as On Fire stain. `LavaDamageChecker` (`src/player/lava_damage_checker.gd`, currently a no-op) becomes active: while any body sample point is in lava, call `take_hit(Vector2.ZERO)`. I-frames (1.0s) give ~1 point per second. Lava still applies On Fire stain as today.
+No change. Lava keeps reaching the player as On Fire stain, so it costs points through fire ticks (A2). `LavaDamageChecker` is a debug tool and is left untouched.
 
 ### A4. Healing sources
 
@@ -260,7 +260,7 @@ Two pre-existing failures (`test_pre_attached_modifier_applied`, `test_flame_swo
 
 ## 4. Implementation order
 
-1. **Core rules** — Part A (A1–A3), Part B, Part C, Part F. The game is playable with the new rules; weapon/modifier traits still behave as before minus damage/crit.
+1. **Core rules** — Part A (A1–A2), Part B, Part C, Part F. The game is playable with the new rules; weapon/modifier traits still behave as before minus damage/crit.
 2. **Infrastructure** — E1 (chance helper, on-kill hook, PlayerBuffs, `chance` column), A4, Part G.
 3. **Content** — Part D weapons, then Part E modifiers.
 

@@ -14,7 +14,6 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 |  | P0 | Medium | Armor + HP model | `player_inventory.gd`: replace `max_health = 100` with 3 HP + 3 armor. A hit costs 1 point, armor first. Keep 1.0s i-frames. Emit `armor_changed` alongside `health_changed`. |
 |  | P0 | Medium | Armor regeneration | After 3s with no hit or tick, regen +1 armor per 1s until full. Any hit or DoT tick resets the 3s timer. HP never regenerates. |
 |  | P0 | Medium | DoT routing | `take_status_damage` costs 1 point per tick, armor first, bypassing i-frames. Tick rates: fire 1/1s, poison 1/1.5s, steam 1/1s. Shorten player-side status durations so a typical burn costs ~2 points. |
-|  | P0 | Low | Lava as a hit | `lava_damage_checker.gd`: lava contact routes through `take_damage` (respects i-frames), ~1 point per second. |
 |  | P1 | Low | Healing sources | Boss kill: +1 HP and full armor. `heal()` works in whole HP points. Remove any heal path not listed in gameplay.md §2. |
 |  | P1 | Medium | Shop "Mend" service | Restore 1 HP. Cost curve like the removal service (base + per-use increment). Unavailable at full HP. |
 |  | P1 | Low | Max armor modifiers | Support max-armor changes from modifiers (`glass_cannon`: −2 max armor). Clamp current armor on change. |
@@ -22,7 +21,7 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 ### Enemy Hit Model
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | Medium | Hit-count health | `enemy.gd`: replace `max_health`/damage with a hit count. Normal = 1, elite = 2, TANK elite = 3. Any hit source (swing, projectile, explosion, lava, status tick) = 1 hit. Remove `_apply_elite_scaling` HP multipliers. |
+|  | P0 | Medium | Hit-count health | `enemy.gd`: replace `max_health`/damage with a hit count. Normal = 1, elite = 2, TANK elite = 3. Any hit source (swing, projectile, explosion, status tick) = 1 hit. Remove `_apply_elite_scaling` HP multipliers. |
 |  | P0 | Low | Unified post-hit invulnerability | Elites and bosses ignore further hits for 0.3s after taking one. Elite flashes + staggers on the first hit. |
 |  | P0 | Medium | Boss hit pools | `boss_enemy.gd`: replace 200 HP with 3 phases × 10 hits (baseline). Phase transitions trigger on hit count, not HP thresholds, and cleanse statuses. |
 |  | P0 | Medium | Remove enemy damage stats | Every enemy attack costs the player exactly 1 point. Drop damage scaling (`_apply_damage_scale`) and per-floor HP/damage curves. |

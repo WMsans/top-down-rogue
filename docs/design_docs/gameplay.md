@@ -22,7 +22,7 @@ The primary referencing game is **Noita**, especially the feel of chaos.
 - Every **hit** from an enemy costs **1 point**: armor first, then HP once armor is empty. Enemy attacks have no damage values — a hit is a hit.
 - After a hit the player is invulnerable for **1.0s**.
 - **Damage-over-time** (fire, poison, steam, …) also costs 1 point per tick, armor first. Ticks ignore invulnerability frames. Tick rates: fire 1 / 1s, poison 1 / 1.5s, steam 1 / 1s. Status durations are short — a typical burn costs ~2 points, not the whole pool.
-- **Lava contact** counts as a hit (respects invulnerability frames): ~1 point per second of standing in it.
+- **Lava** sets the player On Fire, so it costs points through fire ticks.
 - **Armor regeneration:** after **3s** without taking any hit or tick, armor regenerates **+1 per 1s** until full.
 - **HP never regenerates.** It is restored only by specific sources: killing a boss (+1 HP and full armor), the shop's **Mend** service (1 HP, cost rises with each use), and specific weapons/modifiers.
 - Max armor can be changed by items/modifiers; max HP increases are very rare.
@@ -30,7 +30,7 @@ The primary referencing game is **Noita**, especially the feel of chaos.
 
 ### Enemies: Hit Counts
 
-- **Every hit counts as exactly 1**, whatever its source: swing, projectile, explosion, lava, or a status tick. There is no damage and no critical hit.
+- **Every hit counts as exactly 1**, whatever its source: swing, projectile, explosion, or a status tick (lava burns enemies through On Fire). There is no damage and no critical hit.
 - **Normal enemies** die to their first hit. A single burn tick kills them.
 - **Elites** take **2 hits** (TANK elites take 3). They flash and stagger on the first hit.
 - **Bosses** have a hit pool split across phases (baseline **3 phases × 10 hits**, tuned per boss). A phase transition cleanses the boss's statuses.
