@@ -114,10 +114,15 @@ func test_stun_during_windup_cancels_and_releases() -> void:
 
 func test_disabled_enemy_cannot_take_token() -> void:
 	var e := _make(Vector2(20, 0))
-	e._status_component.add_timed_status("stun", 0.5)
-	_world.encounter_director.request_token(e)
+	e._aggroed = true
+	e._process_chase(0.016)
 	_tick_director(e)
+	# Precondition: the director would hand this enemy a token right now.
+	assert_bool(_world.encounter_director.has_token(e)).is_true()
+	e._status_component.add_timed_status("stun", 0.5)
 	assert_bool(e._try_take_token()).is_false()
+	e._process_chase(0.016)
+	assert_int(e._state).is_equal(Enemy.State.CHASE)
 
 
 func test_losing_sight_in_windup_returns_to_chase_keeping_aggro() -> void:
