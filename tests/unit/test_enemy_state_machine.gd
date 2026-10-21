@@ -113,13 +113,46 @@ func test_status_tick_spends_a_hit_without_hurt() -> void:
 	assert_int(e.hits_remaining).is_equal(1)
 	assert_that(e._state).is_equal(Enemy.State.CHASE)
 
-func test_status_tick_respects_invuln() -> void:
+func test_status_tick_ignores_invuln() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.max_hits = 2
+	e.hits_remaining = 2
+	e.take_hit()  # opens the 0.3s window
+	assert_int(e.hits_remaining).is_equal(1)
+	e.apply_status_damage(1)
+	assert_int(e.hits_remaining).is_equal(0)
+	assert_that(e._state).is_equal(Enemy.State.DEATH)
+
+func test_status_tick_does_not_open_invuln_window() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
 	e.max_hits = 2
 	e.hits_remaining = 2
 	e.take_hit()
+	e._tick_hit_invuln(0.31)
 	e.apply_status_damage(1)
-	assert_int(e.hits_remaining).is_equal(1)
+	assert_int(e.hits_remaining).is_equal(0)
+	assert_that(e._state).is_equal(Enemy.State.DEATH)
+
+	# A status tick must not make the next weapon hit a no-op.
+	var e2: MockEnemy = auto_free(MockEnemy.new())
+	e2.max_hits = 2
+	e2.hits_remaining = 2
+	e2.apply_status_damage(1)
+	assert_bool(e2.is_hit_invulnerable()).is_false()
+	e2.take_hit()
+	assert_int(e2.hits_remaining).is_equal(0)
+	assert_that(e2._state).is_equal(Enemy.State.DEATH)
+
+func test_burst_of_status_ticks_all_land() -> void:
+	# Hitch frame: the status component grants several ticks in one frame.
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.max_hits = 3
+	e.hits_remaining = 3
+	e.apply_status_damage(1)
+	e.apply_status_damage(1)
+	e.apply_status_damage(1)
+	assert_int(e.hits_remaining).is_equal(0)
+	assert_that(e._state).is_equal(Enemy.State.DEATH)
 
 func test_enrage_triggers_on_first_hit() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())

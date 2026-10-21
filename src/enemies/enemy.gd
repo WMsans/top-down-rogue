@@ -608,24 +608,29 @@ func take_hit() -> void:
 
 
 func apply_status_damage(amount: int) -> void:
-	# Quiet DoT path: spends hits without forcing HURT state.
+	# Quiet DoT path: spends hits without forcing HURT state. Status ticks
+	# bypass the post-hit invulnerability window (and do not open it): that
+	# window exists to stop multi-hit weapons from spending several hits at
+	# once, and a DoT tick is a hit from another source.
 	for _i in range(amount):
-		if not _consume_hit():
+		if not _consume_hit(true):
 			return
 		_play_hit_flash()
 
 
-# Spends one hit. Returns false when the hit is ignored (already dead or
-# inside the post-hit invulnerability window).
-func _consume_hit() -> bool:
-	if _state == State.DEATH or hits_remaining <= 0 or is_hit_invulnerable():
+# Spends one hit. Returns false when the hit is ignored (already dead, or a
+# weapon hit inside the post-hit invulnerability window).
+func _consume_hit(from_status: bool = false) -> bool:
+	if _state == State.DEATH or hits_remaining <= 0:
+		return false
+	if not from_status and is_hit_invulnerable():
 		return false
 	hits_remaining = 0 if GameModeManager.is_creative() else hits_remaining - 1
 	hits_changed.emit(hits_remaining, max_hits)
 	if hits_remaining <= 0:
 		_change_state(State.DEATH)
 		die()
-	elif max_hits > 1:
+	elif max_hits > 1 and not from_status:
 		_hit_invuln_timer = HIT_INVULN
 	return true
 
