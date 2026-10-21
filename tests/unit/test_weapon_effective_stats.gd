@@ -19,6 +19,11 @@ class _MultMod extends Modifier:
 		return factor if s == stat else 1.0
 
 
+func test_find_empty_modifier_slot_on_fresh_weapon() -> void:
+	var w := Weapon.new()
+	assert_int(w.find_empty_modifier_slot()).is_equal(0)
+
+
 func test_add_then_mult_order() -> void:
 	var w: Weapon = Weapon.new()
 	w.damage = 10.0

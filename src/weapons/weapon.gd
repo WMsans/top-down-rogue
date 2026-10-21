@@ -189,7 +189,7 @@ func _has_keystone() -> bool:
 
 func find_empty_modifier_slot() -> int:
 	for i in range(modifier_slot_count):
-		if modifiers[i] == null:
+		if i >= modifiers.size() or modifiers[i] == null:
 			return i
 	return -1
 

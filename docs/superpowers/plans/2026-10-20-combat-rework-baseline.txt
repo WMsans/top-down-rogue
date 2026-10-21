@@ -1,0 +1,164 @@
+tests/unit/test_advanced_melee_charge.gd | Overall Summary: 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_advanced_melee_combo.gd | Overall Summary: 1 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_tap_chain_advances_then_wraps,
+tests/unit/test_advanced_melee_hit_geometry.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_anti_synergy.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_arena_composition.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_arena_region.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_bedrock_material.gd | Overall Summary: 3 test cases | 3 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | test_bedrock_exists_with_collider,test_bedrock_is_inert,test_bedrock_is_last_material,
+tests/unit/test_berserker_axe_weapon.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_biome_def.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_biome_economy.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_biome_fixed_anchors.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_biome_shop_templates.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_boss_drops.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_boss_phase_transition.gd | NO SUMMARY (crash/parse error) | 
+tests/unit/test_boss_ring_coverage.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_card_autowrap.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_cave_spawner.gd | Overall Summary: 1 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_mob_cap_enforcement,
+tests/unit/test_caves_biome_decor.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_chain_behavior.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_chain_spark.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_charge_bar.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_charge_combo_weapons_data.gd | Overall Summary: 9 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_charge_weapon_ratio.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_charged_ranged_weapon.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_chest_drops.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_chest_weapon_pool.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 3 orphans | | 
+tests/unit/test_combat_util_nearest.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_combat_util_radial_knockback.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_combo_antiloop.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 3 orphans | | 
+tests/unit/test_combo_data.gd | Overall Summary: 8 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_combo_detonator.gd | Overall Summary: 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_combo_engine.gd | Overall Summary: 10 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 9 orphans | | 
+tests/unit/test_combo_flagship.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 1 orphans | | 
+tests/unit/test_combo_registry.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_combo_rhythm.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 1 orphans | | 
+tests/unit/test_combo_states.gd | Overall Summary: 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 4 orphans | | 
+tests/unit/test_combo_ui.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_composition_dispatcher_replay_scope.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_composition_dispatcher_spawn_node.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_csv_table.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_csv_weapon_data.gd | Overall Summary: 6 test cases | 1 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_pre_attached_modifier_applied,
+tests/unit/test_damage_vignette.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_dash_fire_vfx.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_data_modifier.gd | Overall Summary: 21 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_decor_def.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_drop_info_card.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_drop_table.gd | Overall Summary: 18 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_dust_material.gd | NO SUMMARY (crash/parse error) | 
+tests/unit/test_enemy_aggression.gd | Overall Summary: 13 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_enemy_burst_attack.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_enemy_carries_weapon.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_enemy_crowd.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_enemy_state_machine.gd | Overall Summary: 25 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_enemy_tier_distance.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_enemy_wall_clamp.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_feature_floor_overlay.gd | Overall Summary: 1 test cases | 1 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | test_floor_overlay_spawns_sprite_at_offset,
+tests/unit/test_feature_lantern_cluster.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_feature_plaque_set.gd | Overall Summary: 2 test cases | 1 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | test_plaque_set_spawns_sprite_per_spec,
+tests/unit/test_flicker_light.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 1 orphans | | 
+tests/unit/test_floor_chunk.gd | Overall Summary: 4 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_decor_chance_one_fills_all_air_cells,
+tests/unit/test_floor_chunk_decor_lights.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_flow_field.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_free_carve_flag.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_hit_reaction.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_light_decode_hazard.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_lightning_arc_fx.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_lunge_enemy.gd | Overall Summary: 19 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_lunge_spawn.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_material_hardness.gd | NO SUMMARY (crash/parse error) | 
+tests/unit/test_material_hazard_bits.gd | NO SUMMARY (crash/parse error) | 
+tests/unit/test_melee_arc_angle_filter.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_melee_enemy.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_melee_reach_scale.gd | Overall Summary: 10 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_melee_resolve_hit.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_minimap_model.gd | Overall Summary: 12 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_mirror_blade_weapon.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_modal_panel.gd | Overall Summary: 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_modifier_emitter_radius.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_modifier_icon_fallback.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_modifier_rarity.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_modifier_stacking.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_modifiers.gd | Overall Summary: 5 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_advanced_play_move_notifies_per_step,
+tests/unit/test_native_weapon_hooks.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_nav_field.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_new_swords_load.gd | Overall Summary: 2 test cases | 1 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_flame_sword_has_lava_emitter,
+tests/unit/test_oil_and_explode_wave_registry.gd | Overall Summary: 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 5 orphans | | 
+tests/unit/test_on_expire_hook.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_parry_intercept.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_parry_window.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_passability_decode.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_passability_grid.gd | Overall Summary: 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_passability_set_tile.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_player_controller.gd | Overall Summary: 1 test cases | 2 errors | 1 failures | 0 flaky | 0 skipped | 2 orphans | | test_on_hit_impact_delegates_to_inventory,
+tests/unit/test_player_dash.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_player_health_fraction.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_player_inventory.gd | Overall Summary: 4 test cases | 1 errors | 1 failures | 0 flaky | 0 skipped | 4 orphans | | test_take_damage_reduces_health,
+tests/unit/test_poisoned_status.gd | Overall Summary: 9 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_projectile.gd | Overall Summary: 2 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_projectile_expires,
+tests/unit/test_projectile_behaviors.gd | Overall Summary: 19 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_projectile_block.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_projectile_fan_counts.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_quake_hammer_weapon.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_ranged_hit_status.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_ranged_pattern_spawn.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 1 orphans | | 
+tests/unit/test_ranged_pattern_weapons.gd | Overall Summary: 8 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_ranged_weapon.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_ranged_weapon_burst.gd | Overall Summary: 7 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_reaper_glaive_weapon.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_render_chunk_shader.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_sector_grid.gd | Overall Summary: 11 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_sector_grid_claim.gd | Overall Summary: 1 test cases | 0 errors | 2 failures | 0 flaky | 0 skipped | 0 orphans | | test_boss_anchor_at_spaced_offset_only,
+tests/unit/test_sector_grid_fixed_anchors.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_shop_chamber_template.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_shop_modifier_drop.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_shop_pricing.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 1 orphans | | 
+tests/unit/test_shop_rarity_distribution.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_shop_removal.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_shop_stall.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_shop_weapon_drop.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_sniper_enemy.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_sniper_penetration.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_solidity_flags_decode.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_soul_reaver_weapon.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_sp_d_weapons_build.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_sp_e_weapons.gd | Overall Summary: 9 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_sp_e_weapons_build.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_spawn_dispatcher.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 3 orphans | | 
+tests/unit/test_spawn_gauntlet.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_spawn_validation.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_splat_behavior.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_status_component.gd | Overall Summary: 25 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_status_reactions.gd | Overall Summary: 8 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_status_registry.gd | Overall Summary: 18 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_status_thresholds.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_status_visuals.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_swarm_grid.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_template_pack.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_terrain_cell_intern.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 3 orphans | | 
+tests/unit/test_terrain_collider_seam.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 4 orphans | | 
+tests/unit/test_terrain_collision_helper.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_terrain_physical.gd | Overall Summary: 8 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 8 orphans | | 
+tests/unit/test_terrain_physical_hazard.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 3 orphans | | 
+tests/unit/test_terrain_physical_pending_cap.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 3 orphans | | 
+tests/unit/test_terrain_surface.gd | Overall Summary: 4 test cases | 3 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | test_null_adapter_does_not_crash,test_place_gas_delegates_to_adapter,test_place_lava_delegates_to_adapter,
+tests/unit/test_twin_daggers_weapon.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_ui_layout.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_ui_theme.gd | Overall Summary: 6 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 5 orphans | | 
+tests/unit/test_ui_theme_layout.gd | Overall Summary: 4 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_ui_theme_overlay.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_unparryable.gd | Overall Summary: 2 test cases | 2 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | test_parry_skips_damage,test_unparryable_applies_damage,
+tests/unit/test_war_scythe_weapon.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_balance.gd | Overall Summary: 1 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_charge_api.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_crit.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_crit_csv.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_delivery.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_effective_stats.gd | Overall Summary: 5 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_eval_pass.gd | Overall Summary: 10 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 4 orphans | | 
+tests/unit/test_weapon_factory.gd | Overall Summary: 4 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_factory_skips_unregistered_archetype,
+tests/unit/test_weapon_registry_pools.gd | Overall Summary: 10 test cases | 2 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | test_melee_weapon_lives_in_common_bucket,test_ranged_weapon_lives_in_uncommon_bucket,
+tests/unit/test_weapon_resolve_hit.gd | Overall Summary: 7 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_weapon_resources.gd | Overall Summary: 6 test cases | 0 errors | 1 failures | 0 flaky | 0 skipped | 0 orphans | | test_boss_staff_universal_and_type_specific,
+tests/unit/test_whirlwind_blade_weapon.gd | Overall Summary: 2 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
+tests/unit/test_world_manager_chunk_budget.gd | Overall Summary: 3 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans | | 
