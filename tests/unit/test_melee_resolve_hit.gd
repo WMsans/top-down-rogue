@@ -35,9 +35,8 @@ func test_melee_swing_routes_through_resolve_hit_and_applies_edge() -> void:
 	w.weapon_reach = 30.0
 	w.arc_angle = PI
 	w.damage = 5.0
-	w.crit_chance = 0.0
 	w.modifiers = [_EdgeMod.new(), null, null]
 	await get_tree().physics_frame
-	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, 30.0, PI, 1.0, false, true)
+	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, 30.0, PI, 1.0, true)
 	assert_int(target.hits.size()).is_equal(1)
 	assert_that(target.get_node("StatusComponent").get_stain("on_fire")).is_greater(0.0)

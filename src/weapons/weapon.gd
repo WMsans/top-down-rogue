@@ -1,16 +1,14 @@
 class_name Weapon
 extends Resource
 
-const CRIT_STATUS_STAIN := 2.0
+const HIT_STATUS_STAIN := 2.0
 
 @export var name: String = "Weapon"
 @export var description: String = ""
 @export var rarity: int = DropTable.ItemTier.COMMON
 @export var cooldown: float = 0.8
 @export var damage: float = 0.0
-@export var crit_chance: float = 0.0
-@export var crit_multiplier: float = 2.0
-@export var crit_status: String = ""
+@export var hit_status: String = ""
 var icon_texture: Texture2D = null
 var visual: Node2D = null
 var _sprite: Sprite2D = null
@@ -156,8 +154,6 @@ func retrigger_modifier(mod: Modifier, hook: String, args: Array) -> Variant:
 			mod.on_hit_target(self, args[0], args[1])
 		"on_kill":
 			mod.on_kill(self, args[0], args[1])
-		"on_crit":
-			mod.on_crit(self, args[0], args[1])
 		"modify_hit_damage":
 			result = mod.modify_hit_damage(self, args[0], args[1], args[2])
 			if result == null:
@@ -198,8 +194,6 @@ func _seed_effective_stats() -> Dictionary:
 	return {
 		"damage": damage,
 		"cooldown": cooldown,
-		"crit_chance": crit_chance,
-		"crit_multiplier": crit_multiplier,
 		"reach": 0.0,
 		"arc": 0.0,
 		"move_speed": 1.0,
@@ -229,10 +223,8 @@ func invalidate_effective_stats() -> void:
 	_effective_cache = {}
 
 
-func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> void:
+func resolve_hit(user: Node, target: Node, base_dmg: float) -> void:
 	var dmg: float = base_dmg
-	if is_crit:
-		dmg *= get_effective_stats()["crit_multiplier"]
 	for m in _iter_active_modifiers():
 		dmg = m.modify_hit_damage(self, user, target, dmg)
 	dmg = _native_modify_hit_damage(user, target, dmg)
@@ -246,17 +238,22 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 			if rlen_sq > 0.0001:
 				hit_dir = raw_dir / sqrt(rlen_sq)
 		target.on_hit_impact(target.global_position if target is Node2D else Vector2.ZERO, hit_dir, int(dmg))
+	_apply_hit_status(target)
 	for m in _iter_active_modifiers():
 		m.on_hit_target(self, user, target)
-	if is_crit:
-		_on_crit(target)
-		for m in _iter_active_modifiers():
-			m.on_crit(self, user, target)
 	_hit_count += 1
 	if tracks_hits and pre_hits > 0 and target.hits_remaining <= 0:
 		for m in _iter_active_modifiers():
 			m.on_kill(self, user, target)
 		_native_on_kill(user, target)
+
+
+func _apply_hit_status(target: Node) -> void:
+	if hit_status == "":
+		return
+	var sc = target.get_node_or_null("StatusComponent")
+	if sc != null:
+		sc.add_stain(hit_status, HIT_STATUS_STAIN)
 
 
 func _native_modify_hit_damage(_user: Node, _target: Node, dmg: float) -> float:
@@ -273,29 +270,6 @@ func get_base_stats() -> Dictionary:
 		"cooldown": cooldown,
 		"damage": damage
 	}
-
-
-func get_effective_crit_chance() -> float:
-	var c: float = crit_chance
-	for modifier in _iter_active_modifiers():
-		if modifier.has_method("modify_crit_chance"):
-			c = modifier.modify_crit_chance(self, c)
-	return clampf(c, 0.0, 1.0)
-
-
-func roll_crit() -> bool:
-	return randf() < get_effective_crit_chance()
-
-
-func get_effective_crit_chance_for_target(target: Node) -> float:
-	var c: float = crit_chance
-	for m in _iter_active_modifiers():
-		c = m.modify_crit_chance_for_target(self, c, target)
-	return clampf(c, 0.0, 1.0)
-
-
-func roll_crit_for_target(target: Node) -> bool:
-	return randf() < get_effective_crit_chance_for_target(target)
 
 
 func reset_cooldown() -> void:
@@ -315,14 +289,6 @@ func _apply_burst(user: Node, target: Node, amount: float) -> void:
 	target.on_hit_impact(
 		(target.global_position if target is Node2D else Vector2.ZERO),
 		dir, int(amount))
-
-
-func _on_crit(target: Node) -> void:
-	if crit_status == "":
-		return
-	var sc = target.get_node_or_null("StatusComponent")
-	if sc != null:
-		sc.add_stain(crit_status, CRIT_STATUS_STAIN)
 
 
 func get_stats() -> Dictionary:

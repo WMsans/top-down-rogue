@@ -52,3 +52,14 @@ func test_new_modifier_is_droppable() -> void:
 	for tier in WeaponRegistry.modifier_tiers.keys():
 		total += WeaponRegistry.modifier_tiers[tier].size()
 	assert_int(total).is_greater_equal(50)
+
+func test_crit_status_weapons_now_use_hit_status() -> void:
+	assert_str(WeaponRegistry.get_weapon_by_id("flame_sword").hit_status).is_equal("on_fire")
+	assert_str(WeaponRegistry.get_weapon_by_id("frost_sword").hit_status).is_equal("chilly")
+	assert_str(WeaponRegistry.get_weapon_by_id("tide_caller").hit_status).is_equal("wet")
+
+func test_weapons_have_no_crit_fields() -> void:
+	var w = WeaponRegistry.get_weapon_by_id("caliburn")
+	assert_bool("crit_chance" in w).is_false()
+	assert_bool("crit_multiplier" in w).is_false()
+	assert_bool("crit_status" in w).is_false()

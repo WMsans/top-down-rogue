@@ -26,7 +26,7 @@ func _target() -> _Target:
 func test_native_modify_hit_damage_folds_into_resolve_hit() -> void:
 	var w: _NativeWeapon = _NativeWeapon.new()
 	var t := _target()
-	w.resolve_hit(null, t, 3.0, false)
+	w.resolve_hit(null, t, 3.0)
 	assert_int(w.dmg_calls).is_equal(1)
 	assert_int(t.hits[0]).is_equal(6)
 
@@ -34,12 +34,12 @@ func test_native_on_kill_fires_once_on_lethal_hit() -> void:
 	var w: _NativeWeapon = _NativeWeapon.new()
 	var t := _target()
 	t.hits_remaining = 1
-	w.resolve_hit(null, t, 3.0, false)
+	w.resolve_hit(null, t, 3.0)
 	assert_int(w.killed).is_equal(1)
 
 func test_native_on_kill_does_not_fire_on_nonlethal_hit() -> void:
 	var w: _NativeWeapon = _NativeWeapon.new()
 	var t := _target()
 	t.hits_remaining = 2
-	w.resolve_hit(null, t, 3.0, false)
+	w.resolve_hit(null, t, 3.0)
 	assert_int(w.killed).is_equal(0)

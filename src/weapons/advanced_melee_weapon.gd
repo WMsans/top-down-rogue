@@ -10,7 +10,6 @@ class Move extends RefCounted:
 	var arc: float = PI / 2.0
 	var damage_mult: float = 1.0
 	var dash_distance: float = 0.0
-	var force_crit: bool = false
 	var ignore_parry: bool = false
 	var swing_dir: float = 0.0   # 0 = alternate; +1/-1 = forced swing direction
 
@@ -65,12 +64,11 @@ func _slash(dir: float = 0.0, dmg_mult: float = 1.0) -> Move:
 	return m
 
 
-func _thrust(force_crit: bool = false, ignore_parry: bool = false, dash: float = 0.0) -> Move:
+func _thrust(ignore_parry: bool = false, dash: float = 0.0) -> Move:
 	var m := Move.new()
 	m.shape = MoveShape.THRUST
 	m.reach = weapon_reach * 1.25
 	m.arc = deg_to_rad(20.0)
-	m.force_crit = force_crit
 	m.ignore_parry = ignore_parry
 	m.dash_distance = dash
 	return m
@@ -232,7 +230,7 @@ func _play_move(move: Move, user: Node) -> void:
 
 func _apply_move_hit(move: Move, user: Node, pos: Vector2, direction: Vector2) -> void:
 	_carve_and_push(pos, direction, move.reach, move.arc, damage * move.damage_mult)
-	_hit_attackables(user, pos, direction, move.reach, move.arc, move.damage_mult, move.force_crit, move.ignore_parry)
+	_hit_attackables(user, pos, direction, move.reach, move.arc, move.damage_mult, move.ignore_parry)
 
 
 func _start_move_anim(move: Move, direction: Vector2) -> void:

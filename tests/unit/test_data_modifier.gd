@@ -108,16 +108,6 @@ func test_bloodlust_stacks_on_kill_capped() -> void:
 		m.on_kill(null, null, null)
 	assert_that(m.get_stat_add("damage")).is_equal(8.0)
 
-func test_combo_keeper_forces_crit_on_fifth() -> void:
-	var w: Weapon = Weapon.new()
-	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "every_n_hits", "effect": "stat_add", "element": "crit_chance", "magnitude": "1.0", "magnitude2": "5" }))
-	w.modifiers = [m, null, null]
-	w._hit_count = 4
-	assert_that(w.get_effective_crit_chance()).is_equal(1.0)
-	w._hit_count = 2
-	assert_that(w.get_effective_crit_chance()).is_equal(0.0)
-
-
 class _KnockTarget extends Node2D:
 	var knocks: Array = []
 	func _init() -> void:

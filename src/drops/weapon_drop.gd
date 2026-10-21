@@ -38,10 +38,6 @@ func populate_info_card(card: Card) -> void:
 	if weapon:
 		stats.append("Damage: %.0f" % weapon.damage)
 		stats.append("Cooldown: %.1fs" % weapon.cooldown)
-		if weapon.crit_chance > 0.0:
-			stats.append("Crit: %.0f%%" % (weapon.crit_chance * 100.0))
-		if weapon.crit_multiplier != 2.0:
-			stats.append("Crit Mult: %.1fx" % weapon.crit_multiplier)
 		for mod in weapon.modifiers:
 			if mod != null and mod.icon_texture:
 				mod_icons.append(mod.icon_texture)

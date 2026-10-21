@@ -17,7 +17,7 @@ func _init() -> void:
 	icon_texture = preload("res://textures/wall.png")
 
 
-func on_crit(_weapon: Weapon, user: Node, _target: Node) -> void:
+func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 	if user == null or not (user is Node2D):
 		return
 	var host := _resolve_host(user)

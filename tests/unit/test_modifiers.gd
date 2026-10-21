@@ -12,7 +12,7 @@ class _StubTarget extends Node2D:
 		hits.append(dmg)
 
 
-func test_projectile_hit_status_applies_on_non_crit_hit() -> void:
+func test_projectile_hit_status_applies_on_hit() -> void:
 	var parent: Node2D = auto_free(Node2D.new())
 	add_child(parent)
 	var target := _StubTarget.new()
@@ -20,7 +20,6 @@ func test_projectile_hit_status_applies_on_non_crit_hit() -> void:
 	var p: Projectile = Projectile.new()  # frees itself on hit
 	p.is_enemy_projectile = false
 	p.damage = 5.0
-	p.crit_chance = 0.0
 	p.hit_status = "on_fire"
 	parent.add_child(p)
 	p._handle_hit(target)
@@ -36,7 +35,6 @@ func test_projectile_no_hit_status_applies_nothing() -> void:
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
 	p.damage = 5.0
-	p.crit_chance = 0.0
 	parent.add_child(p)
 	p._handle_hit(target)
 	var sc: StatusComponent = target.get_node("StatusComponent")

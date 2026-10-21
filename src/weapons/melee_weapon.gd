@@ -134,7 +134,7 @@ func _use_impl(user: Node) -> void:
 	var direction := _get_facing_direction(user)
 	_start_swing(direction)
 	_carve_and_push(pos, direction, reach * eff["carve_depth"], arc, dmg)
-	_hit_attackables(user, pos, direction, reach, arc, 1.0, false, false)
+	_hit_attackables(user, pos, direction, reach, arc, 1.0, false)
 	notify_attack(user, {
 		"direction": direction,
 		"origin": pos,
@@ -160,7 +160,7 @@ func _solid_carve_strength(dmg: float) -> float:
 	return FREE_CARVE_STRENGTH if free_carve else dmg
 
 
-func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: float, arc: float, dmg_mult: float, force_crit: bool, ignore_parry: bool) -> void:
+func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: float, arc: float, dmg_mult: float, ignore_parry: bool) -> void:
 	var base_dmg: float = damage * dmg_mult
 	if int(base_dmg) <= 0:
 		return
@@ -195,8 +195,7 @@ func _hit_attackables(user: Node, origin: Vector2, direction: Vector2, reach: fl
 				var tint: Color = trail_color if "trail_color" in self else Color(1, 1, 1, 1)
 				NailClashFX.play(node2d.global_position, -hit_dir, tint)
 				continue
-		var is_crit: bool = force_crit or roll_crit_for_target(node)
-		resolve_hit(user, node, damage * dmg_mult, is_crit)
+		resolve_hit(user, node, damage * dmg_mult)
 
 
 func _tick_impl(_delta: float) -> void:

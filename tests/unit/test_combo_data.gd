@@ -110,18 +110,6 @@ func test_deepfreeze_adds_frozen_to_chilly_target() -> void:
 	assert_float(dry.get_node("StatusComponent").get_stain("frozen")).is_equal(0.0)
 
 
-func test_hemophilia_crit_vs_bloody() -> void:
-	var w := Weapon.new()
-	w.crit_chance = 0.2
-	var m := _make("hemophilia")
-	w.add_modifier(0, m)
-	var t := _StatusTarget.new()
-	add_child(t)
-	assert_float(w.get_effective_crit_chance_for_target(t)).is_equal(0.2)
-	t.get_node("StatusComponent").add_stain("bloody", 5.0)
-	assert_float(w.get_effective_crit_chance_for_target(t)).is_equal(0.45)
-
-
 func test_backdraft_registered_and_spreads() -> void:
 	assert_that(_make("backdraft")).is_not_null()
 

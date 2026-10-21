@@ -17,7 +17,6 @@ func test_factory_builds_new_data_weapon() -> void:
 	var w = WeaponRegistry.get_weapon_by_id("rapier")
 	assert_that(w).is_not_null()
 	assert_that(w is MeleeWeapon).is_true()
-	assert_that(w.crit_chance).is_equal(0.3)
 
 func test_factory_skips_unregistered_archetype() -> void:
 	assert_that(WeaponRegistry.get_weapon_by_id("twin_daggers")).is_null()

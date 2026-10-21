@@ -11,7 +11,7 @@ const MULT := {
 
 # [min, max] effective DPS; tolerance is applied below.
 const BANDS := {
-	"Melee":  {"Common": [5.0, 8.0],  "Uncommon": [7.0, 11.0], "Rare": [9.0, 14.0]},
+	"Melee":  {"Common": [5.0, 8.0],  "Uncommon": [6.0, 11.0], "Rare": [7.0, 14.0]},
 	"Ranged": {"Uncommon": [5.0, 9.5], "Rare": [7.0, 11.5]},
 }
 const TOL := 0.6
@@ -28,11 +28,8 @@ func test_every_weapon_sits_in_its_rarity_band() -> void:
 		assert_object(w).is_not_null()
 		var cd: float = w.cooldown
 		var dmg: float = w.damage
-		var cc: float = w.crit_chance
-		var cm: float = w.crit_multiplier
-		var crit_factor: float = 1.0 + cc * (cm - 1.0)
 		var mult: float = MULT.get(id, 1.0)
-		var dps: float = dmg * crit_factor * mult / cd
+		var dps: float = dmg * mult / cd
 		var band: Array = BANDS[row["type"]][row["rarity"]]
 		assert_float(dps) \
 			.override_failure_message("%s (%s %s) DPS=%.1f outside band %s" % [id, row["rarity"], row["type"], dps, str(band)]) \

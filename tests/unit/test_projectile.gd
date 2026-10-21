@@ -77,7 +77,6 @@ func test_projectile_routes_player_hit_through_source_weapon() -> void:
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
 	p.damage = 5.0
-	p.crit_chance = 0.0
 	p.source_weapon = _EdgeWeapon.new()
 	parent.add_child(p)
 	p._handle_hit(target)
@@ -92,7 +91,6 @@ func test_projectile_without_source_weapon_still_hits() -> void:
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
 	p.damage = 4.0
-	p.crit_chance = 0.0
 	parent.add_child(p)
 	p._handle_hit(target)
 	assert_int(target.hits[0]).is_equal(4)

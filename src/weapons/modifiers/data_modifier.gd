@@ -218,16 +218,6 @@ func get_stat_mult(stat: String) -> float:
 	return 1.0
 
 
-func modify_crit_chance(weapon: Weapon, base: float) -> float:
-	if trigger == "passive" and effect == "stat_add" and element == "crit_chance":
-		return base + magnitude
-	if trigger == "every_n_hits" and element == "crit_chance" and weapon != null:
-		var n := int(magnitude2)
-		if n > 0 and (weapon._hit_count % n) == n - 1:
-			return 1.0
-	return base
-
-
 func on_tick(_weapon: Weapon, delta: float) -> void:
 	_time_since_event += delta
 	if name == "Bloodlust" and _time_since_event >= 3.0 and _kill_stacks > 0.0:
@@ -256,9 +246,3 @@ func _spread_status(weapon: Weapon, source_target: Node, status_id: String,
 		var sc = foe.get_node_or_null("StatusComponent") if foe != null else null
 		if sc != null:
 			sc.add_stain(status_id, stain)
-
-
-func modify_crit_chance_for_target(_weapon: Weapon, base: float, target: Node) -> float:
-	if trigger == "on_hit" and effect == "stat_add" and element == "crit_chance" and _condition_met(target):
-		return base + magnitude
-	return base

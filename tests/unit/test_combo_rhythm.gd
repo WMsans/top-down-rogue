@@ -32,10 +32,10 @@ func test_pendulum_alternates_left_right() -> void:
 	w.add_modifier(0, left); w.add_modifier(1, pend); w.add_modifier(2, right)
 	var ctx := {"direction": Vector2.RIGHT, "origin": Vector2.ZERO, "charged": false, "charge_ratio": 0.0}
 	var t := Node.new()
-	w.notify_attack(null, ctx); w.resolve_hit(null, t, 5.0, false)
+	w.notify_attack(null, ctx); w.resolve_hit(null, t, 5.0)
 	assert_int(left.on_hit_calls).is_equal(2)
 	assert_int(right.on_hit_calls).is_equal(1)
-	w.notify_attack(null, ctx); w.resolve_hit(null, t, 5.0, false)
+	w.notify_attack(null, ctx); w.resolve_hit(null, t, 5.0)
 	assert_int(left.on_hit_calls).is_equal(3)
 	assert_int(right.on_hit_calls).is_equal(3)
 

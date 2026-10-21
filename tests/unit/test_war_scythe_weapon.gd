@@ -35,8 +35,7 @@ func test_hits_rear_flank_but_not_directly_behind() -> void:
 	parent.add_child(behind)
 	behind.global_position = Vector2(-10.0, 0.0)
 	var w := WarScythe.new()
-	w.crit_chance = 0.0
 	await get_tree().physics_frame
-	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, w.weapon_reach, w.arc_angle, 1.0, false, true)
+	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, w.weapon_reach, w.arc_angle, 1.0, true)
 	assert_int(flank.hits.size()).is_equal(1)
 	assert_int(behind.hits.size()).is_equal(0)

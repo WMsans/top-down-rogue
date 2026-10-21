@@ -5,13 +5,9 @@ extends Area2D
 @export var speed: float = 120.0
 @export var lifetime: float = 3.0
 @export var is_enemy_projectile: bool = false
-@export var crit_chance: float = 0.0
-@export var crit_multiplier: float = 2.0
-@export var crit_status: String = ""
 @export var hit_status: String = ""
 @export var collisionless_time: float = 0.0
 
-const CRIT_STATUS_STAIN := 2.0
 const HIT_STATUS_STAIN := 2.0
 const ATTACKABLE_HIT_LAYER := 1 << 7  # layer 8, zero-indexed bit 7
 
@@ -86,8 +82,7 @@ func _handle_hit(target: Node) -> void:
 	if target.is_in_group("attackable"):
 		if target != source_node and target.has_method("on_hit_impact"):
 			if source_weapon != null:
-				var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
-				source_weapon.resolve_hit(source_node, target, damage, is_crit)
+				source_weapon.resolve_hit(source_node, target, damage)
 			else:
 				_legacy_apply_hit(target)
 			var keep_enemy := false
@@ -122,13 +117,7 @@ func _carve_terrain() -> void:
 
 
 func _legacy_apply_hit(target: Node) -> void:
-	var is_crit: bool = randf() < clampf(crit_chance, 0.0, 1.0)
-	var dmg: int = int(damage * crit_multiplier) if is_crit else int(damage)
-	target.on_hit_impact(global_position, direction, dmg)
-	if is_crit and crit_status != "":
-		var sc = target.get_node_or_null("StatusComponent")
-		if sc != null:
-			sc.add_stain(crit_status, CRIT_STATUS_STAIN)
+	target.on_hit_impact(global_position, direction, int(damage))
 	if hit_status != "":
 		var hs = target.get_node_or_null("StatusComponent")
 		if hs != null:
