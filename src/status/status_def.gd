@@ -10,7 +10,7 @@ var tint_color: Color
 var decay_rate: float       # stain lost per second
 var active_threshold: float # active once stain >= this
 var category: int
-var burn_dps: float         # > 0 means deals burn damage while active
+var tick_interval: float    # > 0 means costs 1 point every tick_interval seconds while active
 var blocks_movement: bool   # true => immobile while active
 var slow_multiplier: float  # movement speed multiplier while active (1.0 = none)
 var icon_path: String       # res:// path to the above-head status icon (or "")
@@ -25,7 +25,7 @@ func _init(
 	p_decay_rate: float,
 	p_active_threshold: float,
 	p_category: int = Category.NEUTRAL,
-	p_burn_dps: float = 0.0,
+	p_tick_interval: float = 0.0,
 	p_blocks_movement: bool = false,
 	p_slow_multiplier: float = 1.0,
 	p_icon_path: String = "",
@@ -38,7 +38,7 @@ func _init(
 	decay_rate = p_decay_rate
 	active_threshold = p_active_threshold
 	category = p_category
-	burn_dps = p_burn_dps
+	tick_interval = p_tick_interval
 	blocks_movement = p_blocks_movement
 	slow_multiplier = p_slow_multiplier
 	icon_path = p_icon_path

@@ -3,11 +3,11 @@ extends Node
 
 # Per-entity status holder. Attached as a child named "StatusComponent" to the
 # player and every enemy. Holds "stain" amounts, decays them, runs reactions,
-# applies effects (burn DoT, movement block/slow), and tops up stains from the
+# applies effects (status ticks, movement block/slow), and tops up stains from the
 # terrain the owner stands on. Owner must implement apply_status_damage(int).
 
 signal changed
-signal burn_tick  # emitted each time a whole point of burn damage lands
+signal burn_tick  # emitted on every status tick (fire, poison, steam)
 
 const _EPSILON := 0.01
 
@@ -32,7 +32,8 @@ const _HISTORY_FRAMES := 3
 const POLL_INTERVAL := 4
 
 var _stains: Dictionary = {}      # id -> float amount
-var _burn_accum: float = 0.0
+var _tick_timers: Dictionary = {}  # ticking status id -> seconds active since its last tick
+var _stain_caps: Dictionary = {}   # id -> max stain (absent = uncapped)
 var _owner_node: Node = null
 var _terrain_physical: Node = null
 var _origin_history: Array[Vector2] = []  # recent poll positions, oldest first
@@ -55,7 +56,7 @@ func _ready() -> void:
 func add_stain(id: String, amount: float) -> void:
 	if amount == 0.0:
 		return
-	_stains[id] = maxf(0.0, get_stain(id) + amount)
+	_stains[id] = clampf(get_stain(id) + amount, 0.0, _stain_caps.get(id, INF))
 	changed.emit()
 
 
@@ -88,6 +89,20 @@ func get_active_ids() -> Array:
 
 func clear(id: String) -> void:
 	if _stains.erase(id):
+		changed.emit()
+
+
+func clear_all() -> void:
+	_stains.clear()
+	_timed_statuses.clear()
+	_tick_timers.clear()
+	changed.emit()
+
+
+func set_stain_cap(id: String, cap: float) -> void:
+	_stain_caps[id] = cap
+	if get_stain(id) > cap:
+		_stains[id] = cap
 		changed.emit()
 
 
@@ -158,10 +173,10 @@ func is_movement_blocked() -> bool:
 # --- Per-frame update ---
 
 func tick(delta: float) -> void:
-	# Idle fast path: nothing to decay, no burn in flight -> no work, no signal.
+	# Idle fast path: nothing to decay, no tick in flight -> no work, no signal.
 	# Reactions only matter when at least one stain is present, so an empty
-	# component with no pending burn can safely do nothing this frame.
-	if _stains.is_empty() and _burn_accum == 0.0 and _timed_statuses.is_empty():
+	# component with no pending tick can safely do nothing this frame.
+	if _stains.is_empty() and _tick_timers.is_empty() and _timed_statuses.is_empty():
 		return
 	_decay(delta)
 	var entity_pos: Vector2 = Vector2.ZERO
@@ -201,16 +216,18 @@ func _decay(delta: float) -> void:
 
 
 func _apply_effects(delta: float) -> void:
-	if has_status("on_fire"):
-		_burn_accum += StatusRegistry.get_burn_dps("on_fire") * delta
-	if has_status("poisoned"):
-		_burn_accum += StatusRegistry.get_burn_dps("poisoned") * delta
-	var whole: int = int(_burn_accum)
-	if whole >= 1:
-		_burn_accum -= float(whole)
-		burn_tick.emit()
-		if _owner_node != null and _owner_node.has_method("apply_status_damage"):
-			_owner_node.apply_status_damage(whole)
+	for id in StatusRegistry.get_ticking_ids():
+		if not has_status(id):
+			_tick_timers.erase(id)
+			continue
+		var interval: float = StatusRegistry.get_tick_interval(id)
+		var t: float = _tick_timers.get(id, 0.0) + delta
+		while t >= interval:
+			t -= interval
+			burn_tick.emit()
+			if _owner_node != null and _owner_node.has_method("apply_status_damage"):
+				_owner_node.apply_status_damage(1)
+		_tick_timers[id] = t
 
 
 func _poll_terrain(delta: float) -> void:
