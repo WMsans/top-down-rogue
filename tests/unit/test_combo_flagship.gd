@@ -50,22 +50,21 @@ class _LocalChain extends Modifier:
 		weapon.retrigger_modifier(first, "on_hit_target", [user, target])
 
 
-func test_flagship_echo_strike_plus_combustion_hits_twice() -> void:
+func test_flagship_echo_strike_retiggers_the_first_modifier_once() -> void:
 	var user := _StatusTarget.new()
 	add_child(user)
 	user.global_position = Vector2.ZERO
 	var w := Weapon.new()
-	var combustion := CombustionModifier.new()
+	var counter := _HitCounter.new()
 	var echo := EchoStrikeModifier.new()
-	w.add_modifier(0, combustion); w.add_modifier(1, echo)
+	w.add_modifier(0, counter); w.add_modifier(1, echo)
 	var t := _HpTarget.new(1000.0)
 	add_child(t)
 	t.global_position = Vector2(30, 0)
-	t.get_node("StatusComponent").add_stain("on_fire", 4.0)
 	w.resolve_hit(user, t)
-	assert_int(t.impacts.size()).is_equal(2)
-	assert_int(t.impacts[0]).is_equal(1)
-	assert_int(t.impacts[1]).is_equal(1)
+	# the echo retriggers the first modifier, but the swing itself is one hit
+	assert_int(counter.on_hit_calls).is_equal(2)
+	assert_int(t.impacts.size()).is_equal(1)
 
 
 func test_depth_guard_prevents_infinite_retrigger_chain() -> void:

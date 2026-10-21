@@ -44,6 +44,8 @@ func _split(proj, reverse_dir: bool = false) -> void:
 		shard.collisionless_time = shard_collisionless_time
 		if shard_hit_status != "":
 			shard.hit_status = shard_hit_status
+		else:
+			shard.hit_status = proj.hit_status
 		shard.global_position = proj.global_position + shard.direction * spawn_offset
 		var src_sprite = proj.get_node_or_null("Sprite2D")
 		var shard_sprite = shard.get_node_or_null("Sprite2D")

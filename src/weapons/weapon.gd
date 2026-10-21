@@ -264,20 +264,5 @@ func reset_cooldown() -> void:
 	_cooldown_timer = 0.0
 
 
-func _apply_burst(user: Node, target: Node) -> void:
-	if target == null or not is_instance_valid(target):
-		return
-	if not target.has_method("on_hit_impact"):
-		return
-	var dir: Vector2 = Vector2.DOWN
-	if target is Node2D and user is Node2D:
-		var d: Vector2 = (target.global_position - user.global_position)
-		if d.length_squared() > 0.0001:
-			dir = d / d.length()
-	target.on_hit_impact(
-		(target.global_position if target is Node2D else Vector2.ZERO),
-		dir)
-
-
 func get_stats() -> Dictionary:
 	return get_base_stats()

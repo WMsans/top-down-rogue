@@ -8,7 +8,6 @@ extends Area2D
 @export var hit_status: String = ""
 @export var collisionless_time: float = 0.0
 
-const HIT_STATUS_STAIN := 2.0
 const ATTACKABLE_HIT_LAYER := 1 << 7  # layer 8, zero-indexed bit 7
 
 var direction: Vector2 = Vector2.RIGHT
@@ -123,7 +122,7 @@ func _legacy_apply_hit(target: Node) -> void:
 	if hit_status != "":
 		var hs = target.get_node_or_null("StatusComponent")
 		if hs != null:
-			hs.add_stain(hit_status, HIT_STATUS_STAIN)
+			hs.add_stain(hit_status, Weapon.HIT_STATUS_STAIN)
 
 
 func is_solid_at(pos: Vector2) -> bool:

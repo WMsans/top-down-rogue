@@ -24,7 +24,7 @@ func test_projectile_hit_status_applies_on_hit() -> void:
 	parent.add_child(p)
 	p._handle_hit(target)
 	var sc: StatusComponent = target.get_node("StatusComponent")
-	assert_that(sc.get_stain("on_fire")).is_greater(0.0)
+	assert_that(sc.get_stain("on_fire")).is_equal_approx(Weapon.HIT_STATUS_STAIN, 0.001)
 
 
 func test_projectile_no_hit_status_applies_nothing() -> void:
