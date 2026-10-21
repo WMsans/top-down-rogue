@@ -260,8 +260,9 @@ func get_base_stats() -> Dictionary:
 	}
 
 
-func reset_cooldown() -> void:
-	_cooldown_timer = 0.0
+# Refunds a fraction of the cooldown still to wait (0.5 = half the wait left).
+func refund_cooldown(fraction: float) -> void:
+	_cooldown_timer *= clampf(1.0 - fraction, 0.0, 1.0)
 
 
 func get_stats() -> Dictionary:

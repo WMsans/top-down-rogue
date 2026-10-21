@@ -58,6 +58,17 @@ func test_use_sets_cooldown_from_effective() -> void:
 	assert_that(w.is_ready()).is_true()
 
 
+func test_refund_cooldown_halves_the_remaining_wait() -> void:
+	var w: Weapon = Weapon.new()
+	w.cooldown = 2.0
+	w.use(null)
+	w.refund_cooldown(0.5)
+	w.tick(0.99)
+	assert_bool(w.is_ready()).is_false()
+	w.tick(0.02)
+	assert_bool(w.is_ready()).is_true()
+
+
 func test_melee_seeds_reach_and_arc() -> void:
 	var m: MeleeWeapon = MeleeWeapon.new()
 	m.weapon_reach = 30.0

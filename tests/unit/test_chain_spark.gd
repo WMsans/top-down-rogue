@@ -23,6 +23,7 @@ func test_chain_spark_hits_up_to_three_nearest() -> void:
 		e.global_position = Vector2(10.0 * float(i + 1), 0.0)   # x = 10..50, all within RANGE
 		enemies.append(e)
 	var m := ChainSparkModifier.new()
+	m.proc_chance = 1.0
 	m.on_kill(null, user, null)
 	var hits := 0
 	for e in enemies:
@@ -42,6 +43,7 @@ func test_chain_spark_respects_range() -> void:
 	add_child(far)
 	far.global_position = Vector2(500.0, 0.0)   # outside RANGE 160
 	var m := ChainSparkModifier.new()
+	m.proc_chance = 1.0
 	m.on_kill(null, user, null)
 	assert_bool(near.hit_count > 0).is_true()
 	assert_bool(far.hit_count > 0).is_false()
@@ -57,6 +59,7 @@ func test_chain_spark_skips_invulnerable_targets() -> void:
 	add_child(normal)
 	normal.global_position = Vector2(40.0, 0.0)
 	var m := ChainSparkModifier.new()
+	m.proc_chance = 1.0
 	m.on_kill(null, user, null)
 	# the invulnerable target takes nothing at all
 	assert_int(shielded.hit_count).is_equal(0)
@@ -64,3 +67,16 @@ func test_chain_spark_skips_invulnerable_targets() -> void:
 	# the other target is still hit
 	assert_bool(normal.hit_count > 0).is_true()
 	assert_float(normal.get_node("StatusComponent").get_timed_remaining("lightning")).is_greater(0.0)
+
+
+func test_chain_spark_does_not_arc_on_every_kill() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var e: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(e)
+	e.global_position = Vector2(20.0, 0.0)
+	var m := ChainSparkModifier.new()   # documented chance: 1/4
+	for _i in range(100):
+		m.on_kill(null, user, null)
+	assert_int(e.hit_count).is_greater(0)    # it does fire
+	assert_int(e.hit_count).is_less(100)     # but not on every kill

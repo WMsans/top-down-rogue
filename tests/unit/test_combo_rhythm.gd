@@ -36,7 +36,7 @@ func test_pendulum_alternates_left_right() -> void:
 	assert_int(right.on_hit_calls).is_equal(3)
 
 
-func test_headsman_refunds_swing_on_kill() -> void:
+func test_headsman_refunds_half_the_swing_cooldown_on_kill() -> void:
 	var w := Weapon.new()
 	w.cooldown = 0.5
 	w._cooldown_timer = 0.5
@@ -45,7 +45,7 @@ func test_headsman_refunds_swing_on_kill() -> void:
 	var t := _HpTarget.new(100.0)
 	add_child(t)
 	m.on_kill(w, null, t)
-	assert_float(w._cooldown_timer).is_equal(0.0)
+	assert_float(w._cooldown_timer).is_equal(0.25)
 
 
 

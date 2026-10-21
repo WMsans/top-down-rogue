@@ -8,6 +8,7 @@ const STUN_DURATION := 0.3
 const TINT := Color(0.9, 0.95, 1.0)
 
 var chain_count: int = 3
+var proc_chance: float = 0.25  # documented as a 1/4 chance per kill
 
 
 func _init() -> void:
@@ -18,6 +19,8 @@ func _init() -> void:
 
 func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 	if user == null or not (user is Node2D):
+		return
+	if randf() >= proc_chance:
 		return
 	var host := _resolve_host(user)
 	var origin: Vector2 = (user as Node2D).global_position
