@@ -4,6 +4,63 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 
 ---
 
+## Phase 0: Combat Rework (Katana ZERO offense / Soul Knight defense)
+
+See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.csv` / `modifiers.csv` already describe the new behavior; code and stat columns still need to catch up.
+
+### Player Armor & Health
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P0 | Medium | Armor + HP model | `player_inventory.gd`: replace `max_health = 100` with 3 HP + 3 armor. A hit costs 1 point, armor first. Keep 1.0s i-frames. Emit `armor_changed` alongside `health_changed`. |
+|  | P0 | Medium | Armor regeneration | After 3s with no hit or tick, regen +1 armor per 1s until full. Any hit or DoT tick resets the 3s timer. HP never regenerates. |
+|  | P0 | Medium | DoT routing | `take_status_damage` costs 1 point per tick, armor first, bypassing i-frames. Tick rates: fire 1/1s, poison 1/1.5s, steam 1/1s. Shorten player-side status durations so a typical burn costs ~2 points. |
+|  | P0 | Low | Lava as a hit | `lava_damage_checker.gd`: lava contact routes through `take_damage` (respects i-frames), ~1 point per second. |
+|  | P1 | Low | Healing sources | Boss kill: +1 HP and full armor. `heal()` works in whole HP points. Remove any heal path not listed in gameplay.md §2. |
+|  | P1 | Medium | Shop "Mend" service | Restore 1 HP. Cost curve like the removal service (base + per-use increment). Unavailable at full HP. |
+|  | P1 | Low | Max armor modifiers | Support max-armor changes from modifiers (`glass_cannon`: −2 max armor). Clamp current armor on change. |
+
+### Enemy Hit Model
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P0 | Medium | Hit-count health | `enemy.gd`: replace `max_health`/damage with a hit count. Normal = 1, elite = 2, TANK elite = 3. Any hit source (swing, projectile, explosion, lava, status tick) = 1 hit. Remove `_apply_elite_scaling` HP multipliers. |
+|  | P0 | Low | Unified post-hit invulnerability | Elites and bosses ignore further hits for 0.3s after taking one. Elite flashes + staggers on the first hit. |
+|  | P0 | Medium | Boss hit pools | `boss_enemy.gd`: replace 200 HP with 3 phases × 10 hits (baseline). Phase transitions trigger on hit count, not HP thresholds, and cleanse statuses. |
+|  | P0 | Medium | Remove enemy damage stats | Every enemy attack costs the player exactly 1 point. Drop damage scaling (`_apply_damage_scale`) and per-floor HP/damage curves. |
+|  | P1 | Medium | Elite abilities under hit counts | ENRAGE triggers after the first hit (was <30% HP). TANK = 3 hits (was 2× HP). FAST / TELEPORT unchanged. |
+|  | P1 | Medium | Behavior-based difficulty | EASY / NORMAL / HARD tiers become behavior profiles (telegraph length, attack cadence, projectile count). Floor scaling raises these and enemy count, not stats. |
+
+### Damage & Crit Removal
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P0 | Medium | Rename `damage` → `dig_power` | CSV column + `Weapon` resource + registry. Dig power only drives terrain carving. Re-assign values by archetype: daggers/rapiers low; axes/maces/hammers/greatswords high; Gravedigger's Spade and Obsidian Greatsword highest. |
+|  | P0 | Medium | Remove crit | Drop `crit_chance`, `crit_multiplier`, `crit_status` from CSV, `Weapon`, and hit resolution. Weapons that used `crit_status` now use `hit_status` or their new trait (see `weapons.csv`). Delete/rewrite crit tests (`test_weapon_crit*.gd`). |
+|  | P1 | Low | Remove damage numbers | Floating damage numbers no longer apply. Replace with hit feedback only (flash, stagger, elite first-hit marker). |
+|  | P1 | Low | Rename weapons | `thunder_katana` → display name "Katana", `twin_daggers` → "Jack and Mary" (done in CSV; keep ids). Update any hard-coded names/tests. |
+
+### Weapon Behavior Rework
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P0 | High | Implement reworked weapon traits | Make each weapon match its new `weapons.csv` description: Fire Orb (AoE explosion), Willowblade (charged blade wave), Flame/Frost Sword + Tide Caller (status on every hit), Heavenly Sword (frost burst on kill), Glacier Edge (chill → freeze), Cinder Brand (kills burst into flame), Caliburn (sword beam every 3rd swing), Katana (dash-slash, kill refunds cooldown), Rapier (line pierce), Iron Mace (stun on hit), Jack and Mary (front + back strike), Reaper's Glaive (1/10 heal on kill), Berserker's Axe (faster at low armor), Soul Reaver (stacking reach/arc), Arc Railgun (charge → beam size). |
+|  | P0 | Medium | Charge = shape, not hits | Charged attacks change arc/reach/pierce/shockwave/pull only. Never count as more than 1 hit. |
+
+### Modifier Effect Rework
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P0 | High | Stat modifiers | sharpened (+3 dig), heavy_head (stun + knockback, −25% swing speed), honed_point (+30% projectile speed/lifetime), glass_cannon (−2 max armor, +40% swing speed, +30% reach), slot_harmony (+20% swing speed). |
+|  | P0 | High | On-kill modifiers | chain_spark (1/4 lightning arc), hemophilia (1/5 bloody burst), pyroclast (1/10 fire patch), combo_keeper (kill streak shockwave), overkill (piercing shard), headsman (50% cooldown refund), bloodlust (stacking swing speed), vampiric (skip armor-regen delay), executioners_mark (mark → armor). See `modifiers.csv` for final text. |
+|  | P0 | High | Consume modifiers | combustion (+30% reach 1s), necrosis (+30% swing speed 1s), frostshatter (+30% move speed 1s), rupture (+50% dig 1s). Each consumes its status on hit. |
+|  | P0 | Medium | Conditional modifiers | frostbreaker (spread Chilly), coup_de_grace (finishing elite/boss phase refunds swing + 1 armor), rampage (hit streak → reach), momentum (move speed → swing speed), greedy_edge (gold → reach), adrenaline (armor break → +40% move speed 2s), last_stand (1/2 shockwave after being hit). |
+|  | P1 | Medium | Chance system + Executioner's Mark | Central chance helper for all chance-based weapon/modifier effects. Executioner's Mark adds +1/4 to every chance on its weapon, capped at 1. |
+
+### HUD & Tests
+| Done | Priority | Difficulty | Task | Description |
+|------|----------|------------|------|-------------|
+|  | P0 | Medium | Hearts + shields HUD | Replace the health bar with 3 heart icons (HP) and 3 shield icons (armor). Shields refill visibly as armor regenerates. Supports changed max armor. |
+|  | P0 | Medium | Update unit tests | Rewrite tests that assume HP/damage/crit (`test_player_health_fraction`, `test_weapon_crit*`, `test_weapon_balance`, `test_charge_weapon_ratio`, `test_boss_phase_transition`, `test_modifier_stacking`, etc.). Add tests for armor regen, DoT routing, hit counts and 0.3s invulnerability. |
+|  | P2 | Low | Resync Chinese CSVs | `weapons-chinese.csv` / `modifiers-chinese.csv` are already stale (fewer rows). Resync names and descriptions once English text settles. |
+
+---
+
 ## Phase 1: Balancing & Tuning
 
 ### Economy Balancing
@@ -19,30 +76,32 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Weapon Balance
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| x | P0 | High | Full weapon stat audit (52 weapons) | Verify every weapon's cooldown/damage/reach/arc against its rarity and archetype. Identify over/underperformers. See `weapons.csv`. |
-| x | P0 | Medium | Rarity-to-power curve | Standardize damage-per-second ranges: Common 5–8 DPS, Uncommon 7–11 DPS, Rare 9–14 DPS (adjusted for utility/status weapons). |
-| x | P1 | Medium | Melee vs. ranged balance | Ranged safety premium: ranged base DPS should trail melee by ~15–20% at same rarity. Tune projectile lifetimes. |
-| x | P1 | Medium | Archetype power budget | Each weapon archetype gets a power budget: stats, native traits, crit profile. Verify no archetype dominates its tier. |
-| x | P1 | Medium | Pre-attached modifier valuation | Weapons with pre-slotted modifiers pay a stat penalty. Audit that penalty is consistent (e.g., ~1 dmg or +0.05s cd per pre-attached Uncommon+ mod). |
-| x | P2 | Low | Charge weapon balance | Charge weapons trade tap DPS for burst. Ensure charge-time-to-damage ratio is ~1.8–2.5× a tap swing at same rarity. |
+|  | P0 | High | Full weapon stat audit (51 weapons) | Re-audit after the combat rework. Verify every weapon's cooldown/reach/arc/dig_power against its rarity and archetype on the Coverage / Tempo / Utility axes (gameplay.md §4). Identify over/underperformers. See `weapons.csv`. |
+|  | P0 | Medium | Rarity-to-power curve | Replace DPS ranges with the "rarity buys behavior" rule: Common = plain shape, strong on one axis; Uncommon = + one trait; Rare = signature mechanic, solid on two axes. |
+|  | P1 | Medium | Melee vs. ranged balance | Ranged pays for range with tempo: longer cooldowns, projectiles stop at the first enemy unless piercing. Tune cooldowns and projectile lifetimes. |
+|  | P1 | Medium | Archetype power budget | Each weapon archetype gets a power budget across Coverage / Tempo / Utility plus native traits. Verify no archetype dominates its tier. |
+|  | P1 | Medium | Pre-attached modifier valuation | Weapons with pre-slotted modifiers pay a stat penalty. Audit that penalty is consistent (e.g., −reach/arc or +0.05s cd per pre-attached Uncommon+ mod). |
+|  | P2 | Low | Charge weapon balance | Charge weapons trade tempo for attack shape (bigger arc/reach, pierce, shockwave, pull). Verify each charge payoff is worth its wind-up. Hits stay at 1. |
 
 ### Modifier Balance
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| x | P0 | High | Full modifier stat audit (57 modifiers) | Verify every modifier's magnitude/magnitude2 against rarity. See `modifiers.csv`. Identify degenerate combos. |
-| x | P0 | High | Stacking sanity check | Audit additive vs. multiplicative stacking. `stat_add` sums first, `stat_mult` applies after. Cap cooldown floor at ~0.1s. Cap crit_chance at 1.0. |
-| x | P1 | Medium | Conditional trigger payoff | Conditional modifiers (frostbreaker, pyroclast, coup_de_grace, glass_cannon) must reward their condition with ≥1.5× damage. Verify magnitudes. |
+|  | P0 | High | Full modifier stat audit (80 modifiers) | Re-audit after the combat rework. Verify every modifier's magnitude/magnitude2 against rarity. See `modifiers.csv`. Identify degenerate combos (especially on-kill chains and chance stacking with Executioner's Mark). |
+|  | P0 | High | Stacking sanity check | Audit additive vs. multiplicative stacking. `stat_add` sums first, `stat_mult` applies after. Cap cooldown floor at ~0.1s. Cap every chance at 1.0. Cap reach/swing-speed stacks (rampage, greedy_edge, bloodlust, soul_reaver). |
+|  | P1 | Medium | Conditional trigger payoff | Conditional modifiers (frostbreaker, pyroclast, coup_de_grace, glass_cannon, last_stand) must make their condition worth setting up. Verify chances and buff magnitudes. |
 | x | P1 | Medium | Emitter blob sizing | Oil/water/gas/ice/blood/coal/dust blob radii: verify they create meaningful area effects without griefing player pathing or tanking FPS. |
-| x | P1 | Medium | Status stack thresholds | Verify stain thresholds in `status_registry.gd`: on_fire=1.0, wet=1.0, oiled=1.0, chilly=1.0, frozen=3.0, poisoned=0.3, bloody=1.0. Tune magnitudes so ~1–3 hits trigger. |
+|  | P1 | Medium | Status stack thresholds | Verify stain thresholds in `status_registry.gd`: on_fire=1.0, wet=1.0, oiled=1.0, chilly=1.0, frozen=3.0, poisoned=0.3, bloody=1.0. Retune for one-hit kills: a single hit on an elite should be able to apply a status whose next tick finishes it. Player-side durations: a typical burn costs ~2 points. |
 | x | P2 | Low | Anti-synergy costs | Document and verify anti-synergies: wet douses fire, oiled amplifies fire. Players running conflicting modifiers should feel the cost. |
 | x | P2 | Low | Rarity distribution in shops | 5 modifier cards per shop: tune rarity weights so shops feel varied (target ~60% Common, ~30% Uncommon, ~10% Rare). |
 
 ### Enemy Balance
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | High | Enemy HP/DMG per floor | Standardize enemy stat curve: floor 1 baseline, +20-25% HP/dmg per floor. Bosses scale at +15%. |
-|  | P0 | Medium | Enemy tier stat ratios | EASY: 1.0×, NORMAL: 1.5× HP / 1.2× dmg, HARD: 2.5× HP / 1.5× dmg. Verify against weapon DPS so TTK feels right (~3–8 swings per enemy). |
-|  | P1 | Medium | Elite stat multipliers | Elite base: 3.0× HP, 1.5× dmg, 1.3× speed. Elite abilities stack further. Verify elite fights feel like minibosses, not bullet sponges. |
+|  | P0 | High | Per-floor behavior curve | Floor scaling via behavior, not stats: enemy count, telegraph length, attack cadence, projectile count, elite frequency. Floor 1 baseline; each floor tightens these. |
+|  | P0 | Medium | Enemy tier behavior profiles | EASY / NORMAL / HARD differ in telegraph length, attack cadence and projectile count. Verify each tier reads differently and stays fair against 3 armor + 3 HP. |
+|  | P1 | Medium | Elite tuning | Elites: 2 hits (TANK 3), 1.3× speed, plus their ability. Verify elite fights feel like minibosses that demand two clean actions, not a burst. |
+|  | P1 | Medium | Boss hit pool tuning | Baseline 3 phases × 10 hits with 0.3s post-hit invulnerability (≥ ~3s minimum per phase). Tune per boss so phases last long enough to show their mechanics. |
+|  | P1 | Medium | Player survivability tuning | Tune armor regen delay (3s) and rate (1/s), i-frames (1.0s) and status tick rates against real encounters. Target: a clean room costs 0–2 armor; mistakes cost HP. |
 |  | P1 | Medium | Mob density tuning | Per-floor mob cap (25). Per-room enemy counts: calibrate so corridors feel navigable but rooms feel dangerous. |
 |  | P1 | Medium | Ranged enemy spacing | Ranged enemies maintain `preferred_distance` 120px. Verify this creates interesting positioning without kiting frustration. |
 |  | P2 | Low | Biome enemy difficulty skew | Frozen: slower but tankier. Magma: faster but fragile. Mines: mixed. Vault: elite-heavy. Caves: baseline. |
@@ -70,12 +129,12 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 |  | P2 | Medium | Enemy-environment interaction | Enemies react to hazards: avoid lava/fire, path around gas clouds, get slowed in ice. |
 |  | P2 | Medium | Enemy separation steering tuning | Min gap 16px. Tune repulsion force to prevent stacking without pushing enemies through walls. |
 |  | P2 | Low | Wander behavior variety | Wander patterns vary by enemy type: patrols (grunt), random drift (skirmisher), stationary guard (turret). |
-|  | P3 | Low | Enemy hurt reactions | Enemies stagger/knockback on hit (exists). Add: directional knockback based on hit angle, elite stagger resistance. |
+|  | P3 | Low | Enemy hurt reactions | Enemies stagger/knockback on hit (exists). Add: directional knockback based on hit angle, a clear "one hit left" read on elites after their first hit. |
 
 ### Enemy Content Expansion
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P1 | High | 5+ melee enemy variants | Author stats + behaviors for grunt (balanced), brute (slow/heavy), skirmisher (fast/weak), armored (tanky/anti-knockback), cultist (poison-on-hit). |
+|  | P1 | High | 5+ melee enemy variants | Author behaviors for grunt (balanced), brute (slow, long telegraph, wide attack), skirmisher (fast, short telegraph), armored (anti-knockback, frontal guard), cultist (poison-on-hit). All die in one hit. |
 |  | P1 | High | 3+ ranged enemy variants | Author stats + behaviors for archer (straight projectile), mage (slow homing orb), lobber (arcing AoE shot). |
 |  | P2 | Medium | Per-biome enemy roster | Each biome gets 2–4 unique enemy types. Caves: bats + crawlers. Magma: fire imps + lava slugs. Frozen: ice wraiths + frost giants. Mines: constructs + miners. Vault: guardians + sentinels. |
 |  | P2 | Medium | Elite ability variants | Author + balance the 5 elite abilities (FAST, TANK, TELEPORT, ENRAGE). Add 2 more: SUMMONER (spawns minions on hit), SHIELD (periodic invuln bubble). |
@@ -88,7 +147,7 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Boss Mechanics & Phases
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P1 | High | 3-phase boss system polish | Verify phase transition chaining (no skipped phases on burst damage). Ensure each phase escalates visually and mechanically. |
+|  | P1 | High | 3-phase boss system polish | Phases advance on hit count. Verify no skipped phases when several hits land together (0.3s invulnerability, status cleanse on transition). Ensure each phase escalates visually and mechanically. |
 |  | P1 | High | Phase 1 — Single threat | Boss fires basic projectiles at player. ~1 attack pattern. Player learns the rhythm. |
 |  | P1 | High | Phase 2 — Spread/area | Boss adds spread fire (3-projectile fan, 30°). Arena becomes hazardous. Player must reposition. |
 |  | P1 | High | Phase 3 — Arena hazard | Boss spawns lava pools / gas clouds at random arena positions every `hazard_interval` (5s). Player fights boss AND environment. |
@@ -107,7 +166,7 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
 |  | P1 | High | Boss sprite art (5 biomes) | Distinct, large sprites for each boss. Must read as "boss" at a glance — 2–3× normal enemy size, unique silhouette. |
-|  | P1 | Medium | Boss name + health bar HUD | Large boss health bar at top of screen with boss name. Phase indicators. Health-gate markers visible on bar. |
+|  | P1 | Medium | Boss name + hit bar HUD | Large boss bar at top of screen with boss name, segmented by remaining hits. Phase indicators and phase-gate markers visible on bar. |
 |  | P1 | Medium | Boss intro animation | Brief entrance sequence when player enters arena: camera zoom/pan, boss emerges, name banner. |
 |  | P2 | Medium | Boss death sequence | Explosive death, camera shake, portal appears in center of boss remains. Weapon drop flies out. |
 |  | P2 | Medium | Boss arena music sting | Unique boss music theme or layer that kicks in when boss fight starts (FMOD). |
@@ -171,8 +230,8 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 ### Weapon & Item Icons
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P1 | Medium | Weapon icon set (52 weapons) | Currently reused DawnLike/Kyrise icons. Create custom 16×16 or 32×32 icons for all 52 weapons. Distinct silhouette per weapon. |
-|  | P1 | Medium | Modifier icon set (57 modifiers) | Per-modifier icon: element symbols, status icons, stat icons. Currently missing for all 46 new modifiers. |
+|  | P1 | Medium | Weapon icon set (51 weapons) | Currently reused DawnLike/Kyrise icons. Create custom 16×16 or 32×32 icons for all 51 weapons. Distinct silhouette per weapon. |
+|  | P1 | Medium | Modifier icon set (80 modifiers) | Per-modifier icon: element symbols, status icons, stat icons. Currently missing for most modifiers. |
 |  | P2 | Low | Item pickup sprites | Visible world-space sprites for weapon drops and modifier drops on the ground. Distinct shape per rarity. |
 
 ### Biome & Environment Art
@@ -192,8 +251,8 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 |  | P2 | Medium | Combat VFX — fire/ice/lightning | Per-element impact vfx: fire bloom, ice shatter particles, lightning arc sprite, poison cloud puff, steam burst. |
 |  | P2 | Medium | Status effect overlays on enemies | On-fire: flame sprite overlay. Frozen: ice shell overlay. Poisoned: green tint. Wet: water drip particles. Oiled: dark sheen. |
 |  | P2 | Low | Screen shake tuning | Calibrate shake intensity per event: light hit (0.5), heavy hit (1.5), explosion (3.0), boss death (5.0). |
-|  | P2 | Low | Hit-stop tuning | Very brief freeze-frame (0.02–0.05s) on heavy hits / crits / boss phase transitions. |
-|  | P3 | Low | Damage number style | Floating damage numbers (exists). Tune: font, color per damage type, crit color (yellow), size scaling with damage amount. |
+|  | P2 | Low | Hit-stop tuning | Very brief freeze-frame (0.02–0.05s) on kills, elite first hits and boss phase transitions. |
+|  | P3 | Low | Kill feedback style | Replaces floating damage numbers. Tune kill flash, elite first-hit marker, and kill-streak readability. |
 
 ---
 
@@ -206,7 +265,7 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 |  | P1 | Medium | `ModalPanel` reusable scene | One modal base: title bar + body + footer + backdrop. Used by all 8+ modal scenes. Consistent open/close animation via `JuicyPanel`. |
 |  | P1 | Low | 9-slice textured panels | Replace `StyleBoxFlat` with `StyleBoxTexture` sourced from `GUI0.png`. Biome-accent overlay via `AccentOverlay.modulate`. |
 |  | P2 | Medium | Per-scene modal migration | Migrate: pause_menu, settings, death_screen, weapon_popup, chest_ui, shop, main_menu. Each installs a `ModalPanel` with scene-specific content in Body/Footer. |
-|  | P2 | Low | HUD consolidation | Fold `HealthUI` + `WeaponButton` into single `HUD.tscn`. Top-left: health bar + gold. Top-right: weapon icon + tooltip. Both in matching 9-slice frames. |
+|  | P2 | Low | HUD consolidation | Fold `HealthUI` + `WeaponButton` into single `HUD.tscn`. Top-left: hearts + shields + gold. Top-right: weapon icon + tooltip. Both in matching 9-slice frames. |
 
 ### Card UI
 | Done | Priority | Difficulty | Task | Description |
@@ -289,8 +348,8 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
 |  | P0 | High | Full run playtest x50 | Play through floor 1→boss→portal→floor N 50+ times. Document: every death cause, every confusing moment, every "this feels bad" moment. |
-|  | P0 | Medium | Weapon-by-weapon playtest | Equip each of 52 weapons for at least one floor. Note: weapons that feel bad, weapons that trivialize content, weapons with buggy behavior. |
-|  | P0 | Medium | Modifier-by-modifier playtest | Equip each of 57 modifiers. Note: broken interactions, useless modifiers, OP combos, modifiers that don't work as described. |
+|  | P0 | Medium | Weapon-by-weapon playtest | Equip each of 51 weapons for at least one floor. Note: weapons that feel bad, weapons that trivialize content, weapons with buggy behavior. |
+|  | P0 | Medium | Modifier-by-modifier playtest | Equip each of 80 modifiers. Note: broken interactions, useless modifiers, OP combos, modifiers that don't work as described. |
 |  | P1 | Medium | Biome-specific playtest | 5 runs per biome. Note: biome identity feel, hazard fairness, enemy variety within biome, arena quality. |
 |  | P1 | Medium | Edge case stress test | Mob cap 25 + heavy VFX + all modifiers active. Profile FPS. Test with worst-case weapon combos. |
 
@@ -307,7 +366,7 @@ Based on gameplay.md design document. Companion to implementation_todo1.md (core
 |------|----------|------------|------|-------------|
 |  | P1 | Medium | Playtest → fix → playtest loop | 2-week cycles: playtest, triage top 5 issues, fix, playtest again. Target 3 cycles before round 2. |
 |  | P2 | Medium | Friend playtest (Round 2) | After fixes from Round 1. New build. Same testers or 2–3 fresh testers. Compare feedback delta. |
-|  | P2 | Low | Balance spreadsheet | Maintain spreadsheet: weapon DPS tiers, enemy HP curves, gold economy per floor, modifier magnitudes. Update each cycle. |
+|  | P2 | Low | Balance spreadsheet | Maintain spreadsheet: weapon axis ratings (Coverage / Tempo / Utility), enemy behavior curves, boss hit pools, gold economy per floor, modifier magnitudes and chances. Update each cycle. |
 |  | P3 | Low | Playtest video recording | Record playtest sessions (with permission). Review later for subtle issues (UI confusion, pathing problems, animation readability). |
 
 ---

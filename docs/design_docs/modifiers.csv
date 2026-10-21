@@ -22,28 +22,28 @@ soaking_strike,Soaking Strike,"Blows leave enemies drenched, priming them for fr
 greased_edge,Greased Edge,"Coats struck foes in oil — one spark sets them ablaze.",Common,status,on_hit,,apply_status,oiled,2.0,0,No
 frostbite_edge,Frostbite Edge,"Each hit saps warmth, chilling foes toward a deep freeze.",Uncommon,status,on_hit,,apply_status,chilly,2.0,0,No
 ember_edge,Ember Edge,"Strikes ignite foes, setting them burning.",Uncommon,status,on_hit,,apply_status,on_fire,2.0,0,No
-rending_edge,Rending Edge,"Wounds bleed freely, leaving enemies bloody and weakened.",Common,status,on_hit,,apply_status,bloody,2.0,0,No
-sharpened,Sharpened,"+3 flat damage to every hit.",Common,stat,passive,,stat_add,damage,3,0,No
-heavy_head,Heavy Head,"+5 damage, but swings land 25% slower.",Common,stat,passive,,stat_add,damage,5,1.25,No
-honed_point,Honed Point,"+15% critical strike chance.",Uncommon,stat,passive,,stat_add,crit_chance,0.15,0,No
-executioners_mark,Executioner's Mark,"Critical hits deal an extra +0.5x damage.",Uncommon,stat,passive,,stat_add,crit_multiplier,0.5,0,No
+rending_edge,Rending Edge,"Wounds bleed freely, leaving enemies bloody.",Common,status,on_hit,,apply_status,bloody,2.0,0,No
+sharpened,Sharpened,"+3 flat dig power.",Common,stat,passive,,stat_add,damage,3,0,No
+heavy_head,Heavy Head,"Hits stun and knock foes back hard, but swings land 25% slower.",Common,stat,passive,,stat_add,damage,5,1.25,No
+honed_point,Honed Point,"Projectiles fly 30% faster and farther.",Uncommon,stat,passive,,stat_add,crit_chance,0.15,0,No
+executioners_mark,Executioner's Mark,"Raises every chance-based effect on this weapon by +1/4 (capped at certain).",Uncommon,stat,passive,,stat_add,crit_multiplier,0.5,0,No
 quickdraw,Quickdraw,"Swings come 20% faster.",Uncommon,stat,passive,,stat_mult,cooldown,0.8,0,No
 long_reach,Long Reach,"Extends weapon reach by 30%.",Common,stat,passive,,stat_mult,reach,1.3,0,No
 wide_arc,Wide Arc,"Widens the swing arc by 40%, sweeping more foes.",Common,stat,passive,,stat_mult,arc,1.4,0,No
 deep_cut,Deep Cut,"Carves 80% deeper into terrain — dig and tunnel with ease.",Uncommon,stat,passive,,stat_mult,carve_depth,1.8,0,No
 fleetfoot,Fleetfoot,"Move 15% faster while attacking.",Uncommon,stat,passive,,stat_mult,move_speed,1.15,0,No
-frostbreaker,Frostbreaker,"Deal +60% damage to chilled or frozen foes.",Uncommon,trigger,on_hit,target_status:frozen,stat_mult,damage,1.6,0,No
-pyroclast,Pyroclast,"Deal +50% damage to burning foes.",Uncommon,trigger,on_hit,target_status:on_fire,stat_mult,damage,1.5,0,No
-coup_de_grace,Coup de Grace,"+100% damage to foes below 30% health.",Uncommon,trigger,on_hit,target_low_hp,stat_mult,damage,2.0,0.3,No
-bloodlust,Bloodlust,"Each kill grants stacking damage that fades when the killing stops.",Rare,trigger,on_kill,,stat_add,damage,1,8,No
-rampage,Rampage,"Consecutive hits ramp damage; missing resets the streak.",Rare,trigger,on_hit,,stat_add,damage,1,6,No
-glass_cannon,Glass Cannon,"+80% damage while at full health; drops the moment you're hurt.",Rare,trigger,on_hit,self_full_hp,stat_mult,damage,1.8,0,No
-vampiric,Vampiric,"Heal a sliver of health on each kill.",Uncommon,trigger,on_kill,,heal,,3,0,No
-momentum,Momentum,"The faster you move, the harder you hit — up to +50%.",Uncommon,trigger,on_hit,,stat_mult,damage,1.5,0,No
-adrenaline,Adrenaline,"Swings get faster as your health drops, up to 40% faster.",Rare,trigger,passive,self_low_hp,stat_mult,cooldown,0.6,0,No
-combo_keeper,Combo Keeper,"Every 5th hit is a guaranteed critical.",Uncommon,trigger,every_n_hits,,stat_add,crit_chance,1.0,5,No
+frostbreaker,Frostbreaker,"Hitting a chilled or frozen foe spreads Chilly to nearby enemies.",Uncommon,trigger,on_hit,target_status:frozen,stat_mult,damage,1.6,0,No
+pyroclast,Pyroclast,"Killing a burning foe has a 1/10 chance to leave a patch of fire.",Uncommon,trigger,on_hit,target_status:on_fire,stat_mult,damage,1.5,0,No
+coup_de_grace,Coup de Grace,"Finishing an elite or a boss phase refunds the swing and restores 1 armor.",Uncommon,trigger,on_hit,target_low_hp,stat_mult,damage,2.0,0.3,No
+bloodlust,Bloodlust,"Each kill grants stacking swing speed that fades when the killing stops.",Rare,trigger,on_kill,,stat_add,damage,1,8,No
+rampage,Rampage,"Consecutive hits ramp reach (+5% per hit, up to +30%); missing resets the streak.",Rare,trigger,on_hit,,stat_add,damage,1,6,No
+glass_cannon,Glass Cannon,"-2 max armor, but swings land 40% faster with +30% reach.",Rare,trigger,on_hit,self_full_hp,stat_mult,damage,1.8,0,No
+vampiric,Vampiric,"Kills skip the wait before armor regeneration, so armor starts regenerating at once.",Uncommon,trigger,on_kill,,heal,,3,0,No
+momentum,Momentum,"The faster you move, the faster you swing — up to +30%.",Uncommon,trigger,on_hit,,stat_mult,damage,1.5,0,No
+adrenaline,Adrenaline,"When your armor breaks, gain +40% move speed for 2s.",Rare,trigger,passive,self_low_hp,stat_mult,cooldown,0.6,0,No
+combo_keeper,Combo Keeper,"Kills within 2s of each other build a streak; every 5th kill in a streak releases a shockwave.",Uncommon,trigger,every_n_hits,,stat_add,crit_chance,1.0,5,No
 homing_hex,Homing Hex,"Every swing looses a bolt that curves toward the nearest foe.",Uncommon,projectile,on_swing,,spawn_projectile,,1,0,No
-chain_spark,Chain Spark,"Critical hits arc lightning to nearby enemies, with a chance to stun.",Rare,projectile,on_crit,,spawn_projectile,lightning,3,0,No
+chain_spark,Chain Spark,"Kills have a 1/4 chance to arc lightning to nearby enemies, with a chance to stun.",Rare,projectile,on_crit,,spawn_projectile,lightning,3,0,No
 ricochet_shard,Ricochet Shard,"Swings fling a shard that ricochets off walls, striking again.",Uncommon,projectile,on_swing,,spawn_projectile,,1,3,No
 piercing_lance,Piercing Lance,"Looses a lance that skewers every foe in a line.",Uncommon,projectile,on_swing,,spawn_projectile,,1,0,No
 cluster_bomb,Cluster Bomb,"Hurls a bomb that bursts into a ring of fragments.",Rare,projectile,on_swing,,spawn_projectile,on_fire,8,0,No
@@ -58,25 +58,25 @@ midas_touch,Midas Touch,"Slain enemies spill extra gold.",Uncommon,utility,on_ki
 steam_burst,Steam Burst,"Striking a wet foe erupts in scalding steam, spreading the burn.",Rare,trigger,on_hit,target_status:wet,apply_status,steam,3,0,No
 spark_plug,Spark Plug,"Strikes ignite oiled foes — one spark sets them ablaze.",Common,status,on_hit,target_status:oiled,apply_status,on_fire,2.0,0,No
 deepfreeze,Deepfreeze,"Hits against chilled foes drive them toward a deep freeze twice as fast.",Common,status,on_hit,target_status:chilly,apply_status,frozen,2.0,0,No
-hemophilia,Hemophilia,"+25% critical chance versus bleeding foes.",Common,trigger,on_hit,target_status:bloody,stat_add,crit_chance,0.25,0,No
+hemophilia,Hemophilia,"Bloody foes have a 1/5 chance to burst on death, hitting everything adjacent.",Common,trigger,on_hit,target_status:bloody,stat_add,crit_chance,0.25,0,No
 backdraft,Backdraft,"Hitting a burning foe spreads the fire to nearby enemies.",Uncommon,trigger,on_hit,target_status:on_fire,spread_status,on_fire,40,2.0,No
 riptide,Riptide,"Hits knock back wet foes and leave them chilled.",Uncommon,trigger,on_hit,target_status:wet,knockback_and_status,chilly,60,2.0,No
 plague_carrier,Plague Carrier,"Strikes spread a foe's poison to those nearby.",Uncommon,trigger,on_hit,target_status:poisoned,spread_status,poisoned,40,2.0,No
-greedy_edge,Greedy Edge,"Deal up to +40% damage based on gold held (+1% per 50 gold).",Common,trigger,on_hit,self_gold,stat_mult,damage,0.01,0.40,No
-frostshatter,Frostshatter,"Consume Frozen to burst for stacks×8 and shatter nearby foes.",Rare,trigger,on_hit,,,0,0,No
-combustion,Combustion,"Consume On-Fire for an instant burst equal to the remaining burn ×3.",Rare,trigger,on_hit,,,0,0,No
-necrosis,Necrosis,"Consume Poison stacks for an instant burst of ×2 that damage.",Uncommon,trigger,on_hit,,,0,0,No
-rupture,Rupture,"Bleeding accumulates; at 5 stacks the target bursts for 5× a hit.",Uncommon,trigger,on_hit,,,0,0,No
+greedy_edge,Greedy Edge,"+1% reach per 50 gold held, up to +40%.",Common,trigger,on_hit,self_gold,stat_mult,damage,0.01,0.40,No
+frostshatter,Frostshatter,"Hitting a frozen foe consumes Frozen and grants +30% move speed for 1s.",Rare,trigger,on_hit,,,0,0,No
+combustion,Combustion,"Hitting a burning foe consumes On-Fire and grants +30% reach for 1s.",Rare,trigger,on_hit,,,0,0,No
+necrosis,Necrosis,"Hitting a poisoned foe consumes Poison and grants +30% swing speed for 1s.",Uncommon,trigger,on_hit,,,0,0,No
+rupture,Rupture,"Hitting a bloody foe consumes Bloody and grants +50% dig power for 1s.",Uncommon,trigger,on_hit,,,0,0,No
 echo_strike,Echo Strike,"Retrigger your first modifier once per swing.",Rare,trigger,on_hit,,,0,0,No
 overclock,Overclock,"Retrigger the modifier to your left, then disable it for 5 seconds.",Rare,trigger,on_hit,,,0,0,No
 mirror_slot,Mirror Slot,"Become a copy of the modifier to your left.",Rare,trigger,on_hit,,,0,0,No
 catalyst_bond,Catalyst Bond,"Link slots 1 and 3: either fires and both fire.",Rare,trigger,on_hit,,,0,0,No
-keystone,Keystone,"Slot 2 modifier +100%; slots 1 and 3 disabled (focus build).",Rare,trigger,on_hit,,,0,0,No
+keystone,Keystone,"Slot 2 modifier's effect +100%; slots 1 and 3 disabled (focus build).",Rare,trigger,on_hit,,,0,0,No
 twin_trigger,Twin Trigger,"Every 3rd swing, all modifiers trigger twice.",Uncommon,trigger,on_hit,,,0,0,No
 flywheel,Flywheel,"Untriggered modifiers charge; at 5, fire ×3 then empty.",Uncommon,trigger,on_hit,,,0,0,No
-last_stand,Last Stand,"+60% damage on your first hit after taking damage.",Uncommon,trigger,on_hit,,,0,0,No
-overkill,Overkill,"Damage exceeding an enemy's HP carries to the next enemy hit.",Uncommon,trigger,on_hit,,,0,0,No
+last_stand,Last Stand,"After taking a hit, your next swing has a 1/2 chance to release a knockback shockwave.",Uncommon,trigger,on_hit,,,0,0,No
+overkill,Overkill,"Kills fire a piercing shard onward in the swing direction.",Uncommon,trigger,on_hit,,,0,0,No
 evolving_edge,Evolving Edge,"After 15 hits, this modifier's own bonus doubles.",Uncommon,trigger,on_hit,,,0,0,No
 pendulum,Pendulum,"Odd swings ×2 your left modifier, even swings ×2 your right.",Uncommon,trigger,on_hit,,,0,0,No
-headsman,Headsman,"One-shotting an enemy above 50% HP refunds the swing.",Uncommon,trigger,on_hit,,,0,0,No
-slot_harmony,Slot Harmony,"+20% damage while all 3 slots are different categories.",Uncommon,trigger,on_hit,,,0,0,No
+headsman,Headsman,"Kills refund 50% of the swing cooldown.",Uncommon,trigger,on_hit,,,0,0,No
+slot_harmony,Slot Harmony,"+20% swing speed while all 3 slots are different categories.",Uncommon,trigger,on_hit,,,0,0,No
