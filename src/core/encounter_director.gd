@@ -15,6 +15,10 @@ const AIM_CONE_HALF_ANGLE := PI / 4.0
 # The live player facing flips too often to steer a group; sample it slowly.
 const FACING_POLL_INTERVAL := 2.0
 
+const RING_REFRESH := 0.5
+const RING_ROTATE_STEP := TAU / 16.0
+const RING_ROTATE_TRIES := 8
+
 var _active: Array = []
 # enemy -> {"cost": float, "age": float, "attacking": bool}
 var _tokens: Dictionary = {}
@@ -22,6 +26,13 @@ var _requests: Array = []
 var _player_pos: Vector2 = Vector2.ZERO
 var _player_facing: Vector2 = Vector2.RIGHT
 var _facing_timer: float = 0.0
+
+## func(world_pos: Vector2) -> bool; set by WorldManager from its nav field.
+var solid_check: Callable = Callable()
+# enemy -> {"radius": float, "slot": Vector2}
+var _ring: Dictionary = {}
+var _ring_dirty: bool = true
+var _ring_timer: float = 0.0
 
 
 func is_active(enemy) -> bool:
@@ -69,12 +80,14 @@ func update(player_pos: Vector2, attackable: Array, delta: float = 0.0, player_f
 	_player_pos = player_pos
 	_poll_facing(delta, player_facing)
 	_tick_tokens(delta)
+	_tick_ring(delta)
 	_grant_requests()
 
 
 func unregister(enemy) -> void:
 	_active.erase(enemy)
 	release_token(enemy)
+	leave_ring(enemy)
 
 
 func request_token(enemy) -> bool:
@@ -125,6 +138,81 @@ func get_player_facing() -> Vector2:
 	return _player_facing
 
 
+func join_ring(enemy, radius: float) -> void:
+	if _ring.has(enemy):
+		_ring[enemy]["radius"] = radius
+		return
+	_ring[enemy] = {"radius": radius, "slot": Vector2.INF}
+	_ring_dirty = true
+
+
+func leave_ring(enemy) -> void:
+	if _ring.erase(enemy):
+		_ring_dirty = true
+
+
+func get_slot(enemy) -> Vector2:
+	if not _ring.has(enemy):
+		return Vector2.INF
+	if _ring_dirty:
+		_assign_slots()
+	return _ring[enemy]["slot"]
+
+
+func get_ring_slots() -> Array:
+	if _ring_dirty:
+		_assign_slots()
+	var out: Array = []
+	for e in _ring:
+		out.append(_ring[e]["slot"])
+	return out
+
+
+## Spread members evenly by angle around the player. With three or more, the
+## slot pattern is anchored behind the player's (sampled) facing so someone
+## always flanks. Each member takes the free slot nearest its current angle.
+func _assign_slots() -> void:
+	_ring_dirty = false
+	var members: Array = _ring.keys().filter(func(e): return is_instance_valid(e))
+	var n := members.size()
+	if n == 0:
+		return
+	var step := TAU / n
+	var start: float
+	if n >= 3:
+		start = (-_player_facing).angle()
+	else:
+		start = (members[0].global_position - _player_pos).angle()
+	var taken := {}
+	members.sort_custom(_angle_before)
+	for e in members:
+		var mine: float = (e.global_position - _player_pos).angle()
+		var best := -1
+		var best_d := INF
+		for i in range(n):
+			if taken.has(i):
+				continue
+			var d := absf(wrapf(start + step * i - mine, -PI, PI))
+			if d < best_d:
+				best_d = d
+				best = i
+		taken[best] = true
+		_ring[e]["slot"] = _open_slot(start + step * best, _ring[e]["radius"])
+
+
+func _angle_before(a, b) -> bool:
+	return (a.global_position - _player_pos).angle() < (b.global_position - _player_pos).angle()
+
+
+func _open_slot(angle: float, radius: float) -> Vector2:
+	for k in range(RING_ROTATE_TRIES):
+		var offset := RING_ROTATE_STEP * ceilf(k / 2.0) * (1.0 if k % 2 == 1 else -1.0)
+		var pos := _player_pos + Vector2.from_angle(angle + offset) * radius
+		if not solid_check.is_valid() or not solid_check.call(pos):
+			return pos
+	return Vector2.INF
+
+
 func get_token_holders() -> Array:
 	return _tokens.keys().filter(func(e): return is_instance_valid(e))
 
@@ -136,6 +224,17 @@ func _poll_facing(delta: float, player_facing: Vector2) -> void:
 	_facing_timer = FACING_POLL_INTERVAL
 	if player_facing.length_squared() > 0.0001:
 		_player_facing = player_facing.normalized()
+
+
+func _tick_ring(delta: float) -> void:
+	for e in _ring.keys():
+		if not is_instance_valid(e) or not e.is_pursuing():
+			_ring.erase(e)
+			_ring_dirty = true
+	_ring_timer -= delta
+	if _ring_timer <= 0.0:
+		_ring_timer = RING_REFRESH
+		_ring_dirty = true
 
 
 func _tick_tokens(delta: float) -> void:

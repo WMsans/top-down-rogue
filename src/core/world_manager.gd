@@ -107,6 +107,8 @@ func _process(delta: float) -> void:
 	var facing := Vector2.ZERO
 	if player != null and player.has_method("get_facing_direction"):
 		facing = player.get_facing_direction()
+	if nav_field != null and not encounter_director.solid_check.is_valid():
+		encounter_director.solid_check = nav_field.is_solid_world
 	encounter_director.update(tracking_position, attackable, delta, facing)
 	_update_chunks()
 	for coord in compute_device.read_solidity_flags(chunks):

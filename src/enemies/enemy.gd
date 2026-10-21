@@ -42,6 +42,12 @@ const SQUASH_DURATION: float = 0.18
 # taking one, so fans and multi-strikes can't spend several hits at once.
 const HIT_INVULN: float = 0.3
 
+const RING_MARGIN: float = 24.0
+const RING_ENTER_MARGIN: float = 32.0
+const TOKEN_RETRY: float = 0.6
+const RING_JITTER: float = 8.0
+const RING_JITTER_INTERVAL: float = 0.4
+
 
 var hits_remaining: int
 var profile: EnemyProfile = null
@@ -73,6 +79,10 @@ var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 var _director = null
 var uses_tokens: bool = true
+
+var _token_retry_timer: float = 0.0
+var _ring_jitter: float = 0.0
+var _ring_jitter_timer: float = 0.0
 
 var _attack_started: bool = false
 
@@ -268,7 +278,7 @@ func _process_idle(delta: float) -> void:
 		velocity = _wander_direction * _get_effective_speed() * 0.5
 
 
-func _process_chase(_delta: float) -> void:
+func _process_chase(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		_aggroed = false
 		_change_state(State.WANDER)
@@ -288,11 +298,19 @@ func _process_chase(_delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 
-	if sees and dist <= _attack_range:
+	var dir = _get_director()
+	var holds: bool = not uses_tokens or dir == null or dir.has_token(self)
+	if sees and dist <= _attack_range and holds:
 		velocity = Vector2.ZERO
 		if _try_take_token():
 			_change_state(State.WINDUP)
 		return
+
+	if not holds and dist <= _ring_radius() + RING_ENTER_MARGIN:
+		_process_ring(delta, dir)
+		return
+	if dir != null:
+		dir.leave_ring(self)
 
 	var move_dir: Vector2
 	if sees:
@@ -306,6 +324,36 @@ func _process_chase(_delta: float) -> void:
 
 	move_dir = _apply_separation(move_dir)
 	velocity = move_dir * _get_effective_speed()
+
+
+func _ring_radius() -> float:
+	return _attack_range + RING_MARGIN
+
+
+## Without a token, hold a slot on the ring around the player and keep asking.
+func _process_ring(delta: float, dir) -> void:
+	dir.join_ring(self, _ring_radius())
+	_token_retry_timer -= delta
+	if _token_retry_timer <= 0.0:
+		_token_retry_timer = TOKEN_RETRY
+		dir.request_token(self)
+	_ring_jitter_timer -= delta
+	if _ring_jitter_timer <= 0.0:
+		_ring_jitter_timer = RING_JITTER_INTERVAL
+		_ring_jitter = randf_range(-RING_JITTER, RING_JITTER)
+	var player_pos := _player_ref.global_position
+	var slot: Vector2 = dir.get_slot(self)
+	var target: Vector2
+	if slot == Vector2.INF:
+		# No open angle: close to ring distance along the straight line.
+		target = player_pos + _safe_normalized(global_position - player_pos) * _ring_radius()
+	else:
+		target = slot + _safe_normalized(slot - player_pos) * _ring_jitter
+	var to_target := target - global_position
+	if to_target.length() < 2.0:
+		velocity = Vector2.ZERO
+		return
+	velocity = _apply_separation(_safe_normalized(to_target)) * _get_effective_speed()
 
 
 func _process_windup(delta: float) -> void:
@@ -565,6 +613,10 @@ func _measure_body_radius() -> float:
 func _change_state(new_state: int) -> void:
 	if new_state != State.WINDUP and new_state != State.ATTACK and new_state != State.RECOVER:
 		_release_token()
+	if new_state != State.CHASE:
+		var ring_dir = _get_director()
+		if ring_dir != null:
+			ring_dir.leave_ring(self)
 	if new_state == State.HURT:
 		_prev_state = _state
 		_state = new_state
