@@ -2,12 +2,12 @@ class_name Enemy
 extends CharacterBody2D
 
 signal died
-signal health_changed(current: int, maximum: int)
+signal hits_changed(remaining: int, maximum: int)
 
 enum State { WANDER, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
 enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 
-@export var max_health: int = 20
+@export var max_hits: int = 1
 @export var speed: float = 50.0
 @export var enemy_tier: int = DropTable.EnemyTier.NORMAL
 @export var detection_radius: float = 150.0
@@ -21,7 +21,6 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var separation_weight: float = 1.2
 @export var crowd_spacing_scale: float = 1.0
 @export var leash_radius: float = 280.0
-@export var damage_scale: float = 1.0
 @export var carries_weapon: bool = true
 
 const KNOCKBACK_SPEED: float = 180.0
@@ -44,8 +43,13 @@ const TARGETED_COOLDOWN_MULT: float = 0.6
 const PASSIVE_SPEED_MULT: float = 0.7
 const PASSIVE_COOLDOWN_MULT: float = 1.5
 
+# Multi-hit enemies (elites, bosses) ignore further hits for this long after
+# taking one, so fans and multi-strikes can't spend several hits at once.
+const HIT_INVULN: float = 0.3
 
-var health: int
+
+var hits_remaining: int
+var _hit_invuln_timer: float = 0.0
 var drop_table: DropTable = null
 var weapon: Weapon = null
 var _knockback_velocity: Vector2 = Vector2.ZERO
@@ -87,9 +91,8 @@ func _ready() -> void:
 	add_to_group("attackable")
 	add_to_group("gas_interactors")
 	_body_radius = _measure_body_radius()
-	health = max_health
+	hits_remaining = max_hits
 	_speed_base = speed
-	_apply_damage_scale()
 	motion_mode = MOTION_MODE_FLOATING
 
 	if is_elite:
@@ -131,11 +134,9 @@ func _ready() -> void:
 
 
 func _apply_elite_scaling() -> void:
-	max_health = int(float(max_health) * 3.0)
-	health = max_health
+	max_hits = 3 if elite_ability == EliteAbility.TANK else 2
+	hits_remaining = max_hits
 	speed *= 1.3
-	if weapon:
-		weapon.damage *= 1.5
 	scale *= 1.3
 
 	match elite_ability:
@@ -143,19 +144,13 @@ func _apply_elite_scaling() -> void:
 			windup_duration = maxf(0.2, windup_duration * 0.5)
 			cooldown_duration *= 0.5
 		EliteAbility.TANK:
-			max_health *= 2
-			health = max_health
 			speed = _speed_base * 0.7
 		EliteAbility.ENRAGE:
-			pass  # dynamically applied in _process
-
-
-func _apply_damage_scale() -> void:
-	if weapon != null and damage_scale != 1.0:
-		weapon.damage *= damage_scale
+			pass  # applied in _apply_enrage_if_needed after the first hit
 
 
 func _process(delta: float) -> void:
+	_tick_hit_invuln(delta)
 	if _state == State.DEATH:
 		_process_death(delta)
 		return
@@ -220,18 +215,10 @@ func _physics_process(delta: float) -> void:
 func _apply_enrage_if_needed() -> void:
 	if not is_elite or elite_ability != EliteAbility.ENRAGE:
 		return
-	if not weapon:
+	if _elite_enraged or hits_remaining >= max_hits:
 		return
-	if health < max_health * 0.3:
-		if not _elite_enraged:
-			_elite_enraged = true
-			weapon.damage *= 2.0
-			speed *= 1.5
-	else:
-		if _elite_enraged:
-			_elite_enraged = false
-			weapon.damage /= 2.0
-			speed /= 1.5
+	_elite_enraged = true
+	speed *= 1.5
 
 
 func _process_idle(delta: float) -> void:
@@ -608,18 +595,11 @@ func _can_see_player() -> bool:
 	return result.is_empty()
 
 
-func hit(damage: int) -> void:
-	if damage <= 0:
+func take_hit() -> void:
+	if not _consume_hit():
 		return
-	if GameModeManager.is_creative():
-		damage = max_health
-
-	health -= damage
-	health_changed.emit(health, max_health)
 	_on_hit()
-	if health <= 0:
-		_change_state(State.DEATH)
-		die()
+	if _state == State.DEATH:
 		return
 	if _state != State.HURT:
 		_prev_state = _state
@@ -628,28 +608,47 @@ func hit(damage: int) -> void:
 
 
 func apply_status_damage(amount: int) -> void:
-	# Quiet DoT path: drains health without forcing HURT state.
-	if amount <= 0 or _state == State.DEATH:
-		return
-	if GameModeManager.is_creative():
-		amount = max_health
-	health -= amount
-	health_changed.emit(health, max_health)
-	_play_hit_flash()
-	if health <= 0:
+	# Quiet DoT path: spends hits without forcing HURT state.
+	for _i in range(amount):
+		if not _consume_hit():
+			return
+		_play_hit_flash()
+
+
+# Spends one hit. Returns false when the hit is ignored (already dead or
+# inside the post-hit invulnerability window).
+func _consume_hit() -> bool:
+	if _state == State.DEATH or hits_remaining <= 0 or is_hit_invulnerable():
+		return false
+	hits_remaining = 0 if GameModeManager.is_creative() else hits_remaining - 1
+	hits_changed.emit(hits_remaining, max_hits)
+	if hits_remaining <= 0:
 		_change_state(State.DEATH)
 		die()
+	elif max_hits > 1:
+		_hit_invuln_timer = HIT_INVULN
+	return true
 
 
-func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
+func _tick_hit_invuln(delta: float) -> void:
+	if _hit_invuln_timer > 0.0:
+		_hit_invuln_timer = maxf(0.0, _hit_invuln_timer - delta)
+
+
+func is_hit_invulnerable() -> bool:
+	return _hit_invuln_timer > 0.0
+
+
+func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, _damage: int = 0) -> void:
+	if _state == State.DEATH or is_hit_invulnerable():
+		return
 	if hit_dir.length_squared() > 0.0001:
 		apply_knockback(hit_dir, KNOCKBACK_SPEED)
-	var display_damage: int = max_health if GameModeManager.is_creative() else damage
-	var lethal: bool = display_damage >= health
+	var lethal: bool = hits_remaining <= 1 or GameModeManager.is_creative()
 	var spec := HitSpec.new()
 	spec.position = impact_point
 	spec.direction = hit_dir
-	spec.damage = float(display_damage)
+	spec.damage = 1.0
 	spec.is_kill = lethal
 	spec.source_color = Color.WHITE
 	spec.source_radius = 8.0
@@ -674,7 +673,7 @@ func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void
 		global_position += Vector2(cos(angle), sin(angle)) * 64.0
 		_teleport_cooldown = 0.5
 
-	hit(damage)
+	take_hit()
 
 
 func die() -> void:
@@ -718,7 +717,9 @@ func _set_base_modulate(c: Color) -> void:
 
 
 func _on_burn_tick() -> void:
-	_burn_flash = 1.0
+	# burn_tick fires for every ticking status; only a real on_fire stain burns.
+	if _status_component != null and _status_component.get_stain("on_fire") > 0.0:
+		_burn_flash = 1.0
 
 
 func _play_hit_flash() -> void:

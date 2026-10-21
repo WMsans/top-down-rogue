@@ -12,18 +12,15 @@ class _StatusTarget extends Node2D:
 
 
 class _HpTarget extends Node2D:
-	var health: float
-	var max_health: float
+	var hits_remaining: int = 2
 	var impacts: Array = []
-	func _init(h: float = 100.0) -> void:
-		health = h
-		max_health = h
+	func _init(_hp: float = 100.0) -> void:
 		add_to_group("attackable")
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
 	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		health -= float(dmg)
+		hits_remaining -= 1
 		impacts.append(dmg)
 
 

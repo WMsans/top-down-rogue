@@ -8,8 +8,8 @@ func _ready() -> void:
 	_set_base_modulate(Color(0.6, 0.6, 0.6))
 	speed = 0.0
 	_speed_base = 0.0
-	max_health = 30
-	health = max_health
+	max_hits = 9999
+	hits_remaining = max_hits
 
 
 func _setup_drop_table() -> void:

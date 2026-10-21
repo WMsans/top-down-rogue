@@ -9,7 +9,6 @@ func _ready() -> void:
 		weapon = null
 		_attack_range = 28.0
 		speed = 60.0
-		max_health = 15
 		_speed_base = speed
 		cooldown_duration = 0.8
 	elif weapon_resource:
@@ -21,7 +20,6 @@ func _ready() -> void:
 		weapon = MeleeWeapon.new()
 		_attack_range = 28.0
 		speed = 60.0
-		max_health = 15
 		_speed_base = speed
 		cooldown_duration = weapon.cooldown
 	super._ready()

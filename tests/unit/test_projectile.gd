@@ -50,7 +50,7 @@ func test_projectile_registers_in_group() -> void:
 
 
 class _RhTarget extends Node2D:
-	var health: float = 100.0
+	var hits_remaining: int = 1
 	var hits: Array = []
 	func _init() -> void:
 		add_to_group("attackable")
@@ -59,7 +59,7 @@ class _RhTarget extends Node2D:
 		add_child(sc)
 	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
 		hits.append(dmg)
-		health -= dmg
+		hits_remaining -= 1
 
 class _EdgeWeapon extends Weapon:
 	func _init() -> void:

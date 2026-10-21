@@ -86,8 +86,7 @@ func test_heavy_head_dual_stat() -> void:
 
 
 class _HpTarget extends Node2D:
-	var health: float = 3.0
-	var max_health: float = 10.0
+	var hits_remaining: int = 1
 	func _init() -> void:
 		var sc := StatusComponent.new(); sc.name = "StatusComponent"; add_child(sc)
 
@@ -102,11 +101,6 @@ func test_gold_drop_joins_pickup_group() -> void:
 	var g: GoldDrop = auto_free(preload("res://scenes/gold_drop.tscn").instantiate())
 	add_child(g)
 	assert_bool(g.is_in_group("pickup")).is_true()
-
-func test_coup_de_grace_executes_low_hp() -> void:
-	var t: _HpTarget = auto_free(_HpTarget.new()); add_child(t)
-	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "on_hit", "condition": "target_low_hp", "effect": "stat_mult", "element": "damage", "magnitude": "2.0", "magnitude2": "0.3" }))
-	assert_that(m.modify_hit_damage(null, null, t, 10.0)).is_equal(20.0)
 
 func test_bloodlust_stacks_on_kill_capped() -> void:
 	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "on_kill", "effect": "stat_add", "element": "damage", "magnitude": "1", "magnitude2": "8" }))

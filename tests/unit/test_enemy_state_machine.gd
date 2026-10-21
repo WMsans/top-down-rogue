@@ -30,48 +30,110 @@ func test_transitions_to_wander_when_player_leaves() -> void:
 
 func test_hurt_re_staggerable() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.health = 100
+	e.max_hits = 3
+	e.hits_remaining = 3
 	e._state = Enemy.State.CHASE
 	e._state_timer = 0.1
-	e.hit(5)
+	e.take_hit()
 	assert_that(e._state).is_equal(Enemy.State.HURT)
-	var timer_after_first: float = e._state_timer
-	e.hit(5)
+	e._hit_invuln_timer = 0.0
+	e._state_timer = 0.05
+	e.take_hit()
 	assert_that(e._state_timer).is_equal(e.hurt_duration)
 
-func test_death_on_zero_health() -> void:
+func test_normal_enemy_dies_to_one_hit() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.health = 5
-	e.hit(10)
+	e.hits_remaining = 1
+	e.take_hit()
 	assert_that(e._state).is_equal(Enemy.State.DEATH)
 
-func test_elite_stat_scaling() -> void:
+func test_creative_mode_kills_in_one_hit() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.health = e.max_health
+	e.max_hits = 3
+	e.hits_remaining = 3
+	GameModeManager.set_mode(GameModeManager.Mode.CREATIVE)
+	e.take_hit()
+	GameModeManager.set_mode(GameModeManager.Mode.SURVIVAL)
+	assert_that(e._state).is_equal(Enemy.State.DEATH)
+
+func test_elite_takes_two_hits() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
 	e.speed = 100.0
 	e.is_elite = true
 	e._apply_elite_scaling()
-	assert_that(e.max_health).is_equal(60)
+	assert_int(e.max_hits).is_equal(2)
+	assert_int(e.hits_remaining).is_equal(2)
 	assert_that(e.speed).is_greater(100.0)
 
-func test_elite_tank_speed() -> void:
+func test_elite_tank_takes_three_hits_and_is_slow() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.health = e.max_health
 	e.speed = 100.0
 	e._speed_base = 100.0
 	e.is_elite = true
 	e.elite_ability = Enemy.EliteAbility.TANK
 	e._apply_elite_scaling()
+	assert_int(e.max_hits).is_equal(3)
 	assert_that(e.speed).is_equal(70.0)
 
 func test_elite_fast_windup_floor() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.health = e.max_health
 	e.windup_duration = 0.3
 	e.is_elite = true
 	e.elite_ability = Enemy.EliteAbility.FAST
 	e._apply_elite_scaling()
 	assert_that(e.windup_duration).is_equal(0.2)
+
+func test_elite_invulnerable_after_first_hit() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.max_hits = 2
+	e.hits_remaining = 2
+	e.take_hit()
+	e.take_hit()  # inside the 0.3s window: ignored
+	assert_int(e.hits_remaining).is_equal(1)
+	e._tick_hit_invuln(0.31)
+	e.take_hit()
+	assert_that(e._state).is_equal(Enemy.State.DEATH)
+
+func test_invulnerable_hit_plays_no_reaction() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.max_hits = 2
+	e.hits_remaining = 2
+	e.take_hit()
+	e._knockback_velocity = Vector2.ZERO
+	e.on_hit_impact(Vector2.ZERO, Vector2.RIGHT)
+	assert_int(e.hits_remaining).is_equal(1)
+	assert_that(e._knockback_velocity).is_equal(Vector2.ZERO)
+
+func test_status_tick_spends_a_hit_without_hurt() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.max_hits = 2
+	e.hits_remaining = 2
+	e._state = Enemy.State.CHASE
+	e.apply_status_damage(1)
+	assert_int(e.hits_remaining).is_equal(1)
+	assert_that(e._state).is_equal(Enemy.State.CHASE)
+
+func test_status_tick_respects_invuln() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.max_hits = 2
+	e.hits_remaining = 2
+	e.take_hit()
+	e.apply_status_damage(1)
+	assert_int(e.hits_remaining).is_equal(1)
+
+func test_enrage_triggers_on_first_hit() -> void:
+	var e: MockEnemy = auto_free(MockEnemy.new())
+	e.is_elite = true
+	e.elite_ability = Enemy.EliteAbility.ENRAGE
+	e.max_hits = 2
+	e.hits_remaining = 2
+	e.speed = 100.0
+	e._apply_enrage_if_needed()
+	assert_that(e.speed).is_equal(100.0)
+	e.take_hit()
+	e._apply_enrage_if_needed()
+	e._apply_enrage_if_needed()  # applies once
+	assert_that(e.speed).is_equal(150.0)
 
 func test_wander_enters_pause_after_move() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
@@ -263,14 +325,3 @@ func test_contagion_aggros_idle_enemy_near_pursuer() -> void:
 	idle._process_idle(0.1)
 	assert_bool(idle._aggroed).is_true()
 	assert_that(idle._state).is_equal(Enemy.State.CHASE)
-
-
-func test_damage_scale_multiplies_weapon_damage_on_ready() -> void:
-	var e: MockEnemy = auto_free(MockEnemy.new())
-	e.weapon = MeleeWeapon.new()
-	e.weapon.damage = 5.0
-	e.damage_scale = 2.0
-	e._apply_damage_scale()
-	assert_float(e.weapon.damage).is_equal_approx(10.0, 0.001)
-
-

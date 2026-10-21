@@ -4,7 +4,7 @@ const WarScythe = preload("res://src/weapons/war_scythe_weapon.gd")
 
 class _Target extends Area2D:
 	var hits: Array = []
-	var health: float = 100.0
+	var hits_remaining: int = 1
 	func _init() -> void:
 		add_to_group("attackable")
 		set_collision_layer_value(8, true)

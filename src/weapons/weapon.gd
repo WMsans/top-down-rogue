@@ -236,8 +236,8 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 	for m in _iter_active_modifiers():
 		dmg = m.modify_hit_damage(self, user, target, dmg)
 	dmg = _native_modify_hit_damage(user, target, dmg)
-	var had_hp: bool = ("health" in target)
-	var pre_hp: float = target.health if had_hp else 1.0
+	var tracks_hits: bool = ("hits_remaining" in target)
+	var pre_hits: int = target.hits_remaining if tracks_hits else 1
 	if target.has_method("on_hit_impact"):
 		var hit_dir: Vector2 = Vector2.ZERO
 		if target is Node2D and user is Node2D:
@@ -253,7 +253,7 @@ func resolve_hit(user: Node, target: Node, base_dmg: float, is_crit: bool) -> vo
 		for m in _iter_active_modifiers():
 			m.on_crit(self, user, target)
 	_hit_count += 1
-	if had_hp and pre_hp > 0.0 and target.health <= 0.0:
+	if tracks_hits and pre_hits > 0 and target.hits_remaining <= 0:
 		for m in _iter_active_modifiers():
 			m.on_kill(self, user, target)
 		_native_on_kill(user, target)

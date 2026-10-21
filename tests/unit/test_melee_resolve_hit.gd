@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 
 class _Target extends Area2D:
-	var health: float = 100.0
+	var hits_remaining: int = 1
 	var hits: Array = []
 	func _init() -> void:
 		add_to_group("attackable")
@@ -16,7 +16,7 @@ class _Target extends Area2D:
 		add_child(col)
 	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
 		hits.append(dmg)
-		health -= dmg
+		hits_remaining -= 1
 
 class _EdgeMod extends Modifier:
 	func on_hit_target(_w: Weapon, _u: Node, t: Node) -> void:

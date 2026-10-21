@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 
 class _Target extends Node2D:
-	var health: float = 10.0
+	var hits_remaining: int = 1
 	var hits: Array = []
 	func _init() -> void:
 		add_to_group("attackable")
@@ -10,7 +10,7 @@ class _Target extends Node2D:
 		add_child(sc)
 	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
 		hits.append(dmg)
-		health -= dmg
+		hits_remaining -= 1
 
 class _DoubleDmg extends Modifier:
 	func modify_hit_damage(_w, _u, _t, dmg: float) -> float:
@@ -61,7 +61,7 @@ func test_on_kill_fires_once_when_target_dies() -> void:
 	var km := _KillCounter.new()
 	w.modifiers = [km, null, null]
 	var t := _target()
-	t.health = 4.0
+	t.hits_remaining = 1
 	w.resolve_hit(null, t, 5.0, false)   # kills
 	w.resolve_hit(null, t, 5.0, false)   # already dead -> no second kill
 	assert_int(km.kills).is_equal(1)
