@@ -18,6 +18,12 @@ class MockEnemy extends Enemy:
 	func _can_see_player() -> bool:
 		return true
 
+class BlockedEnemy extends MockEnemy:
+	func _edge_blocked(_step: Vector2) -> bool:
+		return true
+	func _nav_field_dir() -> Vector2:
+		return Vector2.UP
+
 
 func _agent(pos: Vector2) -> Agent:
 	var a: Agent = auto_free(Agent.new())
@@ -106,6 +112,42 @@ func test_enemy_without_token_moves_to_ring_at_normal_speed() -> void:
 	assert_int(e._state).is_equal(Enemy.State.CHASE)
 	assert_that(world.encounter_director.get_slot(e)).is_not_equal(Vector2.INF)
 	assert_float(e.velocity.length()).is_equal_approx(60.0, 0.5)
+
+
+func test_slot_follows_player_when_player_moves() -> void:
+	var d := EncounterDirector.new()
+	var agents := _ring_of(d, [Vector2(40, 0)])
+	var before := d.get_slot(agents[0])
+	assert_that(before).is_not_equal(Vector2.INF)
+	d.update(Vector2(30, -20), agents)
+	var moved := d.get_slot(agents[0]) - before
+	assert_that(moved.is_equal_approx(Vector2(30, -20))).is_true()
+
+
+func test_blocked_ring_step_follows_nav_field() -> void:
+	var world: FakeWorld = auto_free(FakeWorld.new())
+	add_child(world)
+	var e: BlockedEnemy = auto_free(BlockedEnemy.new())
+	add_child(e)
+	e._world_manager = world
+	e._director = null
+	var p: Node2D = auto_free(Node2D.new())
+	add_child(p)
+	e._player_ref = p
+	e._player_in_range = true
+	e._attack_range = 28.0
+	e.speed = 60.0
+	e.global_position = Vector2(20, 0)
+	e._state = Enemy.State.CHASE
+	world.encounter_director.update(Vector2.ZERO, [e], 0.0, Vector2.RIGHT)
+	# Fill the pool (NORMAL band = 6) so this enemy cannot get a token.
+	for i in range(6):
+		var blocker := _agent(Vector2(-100 - i, 0))
+		world.encounter_director._tokens[blocker] = {"cost": 1.0, "age": 0.0, "attacking": true}
+	e._process_chase(0.016)
+	assert_that(world.encounter_director.get_slot(e)).is_not_equal(Vector2.INF)
+	# The direct step toward the slot is blocked, so the nav field must win.
+	assert_float(e.velocity.normalized().dot(Vector2.UP)).is_equal_approx(1.0, 0.01)
 
 
 func test_enemy_leaves_ring_on_windup() -> void:

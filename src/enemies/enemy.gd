@@ -353,7 +353,13 @@ func _process_ring(delta: float, dir) -> void:
 	if to_target.length() < 2.0:
 		velocity = Vector2.ZERO
 		return
-	velocity = _apply_separation(_safe_normalized(to_target)) * _get_effective_speed()
+	var move_dir := _safe_normalized(to_target)
+	# No open angle, or terrain in the way of the direct step: follow the nav field.
+	if slot == Vector2.INF or _edge_blocked(move_dir * MOVE_STEP_PX):
+		var fd := _nav_field_dir()
+		if fd != Vector2.ZERO:
+			move_dir = fd
+	velocity = _apply_separation(move_dir) * _get_effective_speed()
 
 
 func _process_windup(delta: float) -> void:

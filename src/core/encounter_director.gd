@@ -29,7 +29,7 @@ var _facing_timer: float = 0.0
 
 ## func(world_pos: Vector2) -> bool; set by WorldManager from its nav field.
 var solid_check: Callable = Callable()
-# enemy -> {"radius": float, "slot": Vector2}
+# enemy -> {"radius": float, "angle": float}; angle INF when no open slot
 var _ring: Dictionary = {}
 var _ring_dirty: bool = true
 var _ring_timer: float = 0.0
@@ -142,7 +142,7 @@ func join_ring(enemy, radius: float) -> void:
 	if _ring.has(enemy):
 		_ring[enemy]["radius"] = radius
 		return
-	_ring[enemy] = {"radius": radius, "slot": Vector2.INF}
+	_ring[enemy] = {"radius": radius, "angle": INF}
 	_ring_dirty = true
 
 
@@ -156,7 +156,7 @@ func get_slot(enemy) -> Vector2:
 		return Vector2.INF
 	if _ring_dirty:
 		_assign_slots()
-	return _ring[enemy]["slot"]
+	return _slot_pos(_ring[enemy])
 
 
 func get_ring_slots() -> Array:
@@ -164,8 +164,15 @@ func get_ring_slots() -> Array:
 		_assign_slots()
 	var out: Array = []
 	for e in _ring:
-		out.append(_ring[e]["slot"])
+		out.append(_slot_pos(_ring[e]))
 	return out
+
+
+## Slots are angles, so they track the player instead of freezing in world space.
+func _slot_pos(slot: Dictionary) -> Vector2:
+	if slot["angle"] == INF:
+		return Vector2.INF
+	return _player_pos + Vector2.from_angle(slot["angle"]) * slot["radius"]
 
 
 ## Spread members evenly by angle around the player. With three or more, the
@@ -197,20 +204,20 @@ func _assign_slots() -> void:
 				best_d = d
 				best = i
 		taken[best] = true
-		_ring[e]["slot"] = _open_slot(start + step * best, _ring[e]["radius"])
+		_ring[e]["angle"] = _open_angle(start + step * best, _ring[e]["radius"])
 
 
 func _angle_before(a, b) -> bool:
 	return (a.global_position - _player_pos).angle() < (b.global_position - _player_pos).angle()
 
 
-func _open_slot(angle: float, radius: float) -> Vector2:
+func _open_angle(angle: float, radius: float) -> float:
 	for k in range(RING_ROTATE_TRIES):
 		var offset := RING_ROTATE_STEP * ceilf(k / 2.0) * (1.0 if k % 2 == 1 else -1.0)
 		var pos := _player_pos + Vector2.from_angle(angle + offset) * radius
 		if not solid_check.is_valid() or not solid_check.call(pos):
-			return pos
-	return Vector2.INF
+			return angle + offset
+	return INF
 
 
 func get_token_holders() -> Array:
