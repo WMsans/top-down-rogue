@@ -231,7 +231,7 @@ func _add_pickup_header() -> void:
 		var stats: Array[String] = []
 		var base_stats := _pickup_weapon.get_base_stats()
 		stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
-		stats.append("Damage: %.0f" % base_stats["damage"])
+		stats.append("Dig: %.1f" % base_stats["dig_power"])
 		card.populate(_pickup_weapon.icon_texture, _pickup_weapon.name, stats)
 		card.set_rarity(_pickup_weapon.rarity)
 		card.set_icon_tooltip_text(_pickup_weapon.name, _pickup_weapon.description)
@@ -276,7 +276,7 @@ func _create_card(weapon: Weapon, slot_index: int) -> Control:
 			var stats: Array[String] = []
 			var base_stats := weapon.get_base_stats()
 			stats.append("Cooldown: %.1fs" % base_stats["cooldown"])
-			stats.append("Damage: %.0f" % base_stats["damage"])
+			stats.append("Dig: %.1f" % base_stats["dig_power"])
 			var mod_icons: Array[Texture2D] = []
 			for i in range(weapon.modifier_slot_count):
 				var mod: Modifier = weapon.get_modifier_at(i)

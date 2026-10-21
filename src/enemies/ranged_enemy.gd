@@ -25,7 +25,6 @@ func _ready() -> void:
 		weapon = RangedWeapon.new()
 		_attack_range = 180.0
 		speed = 50.0
-		max_health = 12
 		_speed_base = speed
 		cooldown_duration = weapon.cooldown
 	detection_radius = 250.0

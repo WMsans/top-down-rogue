@@ -8,24 +8,23 @@ class _StubTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_point: Vector2, _dir: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_point: Vector2, _dir: Vector2) -> void:
+		hits.append(1)
 
 
-func test_projectile_hit_status_applies_on_non_crit_hit() -> void:
+func test_projectile_hit_status_applies_on_hit() -> void:
 	var parent: Node2D = auto_free(Node2D.new())
 	add_child(parent)
 	var target := _StubTarget.new()
 	parent.add_child(target)
 	var p: Projectile = Projectile.new()  # frees itself on hit
 	p.is_enemy_projectile = false
-	p.damage = 5.0
-	p.crit_chance = 0.0
+	p.dig_power = 5.0
 	p.hit_status = "on_fire"
 	parent.add_child(p)
 	p._handle_hit(target)
 	var sc: StatusComponent = target.get_node("StatusComponent")
-	assert_that(sc.get_stain("on_fire")).is_greater(0.0)
+	assert_that(sc.get_stain("on_fire")).is_equal_approx(Weapon.HIT_STATUS_STAIN, 0.001)
 
 
 func test_projectile_no_hit_status_applies_nothing() -> void:
@@ -35,8 +34,7 @@ func test_projectile_no_hit_status_applies_nothing() -> void:
 	parent.add_child(target)
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
-	p.damage = 5.0
-	p.crit_chance = 0.0
+	p.dig_power = 5.0
 	parent.add_child(p)
 	p._handle_hit(target)
 	var sc: StatusComponent = target.get_node("StatusComponent")
@@ -116,7 +114,7 @@ func test_modifier_projectile_spawn_one_under_user_parent() -> void:
 		{ "hit_status": "on_fire" })
 	assert_that(p).is_not_null()
 	assert_bool(p.get_parent() == parent).is_true()
-	assert_that(p.damage).is_equal(4.0)
+	assert_that(p.dig_power).is_equal(4.0)
 	assert_str(p.hit_status).is_equal("on_fire")
 	assert_that(p.is_enemy_projectile).is_false()
 
@@ -412,7 +410,7 @@ func test_spectral_echo_spawn_is_translucent_ghost() -> void:
 	assert_int(_count_projectiles(pu[0])).is_equal(1)
 	for c in pu[0].get_children():
 		if c is Projectile:
-			assert_float(c.damage).is_equal(SpectralEchoModifier.ECHO_DAMAGE)
+			assert_float(c.dig_power).is_equal(SpectralEchoModifier.ECHO_DAMAGE)
 			var sprite: Sprite2D = c.get_node_or_null("Sprite2D")
 			assert_that(sprite).is_not_null()
 			assert_float(sprite.modulate.a).is_less(1.0)

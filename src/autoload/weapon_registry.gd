@@ -7,10 +7,12 @@ const _DataModifier = preload("res://src/weapons/modifiers/data_modifier.gd")
 class WeaponDropEntry:
 	var weapon_resource: Weapon
 	var weight: float
+	var id: String = ""
 
-	func _init(p_resource: Weapon, p_weight: float = 1.0) -> void:
+	func _init(p_resource: Weapon, p_weight: float = 1.0, p_id: String = "") -> void:
 		weapon_resource = p_resource
 		weight = p_weight
+		id = p_id
 
 class ModifierDropEntry:
 	var modifier_script: GDScript
@@ -35,6 +37,7 @@ const PLACEHOLDER_ICON = preload("res://textures/wall.png")
 var _all_weapons: Array = []
 var _modifier_data: Dictionary = {}  # id -> full CSV row
 var _weapons_by_id: Dictionary = {}  # id -> overlaid Weapon (canonical copy)
+var _weapon_rows: Dictionary = {}  # id -> full CSV row
 
 const _RARITY_WORDS := {
 	"Common": DropTable.ItemTier.COMMON,
@@ -135,6 +138,7 @@ func _load_weapon_resources() -> void:
 		var weapon: Weapon = script.new()
 		_apply_csv_fields(weapon, row)
 		weapon.invalidate_effective_stats()
+		_weapon_rows[id] = row
 		_weapons_by_id[id] = weapon
 		_all_weapons.append({ "id": id, "resource": weapon, "weight": 1.0 })
 
@@ -143,14 +147,8 @@ func _apply_csv_fields(weapon: Weapon, row: Dictionary) -> void:
 	weapon.name = row.get("name", weapon.name)
 	weapon.description = row.get("description", "")
 	weapon.cooldown = float(row.get("cooldown", weapon.cooldown))
-	weapon.damage = float(row.get("damage", weapon.damage))
-	var cc: String = row.get("crit_chance", "")
-	if cc != "":
-		weapon.crit_chance = float(cc)
-	var cm: String = row.get("crit_multiplier", "")
-	if cm != "":
-		weapon.crit_multiplier = float(cm)
-	weapon.crit_status = row.get("crit_status", "")
+	weapon.dig_power = float(row.get("dig_power", weapon.dig_power))
+	weapon.hit_status = row.get("hit_status", "")
 	weapon.modifier_slot_count = int(row.get("modifier_slots", weapon.modifier_slot_count))
 	weapon.rarity = _map_rarity(row.get("rarity", ""))
 	_validate_type(weapon, row.get("type", ""))
@@ -215,9 +213,6 @@ func _apply_tuning(weapon: Weapon, row: Dictionary) -> void:
 			var tex := load(pt)
 			if tex is Texture2D:
 				rw.projectile_texture = tex
-		var hs: String = row.get("hit_status", "")
-		if hs != "":
-			rw.hit_status = hs
 
 func _apply_pre_attached_modifiers(weapon: Weapon, row: Dictionary) -> void:
 	for i in range(1, 4):
@@ -239,7 +234,7 @@ func _build_tier_buckets() -> void:
 		var tier: int = res.rarity
 		if not weapon_tiers.has(tier):
 			weapon_tiers[tier] = []
-		weapon_tiers[tier].append(WeaponDropEntry.new(res, entry.weight))
+		weapon_tiers[tier].append(WeaponDropEntry.new(res, entry.weight, entry.id))
 
 
 func _populate_modifier_tiers() -> void:
@@ -266,8 +261,8 @@ func get_random_weapon(tier: int) -> _Weapon:
 	for entry in entries:
 		cumulative += entry.weight
 		if roll <= cumulative:
-			return entry.weapon_resource.duplicate(true)
-	return entries[0].weapon_resource.duplicate(true)
+			return _copy_weapon(entry.weapon_resource, entry.id)
+	return _copy_weapon(entries[0].weapon_resource, entries[0].id)
 
 
 func get_weapon_by_id(id: String) -> _Weapon:
@@ -275,7 +270,17 @@ func get_weapon_by_id(id: String) -> _Weapon:
 	if weapon == null:
 		push_warning("WeaponRegistry: unknown weapon id '%s'" % id)
 		return null
-	return weapon.duplicate(true)
+	return _copy_weapon(weapon, id)
+
+
+# duplicate() drops the weapon's modifier slots (they are not exported), so the copy
+# gets fresh pre-attached modifiers rebuilt from the CSV row.
+func _copy_weapon(weapon: Weapon, id: String) -> Weapon:
+	var copy: Weapon = weapon.duplicate(true)
+	copy.modifier_slot_count = weapon.modifier_slot_count
+	copy.modifiers = []
+	_apply_pre_attached_modifiers(copy, _weapon_rows.get(id, {}))
+	return copy
 
 
 func get_random_modifier(tier: int) -> _Modifier:

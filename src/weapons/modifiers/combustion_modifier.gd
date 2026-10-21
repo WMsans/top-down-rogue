@@ -5,6 +5,5 @@ extends DetonatorModifier
 func _init() -> void:
 	super()
 	name = "Combustion"
-	description = "Consume On-Fire for an instant burst equal to the remaining burn ×3."
+	description = "Hitting a burning foe consumes On-Fire and grants +30% reach for 1s."
 	consumed_status = "on_fire"
-	burst_per_stack = 3.0

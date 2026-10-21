@@ -2,13 +2,13 @@ class_name ChainSparkModifier
 extends Modifier
 
 const RANGE := 160.0
-const DAMAGE := 6
 const LIGHTNING_DURATION := 0.4
 const STUN_CHANCE := 0.25
 const STUN_DURATION := 0.3
 const TINT := Color(0.9, 0.95, 1.0)
 
 var chain_count: int = 3
+var proc_chance: float = 0.25  # documented as a 1/4 chance per kill
 
 
 func _init() -> void:
@@ -17,24 +17,33 @@ func _init() -> void:
 	icon_texture = preload("res://textures/wall.png")
 
 
-func on_crit(_weapon: Weapon, user: Node, _target: Node) -> void:
+func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 	if user == null or not (user is Node2D):
+		return
+	if randf() >= proc_chance:
 		return
 	var host := _resolve_host(user)
 	var origin: Vector2 = (user as Node2D).global_position
-	for n in _nearest_targets(user, chain_count, RANGE):
+	var hits := 0
+	for n in _candidates_in_range(user, RANGE):
+		if hits >= chain_count:
+			break
+		if n.has_method("is_hit_invulnerable") and n.is_hit_invulnerable():
+			continue  # a shielded neighbour must not eat one of the three slots
 		var pos: Vector2 = (n as Node2D).global_position
 		if n.has_method("on_hit_impact"):
-			n.on_hit_impact(pos, (pos - origin).normalized(), DAMAGE)
+			n.on_hit_impact(pos, (pos - origin).normalized())
 		var sc = n.get_node_or_null("StatusComponent")
 		if sc != null:
 			sc.add_timed_status("lightning", LIGHTNING_DURATION)
 			if randf() < STUN_CHANCE:
 				sc.add_timed_status("stun", STUN_DURATION)
 		LightningArcFX.play(host, origin, pos, TINT)
+		hits += 1
 
 
-func _nearest_targets(user: Node, count: int, range_px: float) -> Array:
+# Every attackable within range, nearest first.
+func _candidates_in_range(user: Node, range_px: float) -> Array:
 	var tree := user.get_tree()
 	if tree == null:
 		return []
@@ -49,8 +58,8 @@ func _nearest_targets(user: Node, count: int, range_px: float) -> Array:
 			candidates.append({ "node": n, "d": d })
 	candidates.sort_custom(func(a, b): return a["d"] < b["d"])
 	var out: Array = []
-	for i in range(mini(count, candidates.size())):
-		out.append(candidates[i]["node"])
+	for c in candidates:
+		out.append(c["node"])
 	return out
 
 

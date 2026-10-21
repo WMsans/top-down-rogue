@@ -2,7 +2,7 @@ class_name ArcRailgunWeapon
 extends ChargedRangedWeapon
 
 func _configure() -> void:
-	damage = 8.0
+	dig_power = 8.0
 	cooldown = 1.6
 	charge_time_full = 0.7
 	projectile_count = 1

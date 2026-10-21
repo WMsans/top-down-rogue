@@ -11,9 +11,9 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 ### Player Armor & Health
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | Medium | Armor + HP model | `player_inventory.gd`: replace `max_health = 100` with 3 HP + 3 armor. A hit costs 1 point, armor first. Keep 1.0s i-frames. Emit `armor_changed` alongside `health_changed`. |
-|  | P0 | Medium | Armor regeneration | After 3s with no hit or tick, regen +1 armor per 1s until full. Any hit or DoT tick resets the 3s timer. HP never regenerates. |
-|  | P0 | Medium | DoT routing | `take_status_damage` costs 1 point per tick, armor first, bypassing i-frames. Tick rates: fire 1/1s, poison 1/1.5s, steam 1/1s. Shorten player-side status durations so a typical burn costs ~2 points. |
+| x | P0 | Medium | Armor + HP model | `player_inventory.gd`: replace `max_health = 100` with 3 HP + 3 armor. A hit costs 1 point, armor first. Keep 1.0s i-frames. Emit `armor_changed` alongside `health_changed`. |
+| x | P0 | Medium | Armor regeneration | After 3s with no hit or tick, regen +1 armor per 1s until full. Any hit or DoT tick resets the 3s timer. HP never regenerates. |
+| x | P0 | Medium | DoT routing | `take_status_damage` costs 1 point per tick, armor first, bypassing i-frames. Tick rates: fire 1/1s, poison 1/1.5s, steam 1/1s. Shorten player-side status durations so a typical burn costs ~2 points. |
 |  | P1 | Low | Healing sources | Boss kill: +1 HP and full armor. `heal()` works in whole HP points. Remove any heal path not listed in gameplay.md §2. |
 |  | P1 | Medium | Shop "Mend" service | Restore 1 HP. Cost curve like the removal service (base + per-use increment). Unavailable at full HP. |
 |  | P1 | Low | Max armor modifiers | Support max-armor changes from modifiers (`glass_cannon`: −2 max armor). Clamp current armor on change. |
@@ -21,19 +21,19 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 ### Enemy Hit Model
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | Medium | Hit-count health | `enemy.gd`: replace `max_health`/damage with a hit count. Normal = 1, elite = 2, TANK elite = 3. Any hit source (swing, projectile, explosion, status tick) = 1 hit. Remove `_apply_elite_scaling` HP multipliers. |
-|  | P0 | Low | Unified post-hit invulnerability | Elites and bosses ignore further hits for 0.3s after taking one. Elite flashes + staggers on the first hit. |
-|  | P0 | Medium | Boss hit pools | `boss_enemy.gd`: replace 200 HP with 3 phases × 10 hits (baseline). Phase transitions trigger on hit count, not HP thresholds, and cleanse statuses. |
-|  | P0 | Medium | Remove enemy damage stats | Every enemy attack costs the player exactly 1 point. Drop damage scaling (`_apply_damage_scale`) and per-floor HP/damage curves. |
-|  | P1 | Medium | Elite abilities under hit counts | ENRAGE triggers after the first hit (was <30% HP). TANK = 3 hits (was 2× HP). FAST / TELEPORT unchanged. |
+| x | P0 | Medium | Hit-count health | `enemy.gd`: replace `max_health`/damage with a hit count. Normal = 1, elite = 2, TANK elite = 3. Any hit source (swing, projectile, explosion, status tick) = 1 hit. Remove `_apply_elite_scaling` HP multipliers. |
+| x | P0 | Low | Unified post-hit invulnerability | Elites and bosses ignore further hits for 0.3s after taking one. Elite flashes + staggers on the first hit. |
+| x | P0 | Medium | Boss hit pools | `boss_enemy.gd`: replace 200 HP with 3 phases × 10 hits (baseline). Phase transitions trigger on hit count, not HP thresholds, and cleanse statuses. |
+| x | P0 | Medium | Remove enemy damage stats | Every enemy attack costs the player exactly 1 point. Drop damage scaling (`_apply_damage_scale`) and per-floor HP/damage curves. Note: keystone's "+100%" amplification is gone with the damage model (its dead `DAMAGE_MULT` was dropped) — only the slot-focus behaviour remains; Plan 3 must restore it. |
+| x | P1 | Medium | Elite abilities under hit counts | ENRAGE triggers after the first hit (was <30% HP). TANK = 3 hits (was 2× HP). FAST / TELEPORT unchanged. |
 |  | P1 | Medium | Behavior-based difficulty | EASY / NORMAL / HARD tiers become behavior profiles (telegraph length, attack cadence, projectile count). Floor scaling raises these and enemy count, not stats. |
 
 ### Damage & Crit Removal
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | Medium | Rename `damage` → `dig_power` | CSV column + `Weapon` resource + registry. Dig power only drives terrain carving. Re-assign values by archetype: daggers/rapiers low; axes/maces/hammers/greatswords high; Gravedigger's Spade and Obsidian Greatsword highest. |
-|  | P0 | Medium | Remove crit | Drop `crit_chance`, `crit_multiplier`, `crit_status` from CSV, `Weapon`, and hit resolution. Weapons that used `crit_status` now use `hit_status` or their new trait (see `weapons.csv`). Delete/rewrite crit tests (`test_weapon_crit*.gd`). |
-|  | P1 | Low | Remove damage numbers | Floating damage numbers no longer apply. Replace with hit feedback only (flash, stagger, elite first-hit marker). |
+| x | P0 | Medium | Rename `damage` → `dig_power` | CSV column + `Weapon` resource + registry. Dig power only drives terrain carving. Re-assign values by archetype: daggers/rapiers low; axes/maces/hammers/greatswords high; Gravedigger's Spade and Obsidian Greatsword highest. Note: modifiers whose CSV `element` is still `damage` match no stat and are inert — `bloodlust`, `frostbreaker`, `pyroclast`, `coup_de_grace`, `rampage`, `glass_cannon`, `momentum`, `greedy_edge`; Plan 3 must re-point them. The consume family is inert for the same reason: `necrosis`, `combustion`, `frostshatter` and `rupture` used to burst a hit off a consumed status, and that burst spent a real hit, which the hit-count model does not allow; Plan 3 re-points them at "clear the status and buff the player". |
+| x | P0 | Medium | Remove crit | Drop `crit_chance`, `crit_multiplier`, `crit_status` from CSV, `Weapon`, and hit resolution. Weapons that used `crit_status` now use `hit_status` or their new trait (see `weapons.csv`). Delete/rewrite crit tests (`test_weapon_crit*.gd`). Note: `honed_point` and `executioners_mark` still name the deleted crit stats (`crit_chance`, `crit_multiplier`) and are inert; Plan 3 must re-point them. |
+| x | P1 | Low | Remove damage numbers | Floating damage numbers no longer apply. Replace with hit feedback only (flash, stagger, elite first-hit marker). |
 |  | P1 | Low | Rename weapons | `thunder_katana` → display name "Katana", `twin_daggers` → "Jack and Mary" (done in CSV; keep ids). Update any hard-coded names/tests. |
 
 ### Weapon Behavior Rework
@@ -47,14 +47,14 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 |------|----------|------------|------|-------------|
 |  | P0 | High | Stat modifiers | sharpened (+3 dig), heavy_head (stun + knockback, −25% swing speed), honed_point (+30% projectile speed/lifetime), glass_cannon (−2 max armor, +40% swing speed, +30% reach), slot_harmony (+20% swing speed). |
 |  | P0 | High | On-kill modifiers | chain_spark (1/4 lightning arc), hemophilia (1/5 bloody burst), pyroclast (1/10 fire patch), combo_keeper (kill streak shockwave), overkill (piercing shard), headsman (50% cooldown refund), bloodlust (stacking swing speed), vampiric (skip armor-regen delay), executioners_mark (mark → armor). See `modifiers.csv` for final text. |
-|  | P0 | High | Consume modifiers | combustion (+30% reach 1s), necrosis (+30% swing speed 1s), frostshatter (+30% move speed 1s), rupture (+50% dig 1s). Each consumes its status on hit. |
+|  | P0 | High | Consume modifiers | combustion (+30% reach 1s), necrosis (+30% swing speed 1s), frostshatter (+30% move speed 1s), rupture (+50% dig 1s). Each consumes its status on hit. Note: all four are inert today (their old burst is gone; see the Plan 3 debt note above), so their text already promises the Plan 3 behaviour. |
 |  | P0 | Medium | Conditional modifiers | frostbreaker (spread Chilly), coup_de_grace (finishing elite/boss phase refunds swing + 1 armor), rampage (hit streak → reach), momentum (move speed → swing speed), greedy_edge (gold → reach), adrenaline (armor break → +40% move speed 2s), last_stand (1/2 shockwave after being hit). |
 |  | P1 | Medium | Chance system + Executioner's Mark | Central chance helper for all chance-based weapon/modifier effects. Executioner's Mark adds +1/4 to every chance on its weapon, capped at 1. |
 
 ### HUD & Tests
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-|  | P0 | Medium | Hearts + shields HUD | Replace the health bar with 3 heart icons (HP) and 3 shield icons (armor). Shields refill visibly as armor regenerates. Supports changed max armor. |
+| x | P0 | Medium | Hearts + shields HUD | Replace the health bar with 3 HP pips and 3 armor pips (hearts and shields). A pip lights up when armor regenerates, with a short pop so the refill is visible. Supports changed max armor. |
 |  | P0 | Medium | Update unit tests | Rewrite tests that assume HP/damage/crit (`test_player_health_fraction`, `test_weapon_crit*`, `test_weapon_balance`, `test_charge_weapon_ratio`, `test_boss_phase_transition`, `test_modifier_stacking`, etc.). Add tests for armor regen, DoT routing, hit counts and 0.3s invulnerability. |
 |  | P2 | Low | Resync Chinese CSVs | `weapons-chinese.csv` / `modifiers-chinese.csv` are already stale (fewer rows). Resync names and descriptions once English text settles. |
 

@@ -23,8 +23,8 @@ greased_edge,Greased Edge,"Coats struck foes in oil — one spark sets them abla
 frostbite_edge,Frostbite Edge,"Each hit saps warmth, chilling foes toward a deep freeze.",Uncommon,status,on_hit,,apply_status,chilly,2.0,0,No
 ember_edge,Ember Edge,"Strikes ignite foes, setting them burning.",Uncommon,status,on_hit,,apply_status,on_fire,2.0,0,No
 rending_edge,Rending Edge,"Wounds bleed freely, leaving enemies bloody.",Common,status,on_hit,,apply_status,bloody,2.0,0,No
-sharpened,Sharpened,"+3 flat dig power.",Common,stat,passive,,stat_add,damage,3,0,No
-heavy_head,Heavy Head,"Hits stun and knock foes back hard, but swings land 25% slower.",Common,stat,passive,,stat_add,damage,5,1.25,No
+sharpened,Sharpened,"+3 flat dig power.",Common,stat,passive,,stat_add,dig_power,3,0,No
+heavy_head,Heavy Head,"Hits stun and knock foes back hard, but swings land 25% slower.",Common,stat,passive,,stat_add,dig_power,5,1.25,No
 honed_point,Honed Point,"Projectiles fly 30% faster and farther.",Uncommon,stat,passive,,stat_add,crit_chance,0.15,0,No
 executioners_mark,Executioner's Mark,"Raises every chance-based effect on this weapon by +1/4 (capped at certain).",Uncommon,stat,passive,,stat_add,crit_multiplier,0.5,0,No
 quickdraw,Quickdraw,"Swings come 20% faster.",Uncommon,stat,passive,,stat_mult,cooldown,0.8,0,No

@@ -2,7 +2,7 @@ class_name SeekerLauncherWeapon
 extends RangedWeapon
 
 func _configure() -> void:
-	damage = 4.0
+	dig_power = 4.0
 	cooldown = 1.5
 	projectile_count = 1
 	spread_angle = 0.0

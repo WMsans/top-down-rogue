@@ -60,7 +60,7 @@ func test_fan_emits_center_plus_two_spread() -> void:
 func test_sniper_defaults() -> void:
 	var w := SniperWeapon.new()
 	assert_int(w.burst_count).is_equal(1)
-	assert_float(w.damage).is_greater(15.0)
+	assert_float(w.dig_power).is_greater(15.0)
 	assert_float(w.cooldown).is_greater(2.0)
 
 func test_sniper_makes_penetration_behavior() -> void:

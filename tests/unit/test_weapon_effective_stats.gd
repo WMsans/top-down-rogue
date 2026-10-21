@@ -19,11 +19,16 @@ class _MultMod extends Modifier:
 		return factor if s == stat else 1.0
 
 
+func test_find_empty_modifier_slot_on_fresh_weapon() -> void:
+	var w := Weapon.new()
+	assert_int(w.find_empty_modifier_slot()).is_equal(0)
+
+
 func test_add_then_mult_order() -> void:
 	var w: Weapon = Weapon.new()
-	w.damage = 10.0
-	w.modifiers = [_AddMod.new("damage", 3.0), _MultMod.new("damage", 2.0), null]
-	assert_that(w.get_effective_stats()["damage"]).is_equal(26.0)
+	w.dig_power = 10.0
+	w.modifiers = [_AddMod.new("dig_power", 3.0), _MultMod.new("dig_power", 2.0), null]
+	assert_that(w.get_effective_stats()["dig_power"]).is_equal(26.0)
 
 
 func test_cooldown_floor() -> void:
@@ -35,10 +40,10 @@ func test_cooldown_floor() -> void:
 
 func test_cache_invalidates_on_modifier_change() -> void:
 	var w: Weapon = Weapon.new()
-	w.damage = 5.0
-	assert_that(w.get_effective_stats()["damage"]).is_equal(5.0)
-	w.add_modifier(0, _AddMod.new("damage", 4.0))
-	assert_that(w.get_effective_stats()["damage"]).is_equal(9.0)
+	w.dig_power = 5.0
+	assert_that(w.get_effective_stats()["dig_power"]).is_equal(5.0)
+	w.add_modifier(0, _AddMod.new("dig_power", 4.0))
+	assert_that(w.get_effective_stats()["dig_power"]).is_equal(9.0)
 
 
 func test_use_sets_cooldown_from_effective() -> void:
@@ -53,6 +58,17 @@ func test_use_sets_cooldown_from_effective() -> void:
 	assert_that(w.is_ready()).is_true()
 
 
+func test_refund_cooldown_halves_the_remaining_wait() -> void:
+	var w: Weapon = Weapon.new()
+	w.cooldown = 2.0
+	w.use(null)
+	w.refund_cooldown(0.5)
+	w.tick(0.99)
+	assert_bool(w.is_ready()).is_false()
+	w.tick(0.02)
+	assert_bool(w.is_ready()).is_true()
+
+
 func test_melee_seeds_reach_and_arc() -> void:
 	var m: MeleeWeapon = MeleeWeapon.new()
 	m.weapon_reach = 30.0
@@ -60,3 +76,9 @@ func test_melee_seeds_reach_and_arc() -> void:
 	var s := m.get_effective_stats()
 	assert_that(s["reach"]).is_equal(30.0)
 	assert_that(s["arc"]).is_equal(PI / 2.0)
+
+
+func test_willowblade_charged_thrust_digs_double() -> void:
+	var w: WillowbladeWeapon = WillowbladeWeapon.new()
+	w.is_chargeable()  # forces the lazy move setup
+	assert_float(w.charged_moves[0].dig_mult).is_equal(2.0)

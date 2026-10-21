@@ -1,17 +1,24 @@
 extends CanvasLayer
 
-## Single HUD: TL = health + gold (one framed cluster), TR = weapon
+## Single HUD: TL = hearts + shields + gold (one framed cluster), TR = weapon
 ## (matching framed cluster). Replaces health_ui.gd + weapon_button.gd.
 
-@onready var _health_bar_fill: ColorRect = %BarFill
-@onready var _health_label: RichTextLabel = %HealthLabel
+const PIP_SIZE := Vector2(12, 12)
+const HEART_COLOR := Color(0.9, 0.2, 0.2)
+const SHIELD_COLOR := Color(0.35, 0.65, 1.0)
+const PIP_EMPTY_ALPHA := 0.2
+const PIP_POP_TIME := 0.18
+const PIP_POP_SCALE := 1.6
+
+@onready var _hearts: HBoxContainer = %Hearts
+@onready var _shields: HBoxContainer = %Shields
 @onready var _gold_label: Label = %GoldLabel
 @onready var _weapon_icon: TextureButton = %WeaponIconButton
 @onready var _weapon_fallback: ColorRect = %WeaponFallback
 @onready var _weapon_tooltip: PanelContainer = %WeaponTooltip
 @onready var _weapon_tooltip_name: Label = %WeaponTooltipName
 @onready var _weapon_tooltip_cd: Label = %WeaponTooltipCooldown
-@onready var _weapon_tooltip_dmg: Label = %WeaponTooltipDamage
+@onready var _weapon_tooltip_dig: Label = %WeaponTooltipDig
 
 var _inventory: PlayerInventory
 var _weapon_manager: WeaponManager
@@ -19,6 +26,7 @@ var _current_weapon: Weapon
 var _flash_tween: Tween = null
 var _bounce_tween: Tween = null
 var _outline_panel: Panel = null
+var _lit_pip_counts: Dictionary = {}  # container instance id -> lit pip count
 
 func _ready() -> void:
 	_weapon_icon.pressed.connect(_on_weapon_button_pressed)
@@ -32,9 +40,11 @@ func _ready() -> void:
 		_inventory = player.get_node_or_null("PlayerInventory")
 		if _inventory:
 			_inventory.health_changed.connect(_on_health_changed)
+			_inventory.armor_changed.connect(_on_armor_changed)
 			_inventory.player_died.connect(_on_died)
 			_inventory.gold_changed.connect(_on_gold_changed)
 			_on_health_changed(_inventory.get_health(), _inventory.get_max_health())
+			_on_armor_changed(_inventory.get_armor(), _inventory.get_max_armor())
 			_on_gold_changed(_inventory.gold)
 		_weapon_manager = player.get_node_or_null("WeaponManager")
 		if _weapon_manager:
@@ -56,10 +66,10 @@ func set_weapon_icon(texture: Texture2D) -> void:
 		_weapon_icon.texture_normal = texture
 		_weapon_fallback.visible = false
 
-func set_weapon_tooltip(name: String, cooldown: float, damage: int) -> void:
+func set_weapon_tooltip(name: String, cooldown: float, dig_power: float) -> void:
 	_weapon_tooltip_name.text = name
 	_weapon_tooltip_cd.text = "Cooldown: %.1fs" % cooldown
-	_weapon_tooltip_dmg.text = "Damage: %d" % damage
+	_weapon_tooltip_dig.text = "Dig: %.1f" % dig_power
 
 func show_weapon_tooltip(show: bool) -> void:
 	_weapon_tooltip.visible = show
@@ -78,9 +88,48 @@ func flash_slots_full() -> void:
 	_flash_tween.tween_callback(func() -> void: _outline_panel.visible = false)
 
 func _on_health_changed(current: int, maximum: int) -> void:
-	var ratio := clampf(float(current) / float(maximum), 0.0, 1.0) if maximum > 0 else 0.0
-	_health_bar_fill.anchor_right = ratio
-	_health_label.text = "%d / %d" % [current, maximum]
+	set_pips(_hearts, current, maximum, HEART_COLOR)
+
+
+func _on_armor_changed(current: int, maximum: int) -> void:
+	set_pips(_shields, current, maximum, SHIELD_COLOR)
+
+
+# One square per point of `maximum`; the first `current` are lit, the rest dimmed.
+func set_pips(container: HBoxContainer, current: int, maximum: int, color: Color) -> void:
+	while container.get_child_count() < maximum:
+		var pip := ColorRect.new()
+		pip.custom_minimum_size = PIP_SIZE
+		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		container.add_child(pip)
+	while container.get_child_count() > maximum:
+		var last: Node = container.get_child(container.get_child_count() - 1)
+		container.remove_child(last)
+		last.queue_free()
+	for i in range(container.get_child_count()):
+		var pip: ColorRect = container.get_child(i)
+		pip.color = color
+		pip.modulate.a = 1.0 if i < current else PIP_EMPTY_ALPHA
+	var lit: int = mini(current, maximum)
+	var key: int = container.get_instance_id()
+	var was_lit: int = _lit_pip_counts.get(key, -1)
+	_lit_pip_counts[key] = lit
+	# -1 means the row was empty until now: that is a fill, not a refill.
+	if was_lit >= 0 and lit > was_lit:
+		_pop_pip(container.get_child(lit - 1))
+
+
+# Short pop on a newly lit pip: armour regen is silent otherwise, so a
+# refilling shield would otherwise be invisible. Scale only - the alpha of a
+# pip says whether it is lit.
+func _pop_pip(pip: Node) -> void:
+	if pip == null or not (pip is Control):
+		return
+	var c := pip as Control
+	c.pivot_offset = PIP_SIZE * 0.5
+	c.scale = Vector2.ONE * PIP_POP_SCALE
+	var tween := c.create_tween()
+	tween.tween_property(c, "scale", Vector2.ONE, PIP_POP_TIME)
 
 func _on_died() -> void:
 	if _inventory:
@@ -119,7 +168,7 @@ func _on_weapon_mouse_entered() -> void:
 		var stats := _current_weapon.get_base_stats()
 		_weapon_tooltip_name.text = str(stats["name"])
 		_weapon_tooltip_cd.text = "Cooldown: %.1fs" % stats["cooldown"]
-		_weapon_tooltip_dmg.text = "Damage: %.0f" % stats["damage"]
+		_weapon_tooltip_dig.text = "Dig: %.1f" % stats["dig_power"]
 		_weapon_tooltip.visible = true
 
 func _on_weapon_mouse_exited() -> void:

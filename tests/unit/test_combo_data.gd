@@ -7,41 +7,33 @@ class _StatusTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
 
 
 class _HpTarget extends Node2D:
-	var health: float
-	var max_health: float
+	var hits_remaining: int = 1
 	var impacts: Array = []
-	func _init(h: float = 100.0) -> void:
-		health = h
-		max_health = h
+	func _init(_hp: float = 100.0) -> void:
 		add_to_group("attackable")
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		health -= float(dmg)
-		impacts.append(dmg)
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits_remaining -= 1
+		impacts.append(1)
 
 
 class _HpUser extends Node2D:
-	var health: float = 10.0
-	var max_health: float = 10.0
+	var hits_remaining: int = 1
 
 
 class _HitCounter extends Modifier:
 	var on_hit_calls: int = 0
-	var dmg_seen: float = 0.0
 	func _init() -> void:
 		category = "trigger"
 	func on_hit_target(_w, _u, _t) -> void:
 		on_hit_calls += 1
-	func modify_hit_damage(_w, _u, _t, dmg: float) -> float:
-		dmg_seen = dmg
-		return dmg
 
 
 class _ChainRetrigger extends Modifier:
@@ -112,18 +104,6 @@ func test_deepfreeze_adds_frozen_to_chilly_target() -> void:
 	add_child(dry)
 	m.on_hit_target(null, null, dry)
 	assert_float(dry.get_node("StatusComponent").get_stain("frozen")).is_equal(0.0)
-
-
-func test_hemophilia_crit_vs_bloody() -> void:
-	var w := Weapon.new()
-	w.crit_chance = 0.2
-	var m := _make("hemophilia")
-	w.add_modifier(0, m)
-	var t := _StatusTarget.new()
-	add_child(t)
-	assert_float(w.get_effective_crit_chance_for_target(t)).is_equal(0.2)
-	t.get_node("StatusComponent").add_stain("bloody", 5.0)
-	assert_float(w.get_effective_crit_chance_for_target(t)).is_equal(0.45)
 
 
 func test_backdraft_registered_and_spreads() -> void:

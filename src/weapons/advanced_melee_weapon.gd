@@ -8,9 +8,8 @@ class Move extends RefCounted:
 	var shape: int = MoveShape.SLASH
 	var reach: float = 36.0
 	var arc: float = PI / 2.0
-	var damage_mult: float = 1.0
+	var dig_mult: float = 1.0
 	var dash_distance: float = 0.0
-	var force_crit: bool = false
 	var ignore_parry: bool = false
 	var swing_dir: float = 0.0   # 0 = alternate; +1/-1 = forced swing direction
 
@@ -55,33 +54,32 @@ func _setup_moves() -> void:
 	light_moves = [_slash()]
 
 
-func _slash(dir: float = 0.0, dmg_mult: float = 1.0) -> Move:
+func _slash(dir: float = 0.0, dig_mult: float = 1.0) -> Move:
 	var m := Move.new()
 	m.shape = MoveShape.SLASH
 	m.reach = weapon_reach
 	m.arc = arc_angle
 	m.swing_dir = dir
-	m.damage_mult = dmg_mult
+	m.dig_mult = dig_mult
 	return m
 
 
-func _thrust(force_crit: bool = false, ignore_parry: bool = false, dash: float = 0.0) -> Move:
+func _thrust(ignore_parry: bool = false, dash: float = 0.0) -> Move:
 	var m := Move.new()
 	m.shape = MoveShape.THRUST
 	m.reach = weapon_reach * 1.25
 	m.arc = deg_to_rad(20.0)
-	m.force_crit = force_crit
 	m.ignore_parry = ignore_parry
 	m.dash_distance = dash
 	return m
 
 
-func _spin(dmg_mult: float = 1.0, dash: float = 0.0) -> Move:
+func _spin(dig_mult: float = 1.0, dash: float = 0.0) -> Move:
 	var m := Move.new()
 	m.shape = MoveShape.SPIN
 	m.reach = weapon_reach
 	m.arc = TAU
-	m.damage_mult = dmg_mult
+	m.dig_mult = dig_mult
 	m.dash_distance = dash
 	return m
 
@@ -231,8 +229,8 @@ func _play_move(move: Move, user: Node) -> void:
 
 
 func _apply_move_hit(move: Move, user: Node, pos: Vector2, direction: Vector2) -> void:
-	_carve_and_push(pos, direction, move.reach, move.arc, damage * move.damage_mult)
-	_hit_attackables(user, pos, direction, move.reach, move.arc, move.damage_mult, move.force_crit, move.ignore_parry)
+	_carve_and_push(pos, direction, move.reach, move.arc, dig_power * move.dig_mult)
+	_hit_attackables(user, pos, direction, move.reach, move.arc, move.ignore_parry)
 
 
 func _start_move_anim(move: Move, direction: Vector2) -> void:

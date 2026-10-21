@@ -1,14 +1,17 @@
 extends GdUnitTestSuite
 
 class _SparkEnemy extends Node2D:
-	var hit_dmg: int = -1
+	var hit_count: int = 0
+	var invulnerable: bool = false
 	func _init() -> void:
 		add_to_group("attackable")
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hit_dmg = dmg
+	func is_hit_invulnerable() -> bool:
+		return invulnerable
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hit_count += 1
 
 func test_chain_spark_hits_up_to_three_nearest() -> void:
 	var user: Node2D = auto_free(Node2D.new())
@@ -20,10 +23,11 @@ func test_chain_spark_hits_up_to_three_nearest() -> void:
 		e.global_position = Vector2(10.0 * float(i + 1), 0.0)   # x = 10..50, all within RANGE
 		enemies.append(e)
 	var m := ChainSparkModifier.new()
-	m.on_crit(null, user, null)
+	m.proc_chance = 1.0
+	m.on_kill(null, user, null)
 	var hits := 0
 	for e in enemies:
-		if e.hit_dmg >= 0:
+		if e.hit_count > 0:
 			hits += 1
 	assert_int(hits).is_equal(3)
 	# nearest three got lightning status
@@ -39,6 +43,62 @@ func test_chain_spark_respects_range() -> void:
 	add_child(far)
 	far.global_position = Vector2(500.0, 0.0)   # outside RANGE 160
 	var m := ChainSparkModifier.new()
-	m.on_crit(null, user, null)
-	assert_bool(near.hit_dmg >= 0).is_true()
-	assert_bool(far.hit_dmg >= 0).is_false()
+	m.proc_chance = 1.0
+	m.on_kill(null, user, null)
+	assert_bool(near.hit_count > 0).is_true()
+	assert_bool(far.hit_count > 0).is_false()
+
+func test_chain_spark_skips_invulnerable_targets() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var shielded: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(shielded)
+	shielded.global_position = Vector2(20.0, 0.0)
+	shielded.invulnerable = true
+	var normal: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(normal)
+	normal.global_position = Vector2(40.0, 0.0)
+	var m := ChainSparkModifier.new()
+	m.proc_chance = 1.0
+	m.on_kill(null, user, null)
+	# the invulnerable target takes nothing at all
+	assert_int(shielded.hit_count).is_equal(0)
+	assert_float(shielded.get_node("StatusComponent").get_timed_remaining("lightning")).is_equal(0.0)
+	# the other target is still hit
+	assert_bool(normal.hit_count > 0).is_true()
+	assert_float(normal.get_node("StatusComponent").get_timed_remaining("lightning")).is_greater(0.0)
+
+
+func test_chain_spark_does_not_arc_on_every_kill() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var e: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(e)
+	e.global_position = Vector2(20.0, 0.0)
+	var m := ChainSparkModifier.new()   # documented chance: 1/4
+	for _i in range(100):
+		m.on_kill(null, user, null)
+	assert_int(e.hit_count).is_greater(0)    # it does fire
+	assert_int(e.hit_count).is_less(100)     # but not on every kill
+
+
+func test_chain_spark_invulnerable_target_does_not_eat_a_slot() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var shielded: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(shielded)
+	shielded.global_position = Vector2(10.0, 0.0)
+	shielded.invulnerable = true
+	var normals: Array = []
+	for i in range(3):
+		var e: _SparkEnemy = auto_free(_SparkEnemy.new())
+		add_child(e)
+		e.global_position = Vector2(20.0 + 10.0 * float(i), 0.0)
+		normals.append(e)
+	var m := ChainSparkModifier.new()
+	m.proc_chance = 1.0
+	m.on_kill(null, user, null)
+	# the chain has three slots and all three of them land on real targets
+	for e in normals:
+		assert_int(e.hit_count).is_equal(1)
+	assert_int(shielded.hit_count).is_equal(0)

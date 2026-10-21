@@ -32,12 +32,6 @@ func test_grand_knight_is_slash_slash_thrust() -> void:
 		AdvancedMeleeWeapon.MoveShape.THRUST,
 	])
 
-func test_willowblade_charged_thrust_is_force_crit() -> void:
-	var w := _w("willowblade")
-	assert_int(w.charged_moves.size()).is_equal(1)
-	assert_int(w.charged_moves[0].shape).is_equal(AdvancedMeleeWeapon.MoveShape.THRUST)
-	assert_bool(w.charged_moves[0].force_crit).is_true()
-
 func test_executioner_charged_spin_scales() -> void:
 	var w := _w("executioner")
 	assert_int(w.charged_flurry_max).is_equal(2)

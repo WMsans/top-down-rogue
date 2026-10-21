@@ -2,7 +2,7 @@ class_name VenomSpitterWeapon
 extends RangedWeapon
 
 func _configure() -> void:
-	damage = 2.5
+	dig_power = 2.5
 	cooldown = 1.3
 	projectile_count = 1
 	spread_angle = 0.0

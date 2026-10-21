@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 
 class _Target extends Area2D:
-	var health: float = 100.0
+	var hits_remaining: int = 1
 	var hits: Array = []
 	func _init() -> void:
 		add_to_group("attackable")
@@ -14,9 +14,9 @@ class _Target extends Area2D:
 		shape.radius = 4.0
 		col.shape = shape
 		add_child(col)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
-		health -= dmg
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
+		hits_remaining -= 1
 
 class _EdgeMod extends Modifier:
 	func on_hit_target(_w: Weapon, _u: Node, t: Node) -> void:
@@ -34,10 +34,9 @@ func test_melee_swing_routes_through_resolve_hit_and_applies_edge() -> void:
 	var w := MeleeWeapon.new()
 	w.weapon_reach = 30.0
 	w.arc_angle = PI
-	w.damage = 5.0
-	w.crit_chance = 0.0
+	w.dig_power = 5.0
 	w.modifiers = [_EdgeMod.new(), null, null]
 	await get_tree().physics_frame
-	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, 30.0, PI, 1.0, false, true)
+	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, 30.0, PI, true)
 	assert_int(target.hits.size()).is_equal(1)
 	assert_that(target.get_node("StatusComponent").get_stain("on_fire")).is_greater(0.0)

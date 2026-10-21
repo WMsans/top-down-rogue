@@ -1,8 +1,6 @@
 class_name KeystoneModifier
 extends Modifier
 
-const DAMAGE_MULT := 2.0
-
 
 func _init() -> void:
 	category = "trigger"

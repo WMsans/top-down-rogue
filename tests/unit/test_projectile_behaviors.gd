@@ -49,7 +49,7 @@ func test_behavior_keep_alive_on_enemy_hit() -> void:
 	var p: Projectile = auto_free(Projectile.new())
 	p.behaviors = [b]
 	p.is_enemy_projectile = false
-	p.damage = 5.0
+	p.dig_power = 5.0
 	var target: Enemy = auto_free(Enemy.new())
 	add_child(target)
 	p._handle_hit(target)
@@ -59,7 +59,7 @@ func test_behavior_keep_alive_on_enemy_hit() -> void:
 func test_no_behavior_still_dies_on_enemy_hit() -> void:
 	var p: Projectile = auto_free(Projectile.new())
 	p.is_enemy_projectile = false
-	p.damage = 5.0
+	p.dig_power = 5.0
 	var target: Enemy = auto_free(Enemy.new())
 	add_child(target)
 	p._handle_hit(target)
@@ -78,7 +78,7 @@ func test_split_spawns_shards_on_enemy_hit_then_dies() -> void:
 	add_child(parent)
 	var p: Projectile = Projectile.new()  # NOT auto_free: it should queue_free itself
 	p.is_enemy_projectile = false
-	p.damage = 10.0
+	p.dig_power = 10.0
 	var b := SplitBehavior.new()
 	b.shard_count = 4
 	p.behaviors = [b]
@@ -94,15 +94,15 @@ func test_split_spawns_shards_on_enemy_hit_then_dies() -> void:
 			shards += 1
 	assert_that(shards).is_equal(4)
 
-func test_split_shards_have_no_behaviors_and_reduced_damage() -> void:
+func test_split_shards_have_no_behaviors_and_reduced_dig_power() -> void:
 	var parent: Node2D = auto_free(Node2D.new())
 	add_child(parent)
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
-	p.damage = 10.0
+	p.dig_power = 10.0
 	var b := SplitBehavior.new()
 	b.shard_count = 3
-	b.damage_factor = 0.5
+	b.dig_factor = 0.5
 	p.behaviors = [b]
 	parent.add_child(p)
 	var target: Enemy = auto_free(Enemy.new())
@@ -112,7 +112,7 @@ func test_split_shards_have_no_behaviors_and_reduced_damage() -> void:
 	for c in parent.get_children():
 		if c is Projectile:
 			assert_that(c.behaviors.is_empty()).is_true()
-			assert_that(c.damage).is_equal(5.0)
+			assert_that(c.dig_power).is_equal(5.0)
 
 
 func test_bounce_flips_blocked_x_axis() -> void:
@@ -140,7 +140,7 @@ func test_bounce_dies_when_exhausted() -> void:
 func test_penetrate_passes_through_enemies() -> void:
 	var p: Projectile = auto_free(Projectile.new())
 	p.is_enemy_projectile = false
-	p.damage = 5.0
+	p.dig_power = 5.0
 	p.behaviors = [PenetrateBehavior.new()]
 	p._handle_hit(auto_free(Enemy.new()))
 	assert_that(is_instance_valid(p)).is_true()
@@ -177,7 +177,7 @@ func test_split_shards_inherit_hit_status_when_set() -> void:
 	add_child(parent)
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
-	p.damage = 10.0
+	p.dig_power = 10.0
 	var b := SplitBehavior.new()
 	b.shard_count = 3
 	b.shard_hit_status = "burn"
@@ -229,7 +229,7 @@ func test_split_shards_default_no_hit_status() -> void:
 	add_child(parent)
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
-	p.damage = 10.0
+	p.dig_power = 10.0
 	var b := SplitBehavior.new()
 	b.shard_count = 2
 	p.behaviors = [b]

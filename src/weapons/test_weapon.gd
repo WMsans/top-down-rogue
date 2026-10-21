@@ -27,7 +27,7 @@ var _facing_angle: float = 0.0
 func _init() -> void:
 	name = "Test Weapon"
 	cooldown = 0.5
-	damage = 1.0
+	dig_power = 1.0
 	icon_texture = WEAPON_TEXTURE
 	modifier_slot_count = 3
 	modifiers.resize(modifier_slot_count)

@@ -4,7 +4,7 @@ extends ProjectileBehavior
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
 
 var shard_count: int = 4
-var damage_factor: float = 0.5
+var dig_factor: float = 0.5
 var spread_deg: float = 60.0
 var shard_speed: float = 140.0
 var shard_lifetime: float = 0.6
@@ -36,7 +36,7 @@ func _split(proj, reverse_dir: bool = false) -> void:
 		var angle: float = base_angle + lerpf(-half, half, t)
 		var shard: Projectile = PROJECTILE_SCENE.instantiate()
 		shard.direction = Vector2(cos(angle), sin(angle))
-		shard.damage = proj.damage * damage_factor
+		shard.dig_power = proj.dig_power * dig_factor
 		shard.speed = shard_speed
 		shard.lifetime = shard_lifetime
 		shard.is_enemy_projectile = proj.is_enemy_projectile
@@ -44,6 +44,8 @@ func _split(proj, reverse_dir: bool = false) -> void:
 		shard.collisionless_time = shard_collisionless_time
 		if shard_hit_status != "":
 			shard.hit_status = shard_hit_status
+		else:
+			shard.hit_status = proj.hit_status
 		shard.global_position = proj.global_position + shard.direction * spawn_offset
 		var src_sprite = proj.get_node_or_null("Sprite2D")
 		var shard_sprite = shard.get_node_or_null("Sprite2D")

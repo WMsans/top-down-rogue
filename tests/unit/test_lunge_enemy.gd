@@ -48,8 +48,8 @@ func _make_recording_player(pos: Vector2) -> Node2D:
 	script.source_code = '\n'.join([
 		"extends Node2D",
 		"var hits: Array = []",
-		"func on_hit_impact(_pos: Vector2, _dir: Vector2, dmg: int) -> void:",
-		"\thits.push_back({_pos = _pos, _dir = _dir, dmg = dmg})",
+		"func on_hit_impact(_pos: Vector2, _dir: Vector2) -> void:",
+		"\thits.push_back({_pos = _pos, _dir = _dir})",
 	])
 	var err := script.reload()
 	assert_int(err).is_equal(OK)
@@ -89,7 +89,6 @@ func test_dash_terminates_into_cooldown() -> void:
 
 func test_body_check_hits_once_within_contact_radius() -> void:
 	var e := _lunge_to_recording(Vector2.ZERO, Vector2(5, 0))
-	e.dash_damage = 7.0
 	e._state = Enemy.State.ATTACK
 	e._attack_started = false
 	e._dash_done = false
@@ -99,7 +98,7 @@ func test_body_check_hits_once_within_contact_radius() -> void:
 		e._process_attack(0.05)
 	var hits: Array = e._player_ref.hits
 	assert_int(hits.size()).is_equal(1)
-	assert_int(hits[0]["dmg"]).is_equal(7)
+	assert_that(hits[0]["_pos"]).is_equal(Vector2.ZERO)
 
 func test_sidestepped_player_takes_no_hit() -> void:
 	var e := _lunge_to_recording(Vector2.ZERO, Vector2(200, 0))
@@ -189,18 +188,3 @@ func test_dash_end_stops_fire_vfx() -> void:
 		e._process_attack(0.05)
 	var particles: CPUParticles2D = e._fire_vfx.get_node("Particles")
 	assert_bool(particles.emitting).is_false()
-
-func test_body_check_uses_dash_damage_scaled_by_damage_scale() -> void:
-	var e := _lunge_to_recording(Vector2.ZERO, Vector2(5, 0))
-	e.dash_damage = 7.0
-	e.damage_scale = 2.0
-	e._state = Enemy.State.ATTACK
-	e._attack_started = false
-	e._dash_done = false
-	for i in range(20):
-		if e._state != Enemy.State.ATTACK:
-			break
-		e._process_attack(0.05)
-	var hits: Array = e._player_ref.hits
-	assert_int(hits.size()).is_equal(1)
-	assert_int(hits[0]["dmg"]).is_equal(14)

@@ -31,15 +31,6 @@ func on_hit_target(weapon: Weapon, user: Node, target: Node) -> void:
 		l.on_hit_target(weapon, user, target)
 
 
-func modify_hit_damage(weapon: Weapon, user: Node, target: Node, dmg: float) -> float:
-	if is_disabled:
-		return dmg
-	var l: Modifier = _left(weapon)
-	if l != null:
-		return l.modify_hit_damage(weapon, user, target, dmg)
-	return dmg
-
-
 func on_kill(weapon: Weapon, user: Node, target: Node) -> void:
 	if is_disabled:
 		return

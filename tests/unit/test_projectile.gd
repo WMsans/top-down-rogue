@@ -18,7 +18,7 @@ func test_projectile_expires() -> void:
 func test_enemy_projectile_hits_player() -> void:
 	var p: Projectile = auto_free(Projectile.new())
 	p.is_enemy_projectile = true
-	p.damage = 10.0
+	p.dig_power = 10.0
 	p.direction = Vector2.RIGHT
 	var player := Node2D.new()
 	player.add_to_group("player", true)
@@ -28,7 +28,7 @@ func test_enemy_projectile_hits_player() -> void:
 func test_projectile_ignores_self() -> void:
 	var p: Projectile = auto_free(Projectile.new())
 	p.is_enemy_projectile = false
-	p.damage = 10.0
+	p.dig_power = 10.0
 	p.source_node = p
 	var target: Enemy = auto_free(Enemy.new())
 	p._handle_hit(target)
@@ -37,7 +37,7 @@ func test_projectile_ignores_self() -> void:
 func test_projectile_hits_attackable() -> void:
 	var p: Projectile = auto_free(Projectile.new())
 	p.is_enemy_projectile = false
-	p.damage = 10.0
+	p.dig_power = 10.0
 	p.source_node = null
 	var target: Enemy = auto_free(Enemy.new())
 	p._handle_hit(target)
@@ -50,16 +50,16 @@ func test_projectile_registers_in_group() -> void:
 
 
 class _RhTarget extends Node2D:
-	var health: float = 100.0
+	var hits_remaining: int = 1
 	var hits: Array = []
 	func _init() -> void:
 		add_to_group("attackable")
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
-		health -= dmg
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
+		hits_remaining -= 1
 
 class _EdgeWeapon extends Weapon:
 	func _init() -> void:
@@ -76,12 +76,11 @@ func test_projectile_routes_player_hit_through_source_weapon() -> void:
 	parent.add_child(target)
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
-	p.damage = 5.0
-	p.crit_chance = 0.0
+	p.dig_power = 5.0
 	p.source_weapon = _EdgeWeapon.new()
 	parent.add_child(p)
 	p._handle_hit(target)
-	assert_int(target.hits[0]).is_equal(5)
+	assert_int(target.hits[0]).is_equal(1)
 	assert_that(target.get_node("StatusComponent").get_stain("poisoned")).is_greater(0.0)
 
 func test_projectile_without_source_weapon_still_hits() -> void:
@@ -91,8 +90,7 @@ func test_projectile_without_source_weapon_still_hits() -> void:
 	parent.add_child(target)
 	var p: Projectile = Projectile.new()
 	p.is_enemy_projectile = false
-	p.damage = 4.0
-	p.crit_chance = 0.0
+	p.dig_power = 4.0
 	parent.add_child(p)
 	p._handle_hit(target)
-	assert_int(target.hits[0]).is_equal(4)
+	assert_int(target.hits[0]).is_equal(1)

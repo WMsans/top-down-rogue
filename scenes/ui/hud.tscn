@@ -2,16 +2,9 @@
 
 [ext_resource type="Script" uid="uid://dgo7jg16jcux8" path="res://src/ui/hud.gd" id="1"]
 [ext_resource type="StyleBox" path="res://resources/ui/styles/inset_frame.tres" id="2"]
-[ext_resource type="Shader" uid="uid://5h53yqww8n6t" path="res://shaders/ui/health_bar_shimmer.gdshader" id="3"]
 [ext_resource type="Texture2D" uid="uid://dqyowb5gsntmk" path="res://textures/ui/gold_icon_atlas.tres" id="4"]
 [ext_resource type="FontFile" uid="uid://djmcix6v8np5e" path="res://textures/Assets/DawnLike/GUI/SDS_8x8.ttf" id="4_136eg"]
 [ext_resource type="PackedScene" uid="uid://minimap0001" path="res://scenes/ui/minimap.tscn" id="mm"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_shimmer"]
-shader = ExtResource("3")
-shader_parameter/shimmer_speed = 0.5
-shader_parameter/shimmer_width = 0.08
-shader_parameter/shimmer_brightness = 0.4
 
 [node name="HUD" type="CanvasLayer" unique_id=591189703]
 layer = 5
@@ -39,38 +32,15 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HealthBar" type="Panel" parent="TopLeft/Frame/InnerMargin/VBox" unique_id=19971121]
+[node name="Hearts" type="HBoxContainer" parent="TopLeft/Frame/InnerMargin/VBox"]
 unique_name_in_owner = true
-clip_contents = true
-custom_minimum_size = Vector2(220, 32)
 layout_mode = 2
+theme_override_constants/separation = 4
 
-[node name="BarFill" type="ColorRect" parent="TopLeft/Frame/InnerMargin/VBox/HealthBar" unique_id=1681402564]
+[node name="Shields" type="HBoxContainer" parent="TopLeft/Frame/InnerMargin/VBox"]
 unique_name_in_owner = true
-material = SubResource("ShaderMaterial_shimmer")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 0
-grow_vertical = 2
-color = Color(1, 0.42, 0.208, 1)
-
-[node name="HealthLabel" type="RichTextLabel" parent="TopLeft/Frame/InnerMargin/VBox/HealthBar" unique_id=2052188509]
-unique_name_in_owner = true
-layout_mode = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_fonts/normal_font = ExtResource("4_136eg")
-bbcode_enabled = true
-text = "100 / 100"
-fit_content = true
-scroll_active = false
-horizontal_alignment = 1
-vertical_alignment = 1
+layout_mode = 2
+theme_override_constants/separation = 4
 
 [node name="GoldRow" type="HBoxContainer" parent="TopLeft/Frame/InnerMargin/VBox" unique_id=2141193169]
 layout_mode = 2
@@ -199,7 +169,7 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Cooldown: 0.5s"
 
-[node name="WeaponTooltipDamage" type="Label" parent="WeaponTooltip/TooltipMargin/TooltipVBox" unique_id=597486116]
+[node name="WeaponTooltipDig" type="Label" parent="WeaponTooltip/TooltipMargin/TooltipVBox" unique_id=597486116]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Damage: 0"
+text = "Dig: 0"
