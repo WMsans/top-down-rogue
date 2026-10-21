@@ -21,7 +21,6 @@ var targeted_enemy: Node2D = null
 const KNOCKBACK_SPEED := 20.0
 const KNOCKBACK_DECAY := 12.0
 const DASH_DECAY := 9.0
-const ZOOM_PUNCH_THRESHOLD := 10.0
 const ZOOM_PUNCH_AMOUNT := 0.92
 const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
 const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
@@ -29,6 +28,10 @@ const BURN_FLASH_MAX := 0.7
 const BURN_FLASH_DECAY := 6.0
 const MAX_RECOVERY_STEPS := 8
 const RECOVERY_STEP := 2.0
+# Max stain per ticking status on the player: on_fire (decay 1.0/s, threshold 1.0)
+# stays active ~2s from cap; poisoned (0.4/s, 0.3) ~3s; steam (1.2/s, 1.0) ~2s.
+# Each is ~2 ticks.
+const PLAYER_STAIN_CAPS := {"on_fire": 3.0, "poisoned": 1.5, "steam": 3.4}
 
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _dash_velocity: Vector2 = Vector2.ZERO
@@ -84,6 +87,8 @@ func _ready() -> void:
 	var status := StatusComponent.new()
 	status.name = "StatusComponent"
 	add_child(status)
+	for id in PLAYER_STAIN_CAPS:
+		status.set_stain_cap(id, PLAYER_STAIN_CAPS[id])
 
 	var visuals := StatusVisuals.new()
 	visuals.name = "StatusVisuals"
@@ -353,27 +358,31 @@ func _decay_dash(delta: float) -> void:
 		_dash_velocity = Vector2.ZERO
 
 
-func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
+func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, _damage: int = 0) -> void:
 	if hit_dir.length_squared() > 0.0001:
 		apply_knockback(hit_dir, KNOCKBACK_SPEED)
 
 	_play_hit_flash()
 	_play_squash()
-	_play_zoom_punch(damage)
+	_play_zoom_punch()
 
 	var inventory := get_node_or_null("PlayerInventory")
 	if inventory:
-		inventory.take_damage(damage, hit_dir)
+		inventory.take_hit(hit_dir)
 
 
 func apply_status_damage(amount: int) -> void:
 	var inventory := get_node_or_null("PlayerInventory")
 	if inventory:
-		inventory.take_status_damage(amount)
+		for _i in range(amount):
+			inventory.take_status_tick()
 
 
 func _on_burn_tick() -> void:
-	_burn_flash = 1.0
+	# burn_tick fires for every ticking status; only a real on_fire stain burns.
+	var status := get_node_or_null("StatusComponent")
+	if status and status.get_stain("on_fire") > 0.0:
+		_burn_flash = 1.0
 
 
 func _play_hit_flash() -> void:
@@ -395,9 +404,7 @@ func _play_squash() -> void:
 	_squash_tween.tween_property(_color_rect, "scale", rest_scale, 0.12).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
-func _play_zoom_punch(damage: int) -> void:
-	if damage < ZOOM_PUNCH_THRESHOLD:
-		return
+func _play_zoom_punch() -> void:
 	var cam := get_node_or_null("Camera2D")
 	if cam == null:
 		return
