@@ -2,7 +2,6 @@ class_name RuptureModifier
 extends Modifier
 
 const BLEED_HITS_TO_BURST := 5
-const BURST_MULT := 5.0
 var _bleed_hits: int = 0
 
 
@@ -21,4 +20,4 @@ func on_hit_target(weapon: Weapon, user: Node, target: Node) -> void:
 	_bleed_hits += 1
 	if _bleed_hits >= BLEED_HITS_TO_BURST:
 		_bleed_hits = 0
-		weapon._apply_burst(user, target, weapon.damage * BURST_MULT)
+		weapon._apply_burst(user, target)

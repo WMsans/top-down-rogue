@@ -3,7 +3,6 @@ extends GdUnitTestSuite
 func test_base_modifier_new_hooks_are_noops() -> void:
 	var m: Modifier = Modifier.new()
 	assert_that(m.modify_stat("damage", 5.0)).is_equal(5.0)
-	assert_that(m.modify_hit_damage(null, null, null, 7.0)).is_equal(7.0)
 	m.on_hit_target(null, null, null)
 	m.on_kill(null, null, null)
 
@@ -84,18 +83,6 @@ func test_heavy_head_dual_stat() -> void:
 	assert_that(m.get_stat_add("damage")).is_equal(5.0)
 	assert_that(m.get_stat_mult("cooldown")).is_equal(1.25)
 
-
-class _HpTarget extends Node2D:
-	var hits_remaining: int = 1
-	func _init() -> void:
-		var sc := StatusComponent.new(); sc.name = "StatusComponent"; add_child(sc)
-
-func test_pyroclast_multiplies_only_when_target_burning() -> void:
-	var t: _HpTarget = auto_free(_HpTarget.new()); add_child(t)
-	var m: DataModifier = DataModifier.new(_row({ "category": "trigger", "trigger": "on_hit", "condition": "target_status:on_fire", "effect": "stat_mult", "element": "damage", "magnitude": "1.5" }))
-	assert_that(m.modify_hit_damage(null, null, t, 10.0)).is_equal(10.0)
-	t.get_node("StatusComponent").add_stain("on_fire", 2.0)
-	assert_that(m.modify_hit_damage(null, null, t, 10.0)).is_equal(15.0)
 
 func test_gold_drop_joins_pickup_group() -> void:
 	var g: GoldDrop = auto_free(preload("res://scenes/gold_drop.tscn").instantiate())

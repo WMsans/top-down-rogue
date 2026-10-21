@@ -1,14 +1,14 @@
 extends GdUnitTestSuite
 
 class _SparkEnemy extends Node2D:
-	var hit_dmg: int = -1
+	var hit_count: int = 0
 	func _init() -> void:
 		add_to_group("attackable")
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hit_dmg = dmg
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hit_count += 1
 
 func test_chain_spark_hits_up_to_three_nearest() -> void:
 	var user: Node2D = auto_free(Node2D.new())
@@ -23,7 +23,7 @@ func test_chain_spark_hits_up_to_three_nearest() -> void:
 	m.on_kill(null, user, null)
 	var hits := 0
 	for e in enemies:
-		if e.hit_dmg >= 0:
+		if e.hit_count > 0:
 			hits += 1
 	assert_int(hits).is_equal(3)
 	# nearest three got lightning status
@@ -40,5 +40,5 @@ func test_chain_spark_respects_range() -> void:
 	far.global_position = Vector2(500.0, 0.0)   # outside RANGE 160
 	var m := ChainSparkModifier.new()
 	m.on_kill(null, user, null)
-	assert_bool(near.hit_dmg >= 0).is_true()
-	assert_bool(far.hit_dmg >= 0).is_false()
+	assert_bool(near.hit_count > 0).is_true()
+	assert_bool(far.hit_count > 0).is_false()

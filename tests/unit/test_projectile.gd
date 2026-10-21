@@ -57,8 +57,8 @@ class _RhTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
 		hits_remaining -= 1
 
 class _EdgeWeapon extends Weapon:
@@ -80,7 +80,7 @@ func test_projectile_routes_player_hit_through_source_weapon() -> void:
 	p.source_weapon = _EdgeWeapon.new()
 	parent.add_child(p)
 	p._handle_hit(target)
-	assert_int(target.hits[0]).is_equal(5)
+	assert_int(target.hits[0]).is_equal(1)
 	assert_that(target.get_node("StatusComponent").get_stain("poisoned")).is_greater(0.0)
 
 func test_projectile_without_source_weapon_still_hits() -> void:
@@ -93,4 +93,4 @@ func test_projectile_without_source_weapon_still_hits() -> void:
 	p.damage = 4.0
 	parent.add_child(p)
 	p._handle_hit(target)
-	assert_int(target.hits[0]).is_equal(4)
+	assert_int(target.hits[0]).is_equal(1)

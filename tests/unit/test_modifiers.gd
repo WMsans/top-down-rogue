@@ -8,8 +8,8 @@ class _StubTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_point: Vector2, _dir: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_point: Vector2, _dir: Vector2) -> void:
+		hits.append(1)
 
 
 func test_projectile_hit_status_applies_on_hit() -> void:

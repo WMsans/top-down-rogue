@@ -23,7 +23,7 @@ func on_enemy_hit(proj, target) -> bool:
 			break
 		var nxt: Node2D = nxt_list[0]
 		if proj.source_weapon != null:
-			proj.source_weapon.resolve_hit(proj.source_node, nxt, proj.damage)
+			proj.source_weapon.resolve_hit(proj.source_node, nxt)
 		var sc = nxt.get_node_or_null("StatusComponent")
 		if sc != null:
 			sc.add_timed_status("lightning", LIGHTNING_DURATION)

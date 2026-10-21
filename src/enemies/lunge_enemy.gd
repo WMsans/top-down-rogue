@@ -84,4 +84,4 @@ func _check_body_contact() -> void:
 		return
 	_dash_hit = true
 	if _player_ref.has_method("on_hit_impact"):
-		_player_ref.on_hit_impact(global_position, _lock_dir, 1)
+		_player_ref.on_hit_impact(global_position, _lock_dir)

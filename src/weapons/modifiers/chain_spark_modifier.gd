@@ -2,7 +2,6 @@ class_name ChainSparkModifier
 extends Modifier
 
 const RANGE := 160.0
-const DAMAGE := 6
 const LIGHTNING_DURATION := 0.4
 const STUN_CHANCE := 0.25
 const STUN_DURATION := 0.3
@@ -25,7 +24,7 @@ func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 	for n in _nearest_targets(user, chain_count, RANGE):
 		var pos: Vector2 = (n as Node2D).global_position
 		if n.has_method("on_hit_impact"):
-			n.on_hit_impact(pos, (pos - origin).normalized(), DAMAGE)
+			n.on_hit_impact(pos, (pos - origin).normalized())
 		var sc = n.get_node_or_null("StatusComponent")
 		if sc != null:
 			sc.add_timed_status("lightning", LIGHTNING_DURATION)

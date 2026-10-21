@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 
 class _RecWeapon extends Weapon:
 	var hit_targets: Array = []
-	func resolve_hit(_user, target, _dmg) -> void:
+	func resolve_hit(_user, target) -> void:
 		hit_targets.append(target)
 
 func _enemy(at: Vector2) -> Node2D:

@@ -13,8 +13,8 @@ class _Target extends Area2D:
 		shape.radius = 4.0
 		col.shape = shape
 		add_child(col)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
 
 func test_arc_is_300_degrees() -> void:
 	var w := WarScythe.new()
@@ -36,6 +36,6 @@ func test_hits_rear_flank_but_not_directly_behind() -> void:
 	behind.global_position = Vector2(-10.0, 0.0)
 	var w := WarScythe.new()
 	await get_tree().physics_frame
-	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, w.weapon_reach, w.arc_angle, 1.0, true)
+	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, w.weapon_reach, w.arc_angle, true)
 	assert_int(flank.hits.size()).is_equal(1)
 	assert_int(behind.hits.size()).is_equal(0)

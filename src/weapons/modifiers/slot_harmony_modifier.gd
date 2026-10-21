@@ -10,14 +10,6 @@ func _init() -> void:
 	description = "+20% damage while all 3 slots are different categories."
 
 
-func modify_hit_damage(weapon: Weapon, _user: Node, _target: Node, dmg: float) -> float:
-	if is_disabled:
-		return dmg
-	if _all_different(weapon):
-		return dmg * HARMONY_MULT
-	return dmg
-
-
 func _all_different(weapon: Weapon) -> bool:
 	var cats: Array = []
 	for i in range(weapon.modifier_slot_count):

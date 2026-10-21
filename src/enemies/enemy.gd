@@ -644,7 +644,7 @@ func is_hit_invulnerable() -> bool:
 	return _hit_invuln_timer > 0.0
 
 
-func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, _damage: int = 0) -> void:
+func on_hit_impact(impact_point: Vector2, hit_dir: Vector2) -> void:
 	if _state == State.DEATH or is_hit_invulnerable():
 		return
 	if hit_dir.length_squared() > 0.0001:

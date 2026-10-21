@@ -6,7 +6,6 @@ const KNOCKBACK_RADIUS_FACTOR := 1.8
 const PULL_IMPULSE := 220.0
 const STEAM_BURST_RADIUS := 14.0
 const STEAM_BURST_DENSITY := 180
-const GOLD_STEP := 50.0
 
 var trigger: String = ""
 var condition: String = ""
@@ -15,7 +14,6 @@ var element: String = ""
 var magnitude: float = 0.0
 var magnitude2: float = 0.0
 var _kill_stacks: float = 0.0
-var _hit_streak: float = 0.0
 var _time_since_event: float = 0.0
 
 const _MATERIAL_IDS := {
@@ -105,51 +103,7 @@ func _condition_met(target: Node) -> bool:
 		if sc != null:
 			return sc.get_stain(id) > 0.0
 		return false
-	if condition == "target_low_hp":
-		if target == null or not ("health" in target) or not ("max_health" in target):
-			return false
-		var frac: float = target.health / maxf(1.0, target.max_health)
-		var thresh: float = magnitude2 if magnitude2 > 0.0 else 0.3
-		return frac <= thresh
 	return true
-
-
-func modify_hit_damage(_weapon: Weapon, user: Node, target: Node, dmg: float) -> float:
-	if trigger == "on_hit" and effect == "stat_mult" and element == "damage":
-		if condition == "":
-			if name == "Momentum":
-				var frac := _speed_fraction(user)
-				return dmg * lerpf(1.0, magnitude, frac)
-			if magnitude2 > 0.0:
-				return dmg + _hit_streak
-		elif condition == "self_gold":
-			return dmg * _self_gold_mult(user)
-		elif condition == "self_full_hp":
-			if _self_full_hp(user):
-				return dmg * magnitude
-		elif _condition_met(target):
-			return dmg * magnitude
-	return dmg
-
-
-func _self_gold_mult(user: Node) -> float:
-	var inv = user.get_node_or_null("PlayerInventory") if user != null else null
-	if inv == null or not ("gold" in inv):
-		return 1.0
-	var gold: float = float(inv.gold)
-	var bonus: float = floor(gold / GOLD_STEP) * magnitude
-	return 1.0 + minf(bonus, magnitude2)
-
-
-func _speed_fraction(user: Node) -> float:
-	if user != null and "velocity" in user and "max_speed" in user:
-		return clampf((user.velocity as Vector2).length() / maxf(1.0, user.max_speed), 0.0, 1.0)
-	return 0.0
-
-
-func _self_full_hp(user: Node) -> bool:
-	var inv = user.get_node_or_null("PlayerInventory") if user else null
-	return inv != null and inv.has_method("is_full_health") and inv.is_full_health()
 
 
 func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
@@ -181,9 +135,6 @@ func on_hit_target(_weapon: Weapon, _user: Node, target: Node) -> void:
 			sc2.add_stain(element, magnitude2)
 	if trigger == "on_hit" and effect == "spread_status" and _condition_met(target):
 		_spread_status(_weapon, target, element, magnitude, magnitude2)
-	if name == "Rampage":
-		_hit_streak = minf(_hit_streak + magnitude, magnitude2)
-		_time_since_event = 0.0
 
 
 func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
@@ -192,10 +143,6 @@ func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 	if effect == "stat_add" and element == "damage":
 		_kill_stacks = minf(_kill_stacks + magnitude, magnitude2)
 		_time_since_event = 0.0
-	elif effect == "heal":
-		var inv = user.get_node_or_null("PlayerInventory") if user else null
-		if inv != null and inv.has_method("heal"):
-			inv.heal(int(magnitude))
 	elif effect == "bounty":
 		var ginv = user.get_node_or_null("PlayerInventory") if user else null
 		if ginv != null and ginv.has_method("add_gold"):
@@ -223,8 +170,6 @@ func on_tick(_weapon: Weapon, delta: float) -> void:
 	if name == "Bloodlust" and _time_since_event >= 3.0 and _kill_stacks > 0.0:
 		_kill_stacks = maxf(0.0, _kill_stacks - 1.0)
 		_time_since_event = 0.0
-	if name == "Rampage" and _time_since_event >= 1.5:
-		_hit_streak = 0.0
 
 
 func _weapon_current_user(weapon: Weapon) -> Node:

@@ -18,9 +18,8 @@ func on_hit_target(weapon: Weapon, user: Node, target: Node) -> void:
 	var stacks: float = sc.get_stain(consumed_status)
 	if stacks < StatusRegistry.get_threshold(consumed_status):
 		return
-	var burst: float = stacks * burst_per_stack
 	sc.clear(consumed_status)
-	weapon._apply_burst(user, target, burst)
+	weapon._apply_burst(user, target)
 	_on_detonate(weapon, user, target, stacks)
 
 

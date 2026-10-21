@@ -2,7 +2,6 @@ class_name LightningBoltModifier
 extends Modifier
 
 const RANGE := 160.0
-const DAMAGE := 6
 const FROZEN_STAIN := 3.0
 
 var proc_chance: float = 0.25
@@ -20,7 +19,7 @@ func on_attack(_weapon, user, _ctx) -> void:
 		return
 	if target.has_method("on_hit_impact"):
 		var dir: Vector2 = target.global_position - user.global_position
-		target.on_hit_impact(target.global_position, dir, DAMAGE)
+		target.on_hit_impact(target.global_position, dir)
 	var sc = target.get_node_or_null("StatusComponent")
 	if sc != null:
 		sc.add_stain("frozen", FROZEN_STAIN)

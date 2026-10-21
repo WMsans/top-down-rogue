@@ -75,7 +75,7 @@ func test_retrigger_fires_target_once() -> void:
 	var r := _Retrigger.new()
 	w.add_modifier(0, c); w.add_modifier(1, r)
 	var t := Node.new()
-	w.resolve_hit(null, t, 5.0)
+	w.resolve_hit(null, t)
 	assert_int(c.hits).is_equal(2)
 
 func test_retrigger_skips_retrigger_modifier() -> void:
@@ -84,7 +84,7 @@ func test_retrigger_skips_retrigger_modifier() -> void:
 	var r2 := _Retrigger.new()
 	w.add_modifier(0, r1); w.add_modifier(1, r2)
 	var t := Node.new()
-	w.resolve_hit(null, t, 5.0)
+	w.resolve_hit(null, t)
 	assert_int(r1.calls).is_equal(1)
 	assert_int(r2.calls).is_equal(1)
 
@@ -95,7 +95,7 @@ func test_retrigger_depth_guard_stops_at_two() -> void:
 	var chainB := _ChainRetrigger.new()
 	w.add_modifier(0, c); w.add_modifier(1, chainA); w.add_modifier(2, chainB)
 	var t := Node.new()
-	w.resolve_hit(null, t, 5.0)
+	w.resolve_hit(null, t)
 	assert_int(c.hits).is_equal(3)
 
 
@@ -106,7 +106,7 @@ func test_disabled_modifier_skipped_in_all_hooks() -> void:
 	w.add_modifier(0, c)
 	var t := Node.new()
 	w.notify_attack(null, {"direction": Vector2.RIGHT, "origin": Vector2.ZERO, "charged": false, "charge_ratio": 0.0})
-	w.resolve_hit(null, t, 5.0)
+	w.resolve_hit(null, t)
 	assert_int(c.hits).is_equal(0)
 
 

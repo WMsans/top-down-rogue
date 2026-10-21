@@ -140,11 +140,11 @@ func get_other_slots(of_slot: int) -> Array:
 
 func retrigger_modifier(mod: Modifier, hook: String, args: Array) -> Variant:
 	if mod == null or not is_instance_valid(mod) or mod.is_disabled:
-		return args[2] if hook == "modify_hit_damage" else null
+		return null
 	if mod.is_retrigger_modifier:
-		return args[2] if hook == "modify_hit_damage" else null
+		return null
 	if _retrigger_depth >= RETRIGGER_DEPTH_LIMIT:
-		return args[2] if hook == "modify_hit_damage" else null
+		return null
 	_retrigger_depth += 1
 	var result: Variant = null
 	match hook:
@@ -154,10 +154,6 @@ func retrigger_modifier(mod: Modifier, hook: String, args: Array) -> Variant:
 			mod.on_hit_target(self, args[0], args[1])
 		"on_kill":
 			mod.on_kill(self, args[0], args[1])
-		"modify_hit_damage":
-			result = mod.modify_hit_damage(self, args[0], args[1], args[2])
-			if result == null:
-				result = args[2]
 	_retrigger_depth -= 1
 	return result
 
@@ -223,11 +219,9 @@ func invalidate_effective_stats() -> void:
 	_effective_cache = {}
 
 
-func resolve_hit(user: Node, target: Node, base_dmg: float) -> void:
-	var dmg: float = base_dmg
-	for m in _iter_active_modifiers():
-		dmg = m.modify_hit_damage(self, user, target, dmg)
-	dmg = _native_modify_hit_damage(user, target, dmg)
+func resolve_hit(user: Node, target: Node) -> void:
+	if target.has_method("is_hit_invulnerable") and target.is_hit_invulnerable():
+		return
 	var tracks_hits: bool = ("hits_remaining" in target)
 	var pre_hits: int = target.hits_remaining if tracks_hits else 1
 	if target.has_method("on_hit_impact"):
@@ -237,7 +231,7 @@ func resolve_hit(user: Node, target: Node, base_dmg: float) -> void:
 			var rlen_sq: float = raw_dir.length_squared()
 			if rlen_sq > 0.0001:
 				hit_dir = raw_dir / sqrt(rlen_sq)
-		target.on_hit_impact(target.global_position if target is Node2D else Vector2.ZERO, hit_dir, int(dmg))
+		target.on_hit_impact(target.global_position if target is Node2D else Vector2.ZERO, hit_dir)
 	_apply_hit_status(target)
 	for m in _iter_active_modifiers():
 		m.on_hit_target(self, user, target)
@@ -256,10 +250,6 @@ func _apply_hit_status(target: Node) -> void:
 		sc.add_stain(hit_status, HIT_STATUS_STAIN)
 
 
-func _native_modify_hit_damage(_user: Node, _target: Node, dmg: float) -> float:
-	return dmg
-
-
 func _native_on_kill(_user: Node, _target: Node) -> void:
 	pass
 
@@ -276,7 +266,7 @@ func reset_cooldown() -> void:
 	_cooldown_timer = 0.0
 
 
-func _apply_burst(user: Node, target: Node, amount: float) -> void:
+func _apply_burst(user: Node, target: Node) -> void:
 	if target == null or not is_instance_valid(target):
 		return
 	if not target.has_method("on_hit_impact"):
@@ -288,7 +278,7 @@ func _apply_burst(user: Node, target: Node, amount: float) -> void:
 			dir = d / d.length()
 	target.on_hit_impact(
 		(target.global_position if target is Node2D else Vector2.ZERO),
-		dir, int(amount))
+		dir)
 
 
 func get_stats() -> Dictionary:

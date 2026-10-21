@@ -15,7 +15,7 @@ class TestParryTarget extends Area2D:
 	func try_parry(_attacker: Node, _hit_pos: Vector2, _hit_dir: Vector2) -> bool:
 		return _should_parry
 
-	func on_hit_impact(_impact_point: Vector2, _hit_dir: Vector2, _damage: int) -> void:
+	func on_hit_impact(_impact_point: Vector2, _hit_dir: Vector2) -> void:
 		hit_received = true
 
 

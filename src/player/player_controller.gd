@@ -358,7 +358,7 @@ func _decay_dash(delta: float) -> void:
 		_dash_velocity = Vector2.ZERO
 
 
-func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, _damage: int = 0) -> void:
+func on_hit_impact(impact_point: Vector2, hit_dir: Vector2) -> void:
 	if hit_dir.length_squared() > 0.0001:
 		apply_knockback(hit_dir, KNOCKBACK_SPEED)
 

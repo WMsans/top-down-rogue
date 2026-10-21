@@ -7,8 +7,8 @@ class _StatusTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
 
 
 class _HpTarget extends Node2D:
@@ -19,9 +19,9 @@ class _HpTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
 		hits_remaining -= 1
-		impacts.append(dmg)
+		impacts.append(1)
 
 
 func test_frostshatter_consumes_frozen_and_bursts() -> void:
@@ -35,7 +35,7 @@ func test_frostshatter_consumes_frozen_and_bursts() -> void:
 	var m := FrostshatterModifier.new()
 	m.on_hit_target(Weapon.new(), user, t)
 	assert_int(t.impacts.size()).is_equal(1)
-	assert_int(t.impacts[0]).is_equal(40)
+	assert_int(t.impacts[0]).is_equal(1)
 	assert_float(t.get_node("StatusComponent").get_stain("frozen")).is_equal(0.0)
 
 
@@ -50,7 +50,7 @@ func test_frostshatter_no_burst_below_threshold() -> void:
 	assert_int(t.impacts.size()).is_equal(0)
 
 
-func test_combustion_consumes_fire_and_bursts_x3() -> void:
+func test_combustion_consumes_fire_and_bursts() -> void:
 	var user := _StatusTarget.new()
 	add_child(user)
 	var t := _HpTarget.new(100.0)
@@ -59,11 +59,11 @@ func test_combustion_consumes_fire_and_bursts_x3() -> void:
 	var m := CombustionModifier.new()
 	m.on_hit_target(Weapon.new(), user, t)
 	assert_int(t.impacts.size()).is_equal(1)
-	assert_int(t.impacts[0]).is_equal(12)
+	assert_int(t.impacts[0]).is_equal(1)
 	assert_float(t.get_node("StatusComponent").get_stain("on_fire")).is_equal(0.0)
 
 
-func test_necrosis_consumes_poison_and_bursts_x2() -> void:
+func test_necrosis_consumes_poison_and_bursts() -> void:
 	var user := _StatusTarget.new()
 	add_child(user)
 	var t := _HpTarget.new(100.0)
@@ -72,7 +72,7 @@ func test_necrosis_consumes_poison_and_bursts_x2() -> void:
 	var m := NecrosisModifier.new()
 	m.on_hit_target(Weapon.new(), user, t)
 	assert_int(t.impacts.size()).is_equal(1)
-	assert_int(t.impacts[0]).is_equal(6)
+	assert_int(t.impacts[0]).is_equal(1)
 	assert_float(t.get_node("StatusComponent").get_stain("poisoned")).is_equal(0.0)
 
 
@@ -91,7 +91,7 @@ func test_rupture_bursts_after_five_bloody_hits() -> void:
 	assert_int(t.impacts.size()).is_equal(0)
 	m.on_hit_target(w, user, t)
 	assert_int(t.impacts.size()).is_equal(1)
-	assert_int(t.impacts[0]).is_equal(30)
+	assert_int(t.impacts[0]).is_equal(1)
 	m.on_hit_target(w, user, t)
 	assert_int(t.impacts.size()).is_equal(1)
 

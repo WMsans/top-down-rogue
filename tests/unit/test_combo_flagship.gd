@@ -7,8 +7,8 @@ class _StatusTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
 
 
 class _HpTarget extends Node2D:
@@ -19,9 +19,9 @@ class _HpTarget extends Node2D:
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
 		hits_remaining -= 1
-		impacts.append(dmg)
+		impacts.append(1)
 
 
 class _HitCounter extends Modifier:
@@ -50,7 +50,7 @@ class _LocalChain extends Modifier:
 		weapon.retrigger_modifier(first, "on_hit_target", [user, target])
 
 
-func test_flagship_echo_strike_plus_combustion_doubles_payoff() -> void:
+func test_flagship_echo_strike_plus_combustion_hits_twice() -> void:
 	var user := _StatusTarget.new()
 	add_child(user)
 	user.global_position = Vector2.ZERO
@@ -62,10 +62,10 @@ func test_flagship_echo_strike_plus_combustion_doubles_payoff() -> void:
 	add_child(t)
 	t.global_position = Vector2(30, 0)
 	t.get_node("StatusComponent").add_stain("on_fire", 4.0)
-	w.resolve_hit(user, t, 5.0)
+	w.resolve_hit(user, t)
 	assert_int(t.impacts.size()).is_equal(2)
-	assert_int(t.impacts[0]).is_equal(5)
-	assert_int(t.impacts[1]).is_equal(12)
+	assert_int(t.impacts[0]).is_equal(1)
+	assert_int(t.impacts[1]).is_equal(1)
 
 
 func test_depth_guard_prevents_infinite_retrigger_chain() -> void:
@@ -75,5 +75,5 @@ func test_depth_guard_prevents_infinite_retrigger_chain() -> void:
 	var r2 := _LocalChain.new()
 	w.add_modifier(0, c); w.add_modifier(1, r1); w.add_modifier(2, r2)
 	var t := Node.new()
-	w.resolve_hit(null, t, 5.0)
+	w.resolve_hit(null, t)
 	assert_bool(c.on_hit_calls <= 5).is_true()

@@ -230,7 +230,7 @@ func _play_move(move: Move, user: Node) -> void:
 
 func _apply_move_hit(move: Move, user: Node, pos: Vector2, direction: Vector2) -> void:
 	_carve_and_push(pos, direction, move.reach, move.arc, damage * move.damage_mult)
-	_hit_attackables(user, pos, direction, move.reach, move.arc, move.damage_mult, move.ignore_parry)
+	_hit_attackables(user, pos, direction, move.reach, move.arc, move.ignore_parry)
 
 
 func _start_move_anim(move: Move, direction: Vector2) -> void:

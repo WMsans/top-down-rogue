@@ -58,10 +58,10 @@ func _handle_hit(target: Node) -> void:
 	if is_enemy_projectile:
 		if target.is_in_group("player"):
 			if target.has_method("on_hit_impact"):
-				target.on_hit_impact(global_position, direction, int(damage))
+				target.on_hit_impact(global_position, direction)
 			queue_free()
 		elif target.is_in_group("destructible") and target.has_method("on_hit_impact"):
-			target.on_hit_impact(global_position, direction, int(damage))
+			target.on_hit_impact(global_position, direction)
 			queue_free()
 		elif target is StaticBody2D:
 			var keep := false
@@ -82,7 +82,7 @@ func _handle_hit(target: Node) -> void:
 	if target.is_in_group("attackable"):
 		if target != source_node and target.has_method("on_hit_impact"):
 			if source_weapon != null:
-				source_weapon.resolve_hit(source_node, target, damage)
+				source_weapon.resolve_hit(source_node, target)
 			else:
 				_legacy_apply_hit(target)
 			var keep_enemy := false
@@ -91,7 +91,7 @@ func _handle_hit(target: Node) -> void:
 			if not keep_enemy:
 				queue_free()
 	elif target.is_in_group("destructible") and target.has_method("on_hit_impact"):
-		target.on_hit_impact(global_position, direction, int(damage))
+		target.on_hit_impact(global_position, direction)
 		queue_free()
 	elif target is StaticBody2D:
 		var keep_terrain := false
@@ -117,7 +117,7 @@ func _carve_terrain() -> void:
 
 
 func _legacy_apply_hit(target: Node) -> void:
-	target.on_hit_impact(global_position, direction, int(damage))
+	target.on_hit_impact(global_position, direction)
 	if hit_status != "":
 		var hs = target.get_node_or_null("StatusComponent")
 		if hs != null:

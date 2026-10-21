@@ -48,8 +48,8 @@ func _make_recording_player(pos: Vector2) -> Node2D:
 	script.source_code = '\n'.join([
 		"extends Node2D",
 		"var hits: Array = []",
-		"func on_hit_impact(_pos: Vector2, _dir: Vector2, dmg: int) -> void:",
-		"\thits.push_back({_pos = _pos, _dir = _dir, dmg = dmg})",
+		"func on_hit_impact(_pos: Vector2, _dir: Vector2) -> void:",
+		"\thits.push_back({_pos = _pos, _dir = _dir})",
 	])
 	var err := script.reload()
 	assert_int(err).is_equal(OK)
@@ -98,7 +98,7 @@ func test_body_check_hits_once_within_contact_radius() -> void:
 		e._process_attack(0.05)
 	var hits: Array = e._player_ref.hits
 	assert_int(hits.size()).is_equal(1)
-	assert_int(hits[0]["dmg"]).is_equal(1)
+	assert_that(hits[0]["_pos"]).is_equal(Vector2.ZERO)
 
 func test_sidestepped_player_takes_no_hit() -> void:
 	var e := _lunge_to_recording(Vector2.ZERO, Vector2(200, 0))

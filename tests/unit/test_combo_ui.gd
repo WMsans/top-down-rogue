@@ -2,14 +2,10 @@ extends GdUnitTestSuite
 
 class _HitCounter extends Modifier:
 	var on_hit_calls: int = 0
-	var dmg_seen: float = 0.0
 	func _init() -> void:
 		category = "trigger"
 	func on_hit_target(_w, _u, _t) -> void:
 		on_hit_calls += 1
-	func modify_hit_damage(_w, _u, _t, dmg: float) -> float:
-		dmg_seen = dmg
-		return dmg
 
 
 func test_modifier_state_tag_reflects_disabled_and_retrigger() -> void:

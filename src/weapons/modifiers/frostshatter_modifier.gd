@@ -2,7 +2,6 @@ class_name FrostshatterModifier
 extends DetonatorModifier
 
 const SHATTER_RADIUS := 60.0
-const SHATTER_BURST := 10.0
 
 
 func _init() -> void:
@@ -21,4 +20,4 @@ func _on_detonate(weapon: Weapon, user: Node, target: Node, stacks: float) -> vo
 		return
 	var near: Array = CombatUtil.nearest_attackables(tree, (target as Node2D).global_position, [target], 6, SHATTER_RADIUS)
 	for foe in near:
-		weapon._apply_burst(user, foe, SHATTER_BURST)
+		weapon._apply_burst(user, foe)
