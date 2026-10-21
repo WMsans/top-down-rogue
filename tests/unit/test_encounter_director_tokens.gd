@@ -177,3 +177,13 @@ func test_zero_facing_keeps_last_value() -> void:
 	d.update(Vector2.ZERO, [], 0.0, Vector2.UP)
 	d.update(Vector2.ZERO, [], 2.0, Vector2.ZERO)
 	assert_that(d.get_player_facing()).is_equal(Vector2.UP)
+
+
+func test_token_granted_only_to_active_requester() -> void:
+	var d := EncounterDirector.new()
+	var a := _agent(Vector2(10, 0))
+	var b := _agent(Vector2(20, 0))
+	d.update(Vector2.ZERO, [a])
+	d.request_token(b)
+	d.update(Vector2.ZERO, [a])
+	assert_bool(d.has_token(b)).is_false()

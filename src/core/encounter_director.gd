@@ -154,7 +154,7 @@ func _tick_tokens(delta: float) -> void:
 func _grant_requests() -> void:
 	var pending: Array = []
 	for e in _requests:
-		if is_instance_valid(e) and e.has_method("is_pursuing") and e.is_pursuing() and not _tokens.has(e):
+		if is_instance_valid(e) and _active.has(e) and e.has_method("is_pursuing") and e.is_pursuing() and not _tokens.has(e):
 			pending.append(e)
 	_requests.clear()
 	pending.sort_custom(_request_before)
