@@ -76,7 +76,7 @@ static func _spawn_weapon_resource(_args: Array[String], ctx: Dictionary, id: St
 	if res == null:
 		return "error: unknown weapon '" + id + "'"
 	var drop: WeaponDrop = WEAPON_DROP_SCENE.instantiate()
-	drop.weapon = res.duplicate(true)
+	drop.weapon = WeaponRegistry._copy_weapon(res, id)
 	parent.add_child(drop)
 	drop.global_position = ctx.get("world_pos", Vector2.ZERO)
 	return "Spawned " + id
@@ -95,7 +95,7 @@ static func _spawn_all_weapons(_args: Array[String], ctx: Dictionary) -> String:
 	for i in range(count):
 		var res: Weapon = weapons[i].resource
 		var drop: WeaponDrop = WEAPON_DROP_SCENE.instantiate()
-		drop.weapon = res.duplicate(true)
+		drop.weapon = WeaponRegistry._copy_weapon(res, weapons[i].id)
 		parent.add_child(drop)
 		var angle := TAU * float(i) / float(count)
 		drop.global_position = center + Vector2(cos(angle), sin(angle)) * radius
