@@ -76,3 +76,9 @@ func test_melee_seeds_reach_and_arc() -> void:
 	var s := m.get_effective_stats()
 	assert_that(s["reach"]).is_equal(30.0)
 	assert_that(s["arc"]).is_equal(PI / 2.0)
+
+
+func test_willowblade_charged_thrust_digs_double() -> void:
+	var w: WillowbladeWeapon = WillowbladeWeapon.new()
+	w.is_chargeable()  # forces the lazy move setup
+	assert_float(w.charged_moves[0].dig_mult).is_equal(2.0)

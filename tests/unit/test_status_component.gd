@@ -83,6 +83,18 @@ func _make_comp(owner: Node) -> StatusComponent:
 	owner.add_child(c)
 	return c
 
+func test_clear_erases_the_tick_timer() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	c.add_stain("on_fire", 5.0)
+	c.tick(0.5)              # half a tick interval: the timer sits at 0.5
+	c.clear("on_fire")
+	c.add_stain("on_fire", 5.0)
+	c.tick(0.6)              # a stale timer would have fired by now
+	assert_that(owner.taken).is_equal(0)
+
+
 func test_add_and_get_stain() -> void:
 	var c: StatusComponent = auto_free(StatusComponentScript.new())
 	c.add_stain("wet", 2.5)

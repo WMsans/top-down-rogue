@@ -119,7 +119,7 @@ func get_tick_interval(id: String) -> float:
 
 
 func get_ticking_ids() -> Array:
-	return _ticking_ids
+	return _ticking_ids.duplicate()
 
 
 func blocks_movement(id: String) -> bool:

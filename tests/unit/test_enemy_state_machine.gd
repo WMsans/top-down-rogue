@@ -94,6 +94,14 @@ func test_elite_invulnerable_after_first_hit() -> void:
 	e.take_hit()
 	assert_that(e._state).is_equal(Enemy.State.DEATH)
 
+func test_dummy_has_no_post_hit_invulnerability() -> void:
+	var d: DummyEnemy = auto_free(DummyEnemy.new())
+	d.max_hits = 9999
+	d.hits_remaining = 9999
+	d.take_hit()
+	d.take_hit()  # a training dummy can be hit back to back
+	assert_int(d.hits_remaining).is_equal(9997)
+
 func test_invulnerable_hit_plays_no_reaction() -> void:
 	var e: MockEnemy = auto_free(MockEnemy.new())
 	e.max_hits = 2

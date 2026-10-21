@@ -88,6 +88,7 @@ func get_active_ids() -> Array:
 
 
 func clear(id: String) -> void:
+	_tick_timers.erase(id)
 	if _stains.erase(id):
 		changed.emit()
 

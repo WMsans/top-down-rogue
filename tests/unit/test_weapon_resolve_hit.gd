@@ -87,3 +87,12 @@ func test_resolve_hit_during_invuln_applies_no_status() -> void:
 	assert_int(t.hit_count).is_equal(0)
 	assert_float(t.get_node("StatusComponent").get_stain("on_fire")).is_equal(0.0)
 	assert_int(kills.kills).is_equal(0)
+
+func test_modifier_on_hit_target_skipped_during_invuln() -> void:
+	var w := Weapon.new()
+	w.modifiers = [_EdgeMod.new(), null, null]
+	var t := _target()
+	t.invulnerable = true
+	w.resolve_hit(null, t)
+	assert_int(t.hit_count).is_equal(0)
+	assert_float(t.get_node("StatusComponent").get_stain("poisoned")).is_equal(0.0)

@@ -7,6 +7,8 @@ const PIP_SIZE := Vector2(12, 12)
 const HEART_COLOR := Color(0.9, 0.2, 0.2)
 const SHIELD_COLOR := Color(0.35, 0.65, 1.0)
 const PIP_EMPTY_ALPHA := 0.2
+const PIP_POP_TIME := 0.18
+const PIP_POP_SCALE := 1.6
 
 @onready var _hearts: HBoxContainer = %Hearts
 @onready var _shields: HBoxContainer = %Shields
@@ -24,6 +26,7 @@ var _current_weapon: Weapon
 var _flash_tween: Tween = null
 var _bounce_tween: Tween = null
 var _outline_panel: Panel = null
+var _lit_pip_counts: Dictionary = {}  # container instance id -> lit pip count
 
 func _ready() -> void:
 	_weapon_icon.pressed.connect(_on_weapon_button_pressed)
@@ -107,6 +110,26 @@ func set_pips(container: HBoxContainer, current: int, maximum: int, color: Color
 		var pip: ColorRect = container.get_child(i)
 		pip.color = color
 		pip.modulate.a = 1.0 if i < current else PIP_EMPTY_ALPHA
+	var lit: int = mini(current, maximum)
+	var key: int = container.get_instance_id()
+	var was_lit: int = _lit_pip_counts.get(key, -1)
+	_lit_pip_counts[key] = lit
+	# -1 means the row was empty until now: that is a fill, not a refill.
+	if was_lit >= 0 and lit > was_lit:
+		_pop_pip(container.get_child(lit - 1))
+
+
+# Short pop on a newly lit pip: armour regen is silent otherwise, so a
+# refilling shield would otherwise be invisible. Scale only - the alpha of a
+# pip says whether it is lit.
+func _pop_pip(pip: Node) -> void:
+	if pip == null or not (pip is Control):
+		return
+	var c := pip as Control
+	c.pivot_offset = PIP_SIZE * 0.5
+	c.scale = Vector2.ONE * PIP_POP_SCALE
+	var tween := c.create_tween()
+	tween.tween_property(c, "scale", Vector2.ONE, PIP_POP_TIME)
 
 func _on_died() -> void:
 	if _inventory:

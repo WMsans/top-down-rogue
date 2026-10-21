@@ -95,6 +95,11 @@ func test_stun_status_def() -> void:
 func test_ticking_ids_are_fire_poison_steam() -> void:
 	assert_array(StatusRegistry.get_ticking_ids()).contains_exactly(["on_fire", "poisoned", "steam"])
 
+func test_ticking_ids_are_a_copy() -> void:
+	var ids: Array = StatusRegistry.get_ticking_ids()
+	ids.clear()
+	assert_int(StatusRegistry.get_ticking_ids().size()).is_equal(3)
+
 
 func test_stain_for_material_steam() -> void:
 	assert_str(StatusRegistry.stain_for_material(MaterialRegistry.MAT_STEAM)).is_equal("steam")

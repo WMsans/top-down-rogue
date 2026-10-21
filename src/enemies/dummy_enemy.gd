@@ -16,5 +16,10 @@ func _setup_drop_table() -> void:
 	drop_table = DropTable.from_enemy_tier(enemy_tier)
 
 
+# A training dummy is meant to be hit as often as you like.
+func _has_post_hit_invuln() -> bool:
+	return false
+
+
 func _execute_attack() -> void:
 	pass

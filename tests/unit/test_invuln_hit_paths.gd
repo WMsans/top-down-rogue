@@ -84,3 +84,51 @@ func test_lightning_bolt_on_invulnerable_target_does_nothing() -> void:
 	m.on_attack(null, pu[1], _ctx())
 	assert_int(target.hits.size()).is_equal(0)
 	assert_that(target.get_node("StatusComponent").get_stain("frozen")).is_equal(0.0)
+
+
+# A chain spark proc that reaches an invulnerable target: the target takes
+# nothing, and the other targets in the proc still get hit.
+func test_chain_spark_on_invulnerable_target_does_nothing() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var shielded: _InvTarget = auto_free(_InvTarget.new())
+	add_child(shielded)
+	shielded.global_position = Vector2(20.0, 0.0)
+	shielded.invulnerable = true
+	var normal: _InvTarget = auto_free(_InvTarget.new())
+	add_child(normal)
+	normal.global_position = Vector2(40.0, 0.0)
+	var m := ChainSparkModifier.new()
+	m.proc_chance = 1.0
+	m.on_kill(null, user, null)
+	assert_int(shielded.hits.size()).is_equal(0)
+	assert_float(shielded.get_node("StatusComponent").get_timed_remaining("lightning")).is_equal(0.0)
+	assert_int(normal.hits.size()).is_equal(1)
+	assert_float(normal.get_node("StatusComponent").get_timed_remaining("lightning")).is_greater(0.0)
+
+
+# A projectile chain that reaches an invulnerable target: the target takes
+# nothing, and the chain still moves on to the next one.
+func test_chain_behavior_on_invulnerable_target_does_nothing() -> void:
+	var first: _InvTarget = auto_free(_InvTarget.new())
+	add_child(first)
+	first.global_position = Vector2(100.0, 0.0)
+	var shielded: _InvTarget = auto_free(_InvTarget.new())
+	add_child(shielded)
+	shielded.global_position = Vector2(110.0, 0.0)
+	shielded.invulnerable = true
+	var normal: _InvTarget = auto_free(_InvTarget.new())
+	add_child(normal)
+	normal.global_position = Vector2(120.0, 0.0)
+	var p: Projectile = auto_free(Projectile.new())
+	add_child(p)
+	p.global_position = Vector2.ZERO
+	p.source_weapon = Weapon.new()
+	var b := ChainBehavior.new()
+	b.jumps = 3
+	b.range_px = 200.0
+	b.on_enemy_hit(p, first)
+	assert_int(shielded.hits.size()).is_equal(0)
+	assert_float(shielded.get_node("StatusComponent").get_timed_remaining("lightning")).is_equal(0.0)
+	assert_int(normal.hits.size()).is_equal(1)
+	assert_float(normal.get_node("StatusComponent").get_timed_remaining("lightning")).is_greater(0.0)

@@ -80,3 +80,25 @@ func test_chain_spark_does_not_arc_on_every_kill() -> void:
 		m.on_kill(null, user, null)
 	assert_int(e.hit_count).is_greater(0)    # it does fire
 	assert_int(e.hit_count).is_less(100)     # but not on every kill
+
+
+func test_chain_spark_invulnerable_target_does_not_eat_a_slot() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var shielded: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(shielded)
+	shielded.global_position = Vector2(10.0, 0.0)
+	shielded.invulnerable = true
+	var normals: Array = []
+	for i in range(3):
+		var e: _SparkEnemy = auto_free(_SparkEnemy.new())
+		add_child(e)
+		e.global_position = Vector2(20.0 + 10.0 * float(i), 0.0)
+		normals.append(e)
+	var m := ChainSparkModifier.new()
+	m.proc_chance = 1.0
+	m.on_kill(null, user, null)
+	# the chain has three slots and all three of them land on real targets
+	for e in normals:
+		assert_int(e.hit_count).is_equal(1)
+	assert_int(shielded.hit_count).is_equal(0)

@@ -31,7 +31,7 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 ### Damage & Crit Removal
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| x | P0 | Medium | Rename `damage` → `dig_power` | CSV column + `Weapon` resource + registry. Dig power only drives terrain carving. Re-assign values by archetype: daggers/rapiers low; axes/maces/hammers/greatswords high; Gravedigger's Spade and Obsidian Greatsword highest. Note: modifiers whose CSV `element` is still `damage` match no stat and are inert — `bloodlust`, `frostbreaker`, `pyroclast`, `coup_de_grace`, `rampage`, `glass_cannon`, `momentum`, `greedy_edge`; Plan 3 must re-point them. |
+| x | P0 | Medium | Rename `damage` → `dig_power` | CSV column + `Weapon` resource + registry. Dig power only drives terrain carving. Re-assign values by archetype: daggers/rapiers low; axes/maces/hammers/greatswords high; Gravedigger's Spade and Obsidian Greatsword highest. Note: modifiers whose CSV `element` is still `damage` match no stat and are inert — `bloodlust`, `frostbreaker`, `pyroclast`, `coup_de_grace`, `rampage`, `glass_cannon`, `momentum`, `greedy_edge`; Plan 3 must re-point them. The consume family is inert for the same reason: `necrosis`, `combustion`, `frostshatter` and `rupture` used to burst a hit off a consumed status, and that burst spent a real hit, which the hit-count model does not allow; Plan 3 re-points them at "clear the status and buff the player". |
 | x | P0 | Medium | Remove crit | Drop `crit_chance`, `crit_multiplier`, `crit_status` from CSV, `Weapon`, and hit resolution. Weapons that used `crit_status` now use `hit_status` or their new trait (see `weapons.csv`). Delete/rewrite crit tests (`test_weapon_crit*.gd`). Note: `honed_point` and `executioners_mark` still name the deleted crit stats (`crit_chance`, `crit_multiplier`) and are inert; Plan 3 must re-point them. |
 | x | P1 | Low | Remove damage numbers | Floating damage numbers no longer apply. Replace with hit feedback only (flash, stagger, elite first-hit marker). |
 |  | P1 | Low | Rename weapons | `thunder_katana` → display name "Katana", `twin_daggers` → "Jack and Mary" (done in CSV; keep ids). Update any hard-coded names/tests. |
@@ -47,14 +47,14 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 |------|----------|------------|------|-------------|
 |  | P0 | High | Stat modifiers | sharpened (+3 dig), heavy_head (stun + knockback, −25% swing speed), honed_point (+30% projectile speed/lifetime), glass_cannon (−2 max armor, +40% swing speed, +30% reach), slot_harmony (+20% swing speed). |
 |  | P0 | High | On-kill modifiers | chain_spark (1/4 lightning arc), hemophilia (1/5 bloody burst), pyroclast (1/10 fire patch), combo_keeper (kill streak shockwave), overkill (piercing shard), headsman (50% cooldown refund), bloodlust (stacking swing speed), vampiric (skip armor-regen delay), executioners_mark (mark → armor). See `modifiers.csv` for final text. |
-|  | P0 | High | Consume modifiers | combustion (+30% reach 1s), necrosis (+30% swing speed 1s), frostshatter (+30% move speed 1s), rupture (+50% dig 1s). Each consumes its status on hit. |
+|  | P0 | High | Consume modifiers | combustion (+30% reach 1s), necrosis (+30% swing speed 1s), frostshatter (+30% move speed 1s), rupture (+50% dig 1s). Each consumes its status on hit. Note: all four are inert today (their old burst is gone; see the Plan 3 debt note above), so their text already promises the Plan 3 behaviour. |
 |  | P0 | Medium | Conditional modifiers | frostbreaker (spread Chilly), coup_de_grace (finishing elite/boss phase refunds swing + 1 armor), rampage (hit streak → reach), momentum (move speed → swing speed), greedy_edge (gold → reach), adrenaline (armor break → +40% move speed 2s), last_stand (1/2 shockwave after being hit). |
 |  | P1 | Medium | Chance system + Executioner's Mark | Central chance helper for all chance-based weapon/modifier effects. Executioner's Mark adds +1/4 to every chance on its weapon, capped at 1. |
 
 ### HUD & Tests
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
-| x | P0 | Medium | Hearts + shields HUD | Replace the health bar with 3 heart icons (HP) and 3 shield icons (armor). Shields refill visibly as armor regenerates. Supports changed max armor. |
+| x | P0 | Medium | Hearts + shields HUD | Replace the health bar with 3 HP pips and 3 armor pips (hearts and shields). A pip lights up when armor regenerates, with a short pop so the refill is visible. Supports changed max armor. |
 |  | P0 | Medium | Update unit tests | Rewrite tests that assume HP/damage/crit (`test_player_health_fraction`, `test_weapon_crit*`, `test_weapon_balance`, `test_charge_weapon_ratio`, `test_boss_phase_transition`, `test_modifier_stacking`, etc.). Add tests for armor regen, DoT routing, hit counts and 0.3s invulnerability. |
 |  | P2 | Low | Resync Chinese CSVs | `weapons-chinese.csv` / `modifiers-chinese.csv` are already stale (fewer rows). Resync names and descriptions once English text settles. |
 

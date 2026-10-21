@@ -630,9 +630,15 @@ func _consume_hit(from_status: bool = false) -> bool:
 	if hits_remaining <= 0:
 		_change_state(State.DEATH)
 		die()
-	elif max_hits > 1 and not from_status:
+	elif _has_post_hit_invuln() and not from_status:
 		_hit_invuln_timer = HIT_INVULN
 	return true
+
+
+# Multi-hit enemies (elites, bosses) ignore further hits for a moment. The
+# training dummy has a huge hit pool but should be hittable at any time.
+func _has_post_hit_invuln() -> bool:
+	return max_hits > 1
 
 
 func _tick_hit_invuln(delta: float) -> void:
