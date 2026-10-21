@@ -15,6 +15,7 @@ var _strafe_direction: float = 1.0
 var _strafe_re_roll: float = 0.0
 var _has_spot: bool = false
 var _spot_timer: float = 0.0
+var _alert_broadcast: bool = false
 var _rng := RandomNumberGenerator.new()
 
 
@@ -68,12 +69,16 @@ func get_facing_direction() -> Vector2:
 ## Soul Knight loop: walk to a firing spot, stop, volley, then move again.
 func _process_chase(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref) or not _player_in_range:
+		_aggroed = false
 		_change_state(State.WANDER)
 		return
 	var sees := _can_see_player()
-	if sees and not _aggroed:
+	if sees:
 		_aggroed = true
-		_broadcast_alert()
+		# The claim already set _aggroed, so the alert has its own one-shot flag.
+		if not _alert_broadcast:
+			_alert_broadcast = true
+			_broadcast_alert()
 
 	_spot_timer -= delta
 	if not _has_spot or _spot_timer <= 0.0 or not sees:
@@ -114,6 +119,10 @@ func _pick_spot_and_move() -> bool:
 		return false
 	if dir != null:
 		dir.claim_spot(self, spot)
+		# A claimed spot means the enemy joined the fight, so it counts as
+		# pursuing: the claim survives the director's prune and it can be
+		# granted a token.
+		_aggroed = true
 	_begin_reposition(spot, _rng.randf_range(REPOSITION_MIN, REPOSITION_MAX))
 	return true
 

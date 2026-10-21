@@ -11,6 +11,7 @@ const MAX_DIST := 150.0
 const SPACING := 40.0
 const CANDIDATES := 8
 const ARC_SPREAD := PI
+const ANGLE_JITTER := 0.1
 
 
 static func pick(origin: Vector2, player_pos: Vector2, taken: Array, solid_check: Callable,
@@ -24,7 +25,7 @@ static func pick(origin: Vector2, player_pos: Vector2, taken: Array, solid_check
 	for i in range(CANDIDATES):
 		var k := ceilf(i / 2.0)
 		var sgn := 1.0 if i % 2 == 1 else -1.0
-		var angle := side + sgn * k * step + rng.randf_range(-0.1, 0.1)
+		var angle := side + sgn * k * step + rng.randf_range(-ANGLE_JITTER, ANGLE_JITTER)
 		var spot := player_pos + Vector2.from_angle(angle) * rng.randf_range(MIN_DIST, MAX_DIST)
 		if solid_check.is_valid() and solid_check.call(spot):
 			continue

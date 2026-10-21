@@ -36,6 +36,10 @@ func test_no_valid_candidate_returns_inf() -> void:
 	assert_that(FiringSpotPicker.pick(Vector2(200, 0), Vector2.ZERO, [], solid, Callable(), _rng())).is_equal(Vector2.INF)
 
 
+func test_angle_jitter_is_a_named_constant() -> void:
+	assert_float(FiringSpotPicker.ANGLE_JITTER).is_equal(0.1)
+
+
 func test_blocked_sight_returns_inf() -> void:
 	var los := func(_a: Vector2, _b: Vector2) -> bool: return false
 	assert_that(FiringSpotPicker.pick(Vector2(200, 0), Vector2.ZERO, [], Callable(), los, _rng())).is_equal(Vector2.INF)
