@@ -234,7 +234,7 @@ func test_parry_stun_extends_cooldown() -> void:
 	add_child(e)
 	await get_tree().process_frame
 	e.cooldown_duration = 0.1
-	e._change_state(Enemy.State.COOLDOWN)
+	e._change_state(Enemy.State.RECOVER)
 	e._status_component.add_timed_status("stun", 0.5)
 	e._process(0.05)
 	# Stun returns early from _process, so cooldown timer does not decrease.

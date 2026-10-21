@@ -84,7 +84,7 @@ func test_dash_terminates_into_cooldown() -> void:
 		if e._state != Enemy.State.ATTACK:
 			break
 		e._process_attack(0.05)
-	assert_int(e._state).is_equal(Enemy.State.COOLDOWN)
+	assert_int(e._state).is_equal(Enemy.State.RECOVER)
 	assert_bool(e._dash_done).is_true()
 
 func test_body_check_hits_once_within_contact_radius() -> void:
@@ -117,7 +117,7 @@ func test_dash_done_blocks_restart() -> void:
 	e._attack_started = false
 	e._dash_done = true
 	e._process_attack(0.05)
-	assert_int(e._state).is_equal(Enemy.State.COOLDOWN)
+	assert_int(e._state).is_equal(Enemy.State.RECOVER)
 	assert_int(e._player_ref.hits.size()).is_equal(0)
 
 

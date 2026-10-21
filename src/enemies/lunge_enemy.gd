@@ -58,7 +58,7 @@ func _process_attack(delta: float) -> void:
 	if not _attack_started:
 		_attack_started = true
 		if _dash_done:
-			_change_state(State.COOLDOWN)
+			_change_state(State.RECOVER)
 			return
 		_begin_dash()
 	_tick_dash(delta)
@@ -72,7 +72,7 @@ func _tick_dash(delta: float) -> void:
 		_dash_done = true
 		velocity = Vector2.ZERO
 		_fire_vfx.stop()
-		_change_state(State.COOLDOWN)
+		_change_state(State.RECOVER)
 
 
 func _check_body_contact() -> void:

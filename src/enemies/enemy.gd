@@ -4,7 +4,7 @@ extends CharacterBody2D
 signal died
 signal hits_changed(remaining: int, maximum: int)
 
-enum State { WANDER, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
+enum State { WANDER, CHASE, REPOSITION, WINDUP, ATTACK, RECOVER, HURT, DEATH }
 enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 
 @export var max_hits: int = 1
@@ -38,17 +38,13 @@ const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
 
-const TARGETED_SPEED_MULT: float = 1.3
-const TARGETED_COOLDOWN_MULT: float = 0.6
-const PASSIVE_SPEED_MULT: float = 0.7
-const PASSIVE_COOLDOWN_MULT: float = 1.5
-
 # Multi-hit enemies (elites, bosses) ignore further hits for this long after
 # taking one, so fans and multi-strikes can't spend several hits at once.
 const HIT_INVULN: float = 0.3
 
 
 var hits_remaining: int
+var profile: EnemyProfile = null
 var _hit_invuln_timer: float = 0.0
 var drop_table: DropTable = null
 var weapon: Weapon = null
@@ -95,6 +91,7 @@ func _ready() -> void:
 	_speed_base = speed
 	motion_mode = MOTION_MODE_FLOATING
 
+	profile = _build_profile()
 	if is_elite:
 		_apply_elite_scaling()
 	if is_inside_tree():
@@ -149,6 +146,17 @@ func _apply_elite_scaling() -> void:
 			pass  # applied in _apply_enrage_if_needed after the first hit
 
 
+func _build_profile() -> EnemyProfile:
+	return EnemyProfile.for_tier(enemy_tier, is_elite)
+
+
+# Tests and pre-_ready calls can reach timing code before _ready builds the profile.
+func _get_profile() -> EnemyProfile:
+	if profile == null:
+		profile = _build_profile()
+	return profile
+
+
 func _process(delta: float) -> void:
 	_tick_hit_invuln(delta)
 	if _state == State.DEATH:
@@ -176,12 +184,14 @@ func _process(delta: float) -> void:
 				_process_idle(delta)
 			State.CHASE:
 				_process_chase(delta)
+			State.REPOSITION:
+				_process_reposition(delta)
 			State.WINDUP:
 				_process_windup(delta)
 			State.ATTACK:
 				_process_attack(delta)
-			State.COOLDOWN:
-				_process_cooldown(delta)
+			State.RECOVER:
+				_process_recover(delta)
 
 	if weapon:
 		weapon.tick(delta)
@@ -207,6 +217,7 @@ func _physics_process(delta: float) -> void:
 					m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
 				sprite.modulate = m
 	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT \
+			or _state == State.REPOSITION \
 			or (_state == State.ATTACK and _moves_during_attack()):
 		_move_with_clamp(delta)
 	_resolve_crowd_overlap()
@@ -312,7 +323,17 @@ func _process_attack(_delta: float) -> void:
 		_attack_started = true
 		_execute_attack()
 	if not _attack_in_progress():
-		_change_state(State.COOLDOWN)
+		_change_state(_state_after_attack())
+
+
+## The state an attack hands off to once it finishes. Melee overrides this to
+## chain a follow-up swing; ranged overrides it to re-pick a firing spot.
+func _state_after_attack() -> int:
+	return State.RECOVER
+
+
+func _process_reposition(_delta: float) -> void:
+	_change_state(State.CHASE)
 
 
 func _attack_in_progress() -> bool:
@@ -323,7 +344,7 @@ func _moves_during_attack() -> bool:
 	return false
 
 
-func _process_cooldown(delta: float) -> void:
+func _process_recover(delta: float) -> void:
 	_state_timer -= delta
 	if not is_finite(velocity.x) or not is_finite(velocity.y):
 		velocity = Vector2.ZERO
@@ -544,10 +565,10 @@ func _change_state(new_state: int) -> void:
 		State.ATTACK:
 			_attack_started = false
 		State.WINDUP:
-			_state_timer = windup_duration
+			_state_timer = windup_duration * _get_profile().telegraph_mult
 			_show_exclaim()
-		State.COOLDOWN:
-			_state_timer = cooldown_duration * _get_cooldown_multiplier()
+		State.RECOVER:
+			_state_timer = cooldown_duration * _get_profile().cadence_mult
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
@@ -801,14 +822,8 @@ func get_facing_direction() -> Vector2:
 	return Vector2.DOWN
 
 
-func _is_targeted() -> bool:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return false
-	return _player_ref.get("targeted_enemy") == self
-
-
 func _get_effective_speed() -> float:
-	var base := _base_effective_speed()
+	var base := speed
 	if _status_component != null and is_instance_valid(_status_component):
 		base *= _status_component.get_move_speed_multiplier()
 	return _apply_catch_up(base)
@@ -823,24 +838,3 @@ func _apply_catch_up(base: float) -> float:
 		player_speed = _player_ref.max_speed
 	return EncounterDirector.catch_up_speed(base, dist, player_speed)
 
-
-func _base_effective_speed() -> float:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return speed
-	var target = _player_ref.get("targeted_enemy")
-	if target == null:
-		return speed
-	if target == self:
-		return speed * TARGETED_SPEED_MULT
-	return speed * PASSIVE_SPEED_MULT
-
-
-func _get_cooldown_multiplier() -> float:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return 1.0
-	var target = _player_ref.get("targeted_enemy")
-	if target == null:
-		return 1.0
-	if target == self:
-		return TARGETED_COOLDOWN_MULT
-	return PASSIVE_COOLDOWN_MULT
