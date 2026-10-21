@@ -139,7 +139,7 @@ Unchanged application. A tick = 1 hit, so on_fire / poisoned / steam kill normal
 - `eff["damage"]` → `eff["dig_power"]` in effective-stat aggregation; `stat_add`/`stat_mult` targeting `damage` retarget to `dig_power`.
 - `resolve_hit(user, node, damage * dmg_mult, is_crit)` → `resolve_hit(user, node)`. Per-move `damage_mult` in combo data scales dig only.
 - Ranged/projectile hits carry no damage.
-- `terrain_modifier.gd:601` `damage` param (used for destructible terrain/props) becomes `dig_power`.
+- Material/terrain `damage` (`material_registry.gd`, `terrain_cell.gd`, `terrain_modifier.gd`, `compute_device.gd`) is a separate material-pipeline concept and keeps its name.
 
 **Dig values** (re-assigned by archetype, starting points): dagger/rapier/twin 1.5, sword 3, axe/mace/greatsword 5, hammer 7, Gravedigger's Spade and Obsidian Greatsword 9 (plus `free_carve`).
 
