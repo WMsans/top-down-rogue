@@ -2,11 +2,14 @@ extends GdUnitTestSuite
 
 class _SparkEnemy extends Node2D:
 	var hit_count: int = 0
+	var invulnerable: bool = false
 	func _init() -> void:
 		add_to_group("attackable")
 		var sc := StatusComponent.new()
 		sc.name = "StatusComponent"
 		add_child(sc)
+	func is_hit_invulnerable() -> bool:
+		return invulnerable
 	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
 		hit_count += 1
 
@@ -42,3 +45,22 @@ func test_chain_spark_respects_range() -> void:
 	m.on_kill(null, user, null)
 	assert_bool(near.hit_count > 0).is_true()
 	assert_bool(far.hit_count > 0).is_false()
+
+func test_chain_spark_skips_invulnerable_targets() -> void:
+	var user: Node2D = auto_free(Node2D.new())
+	add_child(user)
+	var shielded: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(shielded)
+	shielded.global_position = Vector2(20.0, 0.0)
+	shielded.invulnerable = true
+	var normal: _SparkEnemy = auto_free(_SparkEnemy.new())
+	add_child(normal)
+	normal.global_position = Vector2(40.0, 0.0)
+	var m := ChainSparkModifier.new()
+	m.on_kill(null, user, null)
+	# the invulnerable target takes nothing at all
+	assert_int(shielded.hit_count).is_equal(0)
+	assert_float(shielded.get_node("StatusComponent").get_timed_remaining("lightning")).is_equal(0.0)
+	# the other target is still hit
+	assert_bool(normal.hit_count > 0).is_true()
+	assert_float(normal.get_node("StatusComponent").get_timed_remaining("lightning")).is_greater(0.0)

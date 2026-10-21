@@ -17,6 +17,8 @@ func on_attack(_weapon, user, _ctx) -> void:
 	var target := _nearest_target(user)
 	if target == null:
 		return
+	if target.has_method("is_hit_invulnerable") and target.is_hit_invulnerable():
+		return
 	if target.has_method("on_hit_impact"):
 		var dir: Vector2 = target.global_position - user.global_position
 		target.on_hit_impact(target.global_position, dir)

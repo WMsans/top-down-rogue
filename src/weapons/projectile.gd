@@ -117,6 +117,8 @@ func _carve_terrain() -> void:
 
 
 func _legacy_apply_hit(target: Node) -> void:
+	if target.has_method("is_hit_invulnerable") and target.is_hit_invulnerable():
+		return
 	target.on_hit_impact(global_position, direction)
 	if hit_status != "":
 		var hs = target.get_node_or_null("StatusComponent")

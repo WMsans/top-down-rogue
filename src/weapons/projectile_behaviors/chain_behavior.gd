@@ -22,6 +22,9 @@ func on_enemy_hit(proj, target) -> bool:
 		if nxt_list.is_empty():
 			break
 		var nxt: Node2D = nxt_list[0]
+		visited.append(nxt)
+		if nxt.has_method("is_hit_invulnerable") and nxt.is_hit_invulnerable():
+			continue  # invulnerable target takes nothing; the chain keeps going
 		if proj.source_weapon != null:
 			proj.source_weapon.resolve_hit(proj.source_node, nxt)
 		var sc = nxt.get_node_or_null("StatusComponent")
@@ -29,7 +32,6 @@ func on_enemy_hit(proj, target) -> bool:
 			sc.add_timed_status("lightning", LIGHTNING_DURATION)
 		if host != null:
 			LightningArcFX.play(host, from.global_position, nxt.global_position, TINT)
-		visited.append(nxt)
 		from = nxt
 	return false  # bolt spent after delivering the chain
 

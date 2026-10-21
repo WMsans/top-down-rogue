@@ -22,6 +22,8 @@ func on_kill(_weapon: Weapon, user: Node, _target: Node) -> void:
 	var host := _resolve_host(user)
 	var origin: Vector2 = (user as Node2D).global_position
 	for n in _nearest_targets(user, chain_count, RANGE):
+		if n.has_method("is_hit_invulnerable") and n.is_hit_invulnerable():
+			continue
 		var pos: Vector2 = (n as Node2D).global_position
 		if n.has_method("on_hit_impact"):
 			n.on_hit_impact(pos, (pos - origin).normalized())
