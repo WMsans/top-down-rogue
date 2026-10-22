@@ -16,15 +16,3 @@ func on_hit_target(weapon: Weapon, user: Node, target: Node) -> void:
 	if first == null or first == self:
 		return
 	weapon.retrigger_modifier(first, "on_hit_target", [user, target])
-
-
-func modify_hit_damage(weapon: Weapon, user: Node, target: Node, dmg: float) -> float:
-	if is_disabled:
-		return dmg
-	var first: Modifier = weapon.get_first_modifier()
-	if first == null or first == self:
-		return dmg
-	var r: Variant = weapon.retrigger_modifier(first, "modify_hit_damage", [user, target, dmg])
-	if r == null:
-		return dmg
-	return float(r)

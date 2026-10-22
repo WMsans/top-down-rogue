@@ -13,6 +13,8 @@ var current_phase: int = 1
 var _original_weapon: RangedWeapon = null
 var _hazard_timer: float = 0.0
 
+const HITS_PER_PHASE := 10
+
 
 func _ready() -> void:
 	if weapon_resource:
@@ -22,20 +24,29 @@ func _ready() -> void:
 		cooldown_duration = weapon.cooldown
 	else:
 		weapon = RangedWeapon.new()
-		weapon.damage = 6.0
 		weapon.cooldown = 0.8
 		weapon.projectile_speed = 120.0
 		_original_weapon = RangedWeapon.new()
 		_attack_range = 200.0
 		cooldown_duration = weapon.cooldown
 	speed = 40.0
-	max_health = 200
+	max_hits = phase_count * HITS_PER_PHASE
 	_speed_base = speed
 	detection_radius = 400.0
 	scale = Vector2(2.0, 2.0)
+	uses_tokens = false
 	super._ready()
 	_setup_drop_table()
 	_hazard_timer = hazard_interval
+
+
+func _build_profile() -> EnemyProfile:
+	return EnemyProfile.for_tier(DropTable.EnemyTier.HARD)
+
+
+func get_facing_direction() -> Vector2:
+	var rw := weapon as RangedWeapon
+	return _dir_to_predicted(rw.projectile_speed if rw != null else 0.0)
 
 
 func _setup_drop_table() -> void:
@@ -53,23 +64,32 @@ func _process(delta: float) -> void:
 			_spawn_hazards()
 
 
-func hit(damage: int) -> void:
-	super.hit(damage)
+func take_hit() -> void:
+	super.take_hit()
+	if _state != State.DEATH:
+		_check_phase_transition()
+
+
+func apply_status_damage(amount: int) -> void:
+	super.apply_status_damage(amount)
 	if _state != State.DEATH:
 		_check_phase_transition()
 
 
 func _check_phase_transition() -> void:
-	while current_phase < phase_count and health <= _phase_threshold(current_phase + 1):
+	while current_phase < phase_count and hits_remaining <= _phase_threshold(current_phase + 1):
 		current_phase += 1
 		_transition_phase()
 
 
+# Phase p begins once this many hits (or fewer) remain.
 func _phase_threshold(p: int) -> int:
-	return int(float(max_health) * float(phase_count - p + 1) / float(phase_count))
+	return HITS_PER_PHASE * (phase_count - p + 1)
 
 
 func _transition_phase() -> void:
+	if _status_component != null:
+		_status_component.clear_all()
 	match current_phase:
 		2:
 			if weapon and weapon is RangedWeapon:

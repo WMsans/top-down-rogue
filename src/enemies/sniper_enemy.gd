@@ -12,7 +12,7 @@ func _ready() -> void:
 	if weapon_resource == null:
 		weapon_resource = SniperWeapon.new()
 	super._ready()
-	windup_duration = 1.2
+	windup_duration = 0.85
 	cooldown_duration = weapon.cooldown if weapon else 2.5
 	_aim_line = Line2D.new()
 	_aim_line.width = 1.5
@@ -43,12 +43,13 @@ func _update_aim_line() -> void:
 	_aim_line.points = PackedVector2Array([Vector2.ZERO, dir * 600.0])
 
 
+func _apply_volley_bonus() -> void:
+	pass  # one deliberate shot; tiers change its telegraph and lead instead
+
+
 func _to_player_dir() -> Vector2:
-	if _player_ref and is_instance_valid(_player_ref):
-		var d := _player_ref.global_position - global_position
-		if d.length() > 0.01:
-			return d.normalized()
-	return Vector2.DOWN
+	var rw := weapon as RangedWeapon
+	return _dir_to_predicted(rw.projectile_speed if rw != null else 0.0)
 
 
 func get_facing_direction() -> Vector2:

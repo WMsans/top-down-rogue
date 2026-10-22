@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 func test_on_fire_def_values() -> void:
 	assert_that(StatusRegistry.has_def("on_fire")).is_true()
 	assert_float(StatusRegistry.get_threshold("on_fire")).is_equal_approx(1.0, 0.001)
-	assert_float(StatusRegistry.get_burn_dps("on_fire")).is_equal_approx(4.0, 0.001)
+	assert_float(StatusRegistry.get_tick_interval("on_fire")).is_equal_approx(1.0, 0.001)
 
 func test_frozen_blocks_movement() -> void:
 	assert_that(StatusRegistry.blocks_movement("frozen")).is_true()
@@ -70,7 +70,7 @@ func test_steam_status_def() -> void:
 	assert_that(def).is_not_null()
 	assert_str(def.id).is_equal("steam")
 	assert_int(def.mode).is_equal(StatusDef.Mode.STAIN)
-	assert_float(def.burn_dps).is_equal(3.0)
+	assert_float(def.tick_interval).is_equal(1.0)
 	assert_float(def.slow_multiplier).is_equal(0.8)
 	assert_float(def.decay_rate).is_equal(1.2)
 
@@ -81,7 +81,7 @@ func test_lightning_status_def() -> void:
 	assert_str(def.id).is_equal("lightning")
 	assert_int(def.mode).is_equal(StatusDef.Mode.TIMED)
 	assert_float(def.default_duration).is_equal(0.4)
-	assert_float(def.burn_dps).is_equal(0.0)
+	assert_float(def.tick_interval).is_equal(0.0)
 
 
 func test_stun_status_def() -> void:
@@ -90,6 +90,15 @@ func test_stun_status_def() -> void:
 	assert_str(def.id).is_equal("stun")
 	assert_int(def.mode).is_equal(StatusDef.Mode.TIMED)
 	assert_float(def.default_duration).is_equal(0.2)
+
+
+func test_ticking_ids_are_fire_poison_steam() -> void:
+	assert_array(StatusRegistry.get_ticking_ids()).contains_exactly(["on_fire", "poisoned", "steam"])
+
+func test_ticking_ids_are_a_copy() -> void:
+	var ids: Array = StatusRegistry.get_ticking_ids()
+	ids.clear()
+	assert_int(StatusRegistry.get_ticking_ids().size()).is_equal(3)
 
 
 func test_stain_for_material_steam() -> void:

@@ -27,7 +27,7 @@ func test_poisoned_properties() -> void:
 	var def := StatusRegistry.get_def("poisoned")
 	assert_that(def.decay_rate).is_equal(0.4)
 	assert_that(def.active_threshold).is_equal(0.3)
-	assert_that(def.burn_dps).is_equal(2.0)
+	assert_that(def.tick_interval).is_equal(1.5)
 	assert_that(def.blocks_movement).is_false()
 	assert_that(def.slow_multiplier).is_equal(0.6)
 
@@ -43,9 +43,8 @@ func test_poisoned_slow_multiplier() -> void:
 	var multiplier := StatusRegistry.get_slow_multiplier("poisoned")
 	assert_that(multiplier).is_equal(0.6)
 
-func test_poisoned_burn_dps() -> void:
-	var dps := StatusRegistry.get_burn_dps("poisoned")
-	assert_that(dps).is_equal(2.0)
+func test_poisoned_tick_interval() -> void:
+	assert_float(StatusRegistry.get_tick_interval("poisoned")).is_equal_approx(1.5, 0.001)
 
 func test_poisoned_does_not_block_movement() -> void:
 	var blocks := StatusRegistry.blocks_movement("poisoned")

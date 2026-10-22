@@ -225,19 +225,9 @@ func _spawn_enemy(world_pos: Vector2, sector_dist: int, floor_num: int, is_boss:
 	if "enemy_tier" in enemy:
 		enemy.enemy_tier = tier_index
 
-	var health_mult := 1.0 + (floor_num - 1) * 0.25
-	var damage_mult := 1.0 + (floor_num - 1) * 0.15
 	var speed_mult  := 1.0 + (floor_num - 1) * 0.10
 
-	enemy.max_health = int(float(enemy.max_health) * health_mult * (2.0 if is_elite else 1.0) * (5.0 if is_boss else 1.0))
 	enemy.speed = enemy.speed * speed_mult * (1.5 if is_boss else 1.0)
-
-	if not is_boss and "damage_scale" in enemy:
-		enemy.damage_scale = damage_mult
-
-	if is_boss:
-		if "weapon_resource" in enemy and enemy.weapon_resource:
-			enemy.weapon_resource.damage *= damage_mult
 
 	if is_boss:
 		enemy.modulate = LevelManager.current_biome.tint

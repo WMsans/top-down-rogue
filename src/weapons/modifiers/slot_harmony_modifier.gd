@@ -7,15 +7,7 @@ const HARMONY_MULT := 1.2
 func _init() -> void:
 	category = "trigger"
 	name = "Slot Harmony"
-	description = "+20% damage while all 3 slots are different categories."
-
-
-func modify_hit_damage(weapon: Weapon, _user: Node, _target: Node, dmg: float) -> float:
-	if is_disabled:
-		return dmg
-	if _all_different(weapon):
-		return dmg * HARMONY_MULT
-	return dmg
+	description = "+20% swing speed while all 3 slots are different categories."
 
 
 func _all_different(weapon: Weapon) -> bool:

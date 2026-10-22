@@ -14,6 +14,7 @@ const ICON_MIN_ALPHA := 0.15
 const ICON_ALPHA_RAMP := 4.0
 
 var _defs: Dictionary = {}  # id -> StatusDef
+var _ticking_ids: Array = []  # ids with tick_interval > 0, registration order
 var _icon_cache: Dictionary = {}  # id -> Texture2D (lazy)
 
 
@@ -24,7 +25,7 @@ func _ready() -> void:
 func _register_defs() -> void:
 	_add(StatusDefScript.new(
 		"on_fire", "On Fire", Color(1.0, 0.45, 0.1, 1.0),
-		1.0, 1.0, StatusDef.Category.HARMFUL, 4.0, false, 1.0,
+		1.0, 1.0, StatusDef.Category.HARMFUL, 1.0, false, 1.0,
 		"res://textures/ui/status/Effect_on_fire.png"))
 	_add(StatusDefScript.new(
 		"wet", "Wet", Color(0.35, 0.55, 0.95, 1.0),
@@ -48,11 +49,11 @@ func _register_defs() -> void:
 		"res://textures/ui/status/Effect_bloody.png"))
 	_add(StatusDefScript.new(
 		"poisoned", "Poisoned", Color(0.3, 0.85, 0.25, 1.0),
-		0.4, 0.3, StatusDef.Category.HARMFUL, 2.0, false, 0.6,
+		0.4, 0.3, StatusDef.Category.HARMFUL, 1.5, false, 0.6,
 		"res://textures/ui/status/Effect_radioactive.png"))
 	_add(StatusDefScript.new(
 		"steam", "Steamed", Color(0.85, 0.85, 0.85, 1.0),
-		1.2, 1.0, StatusDef.Category.HARMFUL, 3.0, false, 0.8,
+		1.2, 1.0, StatusDef.Category.HARMFUL, 1.0, false, 0.8,
 		"res://textures/ui/status/Effect_curse_cloud.png"))
 	_add(StatusDefScript.new(
 		"lightning", "Shocked", Color(0.9, 0.95, 1.0, 1.0),
@@ -66,6 +67,8 @@ func _register_defs() -> void:
 
 func _add(def: StatusDef) -> void:
 	_defs[def.id] = def
+	if def.tick_interval > 0.0:
+		_ticking_ids.append(def.id)
 
 
 func has_def(id: String) -> bool:
@@ -110,9 +113,13 @@ func get_tint(id: String) -> Color:
 	return d.tint_color if d != null else Color(1, 1, 1, 1)
 
 
-func get_burn_dps(id: String) -> float:
+func get_tick_interval(id: String) -> float:
 	var d: StatusDef = _defs.get(id, null)
-	return d.burn_dps if d != null else 0.0
+	return d.tick_interval if d != null else 0.0
+
+
+func get_ticking_ids() -> Array:
+	return _ticking_ids.duplicate()
 
 
 func blocks_movement(id: String) -> bool:

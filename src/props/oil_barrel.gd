@@ -16,7 +16,7 @@ func _ready() -> void:
 	add_to_group("destructible")
 
 
-func on_hit_impact(impact_point: Vector2, hit_dir: Vector2, damage: int) -> void:
+func on_hit_impact(impact_point: Vector2, hit_dir: Vector2) -> void:
 	if _dead:
 		return
 	_hp -= 1

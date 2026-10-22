@@ -48,6 +48,8 @@ func _register_commands() -> void:
 	TpCommands.register(_registry)
 	var EffectCommands := preload("res://src/console/commands/effect_command.gd")
 	EffectCommands.register(_registry)
+	var AiDebugCommands := preload("res://src/console/commands/ai_debug_command.gd")
+	AiDebugCommands.register(_registry)
 
 
 func _build_ui() -> void:

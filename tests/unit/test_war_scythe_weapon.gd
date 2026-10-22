@@ -4,7 +4,7 @@ const WarScythe = preload("res://src/weapons/war_scythe_weapon.gd")
 
 class _Target extends Area2D:
 	var hits: Array = []
-	var health: float = 100.0
+	var hits_remaining: int = 1
 	func _init() -> void:
 		add_to_group("attackable")
 		set_collision_layer_value(8, true)
@@ -13,8 +13,8 @@ class _Target extends Area2D:
 		shape.radius = 4.0
 		col.shape = shape
 		add_child(col)
-	func on_hit_impact(_p: Vector2, _d: Vector2, dmg: int) -> void:
-		hits.append(dmg)
+	func on_hit_impact(_p: Vector2, _d: Vector2) -> void:
+		hits.append(1)
 
 func test_arc_is_300_degrees() -> void:
 	var w := WarScythe.new()
@@ -35,8 +35,7 @@ func test_hits_rear_flank_but_not_directly_behind() -> void:
 	parent.add_child(behind)
 	behind.global_position = Vector2(-10.0, 0.0)
 	var w := WarScythe.new()
-	w.crit_chance = 0.0
 	await get_tree().physics_frame
-	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, w.weapon_reach, w.arc_angle, 1.0, false, true)
+	w._hit_attackables(user, Vector2.ZERO, Vector2.RIGHT, w.weapon_reach, w.arc_angle, true)
 	assert_int(flank.hits.size()).is_equal(1)
 	assert_int(behind.hits.size()).is_equal(0)

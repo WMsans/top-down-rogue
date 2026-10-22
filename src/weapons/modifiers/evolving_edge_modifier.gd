@@ -19,6 +19,6 @@ func on_hit_target(_weapon: Weapon, _user: Node, _target: Node) -> void:
 
 
 func get_stat_add(stat: String) -> float:
-	if stat != "damage":
+	if stat != "dig_power":
 		return 0.0
 	return BASE_BONUS * (2.0 if _hits >= HITS_TO_DOUBLE else 1.0)

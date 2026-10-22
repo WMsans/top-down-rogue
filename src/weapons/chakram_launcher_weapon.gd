@@ -2,7 +2,7 @@ class_name ChakramLauncherWeapon
 extends RangedWeapon
 
 func _configure() -> void:
-	damage = 3.5
+	dig_power = 3.5
 	cooldown = 1.2
 	projectile_count = 1
 	spread_angle = 0.0

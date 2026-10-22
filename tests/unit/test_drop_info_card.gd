@@ -31,10 +31,8 @@ func test_weapon_drop_populate_info_card() -> void:
 	var drop: WeaponDrop = auto_free(WeaponDrop.new())
 	var weapon := Weapon.new()
 	weapon.name = "Sword"
-	weapon.damage = 15.0
+	weapon.dig_power = 15.0
 	weapon.cooldown = 0.8
-	weapon.crit_chance = 0.1
-	weapon.crit_multiplier = 2.5
 	weapon.rarity = DropTable.ItemTier.RARE
 	drop.weapon = weapon
 
@@ -42,10 +40,8 @@ func test_weapon_drop_populate_info_card() -> void:
 	drop.populate_info_card(stub)
 
 	assert_that(stub._populate_name).is_equal("Sword")
-	assert_that(stub._populate_stats).contains(["Damage: 15"])
+	assert_that(stub._populate_stats).contains(["Dig: 15.0"])
 	assert_that(stub._populate_stats).contains(["Cooldown: 0.8s"])
-	assert_that(stub._populate_stats).contains(["Crit: 10%"])
-	assert_that(stub._populate_stats).contains(["Crit Mult: 2.5x"])
 	assert_that(stub._called_set_rarity).is_true()
 	assert_that(stub._called_rarity).is_equal(DropTable.ItemTier.RARE)
 

@@ -83,6 +83,18 @@ func _make_comp(owner: Node) -> StatusComponent:
 	owner.add_child(c)
 	return c
 
+func test_clear_erases_the_tick_timer() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	c.add_stain("on_fire", 5.0)
+	c.tick(0.5)              # half a tick interval: the timer sits at 0.5
+	c.clear("on_fire")
+	c.add_stain("on_fire", 5.0)
+	c.tick(0.6)              # a stale timer would have fired by now
+	assert_that(owner.taken).is_equal(0)
+
+
 func test_add_and_get_stain() -> void:
 	var c: StatusComponent = auto_free(StatusComponentScript.new())
 	c.add_stain("wet", 2.5)
@@ -117,9 +129,54 @@ func test_burn_calls_owner_damage() -> void:
 	var owner: FakeOwner = auto_free(FakeOwner.new())
 	add_child(owner)
 	var c: StatusComponent = _make_comp(owner)
-	c.add_stain("on_fire", 5.0)  # burn_dps 4
-	c.tick(1.0)  # decay -1 -> 4 (still active); burn 4*1=4 delivered
-	assert_that(owner.taken).is_equal(4)
+	c.add_stain("on_fire", 5.0)
+	c.tick(1.0)  # on_fire ticks every 1.0s -> exactly one tick
+	assert_that(owner.taken).is_equal(1)
+
+func test_poison_ticks_every_one_and_a_half_seconds() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	c.add_stain("poisoned", 5.0)
+	c.tick(1.0)
+	assert_that(owner.taken).is_equal(0)
+	c.tick(0.5)
+	assert_that(owner.taken).is_equal(1)
+
+func test_steam_ticks() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	c.add_stain("steam", 5.0)
+	c.tick(1.0)
+	assert_that(owner.taken).is_equal(1)
+
+func test_statuses_tick_independently() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	c.add_stain("on_fire", 5.0)
+	c.add_stain("poisoned", 5.0)
+	c.tick(1.5)  # fire: 1 tick (at 1.0); poison: 1 tick (at 1.5)
+	assert_that(owner.taken).is_equal(2)
+
+func test_large_delta_delivers_multiple_ticks() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	c.add_stain("on_fire", 10.0)
+	c.tick(3.0)
+	assert_that(owner.taken).is_equal(3)
+
+func test_tick_timer_restarts_after_status_ends() -> void:
+	var owner: FakeOwner = auto_free(FakeOwner.new())
+	add_child(owner)
+	var c: StatusComponent = _make_comp(owner)
+	c.add_stain("on_fire", 1.5)
+	c.tick(0.6)  # decays to 0.9 -> below threshold 1.0, timer discarded
+	c.add_stain("on_fire", 5.0)
+	c.tick(0.6)  # fresh timer at 0.6 -> no tick yet
+	assert_that(owner.taken).is_equal(0)
 
 func test_active_ids_lists_active_only() -> void:
 	var c: StatusComponent = auto_free(StatusComponentScript.new())
@@ -142,13 +199,13 @@ func test_blended_tint_shifts_with_status() -> void:
 	assert_that(tint).is_not_equal(Color.WHITE)
 	assert_bool(tint.r > tint.b).is_true()  # warm tint
 
-func test_burn_tick_emitted_on_whole_damage() -> void:
+func test_burn_tick_emitted_on_tick() -> void:
 	var owner: FakeOwner = auto_free(FakeOwner.new())
 	add_child(owner)
 	var c: StatusComponent = _make_comp(owner)
 	var flag := [false]
 	c.burn_tick.connect(func() -> void: flag[0] = true)
-	c.add_stain("on_fire", 5.0)  # burn_dps 4
+	c.add_stain("on_fire", 5.0)
 	c.tick(1.0)
 	assert_bool(flag[0]).is_true()
 
@@ -269,6 +326,27 @@ func test_can_attack() -> void:
 	assert_bool(c.can_attack()).is_true()
 	c.add_timed_status("stun", 0.5)
 	assert_bool(c.can_attack()).is_false()
+
+
+func test_stain_cap_clamps_added_stain() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.set_stain_cap("on_fire", 3.0)
+	c.add_stain("on_fire", 10.0)
+	assert_float(c.get_stain("on_fire")).is_equal_approx(3.0, 0.001)
+
+func test_stain_cap_clamps_existing_stain() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_stain("on_fire", 10.0)
+	c.set_stain_cap("on_fire", 3.0)
+	assert_float(c.get_stain("on_fire")).is_equal_approx(3.0, 0.001)
+
+func test_clear_all_removes_stains_and_timed() -> void:
+	var c: StatusComponent = auto_free(StatusComponentScript.new())
+	c.add_stain("on_fire", 5.0)
+	c.add_timed_status("stun", 1.0)
+	c.clear_all()
+	assert_float(c.get_stain("on_fire")).is_equal(0.0)
+	assert_bool(c.is_stunned()).is_false()
 
 
 func test_stain_and_timed_coexist() -> void:

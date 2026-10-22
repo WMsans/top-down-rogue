@@ -15,25 +15,29 @@ class TestParryTarget extends Area2D:
 	func try_parry(_attacker: Node, _hit_pos: Vector2, _hit_dir: Vector2) -> bool:
 		return _should_parry
 
-	func on_hit_impact(_impact_point: Vector2, _hit_dir: Vector2, _damage: int) -> void:
+	func on_hit_impact(_impact_point: Vector2, _hit_dir: Vector2) -> void:
 		hit_received = true
+
+
+func _swing(user: Node2D) -> void:
+	var w := MeleeWeapon.new()
+	w.weapon_reach = 36.0
+	w.dig_power = 10.0
+	w._hit_attackables(user, user.global_position, Vector2.DOWN, w.weapon_reach, PI, false)
 
 
 func test_parry_skips_damage() -> void:
 	var target: TestParryTarget = auto_free(TestParryTarget.new())
 	target._should_parry = true
 	add_child(target)
-	await get_tree().process_frame
 
 	var user: Node2D = auto_free(Node2D.new())
 	add_child(user)
-	await get_tree().process_frame
+	await get_tree().physics_frame
 	target.global_position = user.global_position + Vector2(0, 10)
+	await get_tree().physics_frame
 
-	var w := MeleeWeapon.new()
-	w.weapon_reach = 36.0
-	w.damage = 10.0
-	w._hit_attackables_in_arc(user, user.global_position, Vector2.DOWN)
+	_swing(user)
 
 	assert_that(target.hit_received).is_false()
 
@@ -42,16 +46,13 @@ func test_unparryable_applies_damage() -> void:
 	var target: TestParryTarget = auto_free(TestParryTarget.new())
 	target._should_parry = false
 	add_child(target)
-	await get_tree().process_frame
 
 	var user: Node2D = auto_free(Node2D.new())
 	add_child(user)
-	await get_tree().process_frame
+	await get_tree().physics_frame
 	target.global_position = user.global_position + Vector2(0, 10)
+	await get_tree().physics_frame
 
-	var w := MeleeWeapon.new()
-	w.weapon_reach = 36.0
-	w.damage = 10.0
-	w._hit_attackables_in_arc(user, user.global_position, Vector2.DOWN)
+	_swing(user)
 
 	assert_that(target.hit_received).is_true()

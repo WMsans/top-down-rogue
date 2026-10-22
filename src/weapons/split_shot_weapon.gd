@@ -7,4 +7,4 @@ func _configure() -> void:
 	reaim_each_shot = true
 	projectile_count = 2
 	spread_angle = 30.0
-	damage = 4.0
+	dig_power = 4.0
