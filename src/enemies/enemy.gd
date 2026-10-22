@@ -4,7 +4,7 @@ extends CharacterBody2D
 signal died
 signal hits_changed(remaining: int, maximum: int)
 
-enum State { WANDER, CHASE, WINDUP, ATTACK, COOLDOWN, HURT, DEATH }
+enum State { WANDER, CHASE, REPOSITION, WINDUP, ATTACK, RECOVER, HURT, DEATH }
 enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 
 @export var max_hits: int = 1
@@ -38,17 +38,24 @@ const BURN_FLASH_DECAY := 6.0
 const SQUASH_SCALE: Vector2 = Vector2(1.4, 0.7)
 const SQUASH_DURATION: float = 0.18
 
-const TARGETED_SPEED_MULT: float = 1.3
-const TARGETED_COOLDOWN_MULT: float = 0.6
-const PASSIVE_SPEED_MULT: float = 0.7
-const PASSIVE_COOLDOWN_MULT: float = 1.5
-
 # Multi-hit enemies (elites, bosses) ignore further hits for this long after
 # taking one, so fans and multi-strikes can't spend several hits at once.
 const HIT_INVULN: float = 0.3
 
+# No telegraph may resolve faster than this, whatever the tier math says.
+const MIN_TELEGRAPH: float = 0.2
+
+const RING_MARGIN: float = 24.0
+const RING_ENTER_MARGIN: float = 32.0
+const TOKEN_RETRY: float = 0.6
+const RING_JITTER: float = 8.0
+const RING_JITTER_INTERVAL: float = 0.4
+const ALERT_RADIUS: float = 120.0
+const REPOSITION_ARRIVE: float = 6.0
+
 
 var hits_remaining: int
+var profile: EnemyProfile = null
 var _hit_invuln_timer: float = 0.0
 var drop_table: DropTable = null
 var weapon: Weapon = null
@@ -76,12 +83,23 @@ var _elite_enraged: bool = false
 var _weapon_visual: Node2D = null
 var _weapon_sprite: Sprite2D = null
 var _director = null
+var uses_tokens: bool = true
+
+var _token_retry_timer: float = 0.0
+var _ring_jitter: float = 0.0
+var _ring_jitter_timer: float = 0.0
+
+var _reaction_timer: float = 0.0
+var _alert_timer: float = -1.0
+var _debug_aim_point: Vector2 = Vector2.INF
 
 var _attack_started: bool = false
 
 var _wander_direction: Vector2 = Vector2.RIGHT
 var _wander_timer: float = 0.0
 var _wander_is_paused: bool = true
+
+var _reposition_target: Vector2 = Vector2.INF
 
 var _exclaim_label: Label = null
 var _exclaim_tween: Tween = null
@@ -95,6 +113,7 @@ func _ready() -> void:
 	_speed_base = speed
 	motion_mode = MOTION_MODE_FLOATING
 
+	profile = _build_profile()
 	if is_elite:
 		_apply_elite_scaling()
 	if is_inside_tree():
@@ -149,13 +168,29 @@ func _apply_elite_scaling() -> void:
 			pass  # applied in _apply_enrage_if_needed after the first hit
 
 
+func _build_profile() -> EnemyProfile:
+	return EnemyProfile.for_tier(enemy_tier, is_elite)
+
+
+# Tests and pre-_ready calls can reach timing code before _ready builds the profile.
+func _get_profile() -> EnemyProfile:
+	if profile == null:
+		profile = _build_profile()
+	return profile
+
+
 func _process(delta: float) -> void:
 	_tick_hit_invuln(delta)
 	if _state == State.DEATH:
 		_process_death(delta)
 		return
 
-	if _status_component != null and _status_component.is_stunned():
+	if _is_disabled():
+		if _state == State.WINDUP or _state == State.ATTACK:
+			_cancel_attack()
+			_change_state(State.CHASE)
+		else:
+			_release_token()
 		velocity = Vector2.ZERO
 		return
 
@@ -176,12 +211,14 @@ func _process(delta: float) -> void:
 				_process_idle(delta)
 			State.CHASE:
 				_process_chase(delta)
+			State.REPOSITION:
+				_process_reposition(delta)
 			State.WINDUP:
 				_process_windup(delta)
 			State.ATTACK:
 				_process_attack(delta)
-			State.COOLDOWN:
-				_process_cooldown(delta)
+			State.RECOVER:
+				_process_recover(delta)
 
 	if weapon:
 		weapon.tick(delta)
@@ -207,6 +244,7 @@ func _physics_process(delta: float) -> void:
 					m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
 				sprite.modulate = m
 	if _state == State.WANDER or _state == State.CHASE or _state == State.HURT \
+			or _state == State.REPOSITION \
 			or (_state == State.ATTACK and _moves_during_attack()):
 		_move_with_clamp(delta)
 	_resolve_crowd_overlap()
@@ -222,7 +260,16 @@ func _apply_enrage_if_needed() -> void:
 
 
 func _process_idle(delta: float) -> void:
+	if _alert_timer >= 0.0:
+		_alert_timer -= delta
+		velocity = Vector2.ZERO
+		if _alert_timer < 0.0:
+			_aggroed = true
+			_change_state(State.CHASE)
+		return
+
 	if _player_ref and is_instance_valid(_player_ref) and _player_in_range:
+		_reaction_timer = _get_profile().reaction_time
 		_change_state(State.CHASE)
 		return
 
@@ -251,7 +298,7 @@ func _process_idle(delta: float) -> void:
 		velocity = _wander_direction * _get_effective_speed() * 0.5
 
 
-func _process_chase(_delta: float) -> void:
+func _process_chase(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		_aggroed = false
 		_change_state(State.WANDER)
@@ -260,21 +307,36 @@ func _process_chase(_delta: float) -> void:
 	var to_player := _player_ref.global_position - global_position
 	var dist := to_player.length()
 	var sees := _can_see_player()
-
 	if sees:
-		_aggroed = true
+		if not _aggroed:
+			_aggroed = true
+			_broadcast_alert()
 	elif not _aggroed:
 		_change_state(State.WANDER)
+		return
+
+	if _reaction_timer > 0.0:
+		_reaction_timer -= delta
+		velocity = Vector2.ZERO
 		return
 
 	if dist < 1.0:
 		velocity = Vector2.ZERO
 		return
 
-	if sees and dist <= _attack_range:
+	var dir = _get_director()
+	var holds: bool = not uses_tokens or dir == null or dir.has_token(self)
+	if sees and dist <= _attack_range and holds:
 		velocity = Vector2.ZERO
-		_change_state(State.WINDUP)
+		if _try_take_token():
+			_change_state(State.WINDUP)
 		return
+
+	if not holds and dist <= _ring_radius() + RING_ENTER_MARGIN:
+		_process_ring(delta, dir)
+		return
+	if dir != null:
+		dir.leave_ring(self)
 
 	var move_dir: Vector2
 	if sees:
@@ -290,14 +352,85 @@ func _process_chase(_delta: float) -> void:
 	velocity = move_dir * _get_effective_speed()
 
 
+func receive_alert() -> void:
+	if _aggroed or _state == State.DEATH or _alert_timer >= 0.0:
+		return
+	_alert_timer = _get_profile().reaction_time
+
+
+func _broadcast_alert() -> void:
+	if not is_inside_tree():
+		return
+	EncounterDirector.alert(global_position, ALERT_RADIUS, get_tree().get_nodes_in_group("attackable"), self)
+
+
+## Where the player will be after `travel_time`, scaled by how well this tier leads.
+func _predict_player_pos(travel_time: float) -> Vector2:
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		return global_position
+	var pos := _player_ref.global_position
+	var v = _player_ref.get("velocity")
+	if not (v is Vector2):
+		return pos
+	return pos + (v as Vector2) * maxf(travel_time, 0.0) * _get_profile().lead_factor
+
+
+func _dir_to_predicted(projectile_speed: float) -> Vector2:
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		_debug_aim_point = Vector2.INF
+		return Vector2.DOWN
+	var dist := global_position.distance_to(_player_ref.global_position)
+	var travel := dist / projectile_speed if projectile_speed > 0.0 else 0.0
+	_debug_aim_point = _predict_player_pos(travel)
+	var d := _safe_normalized(_debug_aim_point - global_position)
+	return d if d != Vector2.ZERO else Vector2.DOWN
+
+
+func _ring_radius() -> float:
+	return _attack_range + RING_MARGIN
+
+
+## Without a token, hold a slot on the ring around the player and keep asking.
+func _process_ring(delta: float, dir) -> void:
+	dir.join_ring(self, _ring_radius())
+	_token_retry_timer -= delta
+	if _token_retry_timer <= 0.0:
+		_token_retry_timer = TOKEN_RETRY
+		dir.request_token(self)
+	_ring_jitter_timer -= delta
+	if _ring_jitter_timer <= 0.0:
+		_ring_jitter_timer = RING_JITTER_INTERVAL
+		_ring_jitter = randf_range(-RING_JITTER, RING_JITTER)
+	var player_pos := _player_ref.global_position
+	var slot: Vector2 = dir.get_slot(self)
+	var target: Vector2
+	if slot == Vector2.INF:
+		# No open angle: close to ring distance along the straight line.
+		target = player_pos + _safe_normalized(global_position - player_pos) * _ring_radius()
+	else:
+		target = slot + _safe_normalized(slot - player_pos) * _ring_jitter
+	var to_target := target - global_position
+	if to_target.length() < 2.0:
+		velocity = Vector2.ZERO
+		return
+	var move_dir := _safe_normalized(to_target)
+	# No open angle, or terrain in the way of the direct step: follow the nav field.
+	if slot == Vector2.INF or _edge_blocked(move_dir * MOVE_STEP_PX):
+		var fd := _nav_field_dir()
+		if fd != Vector2.ZERO:
+			move_dir = fd
+	velocity = _apply_separation(move_dir) * _get_effective_speed()
+
+
 func _process_windup(delta: float) -> void:
-	if _status_component != null and _status_component.is_stunned():
+	if _is_disabled():
+		_cancel_attack()
 		_change_state(State.CHASE)
 		return
 	_state_timer -= delta
 	if not _can_see_player():
-		_hide_exclaim()
-		_change_state(State.WANDER)
+		_cancel_attack()
+		_change_state(State.CHASE)
 		return
 	if _state_timer <= 0.0:
 		_hide_exclaim()
@@ -305,14 +438,45 @@ func _process_windup(delta: float) -> void:
 
 
 func _process_attack(_delta: float) -> void:
-	if _status_component != null and _status_component.is_stunned():
+	if _is_disabled():
+		_cancel_attack()
 		_change_state(State.CHASE)
 		return
 	if not _attack_started:
 		_attack_started = true
 		_execute_attack()
 	if not _attack_in_progress():
-		_change_state(State.COOLDOWN)
+		_change_state(_state_after_attack())
+
+
+## The state an attack hands off to once it finishes. Melee overrides this to
+## chain a follow-up swing; ranged overrides it to re-pick a firing spot.
+func _state_after_attack() -> int:
+	return State.RECOVER
+
+
+## Walk to a spot, then hand back to CHASE. The time limit stops a blocked
+## path from parking the enemy in REPOSITION forever.
+func _begin_reposition(target: Vector2, time_limit: float) -> void:
+	_reposition_target = target
+	_change_state(State.REPOSITION)
+	_state_timer = time_limit
+
+
+func _process_reposition(delta: float) -> void:
+	_state_timer -= delta
+	var to_target := _reposition_target - global_position
+	if _reposition_target == Vector2.INF or _state_timer <= 0.0 or to_target.length() <= REPOSITION_ARRIVE:
+		velocity = Vector2.ZERO
+		_change_state(State.CHASE)
+		return
+	var move_dir := _safe_normalized(to_target)
+	# Terrain in the way of the direct step: follow the nav field instead.
+	if _edge_blocked(move_dir * MOVE_STEP_PX):
+		var fd := _nav_field_dir()
+		if fd != Vector2.ZERO:
+			move_dir = fd
+	velocity = _apply_separation(move_dir) * _get_effective_speed()
 
 
 func _attack_in_progress() -> bool:
@@ -323,7 +487,7 @@ func _moves_during_attack() -> bool:
 	return false
 
 
-func _process_cooldown(delta: float) -> void:
+func _process_recover(delta: float) -> void:
 	_state_timer -= delta
 	if not is_finite(velocity.x) or not is_finite(velocity.y):
 		velocity = Vector2.ZERO
@@ -533,6 +697,12 @@ func _measure_body_radius() -> float:
 
 
 func _change_state(new_state: int) -> void:
+	if new_state != State.WINDUP and new_state != State.ATTACK and new_state != State.RECOVER:
+		_release_token()
+	if new_state != State.CHASE:
+		var ring_dir = _get_director()
+		if ring_dir != null:
+			ring_dir.leave_ring(self)
 	if new_state == State.HURT:
 		_prev_state = _state
 		_state = new_state
@@ -543,11 +713,14 @@ func _change_state(new_state: int) -> void:
 	match new_state:
 		State.ATTACK:
 			_attack_started = false
+			var dir = _get_director()
+			if dir != null and uses_tokens:
+				dir.mark_attacking(self)
 		State.WINDUP:
-			_state_timer = windup_duration
+			_state_timer = maxf(MIN_TELEGRAPH, windup_duration * _get_profile().telegraph_mult)
 			_show_exclaim()
-		State.COOLDOWN:
-			_state_timer = cooldown_duration * _get_cooldown_multiplier()
+		State.RECOVER:
+			_state_timer = cooldown_duration * _get_profile().cadence_mult
 		State.DEATH:
 			_state_timer = death_duration
 			_death_tween = null
@@ -582,17 +755,21 @@ func _execute_attack() -> void:
 func _can_see_player() -> bool:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return false
+	return _has_line_of_sight(global_position, _player_ref.global_position)
+
+
+## True if nothing solid sits between `from` and `to`. Both the enemy's own body
+## and the player are excluded, so the ray can start inside either one.
+func _has_line_of_sight(from: Vector2, to: Vector2) -> bool:
 	if not is_inside_tree():
 		return false
 	var world := get_world_2d()
 	if world == null:
 		return false
-	var space_state := world.direct_space_state
-	var query := PhysicsRayQueryParameters2D.create(global_position, _player_ref.global_position)
+	var query := PhysicsRayQueryParameters2D.create(from, to)
 	query.collision_mask = 1
-	query.exclude = [self, _player_ref]
-	var result := space_state.intersect_ray(query)
-	return result.is_empty()
+	query.exclude = [self, _player_ref] if _player_ref != null else [self]
+	return world.direct_space_state.intersect_ray(query).is_empty()
 
 
 func take_hit() -> void:
@@ -603,6 +780,12 @@ func take_hit() -> void:
 		return
 	if _state != State.HURT:
 		_prev_state = _state
+	# A hit interrupts an elite's attack: it recovers into CHASE and gives its
+	# token back. Bosses keep attacking through hits.
+	if is_elite and (_prev_state == State.WINDUP or _prev_state == State.ATTACK):
+		_cancel_attack()
+		_prev_state = State.CHASE
+		_release_token()
 	_state = State.HURT
 	_state_timer = hurt_duration
 
@@ -793,6 +976,45 @@ func _get_director():
 	return _director
 
 
+func token_cost() -> float:
+	return 1.0
+
+
+## True when this enemy may enter WINDUP now. Without a director (tests, menus)
+## or with tokens disabled (bosses) the answer is always yes.
+func _try_take_token() -> bool:
+	if _is_disabled():
+		return false
+	if not uses_tokens:
+		return true
+	var dir = _get_director()
+	if dir == null:
+		return true
+	return dir.request_token(self)
+
+
+func _release_token() -> void:
+	var dir = _get_director()
+	if dir != null:
+		dir.release_token(self)
+
+
+func _is_disabled() -> bool:
+	if _status_component == null:
+		return false
+	return _status_component.is_stunned() or _status_component.has_status("frozen")
+
+
+func _cancel_attack() -> void:
+	_hide_exclaim()
+	_on_attack_cancelled()
+
+
+## Subclasses stop attack-specific motion or VFX here (lunge dash).
+func _on_attack_cancelled() -> void:
+	pass
+
+
 func get_facing_direction() -> Vector2:
 	if _player_ref and is_instance_valid(_player_ref):
 		var d := _player_ref.global_position - global_position
@@ -801,14 +1023,8 @@ func get_facing_direction() -> Vector2:
 	return Vector2.DOWN
 
 
-func _is_targeted() -> bool:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return false
-	return _player_ref.get("targeted_enemy") == self
-
-
 func _get_effective_speed() -> float:
-	var base := _base_effective_speed()
+	var base := speed
 	if _status_component != null and is_instance_valid(_status_component):
 		base *= _status_component.get_move_speed_multiplier()
 	return _apply_catch_up(base)
@@ -823,24 +1039,3 @@ func _apply_catch_up(base: float) -> float:
 		player_speed = _player_ref.max_speed
 	return EncounterDirector.catch_up_speed(base, dist, player_speed)
 
-
-func _base_effective_speed() -> float:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return speed
-	var target = _player_ref.get("targeted_enemy")
-	if target == null:
-		return speed
-	if target == self:
-		return speed * TARGETED_SPEED_MULT
-	return speed * PASSIVE_SPEED_MULT
-
-
-func _get_cooldown_multiplier() -> float:
-	if _player_ref == null or not is_instance_valid(_player_ref):
-		return 1.0
-	var target = _player_ref.get("targeted_enemy")
-	if target == null:
-		return 1.0
-	if target == self:
-		return TARGETED_COOLDOWN_MULT
-	return PASSIVE_COOLDOWN_MULT

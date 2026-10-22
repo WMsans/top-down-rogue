@@ -33,4 +33,4 @@ func test_attack_state_holds_until_burst_done() -> void:
 	assert_int(e._state).is_equal(Enemy.State.ATTACK)
 	w.bursting = false
 	e._process_attack(0.0)
-	assert_int(e._state).is_equal(Enemy.State.COOLDOWN)
+	assert_int(e._state).is_equal(Enemy.State.RECOVER)

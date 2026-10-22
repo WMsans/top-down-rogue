@@ -26,7 +26,7 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 | x | P0 | Medium | Boss hit pools | `boss_enemy.gd`: replace 200 HP with 3 phases × 10 hits (baseline). Phase transitions trigger on hit count, not HP thresholds, and cleanse statuses. |
 | x | P0 | Medium | Remove enemy damage stats | Every enemy attack costs the player exactly 1 point. Drop damage scaling (`_apply_damage_scale`) and per-floor HP/damage curves. Note: keystone's "+100%" amplification is gone with the damage model (its dead `DAMAGE_MULT` was dropped) — only the slot-focus behaviour remains; Plan 3 must restore it. |
 | x | P1 | Medium | Elite abilities under hit counts | ENRAGE triggers after the first hit (was <30% HP). TANK = 3 hits (was 2× HP). FAST / TELEPORT unchanged. |
-|  | P1 | Medium | Behavior-based difficulty | EASY / NORMAL / HARD tiers become behavior profiles (telegraph length, attack cadence, projectile count). Floor scaling raises these and enemy count, not stats. |
+| x | P1 | Medium | Behavior-based difficulty | EASY / NORMAL / HARD tiers become behavior profiles (telegraph length, attack cadence, projectile count). Floor scaling raises these and enemy count, not stats. |
 
 ### Damage & Crit Removal
 | Done | Priority | Difficulty | Task | Description |
@@ -97,7 +97,7 @@ See gameplay.md §2 for the rules. Weapon and modifier descriptions in `weapons.
 | Done | Priority | Difficulty | Task | Description |
 |------|----------|------------|------|-------------|
 |  | P0 | High | Per-floor behavior curve | Floor scaling via behavior, not stats: enemy count, telegraph length, attack cadence, projectile count, elite frequency. Floor 1 baseline; each floor tightens these. |
-|  | P0 | Medium | Enemy tier behavior profiles | EASY / NORMAL / HARD differ in telegraph length, attack cadence and projectile count. Verify each tier reads differently and stays fair against 3 armor + 3 HP. |
+|  | P0 | Medium | Enemy tier behavior profiles | EASY / NORMAL / HARD differ in telegraph length, attack cadence and projectile count. Verify each tier reads differently and stays fair against 3 armor + 3 HP. Profiles implemented in `EnemyProfile` (2026-10-21 enemy AI rework); playtest verification pending. |
 |  | P1 | Medium | Elite tuning | Elites: 2 hits (TANK 3), 1.3× speed, plus their ability. Verify elite fights feel like minibosses that demand two clean actions, not a burst. |
 |  | P1 | Medium | Boss hit pool tuning | Baseline 3 phases × 10 hits with 0.3s post-hit invulnerability (≥ ~3s minimum per phase). Tune per boss so phases last long enough to show their mechanics. |
 |  | P1 | Medium | Player survivability tuning | Tune armor regen delay (3s) and rate (1/s), i-frames (1.0s) and status tick rates against real encounters. Target: a clean room costs 0–2 armor; mistakes cost HP. |

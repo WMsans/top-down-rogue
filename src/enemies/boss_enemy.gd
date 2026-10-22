@@ -34,9 +34,19 @@ func _ready() -> void:
 	_speed_base = speed
 	detection_radius = 400.0
 	scale = Vector2(2.0, 2.0)
+	uses_tokens = false
 	super._ready()
 	_setup_drop_table()
 	_hazard_timer = hazard_interval
+
+
+func _build_profile() -> EnemyProfile:
+	return EnemyProfile.for_tier(DropTable.EnemyTier.HARD)
+
+
+func get_facing_direction() -> Vector2:
+	var rw := weapon as RangedWeapon
+	return _dir_to_predicted(rw.projectile_speed if rw != null else 0.0)
 
 
 func _setup_drop_table() -> void:
