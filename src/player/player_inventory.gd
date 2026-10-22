@@ -118,6 +118,19 @@ func take_hit(hit_direction: Vector2 = Vector2.ZERO) -> void:
 	_lose_point()
 
 
+# Dash i-frames: shares the hit-invincibility timer, so a dash can never make
+# the player *less* protected than a hit already did.
+func grant_invincibility(duration: float) -> void:
+	if duration <= 0.0 or _is_dead:
+		return
+	_is_invincible = true
+	_invincible_timer = maxf(_invincible_timer, duration)
+
+
+func is_invincible() -> bool:
+	return _is_invincible
+
+
 func take_status_tick() -> void:
 	# Damage-over-time path: bypasses invincibility frames and the heavy hit
 	# reaction. Still takes armor first and still triggers death.

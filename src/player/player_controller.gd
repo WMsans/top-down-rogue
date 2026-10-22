@@ -337,6 +337,10 @@ func get_facing_direction() -> Vector2:
 	return _last_facing
 
 
+func get_move_direction() -> Vector2:
+	return _get_input_direction()
+
+
 func is_facing_left() -> bool:
 	return _facing_left
 

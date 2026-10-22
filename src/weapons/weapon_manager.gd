@@ -5,6 +5,7 @@ const TestWeaponScript := preload("res://src/weapons/test_weapon.gd")
 const MeleeWeaponScript := preload("res://src/weapons/melee_weapon.gd")
 const LavaEmitterModifierScript := preload("res://src/weapons/modifiers/lava_emitter_modifier.gd")
 const ChargeBarScript := preload("res://src/ui/charge_bar.gd")
+const DashWeaponScript := preload("res://src/weapons/dash_weapon.gd")
 
 signal weapon_activated(slot_index: int)
 
@@ -30,6 +31,7 @@ func _setup_weapons() -> void:
 		test_weapon.add_modifier(0, LavaEmitterModifierScript.new())
 		_inventory.equip_weapon(0, test_weapon)
 		_inventory.equip_weapon(1, MeleeWeaponScript.new())
+		_inventory.equip_weapon(2, DashWeaponScript.new())
 
 
 func _setup_visual() -> void:
