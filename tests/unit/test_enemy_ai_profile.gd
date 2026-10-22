@@ -33,6 +33,18 @@ func test_windup_scales_with_telegraph() -> void:
 	assert_float(e._state_timer).is_equal_approx(0.3, 0.0001)
 
 
+func test_fast_elite_windup_never_below_floor() -> void:
+	for tier in [DropTable.EnemyTier.NORMAL, DropTable.EnemyTier.HARD]:
+		var e: MockEnemy = auto_free(MockEnemy.new())
+		e.enemy_tier = tier
+		e.is_elite = true
+		e.elite_ability = Enemy.EliteAbility.FAST
+		add_child(e)
+		assert_float(e.windup_duration).is_equal_approx(0.2, 0.0001)
+		e._change_state(Enemy.State.WINDUP)
+		assert_float(e._state_timer).is_greater_equal(0.2)
+
+
 func test_recover_scales_with_cadence() -> void:
 	var e := _make(DropTable.EnemyTier.EASY)
 	e.cooldown_duration = 1.0

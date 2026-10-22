@@ -42,6 +42,9 @@ const SQUASH_DURATION: float = 0.18
 # taking one, so fans and multi-strikes can't spend several hits at once.
 const HIT_INVULN: float = 0.3
 
+# No telegraph may resolve faster than this, whatever the tier math says.
+const MIN_TELEGRAPH: float = 0.2
+
 const RING_MARGIN: float = 24.0
 const RING_ENTER_MARGIN: float = 32.0
 const TOKEN_RETRY: float = 0.6
@@ -714,7 +717,7 @@ func _change_state(new_state: int) -> void:
 			if dir != null and uses_tokens:
 				dir.mark_attacking(self)
 		State.WINDUP:
-			_state_timer = windup_duration * _get_profile().telegraph_mult
+			_state_timer = maxf(MIN_TELEGRAPH, windup_duration * _get_profile().telegraph_mult)
 			_show_exclaim()
 		State.RECOVER:
 			_state_timer = cooldown_duration * _get_profile().cadence_mult
@@ -999,7 +1002,7 @@ func _release_token() -> void:
 func _is_disabled() -> bool:
 	if _status_component == null:
 		return false
-	return _status_component.is_stunned() or _status_component.get_stain("frozen") > 0.0
+	return _status_component.is_stunned() or _status_component.has_status("frozen")
 
 
 func _cancel_attack() -> void:

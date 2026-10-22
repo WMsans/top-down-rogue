@@ -179,6 +179,35 @@ func test_zero_facing_keeps_last_value() -> void:
 	assert_that(d.get_player_facing()).is_equal(Vector2.UP)
 
 
+func test_overflow_pursuer_still_gets_a_token() -> void:
+	var d := EncounterDirector.new()
+	# Fourteen pursuers sit in the aim cone; the fifteenth flanks and is
+	# closest, so it wins the request sort and must be granted a token even
+	# though it never fits inside the soft-capped chase list.
+	var agents: Array = []
+	for i in range(14):
+		agents.append(_agent(Vector2(100 + i * 5, 0)))
+	var overflow := _agent(Vector2(-5, 0))
+	agents.append(overflow)
+	d.update(Vector2.ZERO, agents, 0.0, Vector2.RIGHT)
+	for a in agents:
+		d.request_token(a)
+	d.update(Vector2.ZERO, agents, 0.0, Vector2.RIGHT)
+	assert_bool(d.has_token(overflow)).is_true()
+
+
+func test_elite_past_soft_cap_adds_capacity() -> void:
+	var d := EncounterDirector.new()
+	var agents: Array = []
+	for i in range(14):
+		agents.append(_agent(Vector2(100 + i * 5, 0)))
+	var elite := _agent(Vector2(300, 0))
+	elite.is_elite = true
+	agents.append(elite)
+	d.update(Vector2.ZERO, agents)
+	assert_float(d.max_tokens()).is_equal(5.0)
+
+
 func test_token_granted_only_to_active_requester() -> void:
 	var d := EncounterDirector.new()
 	var a := _agent(Vector2(10, 0))

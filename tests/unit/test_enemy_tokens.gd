@@ -137,6 +137,20 @@ func test_losing_sight_in_windup_returns_to_chase_keeping_aggro() -> void:
 	assert_bool(_world.encounter_director.has_token(e)).is_false()
 
 
+func test_partial_frozen_stain_still_attacks() -> void:
+	var e := _make(Vector2(20, 0))
+	e._aggroed = true
+	# Frozen is a ramp: only a stain at the 3.0 threshold is hard CC.
+	e._status_component.add_stain("frozen", 1.0)
+	assert_bool(e._is_disabled()).is_false()
+	e._process_chase(0.016)
+	_tick_director(e)
+	e._process_chase(0.016)
+	assert_int(e._state).is_equal(Enemy.State.WINDUP)
+	e._status_component.add_stain("frozen", 2.0)
+	assert_bool(e._is_disabled()).is_true()
+
+
 func test_ranged_costs_half_token() -> void:
 	var r: RangedEnemy = auto_free(RangedEnemy.new())
 	add_child(r)

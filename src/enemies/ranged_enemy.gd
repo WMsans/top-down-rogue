@@ -80,6 +80,11 @@ func _process_chase(delta: float) -> void:
 			_alert_broadcast = true
 			_broadcast_alert()
 
+	if _reaction_timer > 0.0:
+		_reaction_timer -= delta
+		velocity = Vector2.ZERO
+		return
+
 	_spot_timer -= delta
 	if not _has_spot or _spot_timer <= 0.0 or not sees:
 		if _pick_spot_and_move():

@@ -20,6 +20,8 @@ const RING_ROTATE_STEP := TAU / 16.0
 const RING_ROTATE_TRIES := 8
 
 var _active: Array = []
+# Every pursuing enemy this frame, before the soft cap; drives token grants.
+var _pursuing: Array = []
 # enemy -> {"cost": float, "age": float, "attacking": bool}
 var _tokens: Dictionary = {}
 var _requests: Array = []
@@ -81,15 +83,16 @@ func update(player_pos: Vector2, attackable: Array, delta: float = 0.0, player_f
 			still.append(e)
 	_active = still
 
+	var pursuing: Array = []
 	for e in attackable:
-		if _active.size() >= HORDE_SOFT_CAP:
-			break
 		if not is_instance_valid(e):
 			continue
 		if not e.has_method("is_pursuing") or not e.is_pursuing():
 			continue
-		if not _active.has(e):
+		pursuing.append(e)
+		if _active.size() < HORDE_SOFT_CAP and not _active.has(e):
 			_active.append(e)
+	_pursuing = pursuing
 
 	_player_pos = player_pos
 	_poll_facing(delta, player_facing)
@@ -133,7 +136,7 @@ func mark_attacking(enemy) -> void:
 func max_tokens() -> float:
 	var deep := false
 	var elites := 0
-	for e in _active:
+	for e in _pursuing:
 		if not is_instance_valid(e):
 			continue
 		if "enemy_tier" in e and e.enemy_tier >= DropTable.EnemyTier.NORMAL:
@@ -300,7 +303,7 @@ func _tick_tokens(delta: float) -> void:
 func _grant_requests() -> void:
 	var pending: Array = []
 	for e in _requests:
-		if is_instance_valid(e) and _active.has(e) and e.has_method("is_pursuing") and e.is_pursuing() and not _tokens.has(e):
+		if is_instance_valid(e) and _pursuing.has(e) and e.has_method("is_pursuing") and e.is_pursuing() and not _tokens.has(e):
 			pending.append(e)
 	_requests.clear()
 	pending.sort_custom(_request_before)

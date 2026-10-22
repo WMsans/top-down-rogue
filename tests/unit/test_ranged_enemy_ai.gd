@@ -169,3 +169,14 @@ func test_facing_leads_moving_player() -> void:
 	(e._player_ref as CharacterBody2D).velocity = Vector2(0, 100)
 	var d := e.get_facing_direction()
 	assert_float(d.y).is_greater(0.0)
+
+
+func test_reaction_delay_holds_ranged_chase() -> void:
+	var e := _make(DropTable.EnemyTier.NORMAL)
+	e._reaction_timer = 0.2
+	e._process_chase(0.1)
+	assert_that(e.velocity).is_equal(Vector2.ZERO)
+	assert_bool(e._has_spot).is_false()
+	e._process_chase(0.15)
+	e._process_chase(0.016)
+	assert_bool(e._has_spot).is_true()
