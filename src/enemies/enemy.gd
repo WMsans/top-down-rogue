@@ -11,7 +11,7 @@ enum EliteAbility { NONE, FAST, TANK, TELEPORT, ENRAGE }
 @export var speed: float = 50.0
 @export var enemy_tier: int = DropTable.EnemyTier.NORMAL
 @export var detection_radius: float = 150.0
-@export var windup_duration: float = 0.35
+@export var windup_duration: float = 0.25
 @export var death_duration: float = 0.3
 @export var hurt_duration: float = 0.2
 @export var cooldown_duration: float = 0.8
@@ -43,7 +43,7 @@ const SQUASH_DURATION: float = 0.18
 const HIT_INVULN: float = 0.3
 
 # No telegraph may resolve faster than this, whatever the tier math says.
-const MIN_TELEGRAPH: float = 0.2
+const MIN_TELEGRAPH: float = 0.15
 
 const RING_MARGIN: float = 24.0
 const RING_ENTER_MARGIN: float = 32.0

@@ -40,7 +40,7 @@ func _ready() -> void:
 		_speed_base = speed
 		cooldown_duration = weapon.cooldown
 	detection_radius = 250.0
-	windup_duration = 0.4
+	windup_duration = 0.3
 	_rng.randomize()
 	super._ready()
 	_apply_volley_bonus()

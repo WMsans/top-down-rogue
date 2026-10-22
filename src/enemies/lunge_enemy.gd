@@ -27,7 +27,7 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	_attack_range = lunge_range
-	windup_duration = 0.45
+	windup_duration = 0.32
 	cooldown_duration = recovery_duration
 	scale = Vector2(1.6, 1.6)
 	_fire_vfx = DASH_FIRE_VFX_SCENE.instantiate()

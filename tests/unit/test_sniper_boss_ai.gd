@@ -40,7 +40,7 @@ func test_sniper_windup_scales() -> void:
 	e.enemy_tier = DropTable.EnemyTier.HARD
 	add_child(e)
 	e._change_state(Enemy.State.WINDUP)
-	assert_float(e._state_timer).is_equal_approx(0.9, 0.0001)
+	assert_float(e._state_timer).is_equal_approx(0.6375, 0.0001)
 
 
 func test_boss_uses_hard_profile() -> void:

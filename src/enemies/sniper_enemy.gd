@@ -12,7 +12,7 @@ func _ready() -> void:
 	if weapon_resource == null:
 		weapon_resource = SniperWeapon.new()
 	super._ready()
-	windup_duration = 1.2
+	windup_duration = 0.85
 	cooldown_duration = weapon.cooldown if weapon else 2.5
 	_aim_line = Line2D.new()
 	_aim_line.width = 1.5
