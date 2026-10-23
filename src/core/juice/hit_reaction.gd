@@ -5,6 +5,10 @@ const _HitSpec = preload("res://src/core/juice/hit_spec.gd")
 # HitStop constants
 const HIT_STOP_BASE: float = 0.06
 const HIT_STOP_KILL_BONUS: float = 0.04
+# Near-freeze rather than 0: a zero time_scale makes the physics server step with
+# dt = 0, and the contact solver's 1/dt sends overlapping RigidBody2Ds (stacked
+# weapon drops) to NaN, which stalls physics for the rest of the run.
+const HIT_STOP_TIME_SCALE: float = 0.01
 
 # ScreenShake constants
 const SHAKE_AMOUNT: float = 3.0
@@ -124,7 +128,7 @@ func _do_screen_shake(is_kill: bool, dir: Vector2) -> void:
 	var cam := _find_active_camera()
 	if cam:
 		# position_smoothing averages rapid offset changes to ~0 and freezes during
-		# hit-stop (time_scale=0). Disable it for the duration of the shake.
+		# hit-stop (time_scale near 0). Disable it for the duration of the shake.
 		if not _shake_active:
 			_shake_smoothing_was_enabled = cam.position_smoothing_enabled
 		cam.position_smoothing_enabled = false
@@ -137,7 +141,7 @@ func _do_screen_shake(is_kill: bool, dir: Vector2) -> void:
 func _process(_delta: float) -> void:
 	if _shake_duration > 0.0:
 		# Use unscaled real time so shake progresses (and visibly oscillates)
-		# even while Engine.time_scale is 0 during hit-stop.
+		# even while Engine.time_scale is near 0 during hit-stop.
 		_shake_elapsed += get_process_delta_time()
 		var cam := _find_active_camera()
 		if _shake_elapsed >= _shake_duration:
@@ -194,7 +198,7 @@ func _do_hit_stop(is_kill: bool) -> void:
 		duration += HIT_STOP_KILL_BONUS
 	if duration <= 0.0:
 		return
-	Engine.time_scale = 0.0
+	Engine.time_scale = HIT_STOP_TIME_SCALE
 	_active_stop_timer = get_tree().create_timer(duration, true, false, true)
 	var my_timer := _active_stop_timer
 	await my_timer.timeout

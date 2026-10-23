@@ -15,6 +15,11 @@ const REMOVE_BASE := 80
 const REMOVE_STEP := 40
 const PRICE_FLOOR_COEFF := 0.18
 
+const PRICE_FONT := preload("res://textures/Assets/DawnLike/GUI/SDS_6x6.ttf")
+const PRICE_FONT_SIZE := 6
+const PRICE_LABEL_WIDTH := 24.0
+const PRICE_LABEL_Y := 15.0   # just below the table the item sits on
+
 
 # Floor-depth price multiplier. floor_number <= 0 means "use LevelManager".
 static func price_mult(floor_number: int) -> float:
@@ -36,14 +41,24 @@ static func remove_cost(uses: int, floor_number: int = 0) -> int:
 	return int(round(float(REMOVE_BASE + uses * REMOVE_STEP) * price_mult(floor_number)))
 
 
+# Small world-space price tag centered under the item's table.
 static func make_price_label(price: int) -> Label:
 	var label := Label.new()
 	label.name = "PriceLabel"
-	label.text = "%d g" % price
-	label.add_theme_font_size_override("font_size", 16)
-	label.position = Vector2(-16, -30)
+	label.text = format_price(price)
+	label.add_theme_font_override("font", PRICE_FONT)
+	label.add_theme_font_size_override("font_size", PRICE_FONT_SIZE)
+	label.add_theme_constant_override("outline_size", 2)
+	label.add_theme_color_override("font_outline_color", UiTheme.BG_DEEP)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.size = Vector2(PRICE_LABEL_WIDTH, PRICE_FONT_SIZE)
+	label.position = Vector2(-PRICE_LABEL_WIDTH / 2.0, PRICE_LABEL_Y)
 	label.z_index = 20
 	return label
+
+
+static func format_price(price: int) -> String:
+	return "%d" % price
 
 
 static func refresh_price_color(label: Label, affordable: bool) -> void:
