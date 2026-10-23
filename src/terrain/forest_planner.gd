@@ -21,6 +21,11 @@ const KEEP_OUT_MARGIN := 32.0      # sector_keep_out slack around template rooms
 
 const _CHUNK_SIZE := 256
 const _UNREACHABLE_WALL := 1000000  # wall_dist sentinel for cells with no wall in-chunk
+# wall_dist is quantised to whole cells while prop centres sit at cell
+# centres, so the nearest solid pixel can be up to CELL/2 closer than
+# wall_dist claims. Radius filters add this slack so the trunk's
+# r + PASS_GAP air disc is never-touch-solid for real.
+const _WALL_SLACK := CELL * 0.5
 
 
 static func plan(
@@ -83,7 +88,7 @@ static func plan(
 				min_r = minf(min_r, d.trunk_radius)
 			anchor_cells = []
 			for cell in prop_cells:
-				if cell["wall"] >= min_r + PASS_GAP:
+				if cell["wall"] >= min_r + PASS_GAP + _WALL_SLACK:
 					anchor_cells.append(cell)
 		if not anchor_cells.is_empty():
 			var anchor: Dictionary = anchor_cells[rng.randi() % anchor_cells.size()]
@@ -138,7 +143,12 @@ static func plan(
 
 	# Root flora: glowing plants clustered at each prop base, plus one lone
 	# accent in the clearing (the in-patch cell farthest from any wall).
-	var props_placed: Array = entries.duplicate()
+	# Only real props (kind == "prop") get clusters; the edge-rock flora
+	# appended just above are decoration, not hosts.
+	var props_placed: Array = []
+	for e in entries:
+		if e["kind"] == "prop":
+			props_placed.append(e)
 	if not forest.root_flora.is_empty():
 		for p in props_placed:
 			for _i in range(forest.flora_per_tree):
@@ -255,7 +265,7 @@ static func _place_prop(
 				var d: float = cell["pos"].distance_to(from)
 				if d < dist_min or d > dist_max:
 					continue
-			if cell["wall"] < def.trunk_radius + PASS_GAP:
+			if cell["wall"] < def.trunk_radius + PASS_GAP + _WALL_SLACK:
 				continue
 			if not _spacing_ok(cell["pos"], def.trunk_radius, placed):
 				continue
@@ -279,7 +289,7 @@ static func _place_rock(
 		ordered.erase(def)
 		var best: Variant = null
 		for cell in cells:
-			if cell["wall"] < def.trunk_radius + PASS_GAP:
+			if cell["wall"] < def.trunk_radius + PASS_GAP + _WALL_SLACK:
 				continue
 			if not _spacing_ok(cell["pos"], def.trunk_radius, placed):
 				continue

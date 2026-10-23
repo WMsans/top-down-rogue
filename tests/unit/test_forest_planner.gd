@@ -64,6 +64,19 @@ func _corridor_bytes() -> PackedByteArray:
 	return b
 
 
+# Solid except a horizontal air band of `height` px centred on y = 132.
+# height 40 (rows 112..151) leaves cell rows 14-18 open: the centre row 16
+# reports wall_dist = 24 (Chebyshev 3 from the closed rows 13/19) while its
+# cell centre (y = 132) is truly only 20px from the nearest solid row —
+# exercising the up to CELL/2 overestimate of wall_dist.
+func _band_bytes(height: int) -> PackedByteArray:
+	var b := _all_solid_bytes()
+	for y in range(132 - height / 2, 132 + height / 2):
+		for x in range(CHUNK_SIZE):
+			b[y * CHUNK_SIZE + x] = MaterialRegistry.MAT_AIR
+	return b
+
+
 # 6 tree defs (bright/dark/odd x pine/dead, radius 6), one rock def (radius 10),
 # one flora def per flora array. Flora arrays hold distinct instances so tests
 # can tell which array a placement came from.
@@ -114,7 +127,12 @@ func test_props_never_touch_solid() -> void:
 	var entries := _ForestPlannerScript.plan(Vector2i(0, 0), _forest(-1.0), 42, bytes)
 	var props := _props(entries)
 	assert_int(props.size()).is_greater(0)
-	var violation := ""
+	assert_that(_solid_violation(bytes, props)).is_equal("")
+
+
+# "" when every prop keeps the trunk_radius + PASS_GAP disc around its
+# centre entirely on MAT_AIR pixels; otherwise a violation description.
+func _solid_violation(bytes: PackedByteArray, props: Array) -> String:
 	for p in props:
 		var pos: Vector2 = p["pos"]
 		var reach: float = p["def"].trunk_radius + _ForestPlannerScript.PASS_GAP
@@ -124,12 +142,24 @@ func test_props_never_touch_solid() -> void:
 		var y1 := int(ceil(pos.y + reach))
 		for y in range(maxi(y0, 0), mini(y1 + 1, CHUNK_SIZE)):
 			for x in range(maxi(x0, 0), mini(x1 + 1, CHUNK_SIZE)):
-				if violation != "":
-					break
 				if Vector2(x, y).distance_squared_to(pos) <= reach * reach \
 						and bytes[y * CHUNK_SIZE + x] != MaterialRegistry.MAT_AIR:
-					violation = "prop at %s has solid pixel (%d,%d) within trunk_radius+PASS_GAP" % [pos, x, y]
-	assert_that(violation).is_equal("")
+					return "prop at %s has solid pixel (%d,%d) within trunk_radius+PASS_GAP" % [pos, x, y]
+	return ""
+
+
+# wall_dist is 8 * Chebyshev cell distance, but prop centres sit at cell
+# centres, so the nearest solid pixel can be up to CELL/2 closer than
+# wall_dist claims. A radius-6 tree on the 40px band's centre row passed the
+# bare wall >= 6 + 16 filter (wall_dist = 24) while its 22px trunk disc
+# reaches the solid row only 20px away. With the CELL/2 margin requirement
+# (wall >= r + PASS_GAP + CELL/2) no band cell qualifies and nothing places.
+func test_wall_dist_quantization_band_gets_no_props() -> void:
+	var bytes := _band_bytes(40)
+	var entries := _ForestPlannerScript.plan(Vector2i(0, 0), _forest(-1.0), 42, bytes)
+	var props := _props(entries)
+	assert_that(_solid_violation(bytes, props)).is_equal("")
+	assert_int(props.size()).is_equal(0)
 
 
 func test_props_respect_spacing() -> void:
@@ -194,6 +224,39 @@ func test_keep_out_blocks_props_not_flora() -> void:
 		Vector2i(0, 0), _forest(-1.0), 42, _room_bytes(), keep_out)
 	assert_int(_props(entries).size()).is_equal(0)
 	assert_int(_flora_entries(entries).size()).is_greater(0)
+
+
+# Root flora attaches to props only (brief step 7, "for each prop"), never to
+# the edge-rock flora entries appended just before it. The narrow corridor
+# places zero props but does place edge-rock flora, so exactly one root_flora
+# entry may survive: the lone clearing accent.
+func test_root_flora_only_attaches_to_props() -> void:
+	var forest := _forest(-1.0)
+	var entries := _ForestPlannerScript.plan(Vector2i(0, 0), forest, 42, _corridor_bytes())
+	assert_int(_props(entries).size()).is_equal(0)
+	var edge_count := 0
+	var root_count := 0
+	for e in _flora_entries(entries):
+		if forest.edge_rocks.has(e["def"]):
+			edge_count += 1
+		elif forest.root_flora.has(e["def"]):
+			root_count += 1
+	assert_int(edge_count).is_greater(0)  # without edge rocks the case is vacuous
+	assert_int(root_count).is_equal(1)
+	# Room case: at most flora_per_tree root clusters per prop, plus the accent.
+	var room := _forest(-1.0)
+	var room_entries := _ForestPlannerScript.plan(Vector2i(0, 0), room, 42, _room_bytes())
+	var room_props := _props(room_entries)
+	assert_int(room_props.size()).is_greater(0)
+	var room_roots := 0
+	for e in _flora_entries(room_entries):
+		if room.root_flora.has(e["def"]):
+			room_roots += 1
+	assert_bool(room_roots <= room_props.size() * room.flora_per_tree + 1) \
+		.override_failure_message(
+			"%d root flora for %d props (flora_per_tree=%d): clusters attached to non-prop entries"
+			% [room_roots, room_props.size(), room.flora_per_tree]) \
+		.is_true()
 
 
 func test_outside_patch_only_sprinkle() -> void:
