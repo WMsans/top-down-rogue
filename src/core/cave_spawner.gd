@@ -163,7 +163,7 @@ func _is_in_no_spawn_arena(world_pos: Vector2) -> bool:
 	var comp: ArenaComposition = slot.composition as ArenaComposition
 	if comp != null and comp.arena_kind == &"guidance":
 		return true
-	# Sealed rooms (e.g. the shop) opt out of cave spawning via no_spawn.
+	# Templates can opt out of cave spawning via no_spawn.
 	var tmpl := grid.get_template_for_slot(slot)
 	return tmpl != null and tmpl.no_spawn
 

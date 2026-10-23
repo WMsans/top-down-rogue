@@ -36,5 +36,5 @@ func test_remove_cost_escalates_and_scales() -> void:
 
 func test_make_price_label_shows_amount() -> void:
 	var label := ShopPricing.make_price_label(42)
-	assert_that(label.text).is_equal("42 g")
+	assert_that(label.text).is_equal("42")
 	assert_that(label.name).is_equal("PriceLabel")

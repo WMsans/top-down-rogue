@@ -7,6 +7,7 @@ var _price_label: Label = null
 
 func _ready() -> void:
 	super._ready()
+	freeze = true  # stays on its table; fights can't knock it around
 	_price_label = ShopPricing.make_price_label(price)
 	add_child(_price_label)
 	_refresh_affordability()

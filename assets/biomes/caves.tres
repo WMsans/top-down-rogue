@@ -88,9 +88,8 @@ composition = ExtResource("10_elitec")
 script = ExtResource("1_iq0d2")
 png_path = "res://assets/rooms/caves/shop_a.png"
 weight = 2.5
-size_class = 256
+size_class = 128
 rotatable = false
-no_spawn = true
 
 [resource]
 script = ExtResource("3_5ujno")

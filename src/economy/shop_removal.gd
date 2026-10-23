@@ -61,7 +61,7 @@ func interact(player: Node) -> void:
 		inventory.spend_gold(cost)
 		_uses += 1
 		if _price_label != null:
-			_price_label.text = "%d g" % _current_cost()
+			_price_label.text = ShopPricing.format_price(_current_cost())
 	)
 
 
