@@ -122,7 +122,7 @@ static func _play_ring(rect: ColorRect, delay: float, duration: float, scale_mul
 
 
 static func _apply_hitstop(tree: SceneTree) -> void:
-	Engine.time_scale = 0.0
+	Engine.time_scale = HitReaction.HIT_STOP_TIME_SCALE
 	var t := tree.create_timer(HITSTOP_DURATION, true, false, true)
 	t.timeout.connect(func() -> void: Engine.time_scale = 1.0)
 
