@@ -17,7 +17,7 @@ const _DECOR_ENERGY := 1.0                                # global brightness mu
 
 var _warned_missing_texture := false
 
-func populate(coord: Vector2i, biome: BiomeDef, world_seed: int, material_bytes: PackedByteArray = PackedByteArray()) -> void:
+func populate(coord: Vector2i, biome: BiomeDef, world_seed: int, material_bytes: PackedByteArray = PackedByteArray(), keep_out: Callable = Callable()) -> void:
 	for child in get_children():
 		child.queue_free()
 
@@ -28,73 +28,62 @@ func populate(coord: Vector2i, biome: BiomeDef, world_seed: int, material_bytes:
 		return
 
 	_add_floor_sprite(biome.floor_texture)
-	_add_decorations(coord, biome, world_seed, material_bytes)
+	_add_decorations(coord, biome, world_seed, material_bytes, keep_out)
 
 
-func _add_decorations(coord: Vector2i, biome: BiomeDef, world_seed: int, material_bytes: PackedByteArray) -> void:
-	if biome.decor_defs.is_empty() or biome.decor_chance <= 0.0:
+# Turns the planner's deterministic layout into nodes: flora sprites (named
+# "Decor%d") and breakable ForestProp bodies (named "Prop%d", keyed by the
+# planner's stable entry index so destroyed props never respawn). Glowing flora
+# are composited into one baked light afterwards.
+func _add_decorations(coord: Vector2i, biome: BiomeDef, world_seed: int, material_bytes: PackedByteArray, keep_out: Callable) -> void:
+	if biome.forest == null:
 		return
-	# Floor-only placement requires a full chunk's worth of material bytes.
+	# Forest placement requires a full chunk's worth of material bytes.
 	if material_bytes.size() < CHUNK_SIZE * CHUNK_SIZE:
 		return
 
-	var rng := RandomNumberGenerator.new()
-	rng.seed = _hash_seed(world_seed, coord)
-
-	var total_weight := 0.0
-	for def in biome.decor_defs:
-		total_weight += max(def.weight, 0.0)
-	if total_weight <= 0.0:
-		return
+	var entries := ForestPlanner.plan(coord, biome.forest, world_seed, material_bytes, keep_out)
 
 	# Collected light contributions, baked into one PointLight2D after placement.
 	var splats: Array = []
-
-	var cells_per_side := CHUNK_SIZE / TILE_SIZE  # 16
-	var idx := 0
-	for cy in range(cells_per_side):
-		for cx in range(cells_per_side):
-			if rng.randf() >= biome.decor_chance:
+	var decor_idx := 0
+	for entry in entries:
+		var pos: Vector2 = entry["pos"]
+		if entry["kind"] == "flora":
+			var def: DecorDef = entry["def"]
+			if def.texture == null:
 				continue
-			# Classify the cell by its center pixel; skip non-air (solid) cells.
-			var px := cx * TILE_SIZE + TILE_SIZE / 2
-			var py := cy * TILE_SIZE + TILE_SIZE / 2
-			if material_bytes[py * CHUNK_SIZE + px] != MaterialRegistry.MAT_AIR:
-				continue
-			var def := _weighted_pick(biome.decor_defs, total_weight, rng)
-			if def == null or def.texture == null:
-				continue
-			var pos := Vector2(cx * TILE_SIZE, cy * TILE_SIZE)
-			_spawn_decor(def, idx, pos)
+			var sprite := Sprite2D.new()
+			sprite.name = "Decor%d" % decor_idx
+			decor_idx += 1
+			sprite.texture = def.texture
+			# Bottom-centred at pos: the art's base sits on the placement point.
+			sprite.centered = true
+			sprite.offset = Vector2(0, float(def.texture.get_height()) * 0.5)
+			sprite.position = pos
+			add_child(sprite)
 			if def.emits_light:
-				# Anchor at the sprite origin to match the old per-decor light.
 				splats.append({
 					"center": pos,
 					"color": def.light_color,
 					"energy": def.light_energy,
 					"radius": def.light_radius,
 				})
-			idx += 1
+		else:
+			var prop_def: ForestPropDef = entry["def"]
+			var index := int(entry["index"])
+			var id := ForestProp.make_id(world_seed, coord, index)
+			if ForestProp.is_destroyed(id):
+				continue
+			var prop := ForestProp.new()
+			prop.name = "Prop%d" % index
+			# setup() and position must precede add_child(): _enter_tree reads
+			# global_position to register the nav blocker.
+			prop.setup(prop_def, id)
+			prop.position = pos
+			add_child(prop)
 
 	_bake_decor_lights(splats)
-
-
-func _weighted_pick(defs: Array[DecorDef], total_weight: float, rng: RandomNumberGenerator) -> DecorDef:
-	var roll := rng.randf() * total_weight
-	for def in defs:
-		roll -= max(def.weight, 0.0)
-		if roll <= 0.0:
-			return def
-	return defs[defs.size() - 1]
-
-
-func _spawn_decor(def: DecorDef, idx: int, pos: Vector2) -> void:
-	var sprite := Sprite2D.new()
-	sprite.name = "Decor%d" % idx
-	sprite.texture = def.texture
-	sprite.centered = false
-	sprite.position = pos
-	add_child(sprite)
 
 
 ## Composites every glowing decor in the chunk into one additive PointLight2D.
