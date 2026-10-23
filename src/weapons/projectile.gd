@@ -59,8 +59,11 @@ func _handle_hit(target: Node) -> void:
 			if target.has_method("on_hit_impact"):
 				target.on_hit_impact(global_position, direction)
 			queue_free()
-		elif target.is_in_group("destructible") and target.has_method("on_hit_impact"):
-			target.on_hit_impact(global_position, direction)
+		elif target.is_in_group("destructible") and (target.has_method("take_dig_hit") or target.has_method("on_hit_impact")):
+			if target.has_method("take_dig_hit"):
+				target.take_dig_hit(global_position, direction, dig_power)
+			else:
+				target.on_hit_impact(global_position, direction)
 			queue_free()
 		elif target is StaticBody2D:
 			var keep := false
@@ -89,8 +92,11 @@ func _handle_hit(target: Node) -> void:
 				keep_enemy = b.on_enemy_hit(self, target) or keep_enemy
 			if not keep_enemy:
 				queue_free()
-	elif target.is_in_group("destructible") and target.has_method("on_hit_impact"):
-		target.on_hit_impact(global_position, direction)
+	elif target.is_in_group("destructible") and (target.has_method("take_dig_hit") or target.has_method("on_hit_impact")):
+		if target.has_method("take_dig_hit"):
+			target.take_dig_hit(global_position, direction, dig_power)
+		else:
+			target.on_hit_impact(global_position, direction)
 		queue_free()
 	elif target is StaticBody2D:
 		var keep_terrain := false
