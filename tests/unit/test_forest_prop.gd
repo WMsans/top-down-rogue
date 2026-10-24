@@ -16,18 +16,6 @@ class StubWM extends Node:
 	func get_chunk_container() -> Node2D:
 		return null
 
-# ForestProp with an injectable clock and a counting dust hook, so the
-# rate-limit can be tested without real time or the terrain surface.
-class DustProp extends ForestProp:
-	var dust_calls: int = 0
-	var fake_now: float = 0.0
-
-	func _emit_dust(_pos: Vector2, _dir: Vector2) -> void:
-		dust_calls += 1
-
-	func _now() -> float:
-		return fake_now
-
 # Records dig hits so Weapon.resolve_hit dispatch can be asserted.
 class DigTarget extends Node2D:
 	var dig_calls: Array = []
@@ -82,30 +70,11 @@ func test_sprite_bottom_at_origin() -> void:
 	assert_float(bottom).is_equal(0.0)
 
 
-func test_dig_scales_damage() -> void:
-	var prop: ForestProp = auto_free(ForestProp.new())
-	prop.setup(_make_def(), "1:0:0:2")
-	assert_float(prop.hp).is_equal(10.0)
-	prop.take_dig_hit(Vector2(4, 4), Vector2.RIGHT, 3.0)
-	assert_float(prop.hp).is_equal(7.5)
-	prop.on_hit_impact(Vector2(4, 4), Vector2.RIGHT)
-	assert_float(prop.hp).is_equal(6.5)
-
-
-func test_free_carve_dig_is_capped() -> void:
-	var prop: ForestProp = auto_free(ForestProp.new())
-	prop.setup(_make_def(), "1:0:0:3")
-	prop.take_dig_hit(Vector2(4, 4), Vector2.RIGHT, 1.0e9)
-	# DIG_CAP 6.0 * DIG_WEIGHT 0.5 + base 1.0 == exactly 4.0 damage dealt.
-	assert_float(prop.hp).is_equal(6.0)
-
-
-func test_destroyed_when_hp_depleted() -> void:
+func test_destroyed_in_one_hit() -> void:
 	var prop: ForestProp = auto_free(ForestProp.new())
 	var id := ForestProp.make_id(1, Vector2i(3, 4), 0)
 	prop.setup(_make_def(), id)
-	prop.hp = 2.0
-	prop.take_dig_hit(Vector2(2, 2), Vector2.RIGHT, 6.0)
+	prop.on_hit_impact(Vector2(2, 2), Vector2.RIGHT)
 	assert_bool(prop.is_queued_for_deletion()).is_true()
 	assert_bool(ForestProp.is_destroyed(id)).is_true()
 
@@ -115,21 +84,9 @@ func test_destroyed_registry_is_per_seed() -> void:
 	var id_seed2 := ForestProp.make_id(2, Vector2i(5, 5), 0)
 	var prop: ForestProp = auto_free(ForestProp.new())
 	prop.setup(_make_def(), id_seed1)
-	prop.hp = 2.0
-	prop.take_dig_hit(Vector2(2, 2), Vector2.RIGHT, 6.0)
+	prop.on_hit_impact(Vector2(2, 2), Vector2.RIGHT)
 	assert_bool(ForestProp.is_destroyed(id_seed1)).is_true()
 	assert_bool(ForestProp.is_destroyed(id_seed2)).is_false()
-
-
-func test_dust_rate_limited() -> void:
-	var prop: DustProp = auto_free(DustProp.new())
-	prop.setup(_make_def(), "1:0:0:4")
-	prop.take_dig_hit(Vector2(2, 2), Vector2.RIGHT, 0.0)
-	prop.take_dig_hit(Vector2(2, 2), Vector2.RIGHT, 0.0)
-	assert_that(prop.dust_calls).is_equal(1)
-	prop.fake_now = prop.DUST_COOLDOWN
-	prop.take_dig_hit(Vector2(2, 2), Vector2.RIGHT, 0.0)
-	assert_that(prop.dust_calls).is_equal(2)
 
 
 func test_free_releases_nav_blocker() -> void:

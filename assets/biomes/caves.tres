@@ -37,7 +37,6 @@ script = ExtResource("25_propdef")
 texture = ExtResource("30_tree_round_a")
 role = "bright"
 family = "round"
-hp = 12.0
 
 [sub_resource type="Resource" id="Resource_tree_round_b"]
 script = ExtResource("25_propdef")
@@ -50,7 +49,6 @@ script = ExtResource("25_propdef")
 texture = ExtResource("32_tree_round_c")
 role = "odd"
 family = "round"
-hp = 8.0
 
 [sub_resource type="Resource" id="Resource_tree_pine_a"]
 script = ExtResource("25_propdef")
@@ -61,20 +59,17 @@ family = "pine"
 script = ExtResource("25_propdef")
 texture = ExtResource("34_tree_pine_b")
 family = "pine"
-hp = 8.0
 
 [sub_resource type="Resource" id="Resource_rock_small"]
 script = ExtResource("25_propdef")
 texture = ExtResource("35_rock_small")
 kind = "rock"
-hp = 16.0
 trunk_radius = 12.0
 
 [sub_resource type="Resource" id="Resource_rock_large"]
 script = ExtResource("25_propdef")
 texture = ExtResource("36_rock_large")
 kind = "rock"
-hp = 24.0
 trunk_radius = 24.0
 
 [sub_resource type="Resource" id="Resource_edge_rock_a"]

@@ -5,28 +5,22 @@ extends StaticBody2D
 # (trunk and canopy) is one StaticBody2D. Rocks block bodies and navigation with
 # the trunk circle; trees only keep it on attackable_hit so they can be hit.
 
-const DIG_WEIGHT := 0.5
-const DIG_CAP := 6.0
-const DUST_COOLDOWN := 0.1
 # Sprite alpha while an actor stands behind a tree's canopy.
 const FADE_ALPHA := 0.4
 const FADE_TIME := 0.15
-# Hit squash: sprite scales around the trunk base, then springs back.
-const SQUASH := Vector2(1.15, 0.85)
-const SQUASH_TIME := 0.25
+# Death pop: sprite squashes around the trunk base, then shrinks away.
+const SQUASH := Vector2(1.25, 0.75)
+const POP_TIME := 0.15
 const LEAF_COLOR := Color("4b692f")  # DB32 dark green
 const CHIP_COLOR := Color("847e87")  # DB32 grey
 
 # ponytail: never cleared; keyed by seed so floors don't collide. Clear on floor_changed if it ever matters.
 static var _destroyed: Dictionary = {}
 
-var hp: float = 0.0
-
 var _def: ForestPropDef = null
 var _prop_id: String = ""
 var _sprite: Sprite2D = null
 var _dead: bool = false
-var _last_dust: float = -INF
 # Exact (pos, radius) handed to add_blocker in _enter_tree, reused verbatim in
 # _exit_tree: drop_chunk() never reclaims blockers, so any mismatch between the
 # add and the remove leaks a permanently solid cell.
@@ -34,7 +28,6 @@ var _blocker_pos: Vector2 = Vector2.ZERO
 var _blocker_radius: float = 0.0
 var _blocker_grid = null
 var _occluders: int = 0
-var _squash_tween: Tween = null
 
 
 static func make_id(world_seed: int, coord: Vector2i, index: int) -> String:
@@ -48,7 +41,6 @@ static func is_destroyed(prop_id: String) -> bool:
 func setup(def: ForestPropDef, prop_id: String) -> void:
 	_def = def
 	_prop_id = prop_id
-	hp = def.hp
 	# prop_body | attackable_hit (see projectile ATTACKABLE_HIT_LAYER); trees skip prop_body so nothing bumps into them.
 	collision_layer = 128 if def.kind == "tree" else 144
 	collision_mask = 0
@@ -124,39 +116,20 @@ func _fade_to(alpha: float) -> void:
 		_sprite.self_modulate.a = alpha
 
 
-func take_dig_hit(impact_pos: Vector2, hit_dir: Vector2, dig_power: float) -> void:
+# Any hit destroys the prop.
+func take_dig_hit(impact_pos: Vector2, hit_dir: Vector2, _dig_power: float) -> void:
 	if _def == null or _dead:
 		return
 	if impact_pos == Vector2.ZERO:
 		impact_pos = global_position
-	hp -= 1.0 + minf(maxf(dig_power, 0.0), DIG_CAP) * DIG_WEIGHT
-	_sprite.modulate = Color.WHITE
-	if is_inside_tree():
-		# Node.create_tween() requires the node to be in the tree.
-		var tween := create_tween()
-		tween.tween_property(_sprite, "modulate", _def.tint, 0.15)
-		_squash()
 	_burst(impact_pos, -hit_dir, 8)
 	TerrainImpact.play_impact(impact_pos, _def.impact_material(), 1.0, get_parent())
-	var now := _now()
-	if now - _last_dust >= DUST_COOLDOWN:
-		_last_dust = now
-		_emit_dust(impact_pos, -hit_dir)
-	if hp <= 0.0:
-		_die()
+	TerrainSurface.place_dust_splash(impact_pos, 4.0, 120.0, _def.impact_material(), -hit_dir)
+	_die()
 
 
 func on_hit_impact(impact_pos: Vector2, hit_dir: Vector2) -> void:
 	take_dig_hit(impact_pos, hit_dir, 0.0)
-
-
-func _squash() -> void:
-	if _squash_tween != null:
-		_squash_tween.kill()
-	_sprite.scale = SQUASH
-	_squash_tween = create_tween()
-	_squash_tween.tween_property(_sprite, "scale", Vector2.ONE, SQUASH_TIME) \
-		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 # One-shot leaf/chip burst parented beside the prop so it outlives _die().
@@ -206,15 +179,6 @@ func _exit_tree() -> void:
 	_blocker_grid = null
 
 
-# Overridable so tests can drive the dust cooldown with a fake clock.
-func _now() -> float:
-	return Time.get_ticks_msec() / 1000.0
-
-
-func _emit_dust(pos: Vector2, dir: Vector2) -> void:
-	TerrainSurface.place_dust_splash(pos, 4.0, 120.0, _def.impact_material(), dir)
-
-
 func _die() -> void:
 	_dead = true
 	var mat := _def.impact_material()
@@ -232,6 +196,22 @@ func _die() -> void:
 			)
 			TerrainImpact.play_impact(to_global(local), mat, 2.0, get_parent())
 	_burst(global_position + Vector2(0, _sprite.offset.y if _sprite != null else 0.0), Vector2.UP, 24)
-	TerrainSurface.place_dust_splash(global_position, 10.0, 160.0, mat)  # death cloud ignores the cooldown
+	TerrainSurface.place_dust_splash(global_position, 10.0, 160.0, mat)  # death cloud
 	_destroyed[_prop_id] = true
-	queue_free()
+	_pop()
+
+
+# White flash + squash, then shrink to nothing and free. Collision drops at once
+# so the dying prop no longer catches hits.
+func _pop() -> void:
+	collision_layer = 0
+	if not is_inside_tree() or _sprite == null:
+		# Node.create_tween() requires the node to be in the tree.
+		queue_free()
+		return
+	_sprite.modulate = Color.WHITE
+	_sprite.scale = SQUASH
+	var tween := create_tween()
+	tween.tween_property(_sprite, "scale", Vector2(0.0, 1.4), POP_TIME) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_callback(queue_free)

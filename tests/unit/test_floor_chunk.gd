@@ -19,7 +19,6 @@ func _prop_def(kind: String, role: String, family: String, radius: float) -> _Fo
 	d.role = role
 	d.family = family
 	d.trunk_radius = radius
-	d.hp = 1.0  # one lethal dig hit (4.0 damage) is enough for the respawn test
 	d.texture = _make_texture(16, 16)
 	return d
 
@@ -168,7 +167,7 @@ func test_destroyed_prop_not_respawned() -> void:
 	assert_that(props_a.size()).is_greater(1)
 	var first := props_a[0]
 	var dead_id: String = first._prop_id
-	first.take_dig_hit(first.global_position, Vector2.RIGHT, 1000.0)  # capped at 4.0 damage > hp 1.0
+	first.take_dig_hit(first.global_position, Vector2.RIGHT, 0.0)
 	assert_that(ForestProp.is_destroyed(dead_id)).is_true()
 
 	var chunk_b := _FloorChunk.new()

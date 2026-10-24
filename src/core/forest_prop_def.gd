@@ -8,7 +8,6 @@ extends Resource
 @export var role: String = "any"  # "bright" | "dark" | "odd" | "any"
 @export var family: String = ""
 @export var trunk_radius: float = 6.0
-@export var hp: float = 10.0
 @export var tint: Color = Color(0.7, 0.7, 0.75, 1)
 @export var weight: float = 1.0
 
