@@ -21,4 +21,16 @@ static func footprint_clear(world_manager, world_pos: Vector2, half: int = DEFAU
 	for i in range(data.size()):
 		if data[i] != air:
 			return false
+	# Solid props are not terrain materials; they block the nav grid instead.
+	# Stub world managers in tests have no nav_field/grid.
+	var nav_field = world_manager.get("nav_field")
+	if nav_field != null:
+		var grid = nav_field.get("grid")
+		if grid != null:
+			for corner in [
+				Vector2(-half, -half), Vector2(half, -half),
+				Vector2(-half, half), Vector2(half, half),
+			]:
+				if grid.is_solid_world(world_pos + corner):
+					return false
 	return true

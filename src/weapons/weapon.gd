@@ -226,14 +226,18 @@ func resolve_hit(user: Node, target: Node) -> void:
 		return
 	var tracks_hits: bool = ("hits_remaining" in target)
 	var pre_hits: int = target.hits_remaining if tracks_hits else 1
-	if target.has_method("on_hit_impact"):
+	if target.has_method("take_dig_hit") or target.has_method("on_hit_impact"):
 		var hit_dir: Vector2 = Vector2.ZERO
 		if target is Node2D and user is Node2D:
 			var raw_dir: Vector2 = target.global_position - user.global_position
 			var rlen_sq: float = raw_dir.length_squared()
 			if rlen_sq > 0.0001:
 				hit_dir = raw_dir / sqrt(rlen_sq)
-		target.on_hit_impact(target.global_position if target is Node2D else Vector2.ZERO, hit_dir)
+		var impact_pos: Vector2 = target.global_position if target is Node2D else Vector2.ZERO
+		if target.has_method("take_dig_hit"):
+			target.take_dig_hit(impact_pos, hit_dir, dig_power)
+		else:
+			target.on_hit_impact(impact_pos, hit_dir)
 	_apply_hit_status(target)
 	for m in _iter_active_modifiers():
 		m.on_hit_target(self, user, target)

@@ -11,6 +11,10 @@ var _chunk: int
 var _cells_per_chunk: int
 var _solid_lut: PackedByteArray
 var _tiles: Dictionary = {}  # Vector2i chunk coord -> PackedByteArray (cells_per_chunk^2, 1=solid)
+# Solid props (trees, big rocks) that live outside the terrain material bytes.
+# Kept separate from _tiles: the GPU readback refills whole tiles, which would
+# wipe any blocker drawn into them. Vector2i cell -> int refcount.
+var _blocked: Dictionary = {}
 
 func _init(cell_size: int = 8, chunk_size: int = 256, solid_lut: PackedByteArray = PackedByteArray()) -> void:
 	_cell = cell_size
@@ -51,7 +55,34 @@ func drop_chunk(chunk_coord: Vector2i) -> void:
 func world_to_cell(world_pos: Vector2) -> Vector2i:
 	return Vector2i(floori(world_pos.x / _cell), floori(world_pos.y / _cell))
 
+func add_blocker(world_pos: Vector2, radius: float) -> void:
+	for cell: Vector2i in _covered_cells(world_pos, radius):
+		_blocked[cell] = int(_blocked.get(cell, 0)) + 1
+
+func remove_blocker(world_pos: Vector2, radius: float) -> void:
+	for cell: Vector2i in _covered_cells(world_pos, radius):
+		var n := int(_blocked.get(cell, 0)) - 1
+		if n <= 0:
+			_blocked.erase(cell)
+		else:
+			_blocked[cell] = n
+
+# Cells of the disc's axis-aligned bounding square; a prop is round, the grid
+# is square, so the corners are blocked slightly wider than the disc.
+func _covered_cells(world_pos: Vector2, radius: float) -> Array[Vector2i]:
+	var x0 := floori((world_pos.x - radius) / _cell)
+	var x1 := floori((world_pos.x + radius) / _cell)
+	var y0 := floori((world_pos.y - radius) / _cell)
+	var y1 := floori((world_pos.y + radius) / _cell)
+	var cells: Array[Vector2i] = []
+	for y in range(y0, y1 + 1):
+		for x in range(x0, x1 + 1):
+			cells.append(Vector2i(x, y))
+	return cells
+
 func is_solid_cell(cell: Vector2i) -> bool:
+	if _blocked.has(cell):
+		return true
 	var chunk := Vector2i(
 		floori(float(cell.x) / _cells_per_chunk),
 		floori(float(cell.y) / _cells_per_chunk)

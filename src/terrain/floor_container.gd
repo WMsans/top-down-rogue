@@ -15,6 +15,12 @@ func bind(world_manager: Node2D) -> void:
 func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
 	var biome: BiomeDef = LevelManager.current_biome
 	var world_seed: int = LevelManager.world_seed
+	# Props near reserved sector features (rooms, arenas, anchors) are vetoed
+	# through the planner; no grid yet (e.g. tests) means no veto.
+	var grid: SectorGrid = LevelManager.get_grid()
+	var keep_out := Callable()
+	if grid != null:
+		keep_out = func(p: Vector2) -> bool: return ForestPlanner.sector_keep_out(grid, p)
 	for coord in new_coords:
 		if _chunks.has(coord):
 			continue
@@ -24,7 +30,7 @@ func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
 		add_child(fc)
 		var rect := Rect2i(coord.x * CHUNK_SIZE, coord.y * CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
 		var material_bytes: PackedByteArray = _world_manager.read_region(rect)
-		fc.populate(coord, biome, world_seed, material_bytes)
+		fc.populate(coord, biome, world_seed, material_bytes, keep_out)
 		_chunks[coord] = fc
 
 func _on_chunk_unloaded(coord: Vector2i) -> void:

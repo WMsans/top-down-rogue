@@ -168,6 +168,14 @@ func place_oil_splash(world_pos: Vector2, radius: float, outward_speed: float, b
 
 
 func place_gas_splash(world_pos: Vector2, radius: float, density: int, outward_speed: float, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	_place_velocity_splash(world_pos, radius, MaterialRegistry.MAT_GAS, density, 0, outward_speed, bias_dir)
+
+
+func place_dust_splash(world_pos: Vector2, radius: float, outward_speed: float, source_material: int, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	_place_velocity_splash(world_pos, radius, MaterialRegistry.MAT_DUST, 200, source_material, outward_speed, bias_dir)
+
+
+func _place_velocity_splash(world_pos: Vector2, radius: float, material_id: int, density: int, source_byte: int, outward_speed: float, bias_dir: Vector2) -> void:
 	var center_x := int(floor(world_pos.x))
 	var center_y := int(floor(world_pos.y))
 	var r := int(ceil(radius))
@@ -209,9 +217,9 @@ func place_gas_splash(world_pos: Vector2, radius: float, density: int, outward_s
 			var idx := (pixel_pos.y * CHUNK_SIZE + pixel_pos.x) * 4
 			if data[idx] != MaterialRegistry.MAT_AIR:
 				continue
-			data[idx] = MaterialRegistry.MAT_GAS
+			data[idx] = material_id
 			data[idx + 1] = clamped_density
-			data[idx + 2] = 0
+			data[idx + 2] = source_byte
 			var dir_normalized := dir
 			if dir.length_squared() > 0.0001:
 				dir_normalized = dir.normalized()

@@ -17,6 +17,11 @@ func place_gas_splash(world_pos: Vector2, radius: float, density: int, outward_s
 		adapter.place_gas_splash(world_pos, radius, density, outward_speed, bias_dir)
 
 
+func place_dust_splash(world_pos: Vector2, radius: float, outward_speed: float, source_material: int, bias_dir: Vector2 = Vector2.ZERO) -> void:
+	if adapter:
+		adapter.place_dust_splash(world_pos, radius, outward_speed, source_material, bias_dir)
+
+
 func place_lava(world_pos: Vector2, radius: float) -> void:
 	if adapter:
 		adapter.place_lava(world_pos, radius)
