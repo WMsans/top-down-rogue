@@ -8,6 +8,9 @@ extends StaticBody2D
 const DIG_WEIGHT := 0.5
 const DIG_CAP := 6.0
 const DUST_COOLDOWN := 0.1
+# Sprite alpha while an actor stands behind a tree's canopy.
+const FADE_ALPHA := 0.4
+const FADE_TIME := 0.15
 
 # ponytail: never cleared; keyed by seed so floors don't collide. Clear on floor_changed if it ever matters.
 static var _destroyed: Dictionary = {}
@@ -25,6 +28,7 @@ var _last_dust: float = -INF
 var _blocker_pos: Vector2 = Vector2.ZERO
 var _blocker_radius: float = 0.0
 var _blocker_grid = null
+var _occluders: int = 0
 
 
 static func make_id(world_seed: int, coord: Vector2i, index: int) -> String:
@@ -60,6 +64,57 @@ func setup(def: ForestPropDef, prop_id: String) -> void:
 	circle.radius = def.trunk_radius
 	shape_node.shape = circle
 	add_child(shape_node)
+	if def.kind == "tree" and def.texture != null:
+		_add_canopy_area(def)
+
+
+# Area over the canopy (sprite above the trunk) that catches player and enemy
+# hurtboxes on attackable_hit; fading uses self_modulate so the hit flash on
+# modulate never clobbers it.
+func _add_canopy_area(def: ForestPropDef) -> void:
+	var area := Area2D.new()
+	area.name = "CanopyArea"
+	area.collision_layer = 0
+	area.collision_mask = 128  # attackable_hit: player and enemies
+	area.monitorable = false
+	var top := -float(def.texture.get_height() - def.base_inset())
+	var bottom := -def.trunk_radius
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(def.texture.get_width() * 0.6, bottom - top)
+	var shape_node := CollisionShape2D.new()
+	shape_node.shape = rect
+	shape_node.position = Vector2(0, (top + bottom) / 2.0)
+	area.add_child(shape_node)
+	area.body_entered.connect(_on_canopy_body_entered)
+	area.body_exited.connect(_on_canopy_body_exited)
+	add_child(area)
+
+
+func is_faded() -> bool:
+	return _occluders > 0
+
+
+func _on_canopy_body_entered(body: Node2D) -> void:
+	if body is ForestProp:
+		return
+	_occluders += 1
+	if _occluders == 1:
+		_fade_to(FADE_ALPHA)
+
+
+func _on_canopy_body_exited(body: Node2D) -> void:
+	if body is ForestProp or _occluders == 0:
+		return
+	_occluders -= 1
+	if _occluders == 0:
+		_fade_to(1.0)
+
+
+func _fade_to(alpha: float) -> void:
+	if is_inside_tree():
+		create_tween().tween_property(_sprite, "self_modulate:a", alpha, FADE_TIME)
+	else:
+		_sprite.self_modulate.a = alpha
 
 
 func take_dig_hit(impact_pos: Vector2, hit_dir: Vector2, dig_power: float) -> void:
