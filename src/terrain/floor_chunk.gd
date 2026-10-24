@@ -57,9 +57,10 @@ func _add_decorations(coord: Vector2i, biome: BiomeDef, world_seed: int, materia
 			sprite.name = "Decor%d" % decor_idx
 			decor_idx += 1
 			sprite.texture = def.texture
-			# Bottom-centred at pos: the art's base sits on the placement point.
+			# Bottom-centred at pos: with centered = true, offsetting the texture
+			# up by half its height (-h/2) puts its base on the placement point.
 			sprite.centered = true
-			sprite.offset = Vector2(0, float(def.texture.get_height()) * 0.5)
+			sprite.offset = Vector2(0, -float(def.texture.get_height()) * 0.5)
 			sprite.position = pos
 			add_child(sprite)
 			if def.emits_light:

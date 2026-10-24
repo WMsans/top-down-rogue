@@ -198,6 +198,19 @@ func test_non_glowing_flora_has_no_decor_lights() -> void:
 	assert_that(_decor_sprites(chunk).size()).is_greater(0)
 	assert_that(chunk.get_node_or_null("DecorLights")).is_null()
 
+# Flora sprites are bottom-centred at the placement point: with centered = true
+# the offset must be NEGATIVE half the texture height so the sprite's bottom
+# edge sits on pos (same anchoring as ForestProp.setup).
+func test_flora_sprites_bottom_centred_at_placement_point() -> void:
+	var chunk := _FloorChunk.new()
+	add_child(chunk)
+	chunk.populate(Vector2i(0, 0), _make_biome(_make_forest(false)), 4545, _room_bytes())
+	var decors := _decor_sprites(chunk)
+	assert_that(decors.size()).is_greater(0)
+	for sprite in decors:
+		assert_that(sprite.centered).is_true()
+		assert_that(sprite.offset.y).is_equal(-float(sprite.texture.get_height()) / 2.0)
+
 func test_placement_is_deterministic_for_same_seed_and_coord() -> void:
 	var biome := _make_biome(_make_forest())
 	var bytes := _room_bytes()
