@@ -39,7 +39,7 @@ func setup(def: ForestPropDef, prop_id: String) -> void:
 	_def = def
 	_prop_id = prop_id
 	hp = def.hp
-	collision_layer = 132  # enemy_body | attackable_hit (see projectile ATTACKABLE_HIT_LAYER)
+	collision_layer = 144  # prop_body | attackable_hit (see projectile ATTACKABLE_HIT_LAYER)
 	collision_mask = 0
 	add_to_group("destructible")
 	z_as_relative = false

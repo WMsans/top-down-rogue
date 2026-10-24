@@ -56,7 +56,7 @@ func test_setup_layers_and_groups() -> void:
 	var def := _make_def()
 	var prop: ForestProp = auto_free(ForestProp.new())
 	prop.setup(def, "1:0:0:0")
-	assert_int(prop.collision_layer).is_equal(132)
+	assert_int(prop.collision_layer).is_equal(144)
 	assert_int(prop.collision_mask).is_equal(0)
 	assert_bool(prop.is_in_group("destructible")).is_true()
 	assert_bool(prop.is_in_group("attackable")).is_false()

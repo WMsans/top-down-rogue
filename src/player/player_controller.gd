@@ -61,7 +61,7 @@ func _ready() -> void:
 	var cam_node := get_node_or_null("Camera2D")
 	if cam_node:
 		cam_node.add_to_group("camera")
-	collision_mask = 3
+	collision_mask = 19  # terrain | pickups | prop_body
 	collision_layer = 1 | (1 << 7)
 	_original_collision_layer = collision_layer
 	_original_collision_mask = collision_mask
