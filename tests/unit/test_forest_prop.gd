@@ -54,6 +54,7 @@ func _make_def() -> ForestPropDef:
 
 func test_setup_layers_and_groups() -> void:
 	var def := _make_def()
+	def.kind = "rock"
 	var prop: ForestProp = auto_free(ForestProp.new())
 	prop.setup(def, "1:0:0:0")
 	assert_int(prop.collision_layer).is_equal(144)
@@ -137,12 +138,21 @@ func test_free_releases_nav_blocker() -> void:
 	wm.nav_field.grid = _PassabilityGrid.new(8, 256, PackedByteArray())
 	wm.add_to_group("world_manager")
 	add_child(wm)
+	var rock_def := _make_def()
+	rock_def.kind = "rock"
 	var prop: ForestProp = auto_free(ForestProp.new())
-	prop.setup(_make_def(), "1:0:0:5")
+	prop.setup(rock_def, "1:0:0:5")
 	prop.global_position = Vector2(100, 100)
 	add_child(prop)
 	assert_bool(wm.nav_field.grid.is_solid_world(Vector2(100, 100))).is_true()
 	prop.free()
+	assert_bool(wm.nav_field.grid.is_solid_world(Vector2(100, 100))).is_false()
+	# Trees never block: hittable only, not a body or nav obstacle.
+	var tree: ForestProp = auto_free(ForestProp.new())
+	tree.setup(_make_def(), "1:0:0:6")
+	tree.global_position = Vector2(100, 100)
+	add_child(tree)
+	assert_int(tree.collision_layer).is_equal(128)
 	assert_bool(wm.nav_field.grid.is_solid_world(Vector2(100, 100))).is_false()
 
 

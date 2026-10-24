@@ -2,8 +2,8 @@ class_name ForestProp
 extends StaticBody2D
 
 # Runtime for breakable forest props built from ForestPropDef. The whole sprite
-# (trunk and canopy) is one StaticBody2D; only the trunk circle collides and the
-# trunk circle is what blocks navigation.
+# (trunk and canopy) is one StaticBody2D. Rocks block bodies and navigation with
+# the trunk circle; trees only keep it on attackable_hit so they can be hit.
 
 const DIG_WEIGHT := 0.5
 const DIG_CAP := 6.0
@@ -11,6 +11,11 @@ const DUST_COOLDOWN := 0.1
 # Sprite alpha while an actor stands behind a tree's canopy.
 const FADE_ALPHA := 0.4
 const FADE_TIME := 0.15
+# Hit squash: sprite scales around the trunk base, then springs back.
+const SQUASH := Vector2(1.15, 0.85)
+const SQUASH_TIME := 0.25
+const LEAF_COLOR := Color("4b692f")  # DB32 dark green
+const CHIP_COLOR := Color("847e87")  # DB32 grey
 
 # ponytail: never cleared; keyed by seed so floors don't collide. Clear on floor_changed if it ever matters.
 static var _destroyed: Dictionary = {}
@@ -29,6 +34,7 @@ var _blocker_pos: Vector2 = Vector2.ZERO
 var _blocker_radius: float = 0.0
 var _blocker_grid = null
 var _occluders: int = 0
+var _squash_tween: Tween = null
 
 
 static func make_id(world_seed: int, coord: Vector2i, index: int) -> String:
@@ -43,7 +49,8 @@ func setup(def: ForestPropDef, prop_id: String) -> void:
 	_def = def
 	_prop_id = prop_id
 	hp = def.hp
-	collision_layer = 144  # prop_body | attackable_hit (see projectile ATTACKABLE_HIT_LAYER)
+	# prop_body | attackable_hit (see projectile ATTACKABLE_HIT_LAYER); trees skip prop_body so nothing bumps into them.
+	collision_layer = 128 if def.kind == "tree" else 144
 	collision_mask = 0
 	add_to_group("destructible")
 	z_as_relative = false
@@ -128,6 +135,8 @@ func take_dig_hit(impact_pos: Vector2, hit_dir: Vector2, dig_power: float) -> vo
 		# Node.create_tween() requires the node to be in the tree.
 		var tween := create_tween()
 		tween.tween_property(_sprite, "modulate", _def.tint, 0.15)
+		_squash()
+	_burst(impact_pos, -hit_dir, 8)
 	TerrainImpact.play_impact(impact_pos, _def.impact_material(), 1.0, get_parent())
 	var now := _now()
 	if now - _last_dust >= DUST_COOLDOWN:
@@ -141,8 +150,45 @@ func on_hit_impact(impact_pos: Vector2, hit_dir: Vector2) -> void:
 	take_dig_hit(impact_pos, hit_dir, 0.0)
 
 
+func _squash() -> void:
+	if _squash_tween != null:
+		_squash_tween.kill()
+	_sprite.scale = SQUASH
+	_squash_tween = create_tween()
+	_squash_tween.tween_property(_sprite, "scale", Vector2.ONE, SQUASH_TIME) \
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+# One-shot leaf/chip burst parented beside the prop so it outlives _die().
+func _burst(pos: Vector2, dir: Vector2, amount: int) -> void:
+	var parent := get_parent()
+	if parent == null:
+		return
+	var p := CPUParticles2D.new()
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = amount
+	p.lifetime = 0.6
+	p.direction = dir if dir != Vector2.ZERO else Vector2.UP
+	p.spread = 60.0
+	p.gravity = Vector2(0.0, 120.0)
+	p.initial_velocity_min = 40.0
+	p.initial_velocity_max = 90.0
+	p.angular_velocity_min = -360.0
+	p.angular_velocity_max = 360.0
+	p.scale_amount_min = 1.0
+	p.scale_amount_max = 2.5
+	p.color = LEAF_COLOR if _def.kind == "tree" else CHIP_COLOR
+	p.z_as_relative = false
+	p.z_index = z_index + 1
+	p.finished.connect(p.queue_free)
+	parent.add_child(p)
+	p.global_position = pos
+	p.emitting = true
+
+
 func _enter_tree() -> void:
-	if _def == null or _blocker_grid != null:
+	if _def == null or _def.kind == "tree" or _blocker_grid != null:
 		return
 	var wm := get_tree().get_first_node_in_group("world_manager")
 	if wm == null or wm.nav_field == null or wm.nav_field.grid == null:
@@ -185,6 +231,7 @@ func _die() -> void:
 				_sprite.offset.y + randf_range(-half_h, 0.0)
 			)
 			TerrainImpact.play_impact(to_global(local), mat, 2.0, get_parent())
+	_burst(global_position + Vector2(0, _sprite.offset.y if _sprite != null else 0.0), Vector2.UP, 24)
 	TerrainSurface.place_dust_splash(global_position, 10.0, 160.0, mat)  # death cloud ignores the cooldown
 	_destroyed[_prop_id] = true
 	queue_free()
