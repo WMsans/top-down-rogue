@@ -74,6 +74,10 @@ func _ready() -> void:
 	delivery.name = "WeaponDelivery"
 	add_child(delivery)
 	var guidance_center := _find_guidance_room_center()
+	position = Vector2(guidance_center)  # avoid a first-frame reveal at (0,0)
+	var cam := cam_node as Camera2D
+	if cam:
+		cam.reset_smoothing()
 	var wm := get_parent().get_node_or_null("WorldManager")
 	if wm:
 		wm.tracking_position = Vector2(guidance_center)
@@ -83,6 +87,8 @@ func _ready() -> void:
 	var spawn_pos: Vector2i = TerrainSurface.find_spawn_position(guidance_center, Vector2i(BODY_WIDTH, BODY_HEIGHT))
 	position = Vector2(spawn_pos) + Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT)
 	_last_safe_position = position
+	if cam:
+		cam.reset_smoothing()
 
 	var status := StatusComponent.new()
 	status.name = "StatusComponent"
