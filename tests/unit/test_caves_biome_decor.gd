@@ -38,3 +38,36 @@ func test_caves_forest_content() -> void:
 	for def in flora:
 		assert_that(def.texture).is_not_null()
 		assert_that(def.emits_light).is_true()
+
+
+const DB32 := ["000000", "222034", "45283c", "663931", "8f563b", "df7126", "d9a066", "eec39a", "fbf236", "99e550", "6abe30", "37946e", "4b692f", "524b24", "323c39", "3f3f74", "306082", "5b6ee1", "639bff", "5fcde4", "cbdbfc", "ffffff", "9badb7", "847e87", "696a6a", "595652", "76428a", "ac3232", "d95763", "d77bba", "8f974a", "8a6f30"]
+
+
+# Trimmed to Colour1 round trees + pines and two rocks, all in DawnBringer 32.
+func test_caves_forest_trimmed_and_db32() -> void:
+	var forest: ForestDef = (load("res://assets/biomes/caves.tres") as BiomeDef).forest
+	assert_int(forest.tree_defs.size()).is_equal(5)
+	assert_int(forest.rock_defs.size()).is_equal(2)
+	assert_int(forest.secondary_groups).is_equal(1)
+	assert_int(forest.rock_attempts).is_equal(1)
+	var families := {}
+	for def in forest.tree_defs:
+		assert_str(def.texture.resource_path).contains("/Trees/Colour1/")
+		families[def.family] = true
+	assert_array(families.keys()).contains_exactly_in_any_order(["round", "pine"])
+	var defs: Array = []
+	defs.append_array(forest.tree_defs)
+	defs.append_array(forest.rock_defs)
+	for def in defs:
+		var img: Image = def.texture.get_image()
+		img.decompress()
+		var off_palette := ""
+		for y in img.get_height():
+			for x in img.get_width():
+				var c := img.get_pixel(x, y)
+				if c.a > 0.0 and not DB32.has(c.to_html(false)):
+					off_palette = "%s (%d,%d) %s" % [def.texture.resource_path, x, y, c.to_html(false)]
+					break
+			if off_palette != "":
+				break
+		assert_str(off_palette).is_empty()

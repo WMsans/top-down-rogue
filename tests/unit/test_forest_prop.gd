@@ -56,7 +56,7 @@ func test_setup_layers_and_groups() -> void:
 	var def := _make_def()
 	var prop: ForestProp = auto_free(ForestProp.new())
 	prop.setup(def, "1:0:0:0")
-	assert_int(prop.collision_layer).is_equal(132)
+	assert_int(prop.collision_layer).is_equal(144)
 	assert_int(prop.collision_mask).is_equal(0)
 	assert_bool(prop.is_in_group("destructible")).is_true()
 	assert_bool(prop.is_in_group("attackable")).is_false()
@@ -157,3 +157,52 @@ func test_resolve_hit_passes_dig_power() -> void:
 	assert_that(target.dig_calls.size()).is_equal(1)
 	assert_float(target.dig_calls[0]["power"]).is_equal(3.0)
 	assert_bool(target.impact_called).is_false()
+
+
+func _make_tree() -> ForestProp:
+	var tree: ForestProp = auto_free(ForestProp.new())
+	tree.setup(_make_def(), "1:0:0:10")
+	return tree
+
+
+func test_canopy_area_only_on_trees() -> void:
+	var area := _make_tree().get_node("CanopyArea") as Area2D
+	assert_object(area).is_not_null()
+	assert_int(area.collision_layer).is_equal(0)
+	assert_int(area.collision_mask).is_equal(128)
+	assert_bool(area.monitorable).is_false()
+	var rock_def := _make_def()
+	rock_def.kind = "rock"
+	var rock: ForestProp = auto_free(ForestProp.new())
+	rock.setup(rock_def, "1:0:0:11")
+	assert_object(rock.get_node_or_null("CanopyArea")).is_null()
+
+
+func test_fade_counts_occluders() -> void:
+	var tree := _make_tree()
+	var a: CharacterBody2D = auto_free(CharacterBody2D.new())
+	var b: CharacterBody2D = auto_free(CharacterBody2D.new())
+	tree._on_canopy_body_entered(a)
+	tree._on_canopy_body_entered(b)
+	assert_bool(tree.is_faded()).is_true()
+	assert_float(tree.get_node("Sprite2D").self_modulate.a).is_equal_approx(ForestProp.FADE_ALPHA, 0.001)
+	tree._on_canopy_body_exited(a)
+	assert_bool(tree.is_faded()).is_true()
+	tree._on_canopy_body_exited(b)
+	assert_bool(tree.is_faded()).is_false()
+	assert_float(tree.get_node("Sprite2D").self_modulate.a).is_equal(1.0)
+
+
+func test_fade_ignores_props() -> void:
+	var tree := _make_tree()
+	var other: ForestProp = auto_free(ForestProp.new())
+	other.setup(_make_def(), "1:0:0:12")
+	tree._on_canopy_body_entered(other)
+	assert_bool(tree.is_faded()).is_false()
+
+
+func test_hit_flash_keeps_fade() -> void:
+	var tree := _make_tree()
+	tree._on_canopy_body_entered(auto_free(CharacterBody2D.new()))
+	tree.take_dig_hit(Vector2(4, 4), Vector2.RIGHT, 0.0)
+	assert_float(tree.get_node("Sprite2D").self_modulate.a).is_equal_approx(ForestProp.FADE_ALPHA, 0.001)
