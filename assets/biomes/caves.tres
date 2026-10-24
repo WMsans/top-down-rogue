@@ -17,6 +17,140 @@
 [ext_resource type="Texture2D" uid="uid://c5d1q3s3cq4st" path="res://textures/Environments/Decors/grass2.png" id="22_grass2"]
 [ext_resource type="Texture2D" uid="uid://coh8oju5y36ix" path="res://textures/Environments/Decors/small_tree.png" id="23_tree"]
 [ext_resource type="Script" uid="uid://condnltbahyvc" path="res://src/core/forest_def.gd" id="24_forestdef"]
+[ext_resource type="Script" uid="uid://duykjlwkjleqx" path="res://src/core/forest_prop_def.gd" id="25_propdef"]
+[ext_resource type="Texture2D" uid="uid://bpng26jxodi81" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour1/160x160Trees_2.png" id="30_tree_bright_a"]
+[ext_resource type="Texture2D" uid="uid://cg562motd1nmh" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour1/96x128Tree_3.png" id="31_tree_bright_b"]
+[ext_resource type="Texture2D" uid="uid://b2pnhjnc5w086" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour2/160x160Trees2_4.png" id="32_tree_dark_a"]
+[ext_resource type="Texture2D" uid="uid://dj7x41yawn1m5" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour5/160x160Trees5_3.png" id="33_tree_dark_b"]
+[ext_resource type="Texture2D" uid="uid://dfqo8767xd68o" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour4/160x160Trees4_2.png" id="34_tree_odd_a"]
+[ext_resource type="Texture2D" uid="uid://dkd33kurdpl45" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour3/160x160Trees3_1.png" id="35_tree_odd_b"]
+[ext_resource type="Texture2D" uid="uid://6c55l787480v" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour4/96x128Tree4_10.png" id="36_tree_pine_a"]
+[ext_resource type="Texture2D" uid="uid://ukfec1epdws0" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour2/96x128Tree2_11.png" id="37_tree_pine_b"]
+[ext_resource type="Texture2D" uid="uid://cl60wn3brmnrf" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour5/96x128Tree5_10.png" id="38_tree_pine_c"]
+[ext_resource type="Texture2D" uid="uid://c6470r51d582e" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour1/160x160Trees_6.png" id="39_tree_dead_a"]
+[ext_resource type="Texture2D" uid="uid://dgide0dyo6kkr" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Trees/Colour1/96x128Tree_8.png" id="40_tree_dead_b"]
+[ext_resource type="Texture2D" uid="uid://d1nv73ah5fkl2" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Rocks/Colour1/64x64pxRocks_1.png" id="41_rock_64_a"]
+[ext_resource type="Texture2D" uid="uid://durauun4gphk3" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Rocks/Colour1/64x64pxRocks_4.png" id="42_rock_64_b"]
+[ext_resource type="Texture2D" uid="uid://brelfl4n36ciu" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Rocks/Colour1/96x96pxRocks_3.png" id="43_rock_96"]
+[ext_resource type="Texture2D" uid="uid://bsodnkop7xlxp" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Rocks/Colour1/32x32pxRocks_3.png" id="44_edgerock_a"]
+[ext_resource type="Texture2D" uid="uid://df8t51pvw5l64" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Rocks/Colour1/32x32pxRocks_7.png" id="45_edgerock_b"]
+[ext_resource type="Texture2D" uid="uid://ml5aqrmg8o7c" path="res://textures/Assets/NaturalDecorsTreesAndRocksv1/Rocks/Colour1/32x32pxRocks_9.png" id="46_edgerock_c"]
+[ext_resource type="Texture2D" uid="uid://b6fxktyf0e7bs" path="res://textures/Assets/db32/blocks/plants/mushroom_red.png" id="47_mush_red"]
+[ext_resource type="Texture2D" uid="uid://c0miswq24ktfy" path="res://textures/Assets/db32/blocks/plants/mushroom_brown.png" id="48_mush_brown"]
+[ext_resource type="Texture2D" uid="uid://cmavl28hmluyk" path="res://textures/Assets/db32/blocks/plants/amethyst_crystal.png" id="49_amethyst"]
+
+[sub_resource type="Resource" id="Resource_tree_bright_a"]
+script = ExtResource("25_propdef")
+texture = ExtResource("30_tree_bright_a")
+role = "bright"
+family = "round"
+hp = 12.0
+
+[sub_resource type="Resource" id="Resource_tree_bright_b"]
+script = ExtResource("25_propdef")
+texture = ExtResource("31_tree_bright_b")
+role = "bright"
+family = "round"
+hp = 8.0
+
+[sub_resource type="Resource" id="Resource_tree_dark_a"]
+script = ExtResource("25_propdef")
+texture = ExtResource("32_tree_dark_a")
+role = "dark"
+family = "round"
+hp = 12.0
+
+[sub_resource type="Resource" id="Resource_tree_dark_b"]
+script = ExtResource("25_propdef")
+texture = ExtResource("33_tree_dark_b")
+role = "dark"
+family = "round"
+hp = 12.0
+
+[sub_resource type="Resource" id="Resource_tree_odd_a"]
+script = ExtResource("25_propdef")
+texture = ExtResource("34_tree_odd_a")
+role = "odd"
+family = "round"
+hp = 12.0
+
+[sub_resource type="Resource" id="Resource_tree_odd_b"]
+script = ExtResource("25_propdef")
+texture = ExtResource("35_tree_odd_b")
+role = "odd"
+family = "round"
+hp = 12.0
+
+[sub_resource type="Resource" id="Resource_tree_pine_a"]
+script = ExtResource("25_propdef")
+texture = ExtResource("36_tree_pine_a")
+role = "any"
+family = "pine"
+hp = 8.0
+
+[sub_resource type="Resource" id="Resource_tree_pine_b"]
+script = ExtResource("25_propdef")
+texture = ExtResource("37_tree_pine_b")
+role = "any"
+family = "pine"
+hp = 8.0
+
+[sub_resource type="Resource" id="Resource_tree_pine_c"]
+script = ExtResource("25_propdef")
+texture = ExtResource("38_tree_pine_c")
+role = "any"
+family = "pine"
+hp = 8.0
+
+[sub_resource type="Resource" id="Resource_tree_dead_a"]
+script = ExtResource("25_propdef")
+texture = ExtResource("39_tree_dead_a")
+role = "any"
+family = "dead"
+hp = 12.0
+
+[sub_resource type="Resource" id="Resource_tree_dead_b"]
+script = ExtResource("25_propdef")
+texture = ExtResource("40_tree_dead_b")
+role = "any"
+family = "dead"
+hp = 8.0
+
+[sub_resource type="Resource" id="Resource_rock_64_a"]
+script = ExtResource("25_propdef")
+texture = ExtResource("41_rock_64_a")
+kind = "rock"
+hp = 16.0
+trunk_radius = 10.0
+
+[sub_resource type="Resource" id="Resource_rock_64_b"]
+script = ExtResource("25_propdef")
+texture = ExtResource("42_rock_64_b")
+kind = "rock"
+hp = 16.0
+trunk_radius = 10.0
+
+[sub_resource type="Resource" id="Resource_rock_96"]
+script = ExtResource("25_propdef")
+texture = ExtResource("43_rock_96")
+kind = "rock"
+hp = 24.0
+trunk_radius = 14.0
+
+[sub_resource type="Resource" id="Resource_edge_rock_a"]
+script = ExtResource("20_decordef")
+texture = ExtResource("44_edgerock_a")
+emits_light = false
+
+[sub_resource type="Resource" id="Resource_edge_rock_b"]
+script = ExtResource("20_decordef")
+texture = ExtResource("45_edgerock_b")
+emits_light = false
+
+[sub_resource type="Resource" id="Resource_edge_rock_c"]
+script = ExtResource("20_decordef")
+texture = ExtResource("46_edgerock_c")
+emits_light = false
 
 [sub_resource type="Resource" id="Resource_decor_grass1"]
 script = ExtResource("20_decordef")
@@ -39,10 +173,29 @@ light_energy = 1.2
 light_radius = 64.0
 flicker_amplitude = 0.06
 
+[sub_resource type="Resource" id="Resource_decor_mushroom_red"]
+script = ExtResource("20_decordef")
+texture = ExtResource("47_mush_red")
+light_radius = 48.0
+
+[sub_resource type="Resource" id="Resource_decor_mushroom_brown"]
+script = ExtResource("20_decordef")
+texture = ExtResource("48_mush_brown")
+light_radius = 44.0
+
+[sub_resource type="Resource" id="Resource_decor_amethyst"]
+script = ExtResource("20_decordef")
+texture = ExtResource("49_amethyst")
+weight = 0.5
+light_color = Color(0.75, 0.5, 1, 1)
+
 [sub_resource type="Resource" id="Resource_forest"]
 script = ExtResource("24_forestdef")
-root_flora = Array[ExtResource("20_decordef")]([SubResource("Resource_decor_grass1"), SubResource("Resource_decor_grass2"), SubResource("Resource_decor_tree")])
-sprinkle_flora = Array[ExtResource("20_decordef")]([SubResource("Resource_decor_grass1"), SubResource("Resource_decor_grass2"), SubResource("Resource_decor_tree")])
+tree_defs = Array[ExtResource("25_propdef")]([SubResource("Resource_tree_bright_a"), SubResource("Resource_tree_bright_b"), SubResource("Resource_tree_dark_a"), SubResource("Resource_tree_dark_b"), SubResource("Resource_tree_odd_a"), SubResource("Resource_tree_odd_b"), SubResource("Resource_tree_pine_a"), SubResource("Resource_tree_pine_b"), SubResource("Resource_tree_pine_c"), SubResource("Resource_tree_dead_a"), SubResource("Resource_tree_dead_b")])
+rock_defs = Array[ExtResource("25_propdef")]([SubResource("Resource_rock_64_a"), SubResource("Resource_rock_64_b"), SubResource("Resource_rock_96")])
+root_flora = Array[ExtResource("20_decordef")]([SubResource("Resource_decor_grass1"), SubResource("Resource_decor_grass2"), SubResource("Resource_decor_tree"), SubResource("Resource_decor_mushroom_red"), SubResource("Resource_decor_mushroom_brown"), SubResource("Resource_decor_amethyst")])
+edge_rocks = Array[ExtResource("20_decordef")]([SubResource("Resource_edge_rock_a"), SubResource("Resource_edge_rock_b"), SubResource("Resource_edge_rock_c")])
+sprinkle_flora = Array[ExtResource("20_decordef")]([SubResource("Resource_decor_grass1"), SubResource("Resource_decor_grass2"), SubResource("Resource_decor_tree"), SubResource("Resource_decor_mushroom_red"), SubResource("Resource_decor_mushroom_brown"), SubResource("Resource_decor_amethyst")])
 
 [sub_resource type="Resource" id="Resource_xxuj2"]
 script = ExtResource("2_7cf3p")
