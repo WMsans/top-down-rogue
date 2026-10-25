@@ -57,9 +57,10 @@ static func find_entity_layer(tree: SceneTree) -> Node2D:
 	return wm.get("entity_layer") as Node2D if wm != null else null
 
 
-# Drawn size of the contact-shadow oval centred on the trunk base.
+# Drawn size of the contact-shadow oval centred on the trunk base: 60% of the
+# sprite width so it reaches past the roots (trunk_radius is far narrower).
 static func shadow_size(def: ForestPropDef) -> Vector2:
-	var w := def.trunk_radius * 4.0
+	var w := def.texture.get_width() * 0.6 if def.texture != null else def.trunk_radius * 4.0
 	return Vector2(w, w * 0.5)
 
 

@@ -199,11 +199,11 @@ func test_shadow_child() -> void:
 
 
 func test_shadow_darkness() -> void:
-	var def := _make_def()  # trunk_radius 6 -> 24x12 oval
-	assert_that(ForestProp.shadow_size(def)).is_equal(Vector2(24, 12))
+	var def := _make_def()  # 16 px wide -> 60% = 9.6 x 4.8 oval
+	assert_that(ForestProp.shadow_size(def)).is_equal(Vector2(9.6, 4.8))
 	assert_float(ForestProp.shadow_darkness(def, Vector2.ZERO)).is_equal_approx(0.6, 0.001)
-	assert_float(ForestProp.shadow_darkness(def, Vector2(12, 0))).is_equal_approx(0.0, 0.001)
-	assert_float(ForestProp.shadow_darkness(def, Vector2(6, 0))).is_equal_approx(0.3, 0.001)
+	assert_float(ForestProp.shadow_darkness(def, Vector2(4.8, 0))).is_equal_approx(0.0, 0.001)
+	assert_float(ForestProp.shadow_darkness(def, Vector2(2.4, 0))).is_equal_approx(0.3, 0.001)
 	assert_float(ForestProp.shadow_darkness(def, Vector2(0, 30))).is_equal(0.0)
 
 
