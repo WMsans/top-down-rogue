@@ -11,7 +11,7 @@ var _terrain_physical: Node
 
 func _ready() -> void:
 	var player := get_parent()
-	var wm := player.get_parent().get_node_or_null("WorldManager")
+	var wm := player.find_parent("WorldManager")
 	if wm:
 		_terrain_physical = wm.get_node_or_null("TerrainPhysical")
 

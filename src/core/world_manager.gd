@@ -506,6 +506,7 @@ func reset() -> void:
 	for child in chunk_container.get_children():
 		child.queue_free()
 	clear_entities(entity_layer)
+	floor_container.clear()
 	for child in lights_container.get_children():
 		child.queue_free()
 	_light_dispatch_cursor = 0

@@ -33,6 +33,13 @@ func _on_chunks_generated(new_coords: Array[Vector2i]) -> void:
 		fc.populate(coord, biome, world_seed, material_bytes, keep_out)
 		_chunks[coord] = fc
 
+# Frees every floor chunk; reset() clears the world without per-chunk unload signals.
+func clear() -> void:
+	for fc in _chunks.values():
+		if is_instance_valid(fc):
+			fc.queue_free()
+	_chunks.clear()
+
 func _on_chunk_unloaded(coord: Vector2i) -> void:
 	if not _chunks.has(coord):
 		return

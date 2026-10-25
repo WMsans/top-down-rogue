@@ -85,7 +85,7 @@ func _ready() -> void:
 	var cam := cam_node as Camera2D
 	if cam:
 		cam.reset_smoothing()
-	var wm := get_parent().get_node_or_null("WorldManager")
+	var wm := _world_manager()
 	if wm:
 		wm.tracking_position = Vector2(guidance_center)
 	var target_chunk := Vector2i(floori(float(guidance_center.x) / 256), floori(float(guidance_center.y) / 256))
@@ -172,9 +172,14 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_resolve_terrain_overlap()
 
-	var wm := get_parent().get_node_or_null("WorldManager")
+	var wm := _world_manager()
 	if wm:
 		wm.tracking_position = global_position
+
+
+# The player sits under WorldManager/Entities (y-sorted), so the world manager is an ancestor.
+func _world_manager() -> Node:
+	return find_parent("WorldManager")
 
 
 func _find_guidance_room_center() -> Vector2i:
