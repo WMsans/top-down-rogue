@@ -120,6 +120,7 @@ func _physics_process(delta: float) -> void:
 		collision_mask = _original_collision_mask
 	if inventory and inventory.is_dead():
 		velocity = Vector2.ZERO
+		_update_animation(Vector2.ZERO)
 		move_and_slide()
 		_resolve_terrain_overlap()
 		return
@@ -143,8 +144,7 @@ func _physics_process(delta: float) -> void:
 		_facing_left = true
 	elif _last_facing.x > 0.01:
 		_facing_left = false
-	if _sprite != null:
-		_sprite.play(anim_name(_last_facing, _facing_left, input_dir != Vector2.ZERO))
+	_update_animation(input_dir)
 	var status := get_node_or_null("StatusComponent")
 	var speed_mult: float = 1.0
 	if status and status.is_movement_blocked():
@@ -344,6 +344,17 @@ func _find_closest_enemy_direction() -> Vector2:
 		if to_enemy.length() > 0.01:
 			return to_enemy.normalized()
 	return Vector2.ZERO
+
+
+func _update_animation(input_dir: Vector2) -> void:
+	if _sprite == null:
+		return
+	var inventory := get_node_or_null("PlayerInventory")
+	var status := get_node_or_null("StatusComponent")
+	var moving: bool = input_dir != Vector2.ZERO \
+		and not (inventory and inventory.is_dead()) \
+		and not (status and status.is_movement_blocked())
+	_sprite.play(anim_name(_last_facing, _facing_left, moving))
 
 
 static func anim_name(facing: Vector2, facing_left: bool, moving: bool) -> StringName:

@@ -76,3 +76,39 @@ func test_squash_kills_lean() -> void:
 	controller._squash_tween.custom_step(1.0)
 	assert_float(controller._sprite.skew).is_equal(0.0)
 	assert_vector(controller._sprite.scale).is_equal(Vector2.ONE)
+
+
+
+# Wired by hand like test_player_controller.gd: the controller's _ready needs the game scene.
+func _wired_controller() -> PlayerController:
+	var c: PlayerController = auto_free(PlayerController.new())
+	c._sprite = AnimatedSprite2D.new()
+	c._sprite.sprite_frames = load("res://textures/Player/player_sprite_frames.tres")
+	c.add_child(c._sprite)
+	var inv := PlayerInventory.new()
+	inv.name = "PlayerInventory"
+	c.add_child(inv)
+	var status := StatusComponent.new()
+	status.name = "StatusComponent"
+	c.add_child(status)
+	return c
+
+
+func test_moving_player_plays_run() -> void:
+	var c := _wired_controller()
+	c._update_animation(Vector2.RIGHT)
+	assert_str(c._sprite.animation).is_equal("run_front_right")
+
+
+func test_stunned_player_holding_direction_plays_idle() -> void:
+	var c := _wired_controller()
+	(c.get_node("StatusComponent") as StatusComponent).add_timed_status("stun", 5.0)
+	c._update_animation(Vector2.RIGHT)
+	assert_str(c._sprite.animation).starts_with("idle_")
+
+
+func test_dead_player_plays_idle() -> void:
+	var c := _wired_controller()
+	(c.get_node("PlayerInventory") as PlayerInventory)._is_dead = true
+	c._update_animation(Vector2.RIGHT)
+	assert_str(c._sprite.animation).starts_with("idle_")

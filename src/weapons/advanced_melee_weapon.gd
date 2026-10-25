@@ -129,6 +129,7 @@ func _fire_charged(user: Node, ratio: float) -> void:
 		if modifier != null:
 			modifier.on_use(self, user)
 	_do_charged_attack(user, ratio)
+	_play_user_lean(user)
 	_cooldown_timer = cooldown
 
 

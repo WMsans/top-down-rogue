@@ -42,6 +42,7 @@ func _fire_charged(user: Node) -> void:
 		if m != null:
 			m.on_use(self, user)
 	_emit_shot(user, _get_facing_direction(user))
+	_play_user_lean(user)
 	_cooldown_timer = get_effective_stats()["cooldown"]
 
 

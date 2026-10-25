@@ -34,9 +34,14 @@ func use(user: Node) -> void:
 			break
 	if not suppress:
 		_use_impl(user)
+	_play_user_lean(user)
+	_cooldown_timer = get_effective_stats()["cooldown"]
+
+
+# Juice hook: the player leans its sprite toward the attack. Call wherever an attack fires.
+func _play_user_lean(user: Node) -> void:
 	if user != null and user.has_method("play_attack_lean") and user.has_method("get_facing_direction"):
 		user.play_attack_lean(user.get_facing_direction())
-	_cooldown_timer = get_effective_stats()["cooldown"]
 
 
 func reset_cooldown() -> void:
