@@ -35,3 +35,44 @@ func test_inventory_finds_sprite() -> void:
 	parent.add_child(inv)
 	inv._ready()
 	assert_object(inv._sprite).is_same(sprite)
+
+
+func test_lean_target_right_is_mostly_skew() -> void:
+	var t := PlayerController.lean_target(Vector2.RIGHT, false)
+	assert_float(t.skew).is_greater(0.2)
+	assert_float(t.scale.y).is_between(1.0, 1.1)
+
+
+func test_lean_target_left_skews_negative() -> void:
+	assert_float(PlayerController.lean_target(Vector2.LEFT, false).skew).is_less(-0.2)
+
+
+func test_lean_target_up_is_mostly_stretch() -> void:
+	var t := PlayerController.lean_target(Vector2.UP, true)
+	assert_float(t.scale.y).is_greater(1.2)
+	assert_float(t.scale.x).is_less(1.0)
+	assert_float(t.skew).is_between(-0.15, -0.01)  # small, toward facing (left)
+
+
+func test_lean_target_down_facing_right_skews_right() -> void:
+	var t := PlayerController.lean_target(Vector2.DOWN, false)
+	assert_float(t.scale.y).is_greater(1.2)
+	assert_float(t.skew).is_between(0.01, 0.15)
+
+
+func test_lean_target_zero_is_rest() -> void:
+	var t := PlayerController.lean_target(Vector2.ZERO, false)
+	assert_float(t.skew).is_equal(0.0)
+	assert_vector(t.scale).is_equal(Vector2.ONE)
+
+
+func test_squash_kills_lean() -> void:
+	var controller: PlayerController = auto_free(PlayerController.new())
+	controller._sprite = auto_free(AnimatedSprite2D.new())
+	controller.play_attack_lean(Vector2.RIGHT)
+	controller._lean_tween.custom_step(0.03)  # mid-lean
+	controller._play_squash()
+	assert_bool(controller._lean_tween == null or not controller._lean_tween.is_valid()).is_true()
+	controller._squash_tween.custom_step(1.0)
+	assert_float(controller._sprite.skew).is_equal(0.0)
+	assert_vector(controller._sprite.scale).is_equal(Vector2.ONE)

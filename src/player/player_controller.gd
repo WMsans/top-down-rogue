@@ -26,6 +26,13 @@ const HIT_FLASH_COLOR := Color(2.5, 0.3, 0.1)
 const BURN_FLASH_COLOR := Color(1.0, 0.55, 0.15)
 const BURN_FLASH_MAX := 0.7
 const BURN_FLASH_DECAY := 6.0
+const LEAN_SKEW_H := 0.35
+const LEAN_SKEW_V := 0.08
+const LEAN_STRETCH_H := 0.06
+const LEAN_STRETCH_V := 0.3
+const LEAN_THIN := 0.15
+const LEAN_OUT_TIME := 0.05
+const LEAN_BACK_TIME := 0.15
 const MAX_RECOVERY_STEPS := 8
 const RECOVERY_STEP := 2.0
 # Max stain per ticking status on the player: on_fire (decay 1.0/s, threshold 1.0)
@@ -37,6 +44,7 @@ var _knockback_velocity: Vector2 = Vector2.ZERO
 var _dash_velocity: Vector2 = Vector2.ZERO
 var _flash_tween: Tween
 var _squash_tween: Tween
+var _lean_tween: Tween
 var _zoom_tween: Tween
 var _last_safe_position: Vector2 = Vector2.ZERO
 var _status_tint: Color = Color.WHITE
@@ -412,9 +420,39 @@ func _play_hit_flash() -> void:
 func _play_squash() -> void:
 	if _squash_tween and _squash_tween.is_valid():
 		_squash_tween.kill()
+	if _lean_tween and _lean_tween.is_valid():
+		_lean_tween.kill()
+	_sprite.skew = 0.0
 	_squash_tween = create_tween()
 	_squash_tween.tween_property(_sprite, "scale", Vector2(1.3, 0.7), 0.06)
 	_squash_tween.tween_property(_sprite, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+# Positive skew tilts the sprite's top to the right; the node origin is at the feet.
+static func lean_target(direction: Vector2, facing_left: bool) -> Dictionary:
+	if direction.length_squared() < 0.0001:
+		return {"skew": 0.0, "scale": Vector2.ONE}
+	var d := direction.normalized()
+	var ax := absf(d.x)
+	var ay := absf(d.y)
+	var side := signf(d.x) if ax >= 0.01 else (-1.0 if facing_left else 1.0)
+	return {
+		"skew": side * (LEAN_SKEW_H * ax + LEAN_SKEW_V * ay),
+		"scale": Vector2(1.0 - LEAN_THIN * ay, 1.0 + LEAN_STRETCH_H * ax + LEAN_STRETCH_V * ay),
+	}
+
+
+func play_attack_lean(direction: Vector2) -> void:
+	if _sprite == null or (_squash_tween and _squash_tween.is_valid()):
+		return
+	if _lean_tween and _lean_tween.is_valid():
+		_lean_tween.kill()
+	var target := lean_target(direction, _facing_left)
+	_lean_tween = create_tween()
+	_lean_tween.tween_property(_sprite, "skew", target.skew, LEAN_OUT_TIME)
+	_lean_tween.parallel().tween_property(_sprite, "scale", target.scale, LEAN_OUT_TIME)
+	_lean_tween.tween_property(_sprite, "skew", 0.0, LEAN_BACK_TIME).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_lean_tween.parallel().tween_property(_sprite, "scale", Vector2.ONE, LEAN_BACK_TIME).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 func _play_zoom_punch() -> void:
