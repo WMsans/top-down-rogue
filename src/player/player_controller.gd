@@ -16,7 +16,7 @@ var _original_collision_layer: int
 var _original_collision_mask: int
 var targeted_enemy: Node2D = null
 
-@onready var _color_rect: ColorRect = $ColorRect
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 const KNOCKBACK_SPEED := 20.0
 const KNOCKBACK_DECAY := 12.0
@@ -56,7 +56,6 @@ func _enter_tree() -> void:
 	add_child(inventory)
 
 func _ready() -> void:
-	_color_rect.pivot_offset = Vector2(BODY_WIDTH / 2.0, BODY_HEIGHT / 2.0)
 	add_to_group("player")
 	var cam_node := get_node_or_null("Camera2D")
 	if cam_node:
@@ -136,8 +135,8 @@ func _physics_process(delta: float) -> void:
 		_facing_left = true
 	elif _last_facing.x > 0.01:
 		_facing_left = false
-	if _color_rect != null:
-		_color_rect.scale.x = -1.0 if _facing_left else 1.0
+	if _sprite != null:
+		_sprite.play(anim_name(_last_facing, _facing_left, input_dir != Vector2.ZERO))
 	var status := get_node_or_null("StatusComponent")
 	var speed_mult: float = 1.0
 	if status and status.is_movement_blocked():
@@ -150,7 +149,7 @@ func _physics_process(delta: float) -> void:
 	_sanitize_velocity()
 	velocity += _knockback_velocity + _dash_velocity
 	var tint_status := get_node_or_null("StatusComponent")
-	if tint_status and _color_rect:
+	if tint_status and _sprite:
 		_status_tint = tint_status.get_blended_tint()
 		if _burn_flash > 0.0:
 			_burn_flash = maxf(0.0, _burn_flash - delta * BURN_FLASH_DECAY)
@@ -158,7 +157,7 @@ func _physics_process(delta: float) -> void:
 			var m := _status_tint
 			if _burn_flash > 0.0:
 				m = m.lerp(BURN_FLASH_COLOR, _burn_flash * BURN_FLASH_MAX)
-			_color_rect.modulate = m
+			_sprite.modulate = m
 		if HitReaction.vignette:
 			HitReaction.vignette.set_burn_intensity(
 				StatusRegistry.get_icon_alpha("on_fire", tint_status.get_stain("on_fire")))
@@ -339,6 +338,13 @@ func _find_closest_enemy_direction() -> Vector2:
 	return Vector2.ZERO
 
 
+static func anim_name(facing: Vector2, facing_left: bool, moving: bool) -> StringName:
+	return StringName("%s_%s_%s" % [
+		"run" if moving else "idle",
+		"back" if facing.y < 0.0 else "front",
+		"left" if facing_left else "right"])
+
+
 func get_facing_direction() -> Vector2:
 	return _last_facing
 
@@ -398,20 +404,17 @@ func _on_burn_tick() -> void:
 func _play_hit_flash() -> void:
 	if _flash_tween and _flash_tween.is_valid():
 		_flash_tween.kill()
-	_color_rect.modulate = HIT_FLASH_COLOR
+	_sprite.modulate = HIT_FLASH_COLOR
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(_color_rect, "modulate", _status_tint, 0.12)
+	_flash_tween.tween_property(_sprite, "modulate", _status_tint, 0.12)
 
 
 func _play_squash() -> void:
 	if _squash_tween and _squash_tween.is_valid():
 		_squash_tween.kill()
-	var sgn := -1.0 if _facing_left else 1.0
-	var target_scale := Vector2(sgn * 1.3, 0.7)
-	var rest_scale := Vector2(sgn, 1.0)
 	_squash_tween = create_tween()
-	_squash_tween.tween_property(_color_rect, "scale", target_scale, 0.06)
-	_squash_tween.tween_property(_color_rect, "scale", rest_scale, 0.12).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_squash_tween.tween_property(_sprite, "scale", Vector2(1.3, 0.7), 0.06)
+	_squash_tween.tween_property(_sprite, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 func _play_zoom_punch() -> void:

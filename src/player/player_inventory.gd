@@ -31,7 +31,7 @@ var _invincible_timer: float = 0.0
 var _is_dead: bool = false
 var _is_invincible: bool = false
 var _blink_timer: float = 0.0
-var _color_rect: ColorRect
+var _sprite: CanvasItem
 
 var weapons: Array = [null, null, null]  # Array[Weapon], size MAX_WEAPON_SLOTS, null for empty
 var active_weapon_slot: int = 0
@@ -43,7 +43,7 @@ func _ready() -> void:
 	weapons.resize(MAX_WEAPON_SLOTS)
 	var parent_player := get_parent()
 	if parent_player:
-		_color_rect = parent_player.get_node_or_null("ColorRect")
+		_sprite = parent_player.get_node_or_null("Sprite")
 
 
 func _physics_process(delta: float) -> void:
@@ -52,8 +52,8 @@ func _physics_process(delta: float) -> void:
 		if _invincible_timer <= 0.0:
 			_is_invincible = false
 			_invincible_timer = 0.0
-			if not _is_dead and _color_rect:
-				_color_rect.visible = true
+			if not _is_dead and _sprite:
+				_sprite.visible = true
 	_tick_armor_regen(delta)
 
 
@@ -72,11 +72,11 @@ func _tick_armor_regen(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-	if _is_invincible and not _is_dead and _color_rect:
+	if _is_invincible and not _is_dead and _sprite:
 		_blink_timer += delta
 		if _blink_timer >= BLINK_INTERVAL:
 			_blink_timer -= BLINK_INTERVAL
-			_color_rect.visible = not _color_rect.visible
+			_sprite.visible = not _sprite.visible
 
 
 # ---- Gold ----
@@ -161,8 +161,8 @@ func _on_health_depleted() -> void:
 		armor_changed.emit(_current_armor, max_armor)
 		return
 	_is_dead = true
-	if _color_rect:
-		_color_rect.visible = true
+	if _sprite:
+		_sprite.visible = true
 	player_died.emit()
 
 
