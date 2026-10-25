@@ -10,6 +10,7 @@ class StubNavField extends RefCounted:
 
 class StubWM extends Node:
 	var nav_field
+	var entity_layer: Node2D = null
 
 	signal chunks_generated(new_coords: Array[Vector2i])
 
@@ -28,11 +29,11 @@ class DigTarget extends Node2D:
 		impact_called = true
 
 
-# 16x32 opaque texture whose bottom 3 rows are fully transparent.
-func _make_def() -> ForestPropDef:
-	var img := Image.create(16, 32, false, Image.FORMAT_RGBA8)
+# 16 x height opaque texture whose bottom 3 rows are fully transparent.
+func _make_def(height: int = 32) -> ForestPropDef:
+	var img := Image.create(16, height, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0.5, 0.4, 0.2, 1.0))
-	for y in range(29, 32):
+	for y in range(height - 3, height):
 		for x in range(16):
 			img.set_pixel(x, y, Color(0, 0, 0, 0))
 	var def := ForestPropDef.new()
@@ -56,18 +57,6 @@ func test_setup_layers_and_groups() -> void:
 	var circle := shape_node.shape as CircleShape2D
 	assert_object(circle).is_not_null()
 	assert_float(circle.radius).is_equal(def.trunk_radius)
-
-
-func test_sprite_bottom_at_origin() -> void:
-	var def := _make_def()
-	assert_int(def.base_inset()).is_equal(3)
-	var prop: ForestProp = auto_free(ForestProp.new())
-	prop.setup(def, "1:0:0:1")
-	var sprite := prop.get_node("Sprite2D") as Sprite2D
-	assert_object(sprite).is_not_null()
-	assert_bool(sprite.centered).is_true()
-	var bottom: float = sprite.offset.y + float(def.texture.get_height()) / 2.0 - float(def.base_inset())
-	assert_float(bottom).is_equal(0.0)
 
 
 func test_destroyed_in_one_hit() -> void:
@@ -128,7 +117,7 @@ func test_resolve_hit_passes_dig_power() -> void:
 
 func _make_tree() -> ForestProp:
 	var tree: ForestProp = auto_free(ForestProp.new())
-	tree.setup(_make_def(), "1:0:0:10")
+	tree.setup(_make_def(64), "1:0:0:10")
 	return tree
 
 
@@ -173,3 +162,100 @@ func test_hit_flash_keeps_fade() -> void:
 	tree._on_canopy_body_entered(auto_free(CharacterBody2D.new()))
 	tree.take_dig_hit(Vector2(4, 4), Vector2.RIGHT, 0.0)
 	assert_float(tree.get_node("Sprite2D").self_modulate.a).is_equal_approx(ForestProp.FADE_ALPHA, 0.001)
+
+
+func test_canopy_and_band_split_at_trunk_band() -> void:
+	var prop: ForestProp = auto_free(ForestProp.new())
+	prop.setup(_make_def(64), "1:0:0:20")
+	var canopy := prop.get_node("Sprite2D") as Sprite2D
+	assert_bool(canopy.region_enabled).is_true()
+	assert_that(canopy.region_rect).is_equal(Rect2(0, 0, 16, 29))
+	assert_float(canopy.offset.y + canopy.region_rect.size.y).is_equal(-float(ForestProp.TRUNK_BAND))
+	var band := prop.get_node("TrunkBand") as Sprite2D
+	assert_that(band.region_rect).is_equal(Rect2(0, 29, 16, 32))
+	assert_float(band.offset.y + band.region_rect.size.y).is_equal(0.0)
+	assert_float(band.offset.x).is_equal(-8.0)
+	assert_bool(band.z_as_relative).is_false()
+	assert_int(band.z_index).is_equal(0)
+
+
+func test_short_prop_has_band_only() -> void:
+	var prop: ForestProp = auto_free(ForestProp.new())
+	prop.setup(_make_def(), "1:0:0:21")
+	assert_object(prop.get_node_or_null("Sprite2D")).is_null()
+	var band := prop.get_node("TrunkBand") as Sprite2D
+	assert_that(band.region_rect).is_equal(Rect2(0, 0, 16, 29))
+
+
+func test_shadow_child() -> void:
+	var def := _make_def()
+	var prop: ForestProp = auto_free(ForestProp.new())
+	prop.setup(def, "1:0:0:22")
+	var shadow := prop.get_node("Shadow") as Sprite2D
+	assert_bool(shadow.z_as_relative).is_false()
+	assert_int(shadow.z_index).is_equal(-9)
+	var drawn := Vector2(shadow.texture.get_size()) * shadow.scale
+	assert_that(drawn).is_equal(ForestProp.shadow_size(def))
+
+
+func test_shadow_darkness() -> void:
+	var def := _make_def()  # trunk_radius 6 -> 24x12 oval
+	assert_that(ForestProp.shadow_size(def)).is_equal(Vector2(24, 12))
+	assert_float(ForestProp.shadow_darkness(def, Vector2.ZERO)).is_equal_approx(0.6, 0.001)
+	assert_float(ForestProp.shadow_darkness(def, Vector2(12, 0))).is_equal_approx(0.0, 0.001)
+	assert_float(ForestProp.shadow_darkness(def, Vector2(6, 0))).is_equal_approx(0.3, 0.001)
+	assert_float(ForestProp.shadow_darkness(def, Vector2(0, 30))).is_equal(0.0)
+
+
+func test_is_in_front() -> void:
+	var def := _make_def()  # 16 px wide
+	assert_bool(ForestProp.is_in_front(def, Vector2(0, 4), 8.0)).is_true()
+	assert_bool(ForestProp.is_in_front(def, Vector2(0, -2), 8.0)).is_false()
+	assert_bool(ForestProp.is_in_front(def, Vector2(0, 12), 8.0)).is_false()
+	assert_bool(ForestProp.is_in_front(def, Vector2(9, 4), 8.0)).is_false()
+
+
+func _wm_with_layer() -> StubWM:
+	var wm: StubWM = auto_free(StubWM.new())
+	wm.entity_layer = Node2D.new()
+	wm.entity_layer.y_sort_enabled = true
+	wm.add_child(wm.entity_layer)
+	wm.add_to_group("world_manager")
+	add_child(wm)
+	return wm
+
+
+func test_band_in_entity_layer_and_freed_with_prop() -> void:
+	var wm := _wm_with_layer()
+	var prop := ForestProp.new()
+	prop.setup(_make_def(64), "1:0:0:23")
+	prop.position = Vector2(100, 100)
+	add_child(prop)
+	assert_int(wm.entity_layer.get_child_count()).is_equal(1)
+	var band := wm.entity_layer.get_child(0) as Sprite2D
+	assert_str(band.name).is_equal("TrunkBand")
+	assert_that(band.global_position).is_equal(Vector2(100, 100))
+	prop.free()
+	await await_idle_frame()
+	assert_int(wm.entity_layer.get_child_count()).is_equal(0)
+	wm.remove_from_group("world_manager")
+
+
+func test_band_freed_on_destroy() -> void:
+	var wm := _wm_with_layer()
+	var prop := ForestProp.new()
+	prop.setup(_make_def(64), "1:0:0:24")
+	# Impact particles parent to the prop's parent, which must be a Node2D.
+	var host: Node2D = auto_free(Node2D.new())
+	add_child(host)
+	host.add_child(prop)
+	prop.on_hit_impact(Vector2(2, 2), Vector2.RIGHT)
+	await await_millis(int(ForestProp.POP_TIME * 1000) + 150)
+	assert_int(wm.entity_layer.get_child_count()).is_equal(0)
+	wm.remove_from_group("world_manager")
+
+
+func test_band_follows_fade() -> void:
+	var tree := _make_tree()
+	tree._on_canopy_body_entered(auto_free(CharacterBody2D.new()))
+	assert_float(tree.get_node("TrunkBand").self_modulate.a).is_equal_approx(ForestProp.FADE_ALPHA, 0.001)
