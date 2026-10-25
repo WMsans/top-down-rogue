@@ -10,6 +10,8 @@ var _collision_helper: RefCounted
 var terrain_modifier: TerrainModifier
 
 @onready var chunk_container: Node2D = $ChunkContainer
+# Y-sorted: player, spawned actors and forest trunk bands depth-sort here.
+@onready var entity_layer: Node2D = $Entities
 const _FloorContainer = preload("res://src/terrain/floor_container.gd")
 var floor_container: Node2D
 var collision_container: Node2D
@@ -287,8 +289,16 @@ func clear_all_chunks() -> void:
 	chunk_manager.clear_all_chunks()
 
 
+# Spawn parent for actors and projectiles; name kept for its many callers.
 func get_chunk_container() -> Node2D:
-	return chunk_container
+	return entity_layer
+
+
+# Frees everything spawned into the entity layer except the player.
+static func clear_entities(layer: Node) -> void:
+	for child in layer.get_children():
+		if not child.is_in_group("player"):
+			child.queue_free()
 
 
 const CHUNK_SIZE := 256
@@ -495,6 +505,7 @@ func reset() -> void:
 	_gen_uniform_sets_to_free.clear()
 	for child in chunk_container.get_children():
 		child.queue_free()
+	clear_entities(entity_layer)
 	for child in lights_container.get_children():
 		child.queue_free()
 	_light_dispatch_cursor = 0
