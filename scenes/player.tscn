@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://hixog1elal7b" path="res://src/player/player_controller.gd" id="1"]
 [ext_resource type="Script" uid="uid://sy3jmlgfjlp3" path="res://src/player/lava_damage_checker.gd" id="lava_dmg"]
+[ext_resource type="SpriteFrames" uid="uid://io05a4lii187" path="res://textures/Player/player_sprite_frames.tres" id="sprite_frames"]
 [ext_resource type="Script" uid="uid://bifnu6yke7aff" path="res://src/weapons/weapon_manager.gd" id="weapon_manager"]
-[ext_resource type="SpriteFrames" path="res://textures/Player/player_sprite_frames.tres" id="sprite_frames"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(8, 12)
@@ -40,7 +40,6 @@ shape = SubResource("1")
 
 [node name="PointLight2D" type="PointLight2D" parent="." unique_id=693124189]
 energy = 2.0
-shadow_enabled = true
 shadow_color = Color(0, 0, 0, 0.5)
 shadow_filter_smooth = 2.0
 texture = SubResource("GradientTexture2D_g2els")

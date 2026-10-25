@@ -409,7 +409,7 @@ func _process_swing(_delta: float) -> void:
 
 
 func _apply_pose() -> void:
-	visual.position = Vector2.ZERO
+	visual.position = HOLD_OFFSET
 	visual.rotation = 0.0
 	_sprite.position = _pose_pos
 	_sprite.rotation = _pose_rot

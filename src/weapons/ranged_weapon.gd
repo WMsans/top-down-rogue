@@ -61,7 +61,7 @@ func update_visual(_delta: float, user: Node) -> void:
 	if visual == null:
 		return
 	var dir := _get_facing_direction(user)
-	visual.position = Vector2.ZERO
+	visual.position = HOLD_OFFSET
 	visual.rotation = dir.angle() + PI * 5.0 / 4.0
 	_sprite.position = Vector2.ZERO
 	_sprite.rotation = 0.0

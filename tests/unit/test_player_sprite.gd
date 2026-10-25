@@ -6,9 +6,9 @@ func test_sprite_frames_have_all_animations() -> void:
 	for a in ["idle", "run"]:
 		for d in ["front_left", "back_left", "front_right", "back_right"]:
 			assert_bool(frames.has_animation(StringName("%s_%s" % [a, d]))).is_true()
-	assert_int(frames.get_frame_count(&"idle_back_right")).is_equal(20)
-	assert_int(frames.get_frame_count(&"run_front_left")).is_equal(18)
-	assert_int(frames.get_frame_count(&"run_back_left")).is_equal(16)
+	assert_int(frames.get_frame_count(&"idle_back_left")).is_equal(20)
+	assert_int(frames.get_frame_count(&"run_front_right")).is_equal(18)
+	assert_int(frames.get_frame_count(&"run_back_right")).is_equal(16)
 	assert_float(frames.get_animation_speed(&"run_front_right")).is_equal(15.0)
 
 

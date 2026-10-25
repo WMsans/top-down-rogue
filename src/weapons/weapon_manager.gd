@@ -96,7 +96,23 @@ func _activate_weapon(weapon: Weapon) -> void:
 func _process(delta: float) -> void:
 	if _active_weapon != null and _active_weapon.has_visual():
 		_active_weapon.update_visual(delta, _player)
+	_update_visual_layer()
 	_update_charge_bar()
+
+
+# Facing up, the player's body hides the weapon, so draw it before the sprite.
+func _update_visual_layer() -> void:
+	if _visual == null or not _player.has_method("get_facing_direction"):
+		return
+	var body := _player.get_node_or_null("Sprite")
+	if body == null:
+		return
+	var behind: bool = _player.get_facing_direction().y < 0.0
+	var body_index := body.get_index()
+	if behind and _visual.get_index() > body_index:
+		_player.move_child(_visual, body_index)
+	elif not behind and _visual.get_index() < body_index:
+		_player.move_child(_visual, body_index)
 
 
 func _update_charge_bar() -> void:

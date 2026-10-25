@@ -2,6 +2,8 @@ class_name Weapon
 extends Resource
 
 const HIT_STATUS_STAIN := 2.0
+# Where the weapon visual sits relative to its holder; negative y raises it.
+const HOLD_OFFSET := Vector2(0.0, -4.0)
 
 @export var name: String = "Weapon"
 @export var description: String = ""
