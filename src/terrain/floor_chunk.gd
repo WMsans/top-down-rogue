@@ -16,10 +16,14 @@ const _PX_PER_TEXEL := _LIGHT_WORLD / float(_LIGHT_TEX)   # 4.0 world px / texel
 const _DECOR_ENERGY := 1.0                                # global brightness multiplier (tunable)
 
 var _warned_missing_texture := false
+# Flora moved into the world's entity layer (in front of a trunk); owned here
+# and freed with the chunk since they no longer live under it.
+var _raised: Array[Node2D] = []
 
 func populate(coord: Vector2i, biome: BiomeDef, world_seed: int, material_bytes: PackedByteArray = PackedByteArray(), keep_out: Callable = Callable()) -> void:
 	for child in get_children():
 		child.queue_free()
+	_free_raised()
 
 	if biome == null or biome.floor_texture == null:
 		if not _warned_missing_texture:
@@ -43,6 +47,12 @@ func _add_decorations(coord: Vector2i, biome: BiomeDef, world_seed: int, materia
 		return
 
 	var entries := ForestPlanner.plan(coord, biome.forest, world_seed, material_bytes, keep_out)
+	var live_props: Array = []
+	for entry in entries:
+		if entry["kind"] == "prop" and entry["def"].texture != null \
+				and not ForestProp.is_destroyed(ForestProp.make_id(world_seed, coord, int(entry["index"]))):
+			live_props.append(entry)
+	var entity_layer := ForestProp.find_entity_layer(get_tree())
 
 	# Collected light contributions, baked into one PointLight2D after placement.
 	var splats: Array = []
@@ -62,7 +72,7 @@ func _add_decorations(coord: Vector2i, biome: BiomeDef, world_seed: int, materia
 			sprite.centered = true
 			sprite.offset = Vector2(0, -float(def.texture.get_height()) * 0.5)
 			sprite.position = pos
-			add_child(sprite)
+			_place_flora(sprite, live_props, entity_layer)
 			if def.emits_light:
 				splats.append({
 					"center": pos,
@@ -85,6 +95,39 @@ func _add_decorations(coord: Vector2i, biome: BiomeDef, world_seed: int, materia
 			add_child(prop)
 
 	_bake_decor_lights(splats)
+
+
+# Flora standing in front of a trunk joins the y-sorted entity layer so it draws
+# over the trunk band, darkened by the strongest prop shadow it sits in (it is
+# now above the shadow sprites). Everything else stays on the floor layer.
+func _place_flora(sprite: Sprite2D, live_props: Array, entity_layer: Node2D) -> void:
+	var in_front := false
+	var dark := 0.0
+	var h := float(sprite.texture.get_height())
+	for p in live_props:
+		var off: Vector2 = sprite.position - p["pos"]
+		if ForestProp.is_in_front(p["def"], off, h):
+			in_front = true
+			dark = maxf(dark, ForestProp.shadow_darkness(p["def"], off))
+	if not in_front or entity_layer == null:
+		add_child(sprite)
+		return
+	sprite.modulate = Color(1.0 - dark, 1.0 - dark, 1.0 - dark)
+	var world_pos := to_global(sprite.position)
+	entity_layer.add_child(sprite)
+	sprite.global_position = world_pos
+	_raised.append(sprite)
+
+
+func _free_raised() -> void:
+	for node in _raised:
+		if is_instance_valid(node):
+			node.queue_free()
+	_raised.clear()
+
+
+func _exit_tree() -> void:
+	_free_raised()
 
 
 ## Composites every glowing decor in the chunk into one additive PointLight2D.

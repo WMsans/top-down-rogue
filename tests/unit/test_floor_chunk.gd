@@ -8,6 +8,17 @@ const _DecorDef = preload("res://src/core/decor_def.gd")
 
 const CHUNK_SIZE := 256
 
+# World-manager stub exposing an entity layer; get_chunk_container and
+# chunks_generated satisfy the dispatcher autoloads that adopt the group.
+class StubWM extends Node:
+	var entity_layer: Node2D = null
+	var nav_field = null
+
+	signal chunks_generated(new_coords: Array[Vector2i])
+
+	func get_chunk_container() -> Node2D:
+		return null
+
 func _make_texture(width: int, height: int) -> ImageTexture:
 	var img := Image.create(width, height, false, Image.FORMAT_RGBA8)
 	img.fill(Color(1, 1, 1, 1))
@@ -249,3 +260,71 @@ func test_placement_differs_across_coords() -> void:
 				identical = false
 				break
 	assert_that(identical).is_false()
+
+
+func _wm_with_layer() -> StubWM:
+	var wm: StubWM = auto_free(StubWM.new())
+	wm.entity_layer = Node2D.new()
+	wm.entity_layer.y_sort_enabled = true
+	wm.add_child(wm.entity_layer)
+	wm.add_to_group("world_manager")
+	add_child(wm)
+	return wm
+
+
+func _raised_decor(layer: Node) -> Array[Sprite2D]:
+	var out: Array[Sprite2D] = []
+	for child in layer.get_children():
+		if child is Sprite2D and child.name.begins_with("Decor"):
+			out.append(child as Sprite2D)
+	return out
+
+
+func test_front_flora_moves_to_entity_layer_darkened() -> void:
+	var wm := _wm_with_layer()
+	var forest := _make_forest(false)
+	var world_seed := 4646
+	var bytes := _room_bytes()
+	# Expected darkness per flora position, from the planner's own layout.
+	var props: Array = []
+	var floras: Array = []
+	for e in ForestPlanner.plan(Vector2i(0, 0), forest, world_seed, bytes):
+		(props if e["kind"] == "prop" else floras).append(e)
+	var expected: Dictionary = {}  # Vector2 -> darkness
+	for f in floras:
+		var hit := false
+		var d := 0.0
+		for p in props:
+			var off: Vector2 = f["pos"] - p["pos"]
+			if ForestProp.is_in_front(p["def"], off, 16.0):
+				hit = true
+				d = maxf(d, ForestProp.shadow_darkness(p["def"], off))
+		if hit:
+			expected[f["pos"]] = d
+	assert_int(expected.size()).is_greater(0)
+
+	var chunk := _FloorChunk.new()
+	add_child(chunk)
+	chunk.populate(Vector2i(0, 0), _make_biome(forest), world_seed, bytes)
+	var raised := _raised_decor(wm.entity_layer)
+	assert_int(raised.size()).is_equal(expected.size())
+	for sprite in raised:
+		assert_bool(expected.has(sprite.global_position)).is_true()
+		var d: float = expected[sprite.global_position]
+		assert_float(sprite.modulate.r).is_equal_approx(1.0 - d, 0.001)
+	for sprite in _decor_sprites(chunk):
+		assert_that(sprite.modulate).is_equal(Color.WHITE)
+	chunk.free()
+	wm.remove_from_group("world_manager")
+
+
+func test_chunk_free_clears_raised_flora() -> void:
+	var wm := _wm_with_layer()
+	var chunk := _FloorChunk.new()
+	add_child(chunk)
+	chunk.populate(Vector2i(0, 0), _make_biome(_make_forest(false)), 4646, _room_bytes())
+	assert_int(_raised_decor(wm.entity_layer).size()).is_greater(0)
+	chunk.free()
+	await await_idle_frame()
+	assert_int(_raised_decor(wm.entity_layer).size()).is_equal(0)
+	wm.remove_from_group("world_manager")
